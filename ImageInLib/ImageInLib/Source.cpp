@@ -88,7 +88,7 @@ int main() {
 	if (initialSegment == NULL) return false;
 	initialize2dArrayD(initialSegment, Length, Width, 0.0);
 
-	point2D* center = new point2D[1];
+	point2d* center = new point2d[1];
 	center->x = 187; center->y = 254;
 
 	generateInitialSegmentationFunction(initialSegment, Length, Width, center, 0.5, 10.0);
@@ -115,8 +115,8 @@ int main() {
 	segmentation_parameters.tau = 10.0; segmentation_parameters.numberOfTimeStep = 100; segmentation_parameters.maxNoOfTimeSteps = 100;
 	segmentation_parameters.mod = 1; segmentation_parameters.coef_conv = 5.0, segmentation_parameters.coef_dif = 1.0;
 
-	gsubsurf(imageToBeSegmented, initialSegment, segmentationPath, filtering_parameters, segmentation_parameters);
-	//subsurf(imageToBeSegmented, initialSegment, segmentationPath, filtering_parameters, segmentation_parameters);
+	//gsubsurf(imageToBeSegmented, initialSegment, segmentationPath.c_str(), filtering_parameters, segmentation_parameters);
+	subsurf(imageToBeSegmented, initialSegment, segmentationPath.c_str(), filtering_parameters, segmentation_parameters);
 
 	//=======================
 
