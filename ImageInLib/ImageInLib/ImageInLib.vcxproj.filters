@@ -323,7 +323,7 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\segmentation2d.cpp">
+    <ClCompile Include="src\segmentation2d.c">
       <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
   </ItemGroup>
