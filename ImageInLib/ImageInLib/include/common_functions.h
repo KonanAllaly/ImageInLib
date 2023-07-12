@@ -39,6 +39,10 @@ extern "C" {
 		dataType x, y, z;
 	} Point3D;
 
+	typedef struct {
+		dataType x, y;
+	} Point2D;
+
 	// Image Container and Properties
 	typedef struct {
 		// Image Dimensions
