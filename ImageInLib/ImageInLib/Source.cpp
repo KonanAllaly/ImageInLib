@@ -61,6 +61,17 @@ int main() {
 	manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
 	//rescaleToZeroOne2d(imageData, Length, Width);
 
+	patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
+	imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
+	Spacing2D space = { 1.0, 1.0 };
+
+	std::string outputImagePath = outputPath + "loaded2d.raw";
+	interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
+
+	//operation = STORE_DATA;
+	//std::string outputImagePath = outputPath + "loaded2d.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
+
 	//=========== generate circle ========
 
 	//for (i = 0; i < Length; i++) {
@@ -81,43 +92,34 @@ int main() {
 
 	//=======================
 
-	Image_Data2D imageToBeSegmented;
-	imageToBeSegmented.imageDataPtr = imageData; imageToBeSegmented.height = Length; imageToBeSegmented.width = Width;
-
-	dataType* initialSegment = new dataType[dim2D];
-	if (initialSegment == NULL) return false;
-	initialize2dArrayD(initialSegment, Length, Width, 0.0);
-
-	point2d* center = new point2d[1];
-	center->x = 187; center->y = 254;
-
-	generateInitialSegmentationFunction(initialSegment, Length, Width, center, 0.5, 10.0);
-
-	std::string segmentationPath = outputPath + "/segmentation/";
-
-	std::string initialSegmPath = segmentationPath + "_seg_func_0000.raw";
-	operation = STORE_DATA;
+	//Image_Data2D imageToBeSegmented;
+	//imageToBeSegmented.imageDataPtr = imageData; imageToBeSegmented.height = Length; imageToBeSegmented.width = Width;
+	//dataType* initialSegment = new dataType[dim2D];
+	//if (initialSegment == NULL) return false;
+	//initialize2dArrayD(initialSegment, Length, Width, 0.0);
+	//point2d* center = new point2d[1];
+	//center->x = 187; center->y = 254;
+	//generateInitialSegmentationFunction(initialSegment, Length, Width, center, 0.5, 10.0);
+	//std::string segmentationPath = outputPath + "/segmentation/";
+	//std::string initialSegmPath = segmentationPath + "_seg_func_0000.raw";
+	//operation = STORE_DATA;
 	//manageRAWFile2D<dataType>(initialSegment, Length, Width, initialSegmPath.c_str(), operation, false);
+	//Filter_Parameters filtering_parameters;
+	//filtering_parameters.timeStepSize = 1.0; filtering_parameters.h = 1.0;
+	//filtering_parameters.omega_c = 1.4; filtering_parameters.tolerance = 1e-3;
+	//filtering_parameters.maxNumberOfSolverIteration = 100; filtering_parameters.timeStepsNum = 1;
+	//filtering_parameters.eps2 = 0.000001; filtering_parameters.edge_detector_coefficient = 100;
+	//heatImplicit2dScheme(imageToBeSegmented, filtering_parameters);
+	//std::string filteredImagePath = outputPath + "filtered.raw";
+	//manageRAWFile2D<dataType>(imageToBeSegmented.imageDataPtr, Length, Width, filteredImagePath.c_str(), operation, false);
 
-	Filter_Parameters filtering_parameters;
-	filtering_parameters.timeStepSize = 1.0; filtering_parameters.h = 1.0;
-	filtering_parameters.omega_c = 1.4; filtering_parameters.tolerance = 1e-3;
-	filtering_parameters.maxNumberOfSolverIteration = 100; filtering_parameters.timeStepsNum = 1;
-	filtering_parameters.eps2 = 0.000001; filtering_parameters.edge_detector_coefficient = 100;
-
-	heatImplicit2dScheme(imageToBeSegmented, filtering_parameters);
-	std::string filteredImagePath = outputPath + "filtered.raw";
-	manageRAWFile2D<dataType>(imageToBeSegmented.imageDataPtr, Length, Width, filteredImagePath.c_str(), operation, false);
-
-	Segmentation_Parameters segmentation_parameters;
-	segmentation_parameters.h = 1.0; segmentation_parameters.coef = 100; segmentation_parameters.eps2 = 0.00001;
-	segmentation_parameters.maxNoGSIteration = 100; segmentation_parameters.omega_c = 1.5; segmentation_parameters.segTolerance = 1e-3;
-	segmentation_parameters.tau = 10.0; segmentation_parameters.numberOfTimeStep = 100; segmentation_parameters.maxNoOfTimeSteps = 100;
-	segmentation_parameters.mod = 1; segmentation_parameters.coef_conv = 5.0, segmentation_parameters.coef_dif = 1.0;
-
+	//Segmentation_Parameters segmentation_parameters;
+	//segmentation_parameters.h = 1.0; segmentation_parameters.coef = 100; segmentation_parameters.eps2 = 0.00001;
+	//segmentation_parameters.maxNoGSIteration = 100; segmentation_parameters.omega_c = 1.5; segmentation_parameters.segTolerance = 1e-3;
+	//segmentation_parameters.tau = 10.0; segmentation_parameters.numberOfTimeStep = 100; segmentation_parameters.maxNoOfTimeSteps = 100;
+	//segmentation_parameters.mod = 1; segmentation_parameters.coef_conv = 5.0, segmentation_parameters.coef_dif = 1.0;
 	//gsubsurf(imageToBeSegmented, initialSegment, segmentationPath.c_str(), filtering_parameters, segmentation_parameters);
-	subsurf(imageToBeSegmented, initialSegment, segmentationPath.c_str(), filtering_parameters, segmentation_parameters);
-
+	//subsurf(imageToBeSegmented, initialSegment, segmentationPath.c_str(), filtering_parameters, segmentation_parameters);
 	//=======================
 
 	//std::string outputImagePath = outputPath + "loaded.raw";
@@ -125,8 +127,9 @@ int main() {
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 	 
 	delete[] imageData;
-	delete[] initialSegment;
-	delete[] center;
+
+	//delete[] initialSegment;
+	//delete[] center;
 
 	return EXIT_SUCCESS;
 }
