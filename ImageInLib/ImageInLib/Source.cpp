@@ -75,7 +75,11 @@ int main() {
 		resizedImage[i] = 0.0;
 	}
 
-	resizeImage(imageData, resizedImage);
+	Image_Data2D img1, img2;
+	img1.imageDataPtr = imageData; img1.height = Length; img1.width = Width;
+	img2.imageDataPtr = resizedImage; img2.height = LengthNew; img2.width = WidthNew;
+
+	resizeImage(img1, img2);
 
 	//std::string outputImagePath = outputPath + "loaded2d.raw";
 	//interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());

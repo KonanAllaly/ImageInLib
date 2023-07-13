@@ -127,32 +127,35 @@ bool upSampling(dataType** originalImage, dataType** newImage, size_t length, si
  * realOrigin : image origin in real world
  * imageSpacing : - distance between voxels in x and y direction
  *                - distance between slices
- * orientation : IJK(1,1,1), RAS(-1,-1,1) or LPS(1,-1,-1)
+ * orientation : IJK((1, 0, 0),(0,1,0),(0,0,1)), RAS((-1,0,0),(0,-1,0),(0,0,1)) 
+ * or LPS((0,0,1),(0,-1,0),(0,0,-))
 */
-Point3D imageCoordToRealCoord(imgPoint3D srcPoint, Point3D realOrigin, Spacing3D imageSpacing, Point3D orientation) {
+Point3D imageCoordToRealCoord(Point3D srcPoint, Point3D imageOrigin, voxelSpacing imageSpacing, orientationMatrix orientation) {
     Point3D resultPoint;
-    resultPoint.x = realOrigin.x + orientation.x * imageSpacing.sx * srcPoint.x;
-    resultPoint.y = realOrigin.y + orientation.y * imageSpacing.sy * srcPoint.y;
-    resultPoint.z = realOrigin.z + orientation.z * imageSpacing.sz * srcPoint.z;
+    resultPoint.x = imageOrigin.x + imageSpacing.sx * (orientation.v1.x + orientation.v1.y + orientation.v1.z) * srcPoint.x;
+    resultPoint.y = imageOrigin.y + imageSpacing.sy * (orientation.v2.x + orientation.v2.y + orientation.v2.z) * srcPoint.y;
+    resultPoint.z = imageOrigin.z + imageSpacing.sz * (orientation.v3.x + orientation.v3.y + orientation.v3.z) * srcPoint.z;
     return resultPoint;
 }
 
+/*
 //Get image coordinate from real coordinate
-imgPoint3D realCoordToImageCoord(Point3D srcPoint, Point3D realOrigin, Spacing3D imageSpacing, Point3D orientation) {
-    imgPoint3D resultPoint;
-    resultPoint.x = (dataType)((srcPoint.x - realOrigin.x) / (orientation.x * imageSpacing.sx));
-    resultPoint.y = (dataType)((srcPoint.y - realOrigin.y) / (orientation.y * imageSpacing.sy));
-    resultPoint.z = (dataType)((srcPoint.z - realOrigin.z) / (orientation.z * imageSpacing.sz));
+Point3D realCoordToImageCoord(Point3D srcPoint, Point3D realOrigin, voxelSpacing3D imageSpacing, orientationMatrix orientation) {
+    Point3D resultPoint;
+    //resultPoint.x = ((srcPoint.x - realOrigin.x) / (orientation.x * imageSpacing.sx));
+    //resultPoint.y = ((srcPoint.y - realOrigin.y) / (orientation.y * imageSpacing.sy));
+    //resultPoint.z = ((srcPoint.z - realOrigin.z) / (orientation.z * imageSpacing.sz));
     return resultPoint;
 }
+*/
 
-bool resizeImage(dataType* oldImage, dataType* newImage) {
+bool resizeImage(Image_Data2D oldImage, Image_Data2D newImage) {
 
-    if (oldImage == NULL || newImage == NULL)
+    if (oldImage.imageDataPtr == NULL || newImage.imageDataPtr == NULL)
         return false;
 
-    const size_t height_old = 512, width_old = 512;
-    const size_t height_new = 600, width_new = 600;
+    const size_t height_old = oldImage.height, width_old = oldImage.width;
+    const size_t height_new = newImage.height, width_new = newImage.width;
 
     int i, j;
     dataType i_new, j_new;
@@ -165,9 +168,6 @@ bool resizeImage(dataType* oldImage, dataType* newImage) {
     //Compute scale factor
     dataType sx = (dataType)height_old / height_new;
     dataType sy = (dataType)width_old / width_new;
-
-    //dataType sx = (dataType)height_new / height_old;
-    //dataType sy = (dataType)width_new / width_old;
 
     dataType val = 0.0;
 
@@ -198,40 +198,28 @@ bool resizeImage(dataType* oldImage, dataType* newImage) {
             j_int = (int)j_new;
 
             if ((i_floor == i_ceil) && (j_floor == j_ceil)) {
-                val = oldImage[x_new(i_int, j_int, height_old)];
+                val = oldImage.imageDataPtr[x_new(i_int, j_int, height_old)];
             }
             if ((i_floor == i_ceil) && (j_floor != j_ceil)) {
-                //dataType val1 = oldImage[x_new(i_int, j_floor, height_old)];
-                //dataType val2 = oldImage[x_new(i_int, j_ceil, height_old)];
-                //val = val1 * (j_ceil - j) + val2 * (j - j_floor);
+                
                 if(abs(i - i_ceil) > abs(i - i_floor)){
-                    val = oldImage[x_new(i_floor, j_int, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_floor, j_int, height_old)];
                 }
                 else {
-                    val = oldImage[x_new(i_ceil, j_int, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_ceil, j_int, height_old)];
                 }
 
             }
             if (i_floor != i_ceil && (j_floor == j_ceil)) {
-                //dataType val1 = oldImage[x_new(i_floor, j_int, height_old)];
-                //dataType val2 = oldImage[x_new(i_ceil, j_int, height_old)];
-                //val = val1 * (i_ceil - i) + val2 * (i - i_floor);
+                
                 if (abs(j - j_ceil) > abs(j - j_floor)) {
-                    val = oldImage[x_new(i_int, j_floor, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_int, j_floor, height_old)];
                 }
                 else {
-                    val = oldImage[x_new(i_int, j_floor, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_int, j_floor, height_old)];
                 }
             }
             if (i_floor != i_ceil && (j_floor != j_ceil)) {
-
-                //dataType val1 = oldImage[x_new(i_floor, j_floor, height_old)];
-                //dataType val2 = oldImage[x_new(i_ceil, j_floor, height_old)];
-                //dataType val3 = oldImage[x_new(i_floor, j_ceil, height_old)];
-                //dataType val4 = oldImage[x_new(i_ceil, j_ceil, height_old)];
-                //dataType val11 = val1 * (i_ceil - i) + val2 * (i - i_floor);
-                //dataType val12 = val3 * (i_ceil - i) + val4 * (i - i_floor);
-                //val = val11 * (j_ceil - j) + val12 * (j - j_floor);
 
                 dataType minDist = 100000000;
 
@@ -239,60 +227,31 @@ bool resizeImage(dataType* oldImage, dataType* newImage) {
                 dataType distTL = sqrt(pow(i - i_floor, 2) + pow(j - j_floor, 2));
                 if (distTL < minDist) {
                     minDist = distTL;
-                    val = oldImage[x_new(i_floor, j_floor, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_floor, j_floor, height_old)];
                 }
 
                 //Top right neigh
                 dataType distTR = sqrt(pow(i - i_ceil, 2) + pow(j - j_floor, 2));
                 if (distTR < minDist) {
                     minDist = distTR;
-                    val = oldImage[x_new(i_ceil, j_floor, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_ceil, j_floor, height_old)];
                 }
 
                 //Bottom Left neigh
                 dataType distBL = sqrt(pow(i - i_floor, 2) + pow(j - j_ceil, 2));
                 if (distBL < minDist) {
                     minDist = distBL;
-                    val = oldImage[x_new(i_floor, j_ceil, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_floor, j_ceil, height_old)];
                 }
 
                 //Bottom Right neigh
                 dataType distBR = sqrt(pow(i - i_ceil, 2) + pow(j - j_ceil, 2));
                 if (distBR < minDist) {
                     minDist = distBR;
-                    val = oldImage[x_new(i_ceil, j_ceil, height_old)];
+                    val = oldImage.imageDataPtr[x_new(i_ceil, j_ceil, height_old)];
                 }
             }
-
-            /*
-            else {
-                if (i_floor == i_ceil) {
-                    dataType val1 = oldImage[x_new(i_int, j_floor, height_old)];
-                    dataType val2 = oldImage[x_new(i_int, j_ceil, height_old)];
-                    val = val1 * (j_ceil - j) + val2 * (j - j_floor);
-                }
-                else {
-                    if (j_floor == j_ceil) {
-                        dataType val1 = oldImage[x_new(i_floor, j_int, height_old)];
-                        dataType val2 = oldImage[x_new(i_ceil, j_int, height_old)];
-                        val = val1 * (i_ceil - i) + val2 * (i - i_floor);
-                    }
-                    else {
-                        dataType val1 = oldImage[x_new(i_floor, j_floor, height_old)];
-                        dataType val2 = oldImage[x_new(i_ceil, j_floor, height_old)];
-                        dataType val3 = oldImage[x_new(i_floor, j_ceil, height_old)];
-                        dataType val4 = oldImage[x_new(i_ceil, j_ceil, height_old)];
-
-                        dataType val11 = val1 * (i_ceil - i) + val2 * (i - i_floor);
-                        dataType val12 = val3 * (i_ceil - i) + val4 * (i - i_floor);
-
-                        val = val11 * (j_ceil - j) + val12 * (j - j_floor);
-                    }
-                }
-            }
-            */
-
-            newImage[x_new(i, j, height_new)] = val;
+            newImage.imageDataPtr[x_new(i, j, height_new)] = val;
         }
     }
 
