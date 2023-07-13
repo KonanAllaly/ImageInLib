@@ -61,15 +61,28 @@ int main() {
 	manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
 	//rescaleToZeroOne2d(imageData, Length, Width);
 
-	patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
-	imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
-	Spacing2D space = { 1.0, 1.0 };
+	//patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
+	//imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
+	//Spacing2D space = { 1.0, 1.0 };
 
-	std::string outputImagePath = outputPath + "loaded2d.raw";
-	interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
+	size_t WidthNew = 600;
+	size_t LengthNew = 600;
+	dataType* resizedImage = new dataType[WidthNew * LengthNew];
+	if (resizedImage == NULL)
+		return false;
 
-	//operation = STORE_DATA;
+	for (i = 0; i < WidthNew * LengthNew; i++) {
+		resizedImage[i] = 0.0;
+	}
+
+	resizeImage(imageData, resizedImage);
+
 	//std::string outputImagePath = outputPath + "loaded2d.raw";
+	//interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
+
+	operation = STORE_DATA;
+	std::string outputImagePath = outputPath + "resized2d.raw";
+	manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 
 	//=========== generate circle ========
@@ -127,6 +140,7 @@ int main() {
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 	 
 	delete[] imageData;
+	delete[] resizedImage;
 
 	//delete[] initialSegment;
 	//delete[] center;
