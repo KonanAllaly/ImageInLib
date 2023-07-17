@@ -34,14 +34,15 @@ extern "C" {
 // MACROs
 //==============================================================================
 // STRUCTs
-// Common 3D Points - {x,y,z}
-	typedef struct {
-		dataType x, y, z;
-	} Point3D;
-
+// Common 2D Points - {x,y}
 	typedef struct {
 		dataType x, y;
 	} Point2D;
+
+	// Common 3D Points - {x,y,z}
+	typedef struct {
+		dataType x, y, z;
+	} Point3D;
 
 	// Image Container and Properties
 	typedef struct {
@@ -49,12 +50,6 @@ extern "C" {
 		size_t height, length, width; // Absolute Dimension
 		dataType** imageDataPtr; // Image Data Containers
 	} Image_Data;
-
-	typedef struct {
-		// Image Dimensions
-		size_t height, width; // Absolute Dimension
-		dataType* imageDataPtr; // Image Data Containers
-	} Image_Data2D;
 
 	// Generate Random Points
 	typedef struct {
@@ -64,6 +59,36 @@ extern "C" {
 	typedef struct {
 		size_t xd, p;
 	}Random2dPoints;
+
+	//==============================================================================
+	// Structures for interpolation
+
+	//Structure to handle image spacing
+	typedef struct {
+		dataType sx, sy, sz;
+	} VoxelSpacing;
+
+	//Matrix for rotation
+	typedef struct {
+		Point3D v1, v2, v3;
+	}OrientationMatrix;
+
+	typedef struct {
+		Point2D v1, v2;
+	}OrientationMatrix2D;
+
+	typedef struct {
+		dataType sx, sy;
+	} PixelSpacing;
+
+	typedef struct {
+		// Image Dimensions
+		size_t height, width; // Absolute Dimension
+		dataType* imageDataPtr; // Image Data Containers
+		Point2D origin; // image origin
+		PixelSpacing spacing; // pixel size
+	} Image_Data2D;
+
 	//==============================================================================
 	// Shapes Container
 	typedef struct {
@@ -147,7 +172,8 @@ extern "C" {
 	void copyDataTo2dReducedArea(dataType* originalDataPtr, const dataType* extendedDataPtr, const size_t originalHeight, const size_t originalWidth);
 	//==============================================================================
 	void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidth);
-
+	//==============================================================================
+	double getPoint2DDistance(const Point2D a, const Point2D b);
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus
