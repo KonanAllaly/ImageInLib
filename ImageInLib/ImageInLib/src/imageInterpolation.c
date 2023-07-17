@@ -138,7 +138,6 @@ Point3D imageCoordToRealCoord(Point3D srcPoint, Point3D imageOrigin, VoxelSpacin
 //TO DO : find manually the matrix inverse in order to write the final function 
 Point3D realCoordToImageCoord(Point3D srcPoint, Point3D realOrigin, VoxelSpacing imageSpacing, OrientationMatrix orientation) {
     Point3D resultPoint;
-
     return resultPoint;
 }
 
