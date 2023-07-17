@@ -380,7 +380,7 @@ bool resizeImageFromImageCoordToRealCoord(Image_Data2D src_image, Image_Data2D d
                     val = src_image.imageDataPtr[x_new(i_ceil, j_ceil, src_height)];
                 }
             }
-            dest_image.imageDataPtr[x_new(i, j, src_height)] = val;
+            dest_image.imageDataPtr[x_new(i, j, dest_height)] = val;
         }
     }
     return true;

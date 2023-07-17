@@ -55,11 +55,11 @@ int main() {
 	
 	//std::string inputImagePath = inputPath + "Slices304.raw";
 	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/ProjectFor2dTest/output/filtered_gmc.raw";
-	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
-	std::string inputImagePath = outputPath + "resized2d.raw";
+	std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
+	//std::string inputImagePath = outputPath + "resized2d.raw";
 	Operation operation = LOAD_DATA;
 
-	//manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
+	manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
 	//rescaleToZeroOne2d(imageData, Length, Width);
 
 	//patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
@@ -76,21 +76,27 @@ int main() {
 		resizedImage[i] = 0.0;
 	}
 
-	manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, inputImagePath.c_str(), operation, false);
+	//manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, inputImagePath.c_str(), operation, false);
 
 	Image_Data2D img1, img2;
 	img1.imageDataPtr = imageData; img1.height = Length; img1.width = Width;
-	img2.imageDataPtr = resizedImage; img2.height = LengthNew; img2.width = WidthNew;
+	img1.origin = { 0.0,0.0 }; img1.spacing = { 1.0, 1.0 };
 
-	resizeImage(img2, img1);
+	img2.imageDataPtr = resizedImage; img2.height = LengthNew; img2.width = WidthNew;
+	img2.origin = { 0.0, 0.0 }; img2.spacing = { 1.171875, 1.171875 };
+	OrientationMatrix2D orientation;
+	orientation.v1 = { 1.0, 0.0 }; orientation.v2 = { 0.0, 1.0 };
+
+	//resizeImage(img1, img2);
+	resizeImageFromImageCoordToRealCoord(img1, img2, orientation);
 
 	//std::string outputImagePath = outputPath + "loaded2d.raw";
 	//interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
 
 	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "resizedInverse.raw";
-	//manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, outputImagePath.c_str(), operation, false);
-	manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
+	std::string outputImagePath = outputPath + "resizedNew.raw";
+	manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, outputImagePath.c_str(), operation, false);
+	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 
 	//=========== generate circle ========
 
