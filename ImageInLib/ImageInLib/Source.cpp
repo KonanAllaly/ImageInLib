@@ -50,52 +50,81 @@ int main() {
 	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
 
 	dataType* imageData = new dataType[dim2D];
-	if (imageData == NULL)
+	short* image = new short[dim2D];
+	if (imageData == NULL || image == NULL)
 		return false;
 	
-	//std::string inputImagePath = inputPath + "Slices304.raw";
+	//std::string inputImagePath = inputPath + "Cameraman.raw";
 	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/ProjectFor2dTest/output/filtered_gmc.raw";
 	std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
 	//std::string inputImagePath = outputPath + "resized2d.raw";
 	Operation operation = LOAD_DATA;
 
 	manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
-	//rescaleToZeroOne2d(imageData, Length, Width);
 
 	//patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
 	//imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
 	//Spacing2D space = { 1.0, 1.0 };
 
-	size_t WidthNew = 600;
-	size_t LengthNew = 600;
-	dataType* resizedImage = new dataType[WidthNew * LengthNew];
-	if (resizedImage == NULL)
+	size_t Width2 = (size_t)(Width * 1.171875);
+	size_t Length2 = (size_t)(Length * 1.171875);
+	//cout << " H = " << Width2 << " , W = " << Length2 << endl;
+	dataType* resized = new dataType[Width2 * Length2];
+	if (resized == NULL)
 		return false;
-
-	for (i = 0; i < WidthNew * LengthNew; i++) {
-		resizedImage[i] = 0.0;
+	for (i = 0; i < Width2 * Length2; i++) {
+		resized[i] = 0.0;
 	}
 
-	//manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, inputImagePath.c_str(), operation, false);
+	//size_t Width2 = (size_t)(Width * 0.5);
+	//size_t Length2 = (size_t)(Length * 0.5);
+	//cout << " H = " << Width2 << " , W = " << Length2 << endl;
+	//dataType* resized2 = new dataType[Width2 * Length2];
+	//if (resized2 == NULL)
+	//	return false;
+	//for (i = 0; i < Width2 * Length2; i++) {
+	//	resized2[i] = 0.0;
+	//}
 
-	Image_Data2D img1, img2;
+	//std::string inputImagePath = outputPath + "test2.raw";
+	//manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, inputImagePath.c_str(), operation, false);
+	//manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
+
+	Image_Data2D img1;
 	img1.imageDataPtr = imageData; img1.height = Length; img1.width = Width;
 	img1.origin = { 0.0,0.0 }; img1.spacing = { 1.0, 1.0 };
+	img1.orientation.v1 = { 1.0, 0.0 }; img1.orientation.v2 = { 0.0, 1.0 };
 
-	img2.imageDataPtr = resizedImage; img2.height = LengthNew; img2.width = WidthNew;
-	img2.origin = { 0.0, 0.0 }; img2.spacing = { 1.171875, 1.171875 };
-	OrientationMatrix2D orientation;
-	orientation.v1 = { 1.0, 0.0 }; orientation.v2 = { 0.0, 1.0 };
+	Image_Data2D img2;
+	img2.imageDataPtr = resized; img2.height = Length2; img2.width = Width2;
+	img2.origin = { 0.0,0.0 }; img2.spacing = { 1.171875, 1.171875 };
+	img2.orientation.v1 = { 1.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0 };
 
-	//resizeImage(img1, img2);
-	resizeImageFromImageCoordToRealCoord(img1, img2, orientation);
+	//Image_Data2D img2;
+	//img2.imageDataPtr = resized1; img2.height = Length1; img2.width = Width1;
+	//img2.origin = { 0.0, 0.0 }; img2.spacing = { 1.5, 1.5 };
+	//img2.orientation.v1 = { 1.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0 };
+
+	//Image_Data2D img3;
+	//img3.imageDataPtr = resized2; img3.height = Length2; img3.width = Width2;
+	//img3.origin = { 0.0, 0.0 }; img3.spacing = { 0.5, 0.5 };
+	//img3.orientation.v1 = { 1.0, 0.0 }; img3.orientation.v2 = { 0.0, 1.0 };
+
+	interpolateImageFromImageCStoRealWorldCS(img1, img2.origin, img2.spacing, img2.orientation, img2);
+
+	operation = STORE_DATA;
+	std::string outputImagePath = outputPath + "testExpand.raw";
+	manageRAWFile2D<dataType>(resized, Length2, Width2, outputImagePath.c_str(), operation, false);
+	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
+
+	//resizeImageFromRealCoordToImageCoord(img2, img3);
 
 	//std::string outputImagePath = outputPath + "loaded2d.raw";
 	//interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
 
-	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "resizedNew.raw";
-	manageRAWFile2D<dataType>(resizedImage, LengthNew, WidthNew, outputImagePath.c_str(), operation, false);
+	//operation = STORE_DATA;
+	//outputImagePath = outputPath + "testCamer2.raw";
+	//manageRAWFile2D<dataType>(resized2, Length2, Width2, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 
 	//=========== generate circle ========
@@ -153,7 +182,9 @@ int main() {
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 	 
 	delete[] imageData;
-	delete[] resizedImage;
+	delete[] image;
+	delete[] resized;
+	//delete[] resized2;
 
 	//delete[] initialSegment;
 	//delete[] center;
