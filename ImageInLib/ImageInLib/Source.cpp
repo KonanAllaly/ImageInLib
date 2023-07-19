@@ -36,6 +36,10 @@
 #define thresmin 995
 #define thresmax 1213
 
+#define scale 1.171875
+#define sx 1.171875
+#define sy 1.171875
+
 
 int main() {
 
@@ -66,8 +70,8 @@ int main() {
 	//imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
 	//Spacing2D space = { 1.0, 1.0 };
 
-	size_t Width2 = (size_t)(Width * 1.171875);
-	size_t Length2 = (size_t)(Length * 1.171875);
+	size_t Width2 = (size_t)(Width * scale);
+	size_t Length2 = (size_t)(Length * scale);
 	//cout << " H = " << Width2 << " , W = " << Length2 << endl;
 	dataType* resized = new dataType[Width2 * Length2];
 	if (resized == NULL)
@@ -97,7 +101,7 @@ int main() {
 
 	Image_Data2D img2;
 	img2.imageDataPtr = resized; img2.height = Length2; img2.width = Width2;
-	img2.origin = { 0.0,0.0 }; img2.spacing = { 1.171875, 1.171875 };
+	img2.origin = { 0.0,0.0 }; img2.spacing = { sx, sy };
 	img2.orientation.v1 = { 1.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0 };
 
 	//Image_Data2D img2;
@@ -110,14 +114,13 @@ int main() {
 	//img3.origin = { 0.0, 0.0 }; img3.spacing = { 0.5, 0.5 };
 	//img3.orientation.v1 = { 1.0, 0.0 }; img3.orientation.v2 = { 0.0, 1.0 };
 
-	interpolateImageFromImageCStoRealWorldCS(img1, img2.origin, img2.spacing, img2.orientation, img2);
+	interpolateImageFromImageCStoRealWorldCS(img1, img2, scale);
+	//resizeImage(img1, img2);
 
 	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "testExpand.raw";
+	std::string outputImagePath = outputPath + "testReduce2.raw";
 	manageRAWFile2D<dataType>(resized, Length2, Width2, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
-
-	//resizeImageFromRealCoordToImageCoord(img2, img3);
 
 	//std::string outputImagePath = outputPath + "loaded2d.raw";
 	//interpolateToRealDimension2D(imageTest, space, outputImagePath.c_str());
