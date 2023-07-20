@@ -9,6 +9,12 @@ extern "C" {
 #include "transformation.h"
 #include "interpolations.h"
 
+	typedef enum
+	{
+		NEAREST_NEIGHBOR = 1,
+		BILINEAR,
+	} interpolationMethod;
+
 	//====================
 	//3D Functions
 
@@ -20,10 +26,10 @@ extern "C" {
 	*                 - distance between slices
 	* orientation : matrix for orientation/rotation IJK((1, 0, 0),(0,1,0),(0,0,1)), RAS((-1,0,0),(0,-1,0),(0,0,1))
 	* or LPS((0,0,1),(0,-1,0),(0,0,-1))
-	* For given point in real world cordinates system the function provide  
+	* For given point in real world cordinates system the function provide
 	* the corresponding point in image coordinates system
 	*/
-	Point3D getImageCoordFromRealCoord3D(Point3D src_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation);
+	Point3D getRealCoordFromImageCoord3D(Point3D image_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation);
 
 	/*
 	* Point3D getRealCoordFomImageCoord3D(Point3D src_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation)
@@ -36,62 +42,58 @@ extern "C" {
 	* For given point in image cordinates system the function provide
 	* the corresponding point in real world coordinates system
 	*/
-	Point3D getRealCoordFomImageCoord3D(Point3D src_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation);
+	Point3D getImageCoordFromRealCoord3D(Point3D real_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation);
 
 	//=====================================================
 	//2D Functions
 
 	/*
 	* Point2D getImageCoordFromRealCoord2D(Point2D src_point, Point2D real_origin, PixelSpacing real_spacing, OrientationMatrix2D orientation)
-	* src_point : source 2D points in image coordinates system
-	* real_origin : origin in real world
-	* real_spacing : distance between voxels in x and y direction
+	* Point2D src_point : source 2D points in image coordinates system
+	* Point2D real_origin : origin in real world coordinates system
+	* PixelSpacing real_spacing : distance between voxels in x and y direction
 	* orientation : matrix for orientation
-	* For given point in real world cordinates system the function provide
-	* the corresponding point in image coordinates system
+	* For given point in image cordinates system, the function provides
+	* the corresponding point in image real world coordinates system
 	*/
 	Point2D getRealCoordFromImageCoord2D(Point2D src_point, Point2D real_origin, PixelSpacing real_spacing, OrientationMatrix2D orientation);
 
 	/*
 	* Point2D getImageCoordFromRealCoord2D(Point2D src_point, Point2D real_origin, PixelSpacing real_spacing, OrientationMatrix2D orientation)
-	* src_point : source 2D points in image coordinates system
-	* real_origin : origin in real world
-	* real_spacing : - distance between voxels in x and y direction
-	* orientation : matrix for orientation
-	* For given point in real world cordinates system the function provide
+	* Point2D src_point : source 2D points in image coordinates system
+	* Point2D real_origin : origin in real world coordinates system
+	* PixelSpacing real_spacing : distance between voxels in x and y direction
+	* OrientationMatrix2D orientation : matrix for orientation
+	* For given point in real world cordinates system, the function provides
 	* the corresponding point in image coordinates system
 	*/
 	Point2D getImageCoordFromRealCoord2D(Point2D src_point, Point2D image_origin, PixelSpacing real_spacing, OrientationMatrix2D orientation);
 
 	/*
-	* This function compute 2D euclidian distance between two given points
-	* point1 and point2 are given points
+	* This function return the interpolated value by nearest neighbor approach
+	* dataType getInterpolatedValueNearestNeighbor2D(Image_Data2D src_image, Point2D point)
+	* Image_Data2D src_image : source image
+	* Point point : the current point
 	*/
-	dataType getDistance2D(Point2D point1, Point2D point2);
+	dataType getInterpolatedValueNearestNeighbor2D(Image_Data2D src_image, Point2D point);
 
 	/*
-	* This function get the neighbors of 2D given point
-	* point : the given point
-	* spacing : distance between pixels
+	* This function return the interpolated value by bilinear interpolation approach
+	* dataType getInterpolatedValueNearestNeighbor2D(Image_Data2D src_image, Point2D point)
+	* Image_Data2D src_image : source image
+	* Point point : the current point
 	*/
-	PointNeighbors2D getPointNeighbors2D(Point2D point, PixelSpacing spacing);
+	dataType getInterpolatedValueBilinear2D(Image_Data2D src_image, Point2D point);
 
 	/*
-	* This function return the nearest neighbor of given point
-	* Point2D getNearestNeighbor2D(Point2D point, PixelSpacing spacing)
-	* point : the given point
-	*/
-	Point2D getNearestNeighbor2D(Point2D point, PixelSpacing spacing);
-
-	/*
-	* This function perform image interpolation from image coordinates system to real world coordinate system
-	* bool interpolateImageFromImageCSToRealWorldCS(Image_Data2D src_image, Image_Data2D interp_image, dataType scale_factor)
-	* Image_Data2D src_image : structure to handle image in "IMAGE Cordinates System"
+	* This function perform image interpolation
+	* bool imageInterpolation2D(Image_Data2D src_image, Image_Data2D dest_image, dataType scale_factor, interpolationMethod method)
+	* Image_Data2D src_image : source image structure
 	*                          - height, width : image dimension
 	*                          - imageDataPtr : pointer for pixels value
 	*                          - origin : image origin
 	*                          - spacing : pixel size
-	* Image_Data2D dest_image : structure to handle interpolated image in "Real World Coordinates System"
+	* Image_Data2D dest_image : interpolated image structure
 	*                          - height, width : interpolated image dimension
 	*                          - imageDataPtr : pointer for interpolated pixels value
 	*                          - origin : interpolated image origin
@@ -99,7 +101,7 @@ extern "C" {
 	* dataType scale_factor : the scaling. if 0 < scale_factor < 1 ---> shrink
 	*                                      if 1 < scale_factor < infty ---> magnify
 	*/
-	bool interpolateImageFromImageCStoRealWorldCS(Image_Data2D src_image, Image_Data2D interp_image, dataType scale_factor);
+	bool imageInterpolation2D(Image_Data2D src_image, Image_Data2D dest_image, interpolationMethod method);
 
 #ifdef __cplusplus
 }
