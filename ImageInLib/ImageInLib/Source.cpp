@@ -114,9 +114,6 @@ int main() {
 	//img3.origin = { 0.0, 0.0 }; img3.spacing = { 0.5, 0.5 };
 	//img3.orientation.v1 = { 1.0, 0.0 }; img3.orientation.v2 = { 0.0, 1.0 };
 
-	interpolateImageFromImageCStoRealWorldCS(img1, img2, scale);
-	//resizeImage(img1, img2);
-
 	operation = STORE_DATA;
 	std::string outputImagePath = outputPath + "testReduce2.raw";
 	manageRAWFile2D<dataType>(resized, Length2, Width2, outputImagePath.c_str(), operation, false);
