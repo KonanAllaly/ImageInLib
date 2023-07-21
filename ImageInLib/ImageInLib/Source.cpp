@@ -36,7 +36,6 @@
 #define thresmin 995
 #define thresmax 1213
 
-#define scale 1.171875
 #define sx 1.171875
 #define sy 1.171875
 
@@ -46,56 +45,62 @@ int main() {
 	size_t i, j, k;
 
 	//image Dimensions
-	size_t Width = 512;
-	size_t Length = 512;
-	const size_t dim2D = Width * Length;
+	size_t WidthPET = 144;
+	size_t LengthPET = 144;
+	const size_t dim2DPET = WidthPET * LengthPET;
 
 	std::string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
 	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
 
-	dataType* imageData = new dataType[dim2D];
-	short* image = new short[dim2D];
-	if (imageData == NULL || image == NULL)
+	dataType* imageDataPET = new dataType[dim2DPET];
+	if (imageDataPET == NULL)
 		return false;
+	for (i = 0; i < WidthPET * LengthPET; i++) {
+		imageDataPET[i] = 0.0;
+	}
 	
-	//std::string inputImagePath = inputPath + "Cameraman.raw";
+	std::string inputImagePath = inputPath + "pet_slice_150.raw";
 	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/ProjectFor2dTest/output/filtered_gmc.raw";
-	std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
+	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
 	//std::string inputImagePath = outputPath + "resized2d.raw";
 	Operation operation = LOAD_DATA;
 
-	manageRAWFile2D<dataType>(imageData, Length, Width, inputImagePath.c_str(), operation, false);
+	manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, inputImagePath.c_str(), operation, true);
 
-	//patientImageData2D imageTest; imageTest.dataPtr = imageData; imageTest.height = Length; imageTest.width = Width;
-	//imageTest.origin = { 0.0, 0.0 }; imageTest.toRealCoordinates = { 1.171875, 1.171875 };
-	//Spacing2D space = { 1.0, 1.0 };
+	//operation = STORE_DATA;
+	//std::string outputImagePath = outputPath + "load_pet.raw";
+	//manageRAWFile2D<dataType>(imageData, 144, 144, outputImagePath.c_str(), operation, false);
 
-	size_t Width2 = (size_t)(Width * scale);
-	size_t Length2 = (size_t)(Length * scale);
-	dataType* resized = new dataType[Width2 * Length2];
-	if (resized == NULL)
+	size_t WidthCT = 512;
+	size_t LengthCT = 512;
+	dataType* imageDataCT = new dataType[WidthCT * LengthCT];
+	if (imageDataCT == NULL)
 		return false;
-	for (i = 0; i < Width2 * Length2; i++) {
-		resized[i] = 0.0;
+	for (i = 0; i < WidthCT * LengthCT; i++) {
+		imageDataCT[i] = 0.0;
 	}
 
+	//manageRAWFile2D<dataType>(imageDataCT, LengthCT, WidthCT, inputImagePath.c_str(), operation, false);
+
 	Image_Data2D img1;
-	img1.imageDataPtr = imageData; img1.height = Length; img1.width = Width;
-	img1.origin = { 0.0,0.0 }; img1.spacing = { sx, sy };
+	img1.imageDataPtr = imageDataPET; img1.height = LengthPET; img1.width = WidthPET;
+	img1.origin = { 0.0,0.0 }; img1.spacing = { 4.0, 4.0 };
 	img1.orientation.v1 = { 1.0, 0.0 }; img1.orientation.v2 = { 0.0, 1.0 };
 
 	Image_Data2D img2;
-	img2.imageDataPtr = resized; img2.height = Length2; img2.width = Width2;
-	img2.origin = { 0.0,0.0 }; img2.spacing = { 1.0, 1.0 };
+	img2.imageDataPtr = imageDataCT; img2.height = LengthCT; img2.width = WidthCT;
+	img2.origin = { 0.0,0.0 }; img2.spacing = { sx, sy };
 	img2.orientation.v1 = { 1.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0 };
 
-	interpolationMethod method = NEAREST_NEIGHBOR;
+	//interpolationMethod method = NEAREST_NEIGHBOR;
+	interpolationMethod method = BILINEAR;
 
 	imageInterpolation2D(img1, img2, method);
 
 	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "testExpandBil.raw";
-	manageRAWFile2D<dataType>(resized, Length2, Width2, outputImagePath.c_str(), operation, false);
+	std::string outputImagePath = outputPath + "bilinearPET.raw";
+	manageRAWFile2D<dataType>(imageDataCT, LengthCT, WidthCT, outputImagePath.c_str(), operation, false);
+	//manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, outputImagePath.c_str(), operation, false);
 
 	//=========== generate circle ========
 
@@ -151,9 +156,8 @@ int main() {
 	//operation = STORE_DATA;
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
 	 
-	delete[] imageData;
-	delete[] image;
-	delete[] resized;
+	delete[] imageDataPET;
+	delete[] imageDataCT;
 
 	return EXIT_SUCCESS;
 }

@@ -149,6 +149,7 @@ dataType getInterpolatedValueBilinear2D(Image_Data2D src_image, Point2D point) {
     dataType x2 = (dataType)i_ceil;
     dataType y1 = (dataType)j_floor;
     dataType y2 = (dataType)j_ceil;
+   
 
     //Current point neighbors
     Point2D P11 = { x1, y1 }, P12 = { x2, y1 }, P21 = { x1, y2 }, P22 = { x2, y2 };
@@ -158,8 +159,18 @@ dataType getInterpolatedValueBilinear2D(Image_Data2D src_image, Point2D point) {
     dataType q21 = src_image.imageDataPtr[x_new(i_floor, j_ceil, src_image.height)];
     dataType q22 = src_image.imageDataPtr[x_new(i_ceil, j_ceil, src_image.height)];
 
-    return bilinearInterpolation(point.x, x1, x2, q11, q12, q21, q22, point.y, y1, y2);
-
+    if (x1 == x2 && y1 == y2) {
+        return q11;
+    }
+    if (x1 == x2 && y1 != y2) {
+        return linearInterpolation(point.x, y1, y2, q11, q12);
+    }
+    if (x1 != x2 && y1 == y2) {
+        return linearInterpolation(point.y, x1, x2, q12, q22);
+    }
+    if (x1 != x2 && y1 != y2) {
+        return bilinearInterpolation(point.x, x1, x2, q11, q12, q21, q22, point.y, y1, y2);
+    }
 }
 
 bool imageInterpolation2D(Image_Data2D src_image, Image_Data2D dest_image, interpolationMethod method) {
