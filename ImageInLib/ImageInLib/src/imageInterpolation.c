@@ -20,6 +20,281 @@ Point3D getImageCoordFromRealCoord3D(Point3D real_point, Point3D real_origin, Vo
     return resultPoint;
 }
 
+dataType getInterpolatedValueNearestNeighbor3D(Image_Data src_image, Point3D point) {
+
+    int i_floor, i_ceil, j_floor, j_ceil, k_floor, k_ceil;
+
+    if (floor(point.x) > src_image.length - 1) {
+        i_floor = src_image.length - 1;
+    }
+    else {
+        i_floor = floor(point.x);
+    }
+
+    if (floor(point.y) > src_image.width - 1) {
+        j_floor = src_image.width - 1;
+    }
+    else {
+        j_floor = floor(point.y);
+    }
+
+    if (floor(point.z) > src_image.height - 1) {
+        k_floor = src_image.height - 1;
+    }
+    else {
+        k_floor = src_image.height - 1;
+    }
+
+    if (ceil(point.x) > src_image.length - 1) {
+        i_ceil = src_image.length - 1;
+    }
+    else {
+        i_ceil = ceil(point.x);
+    }
+
+    if (ceil(point.y) > src_image.width - 1) {
+        j_ceil = src_image.width - 1;
+    }
+    else {
+        j_ceil = ceil(point.y);
+    }
+
+    if (ceil(point.z) > src_image.height - 1) {
+        k_ceil = src_image.height - 1;
+    }
+    else {
+        k_ceil = ceil(point.z);
+    }
+
+    dataType x1 = i_floor * src_image.spacing.sx;
+    dataType x2 = i_ceil * src_image.spacing.sx;
+    dataType y1 = j_floor * src_image.spacing.sy;
+    dataType y2 = j_ceil * src_image.spacing.sy;
+    dataType z1 = k_floor * src_image.spacing.sz;
+    dataType z2 = k_ceil * src_image.spacing.sz;
+
+    //Current point neighbors
+    Point3D P000 = { x1, y1, z1 }, P100 = { x2, y1, z1 }, P101 = { x2, y1, z2 };
+    Point3D P010 = { x1, y2, z1 }, P011 = { x1, y2, z2 }, P001 = { x1, y1, z2 };
+    Point3D P111 = { x2, y2, z2 }, P110 = { x2, y2, z1 };
+
+    double min_dist = 1000000000000;
+
+    int i_int = 0, j_int = 0, k_int = 0;
+
+    double distP000 = getPoint3DDistance(point, P000);
+    if (distP000 < min_dist) {
+        min_dist = distP000;
+        i_int = i_floor;
+        j_int = j_floor;
+        k_int = k_floor;
+    }
+
+    double distP010 = getPoint3DDistance(point, P010);
+    if (distP010 < min_dist) {
+        min_dist = distP010;
+        i_int = i_floor;
+        j_int = j_ceil;
+        k_int = k_floor;
+    }
+
+    double distP100 = getPoint3DDistance(point, P100);
+    if (distP100 < min_dist) {
+        min_dist = distP100;
+        i_int = i_ceil;
+        j_int = j_floor;
+        k_int = k_floor;
+    }
+
+    double distP110 = getPoint3DDistance(point, P110);
+    if (distP110 < min_dist) {
+        min_dist = distP110;
+        i_int = i_ceil;
+        j_int = j_ceil;
+        k_int = k_floor;
+    }
+
+    double distP001 = getPoint3DDistance(point, P001);
+    if (distP001 < min_dist) {
+        min_dist = distP001;
+        i_int = i_floor;
+        j_int = j_floor;
+        k_int = k_ceil;
+    }
+
+    double distP101 = getPoint3DDistance(point, P101);
+    if (distP101 < min_dist) {
+        min_dist = distP101;
+        i_int = i_ceil;
+        j_int = j_floor;
+        k_int = k_ceil;
+    }
+
+    double distP011 = getPoint3DDistance(point, P011);
+    if (distP011 < min_dist) {
+        min_dist = distP011;
+        i_int = i_floor;
+        j_int = j_ceil;
+        k_int = k_ceil;
+    }
+
+    double distP111 = getPoint3DDistance(point, P111);
+    if (distP111 < min_dist) {
+        min_dist = distP111;
+        i_int = i_ceil;
+        j_int = j_ceil;
+        k_int = k_ceil;
+    }
+
+    //set the interpolated value
+    return src_image.imageDataPtr[k_int][x_new(i_int, j_int, src_image.length)];
+}
+
+dataType getInterpolatedValueTrilinear3D(Image_Data src_image, Point3D point) {
+
+    int i_floor, i_ceil, j_floor, j_ceil, k_floor, k_ceil;
+
+    if (floor(point.x) > src_image.length - 1) {
+        i_floor = src_image.length - 1;
+    }
+    else {
+        i_floor = floor(point.x);
+    }
+
+    if (floor(point.y) > src_image.width - 1) {
+        j_floor = src_image.width - 1;
+    }
+    else {
+        j_floor = floor(point.y);
+    }
+
+    if ((floor(point.z) > src_image.height - 1)) {
+        k_floor = src_image.height - 1;
+    }
+    else {
+        k_floor = floor(point.z);
+    }
+
+    if (ceil(point.x) > src_image.length - 1) {
+        i_ceil = src_image.length - 1;
+    }
+    else {
+        i_ceil = ceil(point.x);
+    }
+
+    if (ceil(point.y) > src_image.width - 1) {
+        j_ceil = src_image.width - 1;
+    }
+    else {
+        j_ceil = ceil(point.y);
+    }
+
+    if (ceil(point.z) > src_image.height - 1) {
+        k_ceil = src_image.height - 1;
+    }
+    else {
+        k_ceil = ceil(point.z);
+    }
+
+    dataType x1 = (dataType)i_floor;
+    dataType x2 = (dataType)i_ceil;
+    dataType y1 = (dataType)j_floor;
+    dataType y2 = (dataType)j_ceil;
+    dataType z1 = (dataType)k_floor;
+    dataType z2 = (dataType)k_ceil;
+
+    //Current point neighbors
+    Point3D P000 = { x1, y1, z1 }, P100 = { x2, y1, z1 }, P101 = {x2, y1, z2};
+    Point3D P010 = { x1, y2, z1 }, P011 = { x1, y2, z2 }, P001 = {x1, y1, z2};
+    Point3D P111 = { x2, y2, z2 }, P110 = { x2, y2, z1 };
+
+    dataType c000 = src_image.imageDataPtr[k_floor][x_new(i_floor, j_floor, src_image.length)];
+    dataType c100 = src_image.imageDataPtr[k_floor][x_new(i_ceil, j_floor, src_image.length)];
+    dataType c001 = src_image.imageDataPtr[k_ceil][x_new(i_floor, j_floor, src_image.length)];
+    dataType c010 = src_image.imageDataPtr[k_floor][x_new(i_floor, j_ceil, src_image.length)];
+    dataType c101 = src_image.imageDataPtr[k_ceil][x_new(i_ceil, j_floor, src_image.length)];
+    dataType c110 = src_image.imageDataPtr[k_floor][x_new(i_ceil, j_ceil, src_image.length)];
+    dataType c111 = src_image.imageDataPtr[k_ceil][x_new(i_ceil, j_ceil, src_image.length)];
+    dataType c011 = src_image.imageDataPtr[k_ceil][x_new(i_floor, j_ceil, src_image.length)];
+
+    //case no interpolation
+    if (x1 == x2 && y1 == y2 && z1 == z2) {
+        return c000;
+    }
+
+    //case linear
+    if (x1 == x2 && y1 == y2 && z1 != z2) {
+        return linearInterpolation(point.z, z1, z2, c000, 111);
+    }
+    if (x1 == x2 && y1 != y2 && z1 == z2) {
+        return linearInterpolation(point.y, y1, y2, c010, c101);
+    }
+    if (x1 != x2 && y1 == y2 && z1 == z2) {
+        return linearInterpolation(point.x, x1, x2, c000, c111);
+    }
+
+    //Case bilinear
+    if (x1 == x2 && y1 != y2 && z1 != z2) {
+        return bilinearInterpolation(point.y, y1, y2, c001, c010, c101, c110, point.z, z1, z2);
+    }
+    if (x1 != x2 && y1 != y2 && z1 == z2) {
+        return bilinearInterpolation(point.x, x1, x2, c101, c001, c101, c111, point.y, y1, y2);
+    }
+    if (x1 != x2 && y1 == y2 && z1 != z2) {
+        return bilinearInterpolation(point.x, x1, x2, c100, c101, c010, c111, point.z, x1, z2);
+    }
+
+    //Case trilinear
+    if (x1 != x2 && y1 != y2 && z1 != z2) {
+        return trilinearInterpolation(point.x, x1, x2, point.y, y1, y2, c000, c001, c010, c011, c100, c101, c110, c111, point.z, z1, z2);
+    }
+
+}
+
+bool imageInterpolation3D(Image_Data src_image, Image_Data dest_image, interpolationMethod method) {
+
+    if (src_image.imageDataPtr == NULL || dest_image.imageDataPtr == NULL)
+        return false;
+
+    int i, j, k;
+
+    const size_t src_length = src_image.length, src_width = src_image.width, src_height = src_image.height;
+    const size_t dest_length = dest_image.length, dest_width = dest_image.width, dest_height = dest_image.height;
+
+    Point3D current_point;
+
+    for (k = 0; k < dest_height; k++) {
+        for (i = 0; i < dest_length; i++) {
+            for (j = 0; j < dest_width; j++) {
+
+                current_point.x = (dataType)i;
+                current_point.y = (dataType)j;
+                current_point.z = (dataType)k;
+
+                //get the corresponding point to the given point in real world coordinates system
+                current_point = getRealCoordFromImageCoord3D(current_point, dest_image.origin, dest_image.spacing, dest_image.orientation);
+
+                //get the corresponding point to given point image cs of the source image
+                current_point = getImageCoordFromRealCoord3D(current_point, src_image.origin, src_image.spacing, src_image.orientation);
+
+                switch (method)
+                {
+                case NEAREST_NEIGHBOR:
+                    dest_image.imageDataPtr[k][x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor3D(src_image, current_point);
+                    break;
+                case TRILINEAR:
+                    dest_image.imageDataPtr[k][x_new(i, j, dest_length)] = getInterpolatedValueTrilinear3D(src_image, current_point);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 //=======================================================
 
 //2D images
