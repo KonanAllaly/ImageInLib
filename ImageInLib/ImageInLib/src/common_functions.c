@@ -196,8 +196,6 @@ void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWi
 	}
 }
 //==============================================================================
-
-//2D function
 void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth) {
 	size_t i, j, xd;
 	for (i = 0; i < imageHeight; i++) {
@@ -272,4 +270,9 @@ void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidt
 double getPoint2DDistance(const Point2D a, const Point2D b)
 {
 	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
+double getPoint3DDistance(const Point3D a, const Point3D b)
+{
+	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
