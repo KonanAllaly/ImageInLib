@@ -98,7 +98,7 @@ int main() {
 	imageInterpolation2D(img1, img2, method);
 
 	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "bilinearPET.raw";
+	std::string outputImagePath = outputPath + "TransformPET_Bilinear.raw";
 	manageRAWFile2D<dataType>(imageDataCT, LengthCT, WidthCT, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, outputImagePath.c_str(), operation, false);
 
