@@ -78,6 +78,8 @@ extern "C" {
 	*/
 	bool imageInterpolation3D(Image_Data src_image, Image_Data dest_image, interpolationMethod method);
 
+	//bool imageInterpolation3DVersion2(Image_Data src_image, Image_Data dest_image, interpolationMethod method);
+
 	//=====================================================
 	//2D Functions
 

@@ -38,6 +38,7 @@
 
 #define sx 1.171875
 #define sy 1.171875
+#define sz 2.5
 
 
 int main() {
@@ -48,58 +49,80 @@ int main() {
 	size_t WidthPET = 144;
 	size_t LengthPET = 144;
 	const size_t dim2DPET = WidthPET * LengthPET;
+	const size_t HeightPET = 255;
 
 	std::string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
 	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
 
-	dataType* imageDataPET = new dataType[dim2DPET];
+	dataType** imageDataPET = new dataType* [HeightPET];
+	for (k = 0; k < HeightPET; k++) {
+		imageDataPET[k] = new dataType[dim2DPET];
+	}
 	if (imageDataPET == NULL)
 		return false;
-	for (i = 0; i < WidthPET * LengthPET; i++) {
-		imageDataPET[i] = 0.0;
+
+	for (k = 0; k < HeightPET; k++) {
+		for (i = 0; i < WidthPET * LengthPET; i++) {
+			imageDataPET[k][i] = 0.0;
+		}
 	}
 	
-	std::string inputImagePath = inputPath + "pet_slice_150.raw";
+	//std::string inputImagePath = inputPath + "pet_slice_150.raw";
 	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/ProjectFor2dTest/output/filtered_gmc.raw";
 	//std::string inputImagePath = "C:/Users/Konan Allaly/Documents/MPI/input/Image.raw";
 	//std::string inputImagePath = outputPath + "resized2d.raw";
 	Operation operation = LOAD_DATA;
 
-	manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, inputImagePath.c_str(), operation, true);
+	std::string inputImagePath = inputPath + "patient2_pet.raw";
 
-	//operation = STORE_DATA;
-	//std::string outputImagePath = outputPath + "load_pet.raw";
-	//manageRAWFile2D<dataType>(imageData, 144, 144, outputImagePath.c_str(), operation, false);
+	manageRAWFile3D<dataType>(imageDataPET, LengthPET, WidthPET, HeightPET, inputImagePath.c_str(), operation, false);
+
+	operation = STORE_DATA;
+	std::string outputImagePath = outputPath + "load_petVolume.raw";
+	//manageRAWFile3D<dataType>(imageDataPET,LengthPET, WidthPET, HeightPET, outputImagePath.c_str(), operation, false);
 
 	size_t WidthCT = 512;
 	size_t LengthCT = 512;
-	dataType* imageDataCT = new dataType[WidthCT * LengthCT];
+	size_t HeightCT = 406;
+	dataType** imageDataCT = new dataType* [HeightCT];
+	for (k = 0; k < HeightCT; k++) {
+		imageDataCT[k] = new dataType[WidthCT * LengthCT];
+	}
+
 	if (imageDataCT == NULL)
 		return false;
-	for (i = 0; i < WidthCT * LengthCT; i++) {
-		imageDataCT[i] = 0.0;
+
+	for (k = 0; k < HeightCT; k++) {
+		for (i = 0; i < WidthCT * LengthCT; i++) {
+			imageDataCT[k][i] = 0.0;
+		}
 	}
 
 	//manageRAWFile2D<dataType>(imageDataCT, LengthCT, WidthCT, inputImagePath.c_str(), operation, false);
 
-	Image_Data2D img1;
-	img1.imageDataPtr = imageDataPET; img1.height = LengthPET; img1.width = WidthPET;
-	img1.origin = { 0.0,0.0 }; img1.spacing = { 4.0, 4.0 };
-	img1.orientation.v1 = { 1.0, 0.0 }; img1.orientation.v2 = { 0.0, 1.0 };
+	Image_Data img1;
+	img1.imageDataPtr = imageDataPET; img1.height = HeightPET; img1.width = WidthPET, img1.length = LengthPET;
+	img1.origin = { 286.586, 216.586, -1021.40 }; img1.spacing = { 4.0, 4.0, 4.0 };
+	//img1.origin = { 0.0, 0.0, 0.0 }; img1.spacing = { 4.0, 4.0, 4.0 };
+	img1.orientation.v1 = { 1.0, 0.0, 0.0 }; img1.orientation.v2 = { 0.0, 1.0, 0.0 }, img1.orientation.v3 = { 0.0, 0.0, - 1.0 };
 
-	Image_Data2D img2;
-	img2.imageDataPtr = imageDataCT; img2.height = LengthCT; img2.width = WidthCT;
-	img2.origin = { 0.0,0.0 }; img2.spacing = { sx, sy };
-	img2.orientation.v1 = { 1.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0 };
+	Image_Data img2;
+	img2.imageDataPtr = imageDataCT; img2.height = HeightCT; img2.width = WidthCT, img2.length = LengthCT;
+	img2.origin = { 300.0, 230.0, -1022.5 }; img2.spacing = { sx, sy, sz };
+	//img2.origin = { 0.0, 0.0, 0.0 }; img2.spacing = { sx, sy, sz };
+	img2.orientation.v1 = { 1.0, 0.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0, 0.0 }, img2.orientation.v3 = { 0.0, 0.0, - 1.0 };
 
-	//interpolationMethod method = NEAREST_NEIGHBOR;
-	interpolationMethod method = BILINEAR;
+	interpolationMethod method = NEAREST_NEIGHBOR;
+	//interpolationMethod method = BILINEAR;
+	//interpolationMethod method = TRILINEAR;
+	 
+	//imageInterpolation3D(img1, img2, method);
 
-	imageInterpolation2D(img1, img2, method);
+	//imageInterpolation3DVersion2(img1, img2, method);
 
 	operation = STORE_DATA;
-	std::string outputImagePath = outputPath + "TransformPET_Bilinear.raw";
-	manageRAWFile2D<dataType>(imageDataCT, LengthCT, WidthCT, outputImagePath.c_str(), operation, false);
+	outputImagePath = outputPath + "TransformPET_NN_V2.raw";
+	manageRAWFile3D<dataType>(imageDataCT, HeightCT, LengthCT, WidthCT, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, outputImagePath.c_str(), operation, false);
 
 	//=========== generate circle ========
@@ -155,7 +178,11 @@ int main() {
 	//std::string outputImagePath = outputPath + "loaded.raw";
 	//operation = STORE_DATA;
 	//manageRAWFile2D<dataType>(imageData, Length, Width, outputImagePath.c_str(), operation, false);
-	 
+	
+	for (k = 0; k < HeightPET; k++) {
+		delete[] imageDataPET[k];
+		delete[] imageDataCT[k];
+	}
 	delete[] imageDataPET;
 	delete[] imageDataCT;
 
