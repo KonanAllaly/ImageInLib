@@ -128,16 +128,16 @@ int main() {
 	//img2.origin = { 0.0, 0.0, 0.0 }; img2.spacing = { sx, sy, sz };
 	img2.orientation.v1 = { 1.0, 0.0, 0.0 }; img2.orientation.v2 = { 0.0, 1.0, 0.0 }, img2.orientation.v3 = { 0.0, 0.0, 1.0 };
 
-	interpolationMethod method = NEAREST_NEIGHBOR;
+	//interpolationMethod method = NEAREST_NEIGHBOR;
 	//interpolationMethod method = BILINEAR;
-	//interpolationMethod method = TRILINEAR;
+	interpolationMethod method = TRILINEAR;
 	 
 	imageInterpolation3D(img1, img2, method);
 
 	//imageInterpolation3DVersion2(img1, img2, method);
 
 	operation = STORE_DATA;
-	outputImagePath = outputPath + "TransformPET_NN.raw";
+	outputImagePath = outputPath + "TransformPET_Trilinear.raw";
 	manageRAWFile3D<dataType>(imageDataCT, LengthCT, WidthCT, HeightCT, outputImagePath.c_str(), operation, false);
 	//manageRAWFile2D<dataType>(imageDataPET, LengthPET, WidthPET, outputImagePath.c_str(), operation, false);
 

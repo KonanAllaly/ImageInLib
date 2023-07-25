@@ -178,7 +178,7 @@ dataType getInterpolatedValueNearestNeighbor3D(Image_Data src_image, Point3D poi
 
     //set the interpolated value
     return src_image.imageDataPtr[k_int][x_new(i_int, j_int, src_image.length)];
-    //return 6500.0;
+ 
 }
 
 dataType getInterpolatedValueTrilinear3D(Image_Data src_image, Point3D point) {
@@ -285,24 +285,24 @@ dataType getInterpolatedValueTrilinear3D(Image_Data src_image, Point3D point) {
 
     //case linear
     if (x1 == x2 && y1 == y2 && z1 != z2) {
-        return linearInterpolation(point.z, z1, z2, c000, 111);
+        return linearInterpolation(point.z, z1, z2, c000, c001);
     }
     if (x1 == x2 && y1 != y2 && z1 == z2) {
-        return linearInterpolation(point.y, y1, y2, c010, c101);
+        return linearInterpolation(point.y, y1, y2, c000, c010);
     }
     if (x1 != x2 && y1 == y2 && z1 == z2) {
-        return linearInterpolation(point.x, x1, x2, c000, c111);
+        return linearInterpolation(point.x, x1, x2, c000, c100);
     }
 
     //Case bilinear
     if (x1 == x2 && y1 != y2 && z1 != z2) {
-        return bilinearInterpolation(point.y, y1, y2, c001, c010, c101, c110, point.z, z1, z2);
+        return bilinearInterpolation(point.y, y1, y2, c000, c011, c101, c110, point.z, z1, z2);
     }
     if (x1 != x2 && y1 != y2 && z1 == z2) {
-        return bilinearInterpolation(point.x, x1, x2, c101, c001, c101, c111, point.y, y1, y2);
+        return bilinearInterpolation(point.x, x1, x2, c000, c110, c001, c111, point.y, y1, y2);
     }
     if (x1 != x2 && y1 == y2 && z1 != z2) {
-        return bilinearInterpolation(point.x, x1, x2, c100, c101, c010, c111, point.z, x1, z2);
+        return bilinearInterpolation(point.x, x1, x2, c100, c001, c010, c111, point.z, x1, z2);
     }
 
     //Case trilinear
@@ -376,32 +376,52 @@ dataType getInterpolatedValueNearestNeighbor2D(Image_Data2D src_image, Point2D p
 
     int i_floor, i_ceil, j_floor, j_ceil;
 
-    if (floor(point.x) > src_image.height - 1) {
-        i_floor = src_image.height - 1;
+    if (floor(point.x) < 0) {
+        i_floor = 0;
     }
     else {
-        i_floor = floor(point.x);
+        if (floor(point.x) > src_image.height - 1) {
+            i_floor = src_image.height - 1;
+        }
+        else {
+            i_floor = floor(point.x);
+        }
     }
-
-    if (floor(point.y) > src_image.width - 1) {
-        j_floor = src_image.width - 1;
-    }
-    else {
-        j_floor = floor(point.y);
-    }
-
-    if (ceil(point.x) > src_image.height - 1) {
-        i_ceil = src_image.height - 1;
+    
+    if (floor(point.y) < 0) {
+        j_floor = 0;
     }
     else {
-        i_ceil = ceil(point.x);
+        if (floor(point.y) > src_image.width - 1) {
+            j_floor = src_image.width - 1;
+        }
+        else {
+            j_floor = floor(point.y);
+        }
     }
-
-    if (ceil(point.y) > src_image.width - 1) {
-        j_ceil = src_image.width - 1;
+ 
+    if (ceil(point.x) < 0) {
+        i_ceil = 0;
     }
     else {
-        j_ceil = ceil(point.y);
+        if (ceil(point.x) > src_image.height - 1) {
+            i_ceil = src_image.height - 1;
+        }
+        else {
+            i_ceil = ceil(point.x);
+        }
+    }
+    
+    if (ceil(point.y) < 0) {
+        j_ceil = 0;
+    }
+    else {
+        if (ceil(point.y) > src_image.width - 1) {
+            j_ceil = src_image.width - 1;
+        }
+        else {
+            j_ceil = ceil(point.y);
+        }
     }
 
     dataType x1 = i_floor * src_image.spacing.sx;
@@ -452,32 +472,52 @@ dataType getInterpolatedValueBilinear2D(Image_Data2D src_image, Point2D point) {
 
     int i_floor, i_ceil, j_floor, j_ceil;
 
-    if (floor(point.x) > src_image.height - 1) {
-        i_floor = src_image.height - 1;
+    if (floor(point.x) < 0) {
+        i_floor = 0;
     }
     else {
-        i_floor = floor(point.x);
+        if (floor(point.x) > src_image.height - 1) {
+            i_floor = src_image.height - 1;
+        }
+        else {
+            i_floor = floor(point.x);
+        }
     }
 
-    if (floor(point.y) > src_image.width - 1) {
-        j_floor = src_image.width - 1;
+    if (floor(point.y) < 0) {
+        j_floor = 0;
     }
     else {
-        j_floor = floor(point.y);
+        if (floor(point.y) > src_image.width - 1) {
+            j_floor = src_image.width - 1;
+        }
+        else {
+            j_floor = floor(point.y);
+        }
     }
 
-    if (ceil(point.x) > src_image.height - 1) {
-        i_ceil = src_image.height - 1;
+    if (ceil(point.x) < 0) {
+        i_ceil = 0;
     }
     else {
-        i_ceil = ceil(point.x);
+        if (ceil(point.x) > src_image.height - 1) {
+            i_ceil = src_image.height - 1;
+        }
+        else {
+            i_ceil = ceil(point.x);
+        }
     }
 
-    if (ceil(point.y) > src_image.width - 1) {
-        j_ceil = src_image.width - 1;
+    if (ceil(point.y) < 0) {
+        j_ceil = 0;
     }
     else {
-        j_ceil = ceil(point.y);
+        if (ceil(point.y) > src_image.width - 1) {
+            j_ceil = src_image.width - 1;
+        }
+        else {
+            j_ceil = ceil(point.y);
+        }
     }
 
     dataType x1 = (dataType)i_floor;
