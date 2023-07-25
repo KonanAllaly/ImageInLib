@@ -24,46 +24,76 @@ dataType getInterpolatedValueNearestNeighbor3D(Image_Data src_image, Point3D poi
 
     int i_floor, i_ceil, j_floor, j_ceil, k_floor, k_ceil;
 
-    if (floor(point.x) > src_image.length - 1) {
-        i_floor = src_image.length - 1;
+    if (floor(point.x) < 0) {
+        i_floor = 0;
     }
     else {
-        i_floor = floor(point.x);
+        if (floor(point.x) > src_image.length - 1) {
+            i_floor = src_image.length - 1;
+        }
+        else {
+            i_floor = floor(point.x);
+        }
     }
 
-    if (floor(point.y) > src_image.width - 1) {
-        j_floor = src_image.width - 1;
+    if (floor(point.y) < 0) {
+        j_floor = 0;
     }
     else {
-        j_floor = floor(point.y);
+        if (floor(point.y) > src_image.width - 1) {
+            j_floor = src_image.width - 1;
+        }
+        else {
+            j_floor = floor(point.y);
+        }
     }
 
-    if (floor(point.z) > src_image.height - 1) {
-        k_floor = src_image.height - 1;
+    if (floor(point.z) < 0) {
+        k_floor = 0;
     }
     else {
-        k_floor = floor(point.z);
+        if (floor(point.z) > src_image.height - 1) {
+            k_floor = src_image.height - 1;
+        }
+        else {
+            k_floor = floor(point.z);
+        }
     }
 
-    if (ceil(point.x) > src_image.length - 1) {
-        i_ceil = src_image.length - 1;
+    if (ceil(point.x) < 0) {
+        i_ceil = 0;
     }
     else {
-        i_ceil = ceil(point.x);
+        if (ceil(point.x) > src_image.length - 1) {
+            i_ceil = src_image.length - 1;
+        }
+        else {
+            i_ceil = ceil(point.x);
+        }
     }
 
-    if (ceil(point.y) > src_image.width - 1) {
-        j_ceil = src_image.width - 1;
+    if (ceil(point.y) < 0) {
+        j_ceil = 0;
     }
     else {
-        j_ceil = ceil(point.y);
+        if (ceil(point.y) > src_image.width - 1) {
+            j_ceil = src_image.width - 1;
+        }
+        else {
+            j_ceil = ceil(point.y);
+        }
     }
 
-    if (ceil(point.z) > src_image.height - 1) {
-        k_ceil = src_image.height - 1;
+    if (ceil(point.z) < 0) {
+        k_ceil = 0;
     }
     else {
-        k_ceil = ceil(point.z);
+        if (ceil(point.z) > src_image.height - 1) {
+            k_ceil = src_image.height - 1;
+        }
+        else {
+            k_ceil = ceil(point.z);
+        }
     }
 
     dataType x1 = i_floor * src_image.spacing.sx;
@@ -148,52 +178,83 @@ dataType getInterpolatedValueNearestNeighbor3D(Image_Data src_image, Point3D poi
 
     //set the interpolated value
     return src_image.imageDataPtr[k_int][x_new(i_int, j_int, src_image.length)];
+    //return 6500.0;
 }
 
 dataType getInterpolatedValueTrilinear3D(Image_Data src_image, Point3D point) {
 
     int i_floor, i_ceil, j_floor, j_ceil, k_floor, k_ceil;
 
-    if (floor(point.x) > src_image.length - 1) {
-        i_floor = src_image.length - 1;
+    if (floor(point.x) < 0) {
+        i_floor = 0;
     }
     else {
-        i_floor = floor(point.x);
+        if (floor(point.x) > src_image.length - 1) {
+            i_floor = src_image.length - 1;
+        }
+        else {
+            i_floor = floor(point.x);
+        }
     }
 
-    if (floor(point.y) > src_image.width - 1) {
-        j_floor = src_image.width - 1;
+    if (floor(point.y) < 0) {
+        j_floor = 0;
     }
     else {
-        j_floor = floor(point.y);
+        if (floor(point.y) > src_image.width - 1) {
+            j_floor = src_image.width - 1;
+        }
+        else {
+            j_floor = floor(point.y);
+        }
     }
 
-    if ((floor(point.z) > src_image.height - 1)) {
-        k_floor = src_image.height - 1;
+    if (floor(point.z) < 0) {
+        k_floor = 0;
     }
     else {
-        k_floor = floor(point.z);
+        if (floor(point.z) > src_image.height - 1) {
+            k_floor = src_image.height - 1;
+        }
+        else {
+            k_floor = floor(point.z);
+        }
     }
 
-    if (ceil(point.x) > src_image.length - 1) {
-        i_ceil = src_image.length - 1;
+    if (ceil(point.x) < 0) {
+        i_ceil = 0;
     }
     else {
-        i_ceil = ceil(point.x);
+        if (ceil(point.x) > src_image.length - 1) {
+            i_ceil = src_image.length - 1;
+        }
+        else {
+            i_ceil = ceil(point.x);
+        }
     }
 
-    if (ceil(point.y) > src_image.width - 1) {
-        j_ceil = src_image.width - 1;
+    if (ceil(point.y) < 0) {
+        j_ceil = 0;
     }
     else {
-        j_ceil = ceil(point.y);
+        if (ceil(point.y) > src_image.width - 1) {
+            j_ceil = src_image.width - 1;
+        }
+        else {
+            j_ceil = ceil(point.y);
+        }
     }
 
-    if (ceil(point.z) > src_image.height - 1) {
-        k_ceil = src_image.height - 1;
+    if (ceil(point.z) < 0) {
+        k_ceil = 0;
     }
     else {
-        k_ceil = ceil(point.z);
+        if (ceil(point.z) > src_image.height - 1) {
+            k_ceil = src_image.height - 1;
+        }
+        else {
+            k_ceil = ceil(point.z);
+        }
     }
 
     dataType x1 = (dataType)i_floor;
@@ -293,119 +354,6 @@ bool imageInterpolation3D(Image_Data src_image, Image_Data dest_image, interpola
     }
     return true;
 }
-
-/*
-bool imageInterpolation3DVersion2(Image_Data src_image, Image_Data dest_image, interpolationMethod method) {
-
-    if (src_image.imageDataPtr == NULL || dest_image.imageDataPtr == NULL)
-        return false;
-
-    int i, j, k;
-
-    Point3D pointVolume;
-    Point2D pointSlice;
-
-    const size_t src_length = src_image.length, src_width = src_image.width, src_height = src_image.height;
-    const size_t dest_length = dest_image.length, dest_width = dest_image.width, dest_height = dest_image.height;
-
-    Image_Data2D src_slice;
-    src_slice.height = src_length; src_slice.width = src_width; 
-    src_slice.orientation.v1.x = src_image.orientation.v1.x; src_slice.orientation.v1.y = src_image.orientation.v1.y;
-    src_slice.orientation.v2.x = src_image.orientation.v2.x; src_slice.orientation.v2.y = src_image.orientation.v2.y;
-    src_slice.origin.x = src_image.origin.x; src_slice.origin.y = src_image.origin.y;
-    src_slice.spacing.sx = src_image.spacing.sx; src_slice.spacing.sy = src_image.spacing.sy;
-
-    Image_Data2D dest_slice;
-    dest_slice.height = dest_length; dest_slice.width = dest_width;
-    dest_slice.orientation.v1.x = dest_image.orientation.v1.x; dest_slice.orientation.v1.y = dest_image.orientation.v1.y;
-    dest_slice.orientation.v2.x = dest_image.orientation.v2.x; dest_slice.orientation.v2.y = dest_image.orientation.v2.y;
-    dest_slice.origin.x = dest_image.origin.x; dest_slice.origin.y = dest_image.origin.y;
-    dest_slice.spacing.sx = dest_image.spacing.sx; dest_slice.spacing.sy = dest_image.spacing.sy;
-
-    int k1, k2;
-    for (k = 0; k < dest_height; k++) {
-
-        src_slice.imageDataPtr = 
-
-        if (floor(k / src_image.spacing.sz) > dest_height - 1) {
-            k1 = dest_height - 1;
-        }
-        else {
-            k1 = floor(k);
-        }
-
-        if (ceil(k / src_image.spacing.sz) > dest_height - 1) {
-            k2 = dest_height - 1;
-        }
-        else {
-            k2 = ceil(k);
-        }
-
-        switch (method)
-        {
-        case NEAREST_NEIGHBOR:
-
-            if (k1 == k2) {
-
-                //copyDataToAnother2dArray(dest_slice.imageDataPtr, dest_image.imageDataPtr[k], dest_length, dest_width);
-
-                for (i = 0; i < dest_length; i++) {
-                    for (j = 0; j < dest_width; j++) {
-                        pointSlice.x = (dataType)i;
-                        pointSlice.y = (dataType)j;
-                        pointSlice = getRealCoordFromImageCoord2D(pointSlice, dest_slice.origin, dest_slice.spacing, dest_slice.orientation);
-                        pointSlice = getImageCoordFromRealCoord2D(pointSlice, src_slice.origin, src_slice.spacing, src_slice.orientation);
-                        //dest_slice.imageDataPtr[x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                        dest_image.imageDataPtr[k][x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                    }
-                }
-
-            }
-            else {
-                if (abs(k1 - 1) < abs(k2 - k)) {
-
-                    //copyDataToAnother2dArray(dest_slice.imageDataPtr, dest_image.imageDataPtr[k1], dest_length, dest_width);
-
-                    for (i = 0; i < dest_length; i++) {
-                        for (j = 0; j < dest_width; j++) {
-                            pointSlice.x = (dataType)i;
-                            pointSlice.y = (dataType)j;
-                            pointSlice = getRealCoordFromImageCoord2D(pointSlice, dest_slice.origin, dest_slice.spacing, dest_slice.orientation);
-                            pointSlice = getImageCoordFromRealCoord2D(pointSlice, src_slice.origin, src_slice.spacing, src_slice.orientation);
-                            //dest_slice.imageDataPtr[x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                            dest_image.imageDataPtr[k1][x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                        }
-                    }
-                }
-                else {
-
-                    //copyDataToAnother2dArray(dest_slice.imageDataPtr, dest_image.imageDataPtr[k2], dest_length, dest_width);
-
-                    for (i = 0; i < dest_length; i++) {
-                        for (j = 0; j < dest_width; j++) {
-                            pointSlice.x = (dataType)i;
-                            pointSlice.y = (dataType)j;
-                            pointSlice = getRealCoordFromImageCoord2D(pointSlice, dest_slice.origin, dest_slice.spacing, dest_slice.orientation);
-                            pointSlice = getImageCoordFromRealCoord2D(pointSlice, src_slice.origin, src_slice.spacing, src_slice.orientation);
-                            //dest_slice.imageDataPtr[x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                            dest_image.imageDataPtr[k2][x_new(i, j, dest_length)] = getInterpolatedValueNearestNeighbor2D(src_slice, pointSlice);
-                        }
-                    }
-
-                }
-            }
-            break;
-        case TRILINEAR:
-            exit(0);
-            break;
-        default:
-            break;
-        }
-    }
-
-    return true;
-}
-*/
 
 //=======================================================
 
