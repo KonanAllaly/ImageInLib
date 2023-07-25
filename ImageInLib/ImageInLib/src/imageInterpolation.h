@@ -12,8 +12,8 @@ extern "C" {
 	typedef enum
 	{
 		NEAREST_NEIGHBOR = 1,
-		BILINEAR,
-		TRILINEAR,
+		BILINEAR, // for 2D image
+		TRILINEAR // for 3D image
 	} interpolationMethod;
 
 	//====================
