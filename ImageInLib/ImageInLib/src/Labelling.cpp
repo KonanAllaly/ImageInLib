@@ -417,7 +417,6 @@ bool labelling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArr
 						statusArray[k][x_new(i, j, xDim)] = true;
 					}
 				}
-
 			}
 		}
 	}
