@@ -144,7 +144,8 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 	//compute coefficients from presmoothed image
-	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
+	//generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
+	generalizedGFunctionForImageToBeSegmented(inputImageData, inputImageData.imageDataPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
 
 	//Array for name construction
 	unsigned char  name[500];
@@ -154,8 +155,9 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	store3dDataArrayD(edgeGradientPtr, length, width, height, name, flags);
-	manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+
+	//manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 
 	firstCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
 	//loop for segmentation time steps
@@ -169,7 +171,8 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 		//calcution of coefficients
-		generalizedGaussSeidelCoefficients(imageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
+		//generalizedGaussSeidelCoefficients(imageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
+		generalizedGaussSeidelCoefficients(imageData, inputImageData.imageDataPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
 
 		// Call to function that will evolve segmentation function in each discrete time step
 		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, segParameters, CoefPtrs, centers, no_of_centers);
@@ -298,9 +301,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	heatImplicitScheme(presmoothingData, explicit_lhe_Parameters); // unconditionnally stable
-	//geodesicMeanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
-	//meanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
+	//heatImplicitScheme(presmoothingData, explicit_lhe_Parameters); // unconditionnally stable
 
 	copyDataToReducedArea(inputImageData.imageDataPtr, extendedCoefPtr, height, length, width);
 
@@ -391,7 +392,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 				norm_image_smoothed_average = (dataType)((norm_image_smoothed_e + norm_image_smoothed_w + norm_image_smoothed_n + norm_image_smoothed_s +
 					norm_image_smoothed_t + norm_image_smoothed_b) / 6.0);
 
-				edgeGradientPtr[k][x] = gradientFunction(norm_image_smoothed_average * norm_image_smoothed_average, segParameters.coef);
+				//edgeGradientPtr[k][x] = gradientFunction(norm_image_smoothed_average * norm_image_smoothed_average, segParameters.coef);
 
 			}
 		}
@@ -678,5 +679,3 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 
 	return true;
 }
-
-// // Functions for 2D Images
