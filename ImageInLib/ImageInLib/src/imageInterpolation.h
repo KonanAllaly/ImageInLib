@@ -136,6 +136,8 @@ extern "C" {
 	*/
 	bool imageInterpolation2D(Image_Data2D src_image, Image_Data2D dest_image, interpolationMethod method);
 
+	Statistics getStatisticsPET(Image_Data imageData, Point3D point_ct, dataType radius);
+
 #ifdef __cplusplus
 }
 
