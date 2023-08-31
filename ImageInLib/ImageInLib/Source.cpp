@@ -127,19 +127,19 @@ int main() {
 	}
 
 	std::string outputImagePath = outputPath + "loaded.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
 
 	outputImagePath = outputPath + "threshold.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Distance Map
 	Distance_Map_Params params_dist = { 0.5, 1.0, 0.0, 1000000, 1e-3 };
 	computeDistanceMap(distanceMap, maskThreshold, Length, Width, Height, params_dist, FAST_SWEEP);
 
 	outputImagePath = outputPath + "distance.raw";
-	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Find the point with the highest distance
 	//dataType dist_max = 0.0;
@@ -211,21 +211,21 @@ int main() {
 			maskThreshold[k][i] = image_ct[k][i];
 		}
 	}
-	thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
+	//thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
 
 	/*===================== Labelling CT ========================================*/
 
 	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
 	outputImagePath = outputPath + "afterErosion.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
-	labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
+	//labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
 
 	//number of region voxels
 	int numberOfRegionsCells = 0;
@@ -295,9 +295,9 @@ int main() {
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
 	outputImagePath = outputPath + "biggest_region.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
-	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
 	//int liver_number_of_voxel = 0;
 	//for (k = 0; k < Height; k++) {
@@ -322,7 +322,7 @@ int main() {
 
 	//std::cout << "Stat inside the segmented Live : max = " << max_liver << ", min = " << min_liver << std::endl;
 	outputImagePath = outputPath + "biggest_region_with_one_dilatation.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//dataType * center = (dataType*)malloc(3 * sizeof(dataType));
 	//centroidImage(maskThreshold, center, Height, Length, Width, 0.0);
@@ -412,11 +412,19 @@ int main() {
 
 	Point3D centerCT = { imax, jmax, kmax }, centerPET = { 0.0, 0.0, 0.0 };
 	centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
+
+	inputImagePath = inputPath + "patient3_pet.raw";
+	manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
+
+	Statistics stats = getStatisticsPET(IMAGE_PET, centerPET, 5.0);
+
+	std::cout << " Stats : max = " << stats.max_data << ", min = " << ", mean = " << stats.mean_data << ", sd = " << stats.sd_data << std::endl;
+
 	centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
 	int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
 	////std::cout << "Center PET (" << ipet << ", " << jpet << ", " << kpet << ")" << std::endl;
 
-	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
 	//std::string outputImagePath = outputPath + "interpolated_ct.raw";
 	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
@@ -539,14 +547,14 @@ int main() {
 
 	IMAGE_CT.imageDataPtr = maskThreshold;
 	IMAGE_PET.imageDataPtr = initial_seg;
-	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
 	//generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
 
-	rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
+	//rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
 
 	outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
-	manageRAWFile3D<dataType>(initial_seg, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(initial_seg, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	Image_Data ImageToBeSegmented;
 	ImageToBeSegmented.imageDataPtr = image_pet;
