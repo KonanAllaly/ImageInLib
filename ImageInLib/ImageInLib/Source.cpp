@@ -126,17 +126,20 @@ int main() {
 		}
 	}
 
-	//std::string outputImagePath = outputPath + "LoadedP3.raw";
-	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	std::string outputImagePath = outputPath + "loaded.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
+
+	outputImagePath = outputPath + "threshold.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Distance Map
 	Distance_Map_Params params_dist = { 0.5, 1.0, 0.0, 1000000, 1e-3 };
 	computeDistanceMap(distanceMap, maskThreshold, Length, Width, Height, params_dist, FAST_SWEEP);
 
-	//std::string outputImagePath = outputPath + "distanceP3.raw";
-	//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	outputImagePath = outputPath + "distance.raw";
+	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Find the point with the highest distance
 	//dataType dist_max = 0.0;
@@ -218,6 +221,10 @@ int main() {
 	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	outputImagePath = outputPath + "afterErosion.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+
 	labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
 
 	//number of region voxels
@@ -286,7 +293,11 @@ int main() {
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	outputImagePath = outputPath + "biggest_region.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+
+	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
 	//int liver_number_of_voxel = 0;
 	//for (k = 0; k < Height; k++) {
@@ -310,8 +321,8 @@ int main() {
 	//std::cout << "The segmented Liver contains : " << liver_number_of_voxel << " voxels" << std::endl;
 
 	//std::cout << "Stat inside the segmented Live : max = " << max_liver << ", min = " << min_liver << std::endl;
-	//std::string outputImagePath = outputPath + "biggest_region.raw";
-	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	outputImagePath = outputPath + "biggest_region_with_one_dilatation.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//dataType * center = (dataType*)malloc(3 * sizeof(dataType));
 	//centroidImage(maskThreshold, center, Height, Length, Width, 0.0);
@@ -516,7 +527,6 @@ int main() {
 	//center_seg->x = imax; center_seg->y = jmax; center_seg->z = kmax;
 	center_seg->x = ipet; center_seg->y = jpet; center_seg->z = kpet;
 	
-
 	dataType** initial_seg = new dataType * [height_pet];
 	for (k = 0; k < height_pet; k++) {
 		initial_seg[k] = new dataType[length_pet * width_pet];
@@ -527,15 +537,15 @@ int main() {
 		}
 	}
 
-	//IMAGE_CT.imageDataPtr = maskThreshold;
-	//IMAGE_PET.imageDataPtr = initial_seg;
-	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+	IMAGE_CT.imageDataPtr = maskThreshold;
+	IMAGE_PET.imageDataPtr = initial_seg;
+	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
-	generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
+	//generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
 
 	rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
 
-	std::string outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
+	outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
 	manageRAWFile3D<dataType>(initial_seg, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	Image_Data ImageToBeSegmented;
@@ -544,8 +554,8 @@ int main() {
 
 	Segmentation_Parameters seg_params;
 	seg_params.tau = 1.0; seg_params.h = 1.0; seg_params.omega_c = 1.4; seg_params.mod = 1;
-	seg_params.maxNoGSIteration = 100; seg_params.coef = 50000; seg_params.gauss_seidelTolerance = 1e-6;
-	seg_params.maxNoOfTimeSteps = 11; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
+	seg_params.maxNoGSIteration = 100; seg_params.coef = 50000; seg_params.gauss_seidelTolerance = 1e-3;
+	seg_params.maxNoOfTimeSteps = 100; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
 	seg_params.coef_conv = 1.0; seg_params.coef_dif = 0.010;
 
 	//Smoothing by heat explicit so we don't need all the parameters
@@ -558,7 +568,7 @@ int main() {
 	unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
 
 	//subsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
-	generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+	//generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
 
 	delete[] center_seg;
 
