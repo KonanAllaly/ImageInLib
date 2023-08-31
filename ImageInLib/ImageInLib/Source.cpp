@@ -27,6 +27,7 @@
 #include "segmentation.h"
 #include "src/segmentation3D_subsurf.h"
 #include "src/segmentation3d_gsubsurf.h"
+#include "src/shape_registration.h"
 
 #define _sx 1.171875
 #define _sy 1.171875
@@ -39,7 +40,7 @@
 int main() {
 
 	int i, j, k;
-
+	
 	std::string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
 	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
 
@@ -48,124 +49,139 @@ int main() {
 	//VoxelSpacing spacingCT = { _sx, _sy, _sz };
 	//VoxelSpacing spacingPET = { _s_pet, _s_pet, _s_pet };
 
-	//Point3D originCT = { -300.0, -230.0, -1339.2999 }; // patient 3
-	//Point3D originPET = { -286.586, -216.586, -1338.800049 }; // patient 3
-	//VoxelSpacing spacingCT = { _sx, _sy, _sz };
-	//VoxelSpacing spacingPET = { _s_pet, _s_pet, _s_pet };
+	Point3D originCT = { -300.0, -230.0, -1339.2999 };
+	Point3D originPET = { -286.586, -216.586, -1338.800049 };
+	VoxelSpacing spacingCT = { _sx, _sy, _sz };
+	VoxelSpacing spacingPET = { _s_pet, _s_pet, _s_pet };
 
-	Point3D originCT = { -249.5117, -403.0117, 675.0 }; // patient 6
-	Point3D originPET = { -360.1, -515.421, 677.0 }; // patient 6
-	VoxelSpacing spacingCT = { 0.97656, 0.97656, 1.5 };
-	VoxelSpacing spacingPET = { 3.3, 3.3, 3.0 };
+	//Point3D originCT = { -249.5117, -403.0117, 675.0 }; // patient 6
+	//Point3D originPET = { -360.1, -515.421, 677.0 }; // patient 6
+	//VoxelSpacing spacingCT = { 0.97656, 0.97656, 1.5 };
+	//VoxelSpacing spacingPET = { 3.3, 3.3, 3.0 };
 	
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; orientation.v2 = { 0.0, 1.0, 0.0 }; orientation.v3 = { 0.0, 0.0, 1.0 };
 
+	/*========== 2D Labeling for the wiki ======================*/
+
+	//std::string Image2DPath = inputPath + "memboa.raw";
+	//dataType * image2D = new dataType[260 * 260];
+	//dataType* mask2D = new dataType[260 * 260];
+	//manageRAWFile2D<dataType>(image2D, 260, 260, Image2DPath.c_str(), LOAD_DATA, false);
+	//Image2DPath = outputPath + "memboa_loaded.raw";
+	//manageRAWFile2D<dataType>(image2D, 260, 260, Image2DPath.c_str(), STORE_DATA, false);
+	//for (i = 0; i < 260 * 260; i++) {
+	//	if (image2D[i] <= 125) {
+	//		mask2D[i] = 0.0;
+	//	}
+	//	else {
+	//		mask2D[i] = 1.0;
+	//	}
+	//}
+	//Image2DPath = outputPath + "threshold_memboa.raw";
+	//manageRAWFile2D<dataType>(mask2D, 260, 260, Image2DPath.c_str(), STORE_DATA, false);
+	//delete[] image2D;
+	//delete[] mask2D;
+
 	/*======== Data container for original ct data ============*/
 	
-	const size_t Height = 330, Width = 512, Length = 512;
+	const size_t Height = 508, Width = 512, Length = 512;
 	const size_t dim2D = Width * Length;
 	
-	short** image = new short * [Height];
 	dataType** image_ct = new dataType * [Height];
 	dataType** maskThreshold = new dataType * [Height];
 	dataType** distanceMap = new dataType * [Height];
-	dataType** ball = new dataType * [Height];
 	int** segment = new int* [Height];
 	bool** status = new bool* [Height];
 	for (k = 0; k < Height; k++) {
-		image[k] = new short[dim2D];
 		image_ct[k] = new dataType[dim2D];
 		maskThreshold[k] = new dataType[dim2D];
 		distanceMap[k] = new dataType[dim2D];
-		ball[k] = new dataType[dim2D];
 		segment[k] = new int[dim2D];
 		status[k] = new bool[dim2D];
 	}
-	if (image == NULL || image_ct == NULL || maskThreshold == NULL || distanceMap == NULL)
+	if (image_ct == NULL || maskThreshold == NULL || distanceMap == NULL)
 		return false;
 
 	//Initialization
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			image[k][i] = 0.0;
 			image_ct[k][i] = 0.0;
 			maskThreshold[k][i] = 0.0;
 			distanceMap[k][i] = 0.0;
-			ball[k][i] = 0.0;
 			segment[k][i] = 0;
 			status[k][i] = false;
 		}
 	}
 
-	std::string inputImagePath = inputPath + "patient4.raw";
-	manageRAWFile3D<short>(image, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
-	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
-
-	Image_Data IMAGE_CT;
-	IMAGE_CT.imageDataPtr = image_ct;
-	IMAGE_CT.height = Height; IMAGE_CT.length = Length; IMAGE_CT.width = Width;
-	IMAGE_CT.origin = originCT;
-	IMAGE_CT.spacing = spacingCT;
-	IMAGE_CT.orientation = orientation;
+	std::string inputImagePath = inputPath + "patient3_ct.raw";
+	manageRAWFile3D<dataType>(image_ct, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
 
 	/*===================   Find the point with the highest distance ==========*/
 
 	//fill the threshold container
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			image_ct[k][i] = (dataType)image[k][i];
 			maskThreshold[k][i] = image_ct[k][i];
 		}
 	}
 
-	std::string outputImagePath = outputPath + "LoadedP4.raw";
-	manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//std::string outputImagePath = outputPath + "LoadedP3.raw";
+	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
-	//thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
+	thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
 
 	//Distance Map
 	Distance_Map_Params params_dist = { 0.5, 1.0, 0.0, 1000000, 1e-3 };
-	//computeDistanceMap(distanceMap, maskThreshold, Length, Width, Height, params_dist, FAST_SWEEP);
+	computeDistanceMap(distanceMap, maskThreshold, Length, Width, Height, params_dist, FAST_SWEEP);
 
-	outputImagePath = outputPath + "distanceP4.raw";
+	//std::string outputImagePath = outputPath + "distanceP3.raw";
 	//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Find the point with the highest distance
-	dataType dist_max = 0.0;
-	int imax = 0, jmax = 0, kmax = 0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				if (distanceMap[k][x_new(i, j, Length)] > dist_max) {
-					dist_max = distanceMap[k][x_new(i, j, Length)];
-					kmax = k; imax = i; jmax = j;
-				}
-			}
-		}
-	}
+	//dataType dist_max = 0.0;
+	//int imax = 0, jmax = 0, kmax = 0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			if (distanceMap[k][x_new(i, j, Length)] > dist_max) {
+	//				dist_max = distanceMap[k][x_new(i, j, Length)];
+	//				kmax = k; imax = i; jmax = j;
+	//			}
+	//		}
+	//	}
+	//}
+
+	Point3D point_found = getPointWithTheHighestValue(distanceMap, Length, Width, Height);
+	int imax = (int)point_found.x; 
+	int jmax = (int)point_found.y;
+	int kmax = (int)point_found.z;
+
+	//point_found = getRealCoordFromImageCoord3D(point_found, originCT, spacingCT, orientation);
+	//std::cout << "Coordinates of the approximative centroid : (" << point_found.x << "," << point_found.y << "," << point_found.z << ")" << std::endl;
+
 	//std::cout << "Distance max = " << dist_max << std::endl;
 	//std::cout << "Center CT (" << imax << ", " << jmax << ", " << kmax << ")" << std::endl;
 
-	//ball in the Liver
-	dataType radius = 5.0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				if (sqrt((imax - i) * (imax - i) + (jmax - j) * (jmax - j) + (kmax - k) * (kmax - k)) < radius) {
-					ball[k][x_new(i, j, Length)] = 1;
-				}
-				else {
-					ball[k][x_new(i, j, Length)] = 0;
-				}
-			}
-		}
-	}
-	outputImagePath = outputPath + "ballP4.raw";
+	////ball in the Liver
+	//dataType radius = 5.0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			if (sqrt((imax - i) * (imax - i) + (jmax - j) * (jmax - j) + (kmax - k) * (kmax - k)) < radius) {
+	//				ball[k][x_new(i, j, Length)] = 1;
+	//			}
+	//			else {
+	//				ball[k][x_new(i, j, Length)] = 0;
+	//			}
+	//		}
+	//	}
+	//}
+	//outputImagePath = outputPath + "ballP4.raw";
 	//manageRAWFile3D<dataType>(ball, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Find threshold values around the point with the highest distance
-	dataType local_max = 0.0, local_min = 1000000;
+	dataType local_max = 0.0, local_min = 1000000, radius = 10.0;
 	size_t x = 0, voxel_used = 0;
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < Length; i++) {
@@ -192,17 +208,17 @@ int main() {
 			maskThreshold[k][i] = image_ct[k][i];
 		}
 	}
-	//thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
+	thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
 
 	/*===================== Labelling CT ========================================*/
 
 	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
 
 	//number of region voxels
 	int numberOfRegionsCells = 0;
@@ -240,26 +256,79 @@ int main() {
 		for (i = 0; i < dim2D; i++) {
 			if (countingArray[segment[k][i]] != maxElement) {
 				segment[k][i] = 0;
-			}
-		}
-	}
-
-	int liver_number_of_voxel = 0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (segment[k][i] != 0) {
-				maskThreshold[k][i] = 1.0;
-				liver_number_of_voxel++;
-			}
-			else {
 				maskThreshold[k][i] = 0.0;
 			}
+			else {
+				maskThreshold[k][i] = 1.0;
+			}
 		}
 	}
-	//std::cout << "The segmented Liver contains : " << liver_number_of_voxel << " voxels" << std::endl;
-	//outputImagePath = outputPath + "biggest_regionP7.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
+	////Apply dilatation before saving
+	//dataType min_liver = 100000, max_liver = 0.0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (segment[k][i] != 0) {
+	//			maskThreshold[k][i] = 1.0;
+	//			if (image_ct[k][i] < min_liver) {
+	//				min_liver = image_ct[k][i];
+	//			}
+	//			if (image_ct[k][i] > max_liver) {
+	//				max_liver = image_ct[k][i];
+	//			}
+	//		}
+	//		else {
+	//			maskThreshold[k][i] = 0.0;
+	//		}
+	//	}
+	//}
+	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	//int liver_number_of_voxel = 0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		//if (segment[k][i] != 0) {
+	//		//	maskThreshold[k][i] = image_ct[k][i];
+	//		//	liver_number_of_voxel++;
+	//		//}
+	//		//else {
+	//		//	maskThreshold[k][i] = 0.0;
+	//		//}
+	//		if (maskThreshold[k][i] == 1) {
+	//			maskThreshold[k][i] = image_ct[k][i];
+	//			liver_number_of_voxel++;
+	//		}
+	//		else {
+	//			maskThreshold[k][i] = 0.0;
+	//		}
+	//	}
+	//}
+	//std::cout << "The segmented Liver contains : " << liver_number_of_voxel << " voxels" << std::endl;
+
+	//std::cout << "Stat inside the segmented Live : max = " << max_liver << ", min = " << min_liver << std::endl;
+	//std::string outputImagePath = outputPath + "biggest_region.raw";
+	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+
+	//dataType * center = (dataType*)malloc(3 * sizeof(dataType));
+	//centroidImage(maskThreshold, center, Height, Length, Width, 0.0);
+	//Point3D Liver_centroid = { center[0], center[1], center[2] };
+	//Liver_centroid = getRealCoordFromImageCoord3D(Liver_centroid, originCT, spacingCT, orientation);
+
+	//Point3D centroid_slicer = { 76.50, -59.9137, -588.443 };
+
+	//std::cout << "Coordinates of the centroid : (" << center[0] << "," << center[1] << "," << center[2] << ")" << std::endl;
+	//std::cout << "Coordinates of the centroid From Slicer : (" << centroid_slicer.x << "," << centroid_slicer.y << "," << centroid_slicer.z << ")" << std::endl;
+	//std::cout << "Coordinates of the centroid in real world coordinates : (" << Liver_centroid.x << "," << Liver_centroid.y << "," << Liver_centroid.z << ")" << std::endl;
+
+	//std::cout << "Distance centroid slicer VS centroid code : " << getPoint3DDistance(Liver_centroid, centroid_slicer) << std::endl;
+	//std::cout << "Distance approximative centroid VS centroid Slicer : " << getPoint3DDistance(point_found, centroid_slicer) << std::endl;
+	//std::cout << "Distance approximative centroid VS centroid code : " << getPoint3DDistance(point_found, Liver_centroid) << std::endl;
+
+	//free(center);
 	free(countingArray);
 
 	/*===================== Data container for orginal PET data =============*/
@@ -274,44 +343,31 @@ int main() {
 	//const size_t height_pet = 440, length_pet = 220, width_pet = 220; // patient7
 	
 	dataType** image_pet = new dataType * [height_pet];
-	short** pet = new short * [height_pet];
 	dataType** mask_pet = new dataType * [height_pet];
-	dataType** ball_pet = new dataType * [height_pet];
 	//int** segment = new int * [height_pet];
 	//bool** status = new bool* [height_pet];
 	for (k = 0; k < height_pet; k++) {
 		image_pet[k] = new dataType[length_pet * width_pet];
-		pet[k] = new short[length_pet * width_pet];
 		mask_pet[k] = new dataType[length_pet * width_pet];
-		ball_pet[k] = new dataType[length_pet * width_pet];
 		//segment[k] = new int[length_pet * width_pet];
 		//status[k] = new bool[length_pet * width_pet];
 	}
-	if (image_pet == NULL || pet == NULL || mask_pet == NULL)
+	if (image_pet == NULL || mask_pet == NULL)
 		return false;
 
 	for (k = 0; k < height_pet; k++) {
 		for (i = 0; i < length_pet * width_pet; i++) {
 			image_pet[k][i] = 0.0;
-			pet[k][i] = 0;
 			mask_pet[k][i] = 0.0;
-			ball_pet[k][i] = 0.0;
 			//segment[k][i] = 0;
 			//status[k][i] = false;
 		}
 	}
 
-	Image_Data IMAGE_PET;
-	IMAGE_PET.imageDataPtr = image_pet;
-	IMAGE_PET.height = height_pet; IMAGE_PET.length = length_pet; IMAGE_PET.width = width_pet;
-	IMAGE_PET.origin = originPET;
-	IMAGE_PET.spacing = spacingPET;
-	IMAGE_PET.orientation = orientation;
-
 	//inputImagePath = inputPath + "patient3_pet.raw";
-	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, true);
+	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
 
-	//outputImagePath = outputPath + "loadedPET.raw";
+	//std::string outputImagePath = outputPath + "loadedPET.raw";
 	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	////copy to mask
@@ -327,19 +383,37 @@ int main() {
 	//thresholding3dFunctionN(mask_pet, length_pet, width_pet, height_pet, 4250, 8000, 0.0, 1.0); //patient 5,6
 	//thresholding3dFunctionN(mask_pet, length_pet, width_pet, height_pet, 4250, 8000, 0.0, 1.0); //patient 7
 
-	/*==================  Interpolated Coordinates ========*/
+	/*==================  Interpolation ========*/
 
-	//Point3D centerCT = { imax, jmax, kmax }, centerPET = { 0.0, 0.0, 0.0 };
-	//centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
-	//centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
+	Image_Data IMAGE_CT;
+	IMAGE_CT.imageDataPtr = image_ct;
+	IMAGE_CT.height = Height; IMAGE_CT.length = Length; IMAGE_CT.width = Width;
+	IMAGE_CT.origin = originCT;
+	IMAGE_CT.spacing = spacingCT;
+	IMAGE_CT.orientation = orientation;
 
-	//int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
+	Image_Data IMAGE_PET;
+	IMAGE_PET.imageDataPtr = image_pet;
+	IMAGE_PET.height = height_pet; IMAGE_PET.length = length_pet; IMAGE_PET.width = width_pet;
+	IMAGE_PET.origin = originPET;
+	IMAGE_PET.spacing = spacingPET;
+	IMAGE_PET.orientation = orientation;
+
+	Point3D centerCT = { imax, jmax, kmax }, centerPET = { 0.0, 0.0, 0.0 };
+	centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
+	centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
+	int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
 	////std::cout << "Center PET (" << ipet << ", " << jpet << ", " << kpet << ")" << std::endl;
+
+	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+
+	//std::string outputImagePath = outputPath + "interpolated_ct.raw";
+	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	/*================= Local threshold for PET ==============*/
 
 	////Find threshold values around the point with the highest distance
-	//dataType local_max = 0.0, local_min = 100000000, radius = 7.0;
+	//dataType local_max = 0.0, local_min = 100000000, radius = 5.0;
 	//size_t x = 0, nb_local_voxels = 0;
 	//for (k = 0; k < height_pet; k++) {
 	//	for (i = 0; i < length_pet; i++) {
@@ -361,8 +435,8 @@ int main() {
 	//std::cout << "Local max = " << local_max << ", " << " Local min = " << local_min << std::endl;
 	//std::cout << nb_local_voxels << " voxels were used to find those local threshold values" << std::endl;
 
-	//outputImagePath = outputPath + "ball_pet.raw";
-	//manageRAWFile3D<dataType>(ball_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
+	////outputImagePath = outputPath + "ball_pet.raw";
+	////manageRAWFile3D<dataType>(ball_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	//thresholding3dFunctionN(mask_pet, length_pet, width_pet, height_pet, local_min, local_max, 0.0, 1.0);
 
@@ -372,8 +446,7 @@ int main() {
 	////erosion3dHeighteenNeigbours(mask_pet, length_pet, width_pet, height_pet, 1.0, 0.0);
 	////erosion3dHeighteenNeigbours(mask_pet, length_pet, width_pet, height_pet, 1.0, 0.0);
 	////erosion3dHeighteenNeigbours(mask_pet, length_pet, width_pet, height_pet, 1.0, 0.0);
-	////erosion3dHeighteenNeigbours(mask_pet, length_pet, width_pet, height_pet, 1.0, 0.0);
-	// 
+	//erosion3dHeighteenNeigbours(mask_pet, length_pet, width_pet, height_pet, 1.0, 0.0); 
 	//labelling3D(mask_pet, segment, status, length_pet, width_pet, height_pet, 1.0);
 
 	////number of region voxels
@@ -420,7 +493,8 @@ int main() {
 	//for (k = 0; k < height_pet; k++) {
 	//	for (i = 0; i < length_pet * width_pet; i++) {
 	//		if (segment[k][i] != 0) {
-	//			mask_pet[k][i] = 1.0;
+	//			//mask_pet[k][i] = 1.0;
+	//			mask_pet[k][i] = image_pet[k][i];
 	//			liver_volume++;
 	//		}
 	//		else {
@@ -430,62 +504,72 @@ int main() {
 	//}
 	//std::cout << "The segmented Liver volume is : " << liver_volume << " voxels" << std::endl;
 
-	//outputImagePath = outputPath + "biggest_region_pet.raw";
+	//std::string outputImagePath = outputPath + "biggest_region_pet_p3.raw";
 	//manageRAWFile3D<dataType>(mask_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	//free(countingArray);
 
 	/*============= Segmentation ================*/
 
-	//Point3D* center_seg = new Point3D[1];
+	Point3D* center_seg = new Point3D[1];
 	//center_seg->x = idown; center_seg->y = jdown; center_seg->z = kdown;
-	//center_seg->x = ipet; center_seg->y = jpet; center_seg->z = kpet;
 	//center_seg->x = imax; center_seg->y = jmax; center_seg->z = kmax;
+	center_seg->x = ipet; center_seg->y = jpet; center_seg->z = kpet;
+	
 
-	//dataType** initial_seg = new dataType * [height_pet];
-	//for (k = 0; k < height_pet; k++) {
-	//	initial_seg[k] = new dataType[length_pet * width_pet];
-	//}
-	//for (k = 0; k < height_pet; k++) {
-	//	for (i = 0; i < width_pet * length_pet; i++) {
-	//		initial_seg[k][i] = 0.0;
-	//	}
-	//}
+	dataType** initial_seg = new dataType * [height_pet];
+	for (k = 0; k < height_pet; k++) {
+		initial_seg[k] = new dataType[length_pet * width_pet];
+	}
+	for (k = 0; k < height_pet; k++) {
+		for (i = 0; i < width_pet * length_pet; i++) {
+			initial_seg[k][i] = 0.0;
+		}
+	}
 
-	//generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
+	//IMAGE_CT.imageDataPtr = maskThreshold;
+	//IMAGE_PET.imageDataPtr = initial_seg;
+	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
-	//Image_Data ImageToBeSegmented;
-	//ImageToBeSegmented.imageDataPtr = image_pet;
-	//ImageToBeSegmented.height = height_pet; ImageToBeSegmented.length = length_pet; ImageToBeSegmented.width = width_pet;
+	generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
 
-	//Segmentation_Parameters seg_params;
-	//seg_params.tau = 1.0; seg_params.h = 0.1; seg_params.omega_c = 1.4; seg_params.mod = 10;
-	//seg_params.maxNoGSIteration = 100; seg_params.coef = 100; seg_params.gauss_seidelTolerance = 1e-6;
-	//seg_params.maxNoOfTimeSteps = 4000; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
-	//seg_params.coef_conv = 10.0; seg_params.coef_dif = 1.0;
+	rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
+
+	std::string outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
+	manageRAWFile3D<dataType>(initial_seg, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
+
+	Image_Data ImageToBeSegmented;
+	ImageToBeSegmented.imageDataPtr = image_pet;
+	ImageToBeSegmented.height = height_pet; ImageToBeSegmented.length = length_pet; ImageToBeSegmented.width = width_pet;
+
+	Segmentation_Parameters seg_params;
+	seg_params.tau = 1.0; seg_params.h = 1.0; seg_params.omega_c = 1.4; seg_params.mod = 1;
+	seg_params.maxNoGSIteration = 100; seg_params.coef = 50000; seg_params.gauss_seidelTolerance = 1e-6;
+	seg_params.maxNoOfTimeSteps = 11; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
+	seg_params.coef_conv = 1.0; seg_params.coef_dif = 0.010;
 
 	//Smoothing by heat explicit so we don't need all the parameters
-	//Filter_Parameters parameters; parameters.coef = 1e-4;
-	//parameters.h = 6.0; parameters.timeStepSize = 1.0; parameters.timeStepsNum = 10;
+	Filter_Parameters parameters; parameters.coef = 1e-4;
+	parameters.h = seg_params.h; parameters.timeStepSize = parameters.h/6.0; parameters.timeStepsNum = 2; //10
 	//Filter_Parameters parameters; parameters.coef = 1e-4; parameters.edge_detector_coefficient = 1000; parameters.eps2 = 1e-4;
 	//parameters.h = 6.0; parameters.maxNumberOfSolverIteration = 100; parameters.omega_c = 1.4; parameters.p = 1;
 	//parameters.sigma = 0.1; parameters.timeStepSize = 1.0; parameters.timeStepsNum = 1; parameters.tolerance = 1e-6;
 
-	//unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
+	unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
 
-	////subsurfSegmentation(F_Image, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
-	//generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+	//subsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+	generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+
+	delete[] center_seg;
 
 	for (k = 0; k < Height; k++) {
 		delete[] image_ct[k];
-		delete[] ball[k];
 		delete[] maskThreshold[k];
 		delete[] distanceMap[k];
 		delete[] segment[k];
 		delete[] status[k];
 	}
 	delete[] image_ct;
-	delete[] ball;
 	delete[] maskThreshold;
 	delete[] distanceMap;
 	delete[] segment;
@@ -493,16 +577,14 @@ int main() {
 
 	for (k = 0; k < height_pet; k++) {
 		delete[] image_pet[k];
-		delete[] pet[k];
 		delete[] mask_pet[k];
-		delete[] ball_pet[k];
+		delete[] initial_seg[k];
 		//delete[] segment[k];
 		//delete[] status[k];
 	}
 	delete[] image_pet;
-	delete[] pet;
 	delete[] mask_pet;
-	delete[] ball_pet;
+	delete[] initial_seg;
 	//delete[] segment;
 	//delete[] status;
 
