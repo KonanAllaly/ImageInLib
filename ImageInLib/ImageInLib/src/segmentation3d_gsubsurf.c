@@ -636,18 +636,18 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 					/ (1 + coef_tauh * (CoefPtrs.e_Ptr[k][x] + CoefPtrs.w_Ptr[k][x] + CoefPtrs.s_Ptr[k][x] + CoefPtrs.n_Ptr[k][x] + CoefPtrs.b_Ptr[k][x] + CoefPtrs.t_Ptr[k][x]))));
 
 					// SOR implementation using Gauss-Seidel
-					dataType new_value = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
+					//dataType new_value = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 					//gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 
-					////don't change if the old value is 1.0
-					//if(gauss_seidelPtr[k_ext][x_ext] != 1.0){
-					//	gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
-					//}
-
-					//don't change if the old value is higher than the new one
-					if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
-						gauss_seidelPtr[k_ext][x_ext] = new_value;
+					//don't change if the old value was 1.0
+					if(gauss_seidelPtr[k_ext][x_ext] != 1.0){
+						gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 					}
+
+					////don't change if the old value is higher than the new one
+					//if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
+					//	gauss_seidelPtr[k_ext][x_ext] = new_value;
+					//}
 
 				}
 			}
