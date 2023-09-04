@@ -166,25 +166,26 @@ int main() {
 	//std::cout << "Distance max = " << dist_max << std::endl;
 	//std::cout << "Center CT (" << imax << ", " << jmax << ", " << kmax << ")" << std::endl;
 
-	////ball in the Liver
-	//dataType radius = 5.0;
+	//ball in the Liver
+	dataType radius = 5.0;
 	//for (k = 0; k < Height; k++) {
 	//	for (i = 0; i < Length; i++) {
 	//		for (j = 0; j < Width; j++) {
 	//			if (sqrt((imax - i) * (imax - i) + (jmax - j) * (jmax - j) + (kmax - k) * (kmax - k)) < radius) {
-	//				ball[k][x_new(i, j, Length)] = 1;
+	//				//ball[k][x_new(i, j, Length)] = 1;
+	//				image_ct[k][x_new(i, j, Length)] = 0;
 	//			}
-	//			else {
-	//				ball[k][x_new(i, j, Length)] = 0;
-	//			}
+	//			//else {
+	//			//	ball[k][x_new(i, j, Length)] = 0;
+	//			//}
 	//		}
 	//	}
 	//}
-	//outputImagePath = outputPath + "ballP4.raw";
-	//manageRAWFile3D<dataType>(ball, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	//outputImagePath = outputPath + "ball_image_ct.raw";
+	//manageRAWFile3D<dataType>(image_ct, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//Find threshold values around the point with the highest distance
-	dataType local_max = 0.0, local_min = 1000000, radius = 10.0;
+	dataType local_max = 0.0, local_min = 1000000;// radius = 10.0;
 	size_t x = 0, voxel_used = 0;
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < Length; i++) {
@@ -413,18 +414,41 @@ int main() {
 	Point3D centerCT = { imax, jmax, kmax }, centerPET = { 0.0, 0.0, 0.0 };
 	centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
 
+	centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
+	int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
+
 	//inputImagePath = inputPath + "patient3_pet.raw";
 	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
 
-	//Statistics stats = getStatisticsPET(IMAGE_PET, centerPET, 5.0);
+	//Statistics stats = getStatistics(IMAGE_PET, centerPET, 5.0);
 
 	//std::cout << " Stats : max = " << stats.max_data << ", min = " << ", mean = " << stats.mean_data << ", sd = " << stats.sd_data << std::endl;
 
-	centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
-	int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
+	//centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
+	//int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
 	////std::cout << "Center PET (" << ipet << ", " << jpet << ", " << kpet << ")" << std::endl;
 
 	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+
+	//Point3D current_point = { 0.0, 0.0, 0.0 };
+	//double distPoint = 0.0;
+	//for (k = 0; k < height_pet; k++) {
+	//	for (i = 0; i < length_pet; i++) {
+	//		for (j = 0; j < width_pet; j++) {
+	//			current_point.x = i; current_point.y = j; current_point.z = k;
+	//			distPoint = getPoint3DDistance(centerPET, current_point);
+	//			if (distPoint < 5) {
+	//				mask_pet[k][x_new(i, j, length_pet)] = 1.0;
+	//				image_pet[k][x_new(i, j, length_pet)] = 4000;
+	//			}
+	//			else {
+	//				mask_pet[k][x_new(i, j, length_pet)] = 0.0;
+	//			}
+	//		}
+	//	}
+	//}
+	//outputImagePath = outputPath + "ball_in_image.raw";
+	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
 	//std::string outputImagePath = outputPath + "interpolated_ct.raw";
 	//manageRAWFile3D<dataType>(image_pet, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
@@ -576,7 +600,7 @@ int main() {
 	unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
 
 	//subsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
-	generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+	//generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
 
 	delete[] center_seg;
 
