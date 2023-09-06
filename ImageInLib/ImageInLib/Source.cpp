@@ -198,21 +198,21 @@ int main() {
 			maskThreshold[k][i] = image_ct[k][i];
 		}
 	}
-	//thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
+	thresholding3dFunctionN(maskThreshold, Length, Width, Height, local_min, local_max, 0.0, 1.0);
 
 	/*===================== Labelling CT ========================================*/
 
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
-	outputImagePath = outputPath + "afterErosion.raw";
+	//outputImagePath = outputPath + "afterErosion.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
-	//labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
+	labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
 
 	//number of region voxels
 	int numberOfRegionsCells = 0;
@@ -281,7 +281,7 @@ int main() {
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	////dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
 
-	outputImagePath = outputPath + "biggest_region.raw";
+	//outputImagePath = outputPath + "biggest_region.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
@@ -308,7 +308,7 @@ int main() {
 	//std::cout << "The segmented Liver contains : " << liver_number_of_voxel << " voxels" << std::endl;
 
 	//std::cout << "Stat inside the segmented Live : max = " << max_liver << ", min = " << min_liver << std::endl;
-	outputImagePath = outputPath + "biggest_region_with_one_dilatation.raw";
+	//outputImagePath = outputPath + "biggest_region_with_one_dilatation.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
 	//dataType * center = (dataType*)malloc(3 * sizeof(dataType));
@@ -331,9 +331,9 @@ int main() {
 
 	/*===================== Data container for orginal PET data =============*/
 
-	//const size_t height_pet = 255, length_pet = 144, width_pet = 144; // patient2
+	const size_t height_pet = 255, length_pet = 144, width_pet = 144; // patient2
 
-	const size_t height_pet = 255, length_pet = 144, width_pet = 144; // patient3
+	//const size_t height_pet = 318, length_pet = 144, width_pet = 144; // patient3
 	 
 	//const size_t height_pet = 192, length_pet = 81, width_pet = 120; // patient1
 	//const size_t height_pet = 195, length_pet = 128, width_pet = 128; // patient4, patient5
@@ -384,136 +384,129 @@ int main() {
 	//thresholding3dFunctionN(mask_pet, length_pet, width_pet, height_pet, 4250, 8000, 0.0, 1.0); //patient 5,6
 	//thresholding3dFunctionN(mask_pet, length_pet, width_pet, height_pet, 4250, 8000, 0.0, 1.0); //patient 7
 
-	inputImagePath = inputPath + "_seg_func_00.raw";
-	manageRAWFile3D<dataType>(mask_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
+	//inputImagePath = inputPath + "_seg_func_00.raw";
+	//manageRAWFile3D<dataType>(mask_pet, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
 
-	inputImagePath = inputPath + "_seg_func_300.raw";
-	manageRAWFile3D<dataType>(inproved_liver, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
+	//inputImagePath = inputPath + "_seg_func_300.raw";
+	//manageRAWFile3D<dataType>(inproved_liver, length_pet, width_pet, height_pet, inputImagePath.c_str(), LOAD_DATA, false);
 
-	for (k = 0; k < height_pet; k++) {
-		for (i = 0; i < length_pet * width_pet; i++) {
-			if (inproved_liver[k][i] >= 0.75) {
-				inproved_liver[k][i] = 1.0;
-			}
-			else {
-				inproved_liver[k][i] = 0.0;
-			}
-		}
-	}
+	//for (k = 0; k < height_pet; k++) {
+	//	for (i = 0; i < length_pet * width_pet; i++) {
+	//		if (inproved_liver[k][i] >= 0.75) {
+	//			inproved_liver[k][i] = 1.0;
+	//		}
+	//		else {
+	//			inproved_liver[k][i] = 0.0;
+	//		}
+	//	}
+	//}
 
-	dataType* center1 = (dataType*)malloc(3 * sizeof(dataType));
-	dataType* center2 = (dataType*)malloc(3 * sizeof(dataType));
+	//dataType* center1 = (dataType*)malloc(3 * sizeof(dataType));
+	//dataType* center2 = (dataType*)malloc(3 * sizeof(dataType));
 
-	centroidImage(mask_pet, center1, height_pet, length_pet, width_pet, 0.0);
-	centroidImage(inproved_liver, center2, height_pet, length_pet, width_pet, 0.0);
+	//centroidImage(mask_pet, center1, height_pet, length_pet, width_pet, 0.0);
+	//centroidImage(inproved_liver, center2, height_pet, length_pet, width_pet, 0.0);
 
-	Point3D segment_centroid = { center1[0], center1[1], center1[2] };
-	Point3D inproved_centroid = { center2[0], center2[1], center2[2] };
-	Point3D slicer_centroid = { -72.5352, 71.2067, -510.802 };
+	//Point3D segment_centroid = { center1[0], center1[1], center1[2] };
+	//Point3D inproved_centroid = { center2[0], center2[1], center2[2] };
+	//Point3D slicer_centroid = { -72.5352, 71.2067, -510.802 };
 
-	segment_centroid = getRealCoordFromImageCoord3D(segment_centroid, originPET, spacingPET, orientation);
-	inproved_centroid = getRealCoordFromImageCoord3D(inproved_centroid, originPET, spacingPET, orientation);
-	point_found = getRealCoordFromImageCoord3D(point_found, originCT, spacingCT, orientation);
+	//segment_centroid = getRealCoordFromImageCoord3D(segment_centroid, originPET, spacingPET, orientation);
+	//inproved_centroid = getRealCoordFromImageCoord3D(inproved_centroid, originPET, spacingPET, orientation);
+	//point_found = getRealCoordFromImageCoord3D(point_found, originCT, spacingCT, orientation);
 
-	double dist1 = getPoint3DDistance(point_found, segment_centroid);
-	std::cout << " The distance segment liver - point found = " << dist1 << std::endl;
+	//double dist1 = getPoint3DDistance(point_found, segment_centroid);
+	//std::cout << " The distance segment liver - point found = " << dist1 << std::endl;
 
-	double dist2 = getPoint3DDistance(point_found, inproved_centroid);
-	std::cout << " The distance inproved segment centroid - point found = " << dist2 << std::endl;
+	//double dist2 = getPoint3DDistance(point_found, inproved_centroid);
+	//std::cout << " The distance inproved segment centroid - point found = " << dist2 << std::endl;
 
-	double dist3 = getPoint3DDistance(segment_centroid, inproved_centroid);
-	std::cout << " The distance inproved segment centroid - segment centroid = " << dist3 << std::endl;
+	//double dist3 = getPoint3DDistance(segment_centroid, inproved_centroid);
+	//std::cout << " The distance inproved segment centroid - segment centroid = " << dist3 << std::endl;
 
-	double dist4 = getPoint3DDistance(point_found, slicer_centroid);
-	std::cout << " The distance found point - slicer centroid = " << dist4 << std::endl;
+	//double dist4 = getPoint3DDistance(point_found, slicer_centroid);
+	//std::cout << " The distance found point - slicer centroid = " << dist4 << std::endl;
 
-	dist4 = getPoint3DDistance(inproved_centroid, slicer_centroid);
-	std::cout << " The distance inproved - slicer centroid = " << dist4 << std::endl;
+	//dist4 = getPoint3DDistance(inproved_centroid, slicer_centroid);
+	//std::cout << " The distance inproved - slicer centroid = " << dist4 << std::endl;
 
-	dist4 =  getPoint3DDistance(segment_centroid, slicer_centroid);
-	std::cout << " The distance segment - slicer centroid = " << dist4 << std::endl;
+	//dist4 =  getPoint3DDistance(segment_centroid, slicer_centroid);
+	//std::cout << " The distance segment - slicer centroid = " << dist4 << std::endl;
 
-	dataType** ball1 = new dataType * [height_pet];
-	dataType** ball2 = new dataType * [height_pet];
-	dataType** ball3 = new dataType * [height_pet];
-	dataType** ball4 = new dataType * [height_pet];
-	for (k = 0; k < height_pet; k++) {
-		ball1[k] = new dataType[length_pet * width_pet];
-		ball2[k] = new dataType[length_pet * width_pet];
-		ball3[k] = new dataType[length_pet * width_pet];
-		ball4[k] = new dataType[length_pet * width_pet];
-	}
+	//dataType** ball1 = new dataType * [height_pet];
+	//dataType** ball2 = new dataType * [height_pet];
+	//dataType** ball3 = new dataType * [height_pet];
+	//dataType** ball4 = new dataType * [height_pet];
+	//for (k = 0; k < height_pet; k++) {
+	//	ball1[k] = new dataType[length_pet * width_pet];
+	//	ball2[k] = new dataType[length_pet * width_pet];
+	//	ball3[k] = new dataType[length_pet * width_pet];
+	//	ball4[k] = new dataType[length_pet * width_pet];
+	//}
 
-	Point3D current_point = {0.0, 0.0, 0.0};
-	for (k = 0; k < height_pet; k++) {
-		for (i = 0; i < length_pet; i++) {
-			for (j = 0; j < width_pet; j++) {
+	//Point3D current_point = {0.0, 0.0, 0.0};
+	//for (k = 0; k < height_pet; k++) {
+	//	for (i = 0; i < length_pet; i++) {
+	//		for (j = 0; j < width_pet; j++) {
+	//			current_point.x = (dataType)i; current_point.y = (dataType)j; current_point.z = (dataType)k;
+	//			current_point = getRealCoordFromImageCoord3D(current_point, originPET, spacingPET, orientation);
+	//			dist1 = getPoint3DDistance(current_point, point_found);
+	//			dist2 = getPoint3DDistance(current_point, segment_centroid);
+	//			dist3 = getPoint3DDistance(current_point, inproved_centroid);
+	//			dist4 = getPoint3DDistance(current_point, slicer_centroid);
+	//			x = x_new(i, j, length_pet);
+	//			if (dist1 < 10) {
+	//				ball1[k][x] = 1.0;
+	//			}
+	//			else {
+	//				ball1[k][x] = 0.0;
+	//			}
+	//			if (dist2 < 10) {
+	//				ball2[k][x] = 1.0;
+	//			}
+	//			else {
+	//				ball2[k][x] = 0.0;
+	//			}
+	//			if (dist3 < 10) {
+	//				ball3[k][x] = 1.0;
+	//			}
+	//			else {
+	//				ball3[k][x] = 0.0;
+	//			}
+	//			if (dist4 < 10) {
+	//				ball4[k][x] = 1.0;
+	//			}
+	//			else {
+	//				ball4[k][x] = 0.0;
+	//			}
+	//		}
+	//	}
+	//}
 
-				current_point.x = (dataType)i; current_point.y = (dataType)j; current_point.z = (dataType)k;
-				current_point = getRealCoordFromImageCoord3D(current_point, originPET, spacingPET, orientation);
-				dist1 = getPoint3DDistance(current_point, point_found);
-				dist2 = getPoint3DDistance(current_point, segment_centroid);
-				dist3 = getPoint3DDistance(current_point, inproved_centroid);
-				dist4 = getPoint3DDistance(current_point, slicer_centroid);
+	//outputImagePath = outputPath + "ball_around_found_point.raw";
+	//manageRAWFile3D<dataType>(ball1, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
-				x = x_new(i, j, length_pet);
+	//outputImagePath = outputPath + "ball_around_segment_centroid.raw";
+	//manageRAWFile3D<dataType>(ball2, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
-				if (dist1 < 10) {
-					ball1[k][x] = 1.0;
-				}
-				else {
-					ball1[k][x] = 0.0;
-				}
+	//outputImagePath = outputPath + "ball_around_inproved_centroid.raw";
+	//manageRAWFile3D<dataType>(ball3, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
-				if (dist2 < 10) {
-					ball2[k][x] = 1.0;
-				}
-				else {
-					ball2[k][x] = 0.0;
-				}
+	//outputImagePath = outputPath + "ball_around_slicer_centroid.raw";
+	//manageRAWFile3D<dataType>(ball4, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
 
-				if (dist3 < 10) {
-					ball3[k][x] = 1.0;
-				}
-				else {
-					ball3[k][x] = 0.0;
-				}
-
-				if (dist4 < 10) {
-					ball4[k][x] = 1.0;
-				}
-				else {
-					ball4[k][x] = 0.0;
-				}
-
-			}
-		}
-	}
-
-	outputImagePath = outputPath + "ball_around_found_point.raw";
-	manageRAWFile3D<dataType>(ball1, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
-
-	outputImagePath = outputPath + "ball_around_segment_centroid.raw";
-	manageRAWFile3D<dataType>(ball2, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
-
-	outputImagePath = outputPath + "ball_around_inproved_centroid.raw";
-	manageRAWFile3D<dataType>(ball3, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
-
-	outputImagePath = outputPath + "ball_around_slicer_centroid.raw";
-	manageRAWFile3D<dataType>(ball4, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
-
-	free(center1);
-	free(center2);
-	for (k = 0; k < height_pet; k++) {
-		delete[] ball1[k];
-		delete[] ball2[k];
-		delete[] ball3[k];
-		delete[] ball4[k];
-	}
-	delete[] ball1;
-	delete[] ball2;
-	delete[] ball3;
-	delete[] ball4;
+	//free(center1);
+	//free(center2);
+	//for (k = 0; k < height_pet; k++) {
+	//	delete[] ball1[k];
+	//	delete[] ball2[k];
+	//	delete[] ball3[k];
+	//	delete[] ball4[k];
+	//}
+	//delete[] ball1;
+	//delete[] ball2;
+	//delete[] ball3;
+	//delete[] ball4;
 
 	/*==================  Interpolation ========*/
 
@@ -532,9 +525,8 @@ int main() {
 	IMAGE_PET.orientation = orientation;
 
 	Point3D centerCT = { imax, jmax, kmax }, centerPET = { 0.0, 0.0, 0.0 };
-	//centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
-
-	//centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
+	centerPET = getRealCoordFromImageCoord3D(centerCT, originCT, spacingCT, orientation);
+	centerPET = getImageCoordFromRealCoord3D(centerPET, originPET, spacingPET, orientation);
 	int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
 
 	//inputImagePath = inputPath + "patient3_pet.raw";
@@ -547,7 +539,7 @@ int main() {
 	//int ipet = (int)centerPET.x, jpet = (int)centerPET.y, kpet = (int)centerPET.z;
 	////std::cout << "Center PET (" << ipet << ", " << jpet << ", " << kpet << ")" << std::endl;
 
-	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
 	//Point3D current_point = { 0.0, 0.0, 0.0 };
 	//double distPoint = 0.0;
@@ -694,11 +686,11 @@ int main() {
 
 	IMAGE_CT.imageDataPtr = maskThreshold;
 	IMAGE_PET.imageDataPtr = initial_seg;
-	//imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
+	imageInterpolation3D(IMAGE_CT, IMAGE_PET, TRILINEAR);
 
 	//generateInitialSegmentationFunctionForMultipleCentres(initial_seg, length_pet, width_pet, height_pet, center_seg, 1.0, 10.0, 1.0);
 
-	//rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
+	rescaleNewRange(image_pet, length_pet, width_pet, height_pet, 0.0, 1.0, 4000.0, 0.0);
 
 	outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
 	//manageRAWFile3D<dataType>(initial_seg, length_pet, width_pet, height_pet, outputImagePath.c_str(), STORE_DATA, false);
@@ -708,9 +700,9 @@ int main() {
 	ImageToBeSegmented.height = height_pet; ImageToBeSegmented.length = length_pet; ImageToBeSegmented.width = width_pet;
 
 	Segmentation_Parameters seg_params;
-	seg_params.tau = 1.0; seg_params.h = 1.0; seg_params.omega_c = 1.4; seg_params.mod = 10;
+	seg_params.tau = 0.1; seg_params.h = 1.0; seg_params.omega_c = 1.4; seg_params.mod = 10;
 	seg_params.maxNoGSIteration = 100; seg_params.coef = 50000; seg_params.gauss_seidelTolerance = 1e-3;
-	seg_params.maxNoOfTimeSteps = 1000; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
+	seg_params.maxNoOfTimeSteps = 100; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
 	seg_params.coef_conv = 1.0; seg_params.coef_dif = 0.010;
 
 	//Smoothing by heat explicit so we don't need all the parameters
@@ -723,7 +715,7 @@ int main() {
 	unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
 
 	//subsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
-	//generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
+	generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
 
 	delete[] center_seg;
 

@@ -593,7 +593,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 		return false;
 
 	size_t k, i, j;
-	dataType hh = segParameters.h * segParameters.h, hhh = segParameters.h * segParameters.h * segParameters.h;
+	dataType hh = segParameters.h * segParameters.h;
 	dataType tau = segParameters.tau;
 
 	// Error value used to check iteration
@@ -610,7 +610,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 	size_t x_ext; //x_ext = x_new(i_ext, j_ext, length_ext);
 	size_t z; // Steps counter
 
-	const dataType coef_tauh = tau / hhh;
+	const dataType coef_tauh = tau / hh;
 
 	// The Implicit Scheme Evaluation
 	z = 0;
@@ -670,7 +670,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 							+ CoefPtrs.s_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
 							+ CoefPtrs.n_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)]
 							+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] + CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])
-						- prevSol_extPtr[k_ext][x_ext], 2) * hhh);
+						- prevSol_extPtr[k_ext][x_ext], 2) * hh);
 				}
 			}
 		}
