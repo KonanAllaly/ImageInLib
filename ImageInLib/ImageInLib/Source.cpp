@@ -34,8 +34,15 @@
 #define _sz 2.5
 #define _s_pet 4
 
-#define thres_min 995
-#define thres_max 1213
+//#define thres_min 995
+//#define thres_max 1213
+
+#define orig_thres_min -29
+#define orig_thres_max 189
+#define orig_min -3024
+
+#define thres_min orig_thres_min - orig_min
+#define thres_max orig_thres_max - orig_min
 
 int main() {
 
@@ -212,7 +219,7 @@ int main() {
 	//std::string outputImagePath = outputPath + "patient5_ct_new.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 
-	thresholding3dFunctionN(maskThreshold, Length, Width, Height, 3000, 4000, 0.0, 1.0);
+	thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
 
 	//outputImagePath = outputPath + "threshold.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
