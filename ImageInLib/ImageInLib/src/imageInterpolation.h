@@ -136,7 +136,17 @@ extern "C" {
 	*/
 	bool imageInterpolation2D(Image_Data2D src_image, Image_Data2D dest_image, interpolationMethod method);
 
-	Statistics getStatisticsPET(Image_Data imageData, Point3D point_ct, dataType radius);
+	/*
+	* This function return statistics (min, max, mean, standart deviation) in image
+	* around given point in real world coordinates system
+	* getStatistics(Image_Data imageData, Point3D point_ct, dataType radius);
+	* imageData : structure containing the information of the image (lenght, width, heigth, origin, voxels value...)
+	* point : the given point in real world coordinates system
+	* radius : radium of the region (ball) where to compute the statistics
+	*/
+	Statistics getStatistics(Image_Data imageData, Point3D point_ct, dataType radius);
+
+	Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radius);
 
 #ifdef __cplusplus
 }
