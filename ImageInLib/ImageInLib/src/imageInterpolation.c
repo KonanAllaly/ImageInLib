@@ -355,11 +355,11 @@ bool imageInterpolation3D(Image_Data src_image, Image_Data dest_image, interpola
     return true;
 }
 
-Statistics getStatisticsPET(Image_Data imageData, Point3D point_ct, dataType radius) {
+Statistics getStatistics(Image_Data imageData, Point3D point_ct, dataType radius) {
     
     size_t i, j, k, nb_point = 0;
     Statistics result;
-    Point3D point_pet = getImageCoordFromRealCoord3D(point_ct, imageData.origin, imageData.spacing, imageData.orientation);
+    //Point3D point_pet;// = getImageCoordFromRealCoord3D(point_ct, imageData.origin, imageData.spacing, imageData.orientation);
     dataType sum = 0.0;
     result.max_data = 0.0; result.min_data = 1000000000000000;
 
@@ -367,7 +367,9 @@ Statistics getStatisticsPET(Image_Data imageData, Point3D point_ct, dataType rad
         for (i = 0; i < imageData.length; i++) {
             for (j = 0; j < imageData.width; j++) {
                 Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-                dataType dist = getPoint3DDistance(point_pet, current_point);
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                dataType dist = getPoint3DDistance(point_ct, current_point);
+
                 //We are considering just voxel in a ball defined by the radius
                 if (dist <= radius) {
                     dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, imageData.length)];
@@ -391,7 +393,153 @@ Statistics getStatisticsPET(Image_Data imageData, Point3D point_ct, dataType rad
         for (i = 0; i < imageData.length; i++) {
             for (j = 0; j < imageData.width; j++) {
                 Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-                dataType dist = getPoint3DDistance(point_pet, current_point);
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                dataType dist = getPoint3DDistance(point_ct, current_point);
+                if (dist <= radius) {
+                    sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, imageData.length)] - result.mean_data, 2);
+                }
+            }
+        }
+    }
+
+    result.sd_data = sqrt(sum_diff / (dataType)nb_point);
+
+    return result;
+}
+
+//point_of_interest is in real world coordinates system
+Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radius) {
+
+    size_t i, j, k, nb_point = 0;
+    Statistics result;
+
+    //get the image coordinate of he point of interest
+    //point_of_interest = getImageCoordFromRealCoord3D(point_of_interest, imageData.origin, imageData.spacing, imageData.orientation);
+    //int i_point = (int)point_of_interest.x, j_point = (int)point_of_interest.y, k_point = (int)point_of_interest.z;
+
+    //dataType x_top = point_of_interest.x - radius;
+    //dataType y_top = point_of_interest.y - radius;
+    //dataType z_top = point_of_interest.z - radius;
+
+    Point3D top_left_neighbor = { point_of_interest.x - radius, point_of_interest.y - radius, point_of_interest.z - radius };
+
+    //dataType x_bottom = x_top + 2 * radius;
+    //dataType y_bottom = y_top + 2 * radius;
+    //dataType z_bottom = z_top + 2 * radius;
+
+    //the orientation should be considered for more robust case
+    Point3D bottom_rigth_neighbor = { top_left_neighbor.x + 2 * radius, top_left_neighbor.y + 2 * radius, top_left_neighbor.z + 2 * radius };
+
+    top_left_neighbor = getImageCoordFromRealCoord3D(top_left_neighbor, imageData.origin, imageData.spacing, imageData.orientation);
+    bottom_rigth_neighbor = getImageCoordFromRealCoord3D(bottom_rigth_neighbor, imageData.origin, imageData.spacing, imageData.orientation);
+
+    size_t i_min = 0, i_max = 0, j_min = 0, j_max = 0, k_min = 0, k_max = 0;
+
+    if (top_left_neighbor.x < 0) {
+        i_min = 0;
+    }
+    else {
+        if (top_left_neighbor.x > imageData.length - 1) {
+            i_min = imageData.length - 1;
+        }
+        else {
+            i_min = (size_t)top_left_neighbor.x;
+        }
+    }
+
+    if (top_left_neighbor.y < 0) {
+        j_min = 0;
+    }
+    else {
+        if (top_left_neighbor.y > imageData.width - 1) {
+            j_min = imageData.width - 1;
+        }
+        else {
+            j_min = (size_t)top_left_neighbor.y;
+        }
+    }
+
+    if (top_left_neighbor.z < 0) {
+        k_min = 0;
+    }
+    else {
+        if (top_left_neighbor.z > imageData.height - 1) {
+            k_min = imageData.height - 1;
+        }
+        else {
+            k_min = (size_t)top_left_neighbor.z;
+        }
+    }
+
+    if (bottom_rigth_neighbor.x < 0) {
+        i_max = 0;
+    }
+    else {
+        if (bottom_rigth_neighbor.x > imageData.length - 1) {
+            i_max = imageData.length - 1;
+        }
+        else {
+            i_max = (size_t)bottom_rigth_neighbor.x;
+        }
+    }
+
+    if (bottom_rigth_neighbor.y < 0) {
+        j_max = 0;
+    }
+    else {
+        if (bottom_rigth_neighbor.y > imageData.width - 1) {
+            j_max = imageData.width - 1;
+        }
+        else {
+            j_max = (size_t)bottom_rigth_neighbor.y;
+        }
+    }
+
+    if (bottom_rigth_neighbor.z < 0) {
+        k_max = 0;
+    }
+    else {
+        if (bottom_rigth_neighbor.z > imageData.height - 1) {
+            k_max = imageData.height - 1;
+        }
+        else {
+            k_max = (size_t)bottom_rigth_neighbor.z;
+        }
+    }
+
+    double sum = 0.0;
+    result.max_data = 0.0; result.min_data = 1000000000000000;
+
+    for (k = k_min; k <= k_max; k++) {
+        for (i = i_min; i <= i_max; i++) {
+            for (j = j_min; j <= j_max; j++) {
+                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                double dist = getPoint3DDistance(point_of_interest, current_point);
+                if (dist <= radius) {
+                    dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, imageData.length)];
+                    if (voxel_value < result.min_data) {
+                        result.min_data = voxel_value;
+                    }
+                    if (voxel_value > result.max_data) {
+                        result.max_data = voxel_value;
+                    }
+                    sum = sum + voxel_value;
+                    nb_point = nb_point + 1;
+                }
+            }
+        }
+    }
+
+    result.mean_data = sum / (dataType)nb_point;
+
+    dataType sum_diff = 0.0;
+    for (k = k_min; k <= k_max; k++) {
+        for (i = i_min; i <= i_max; i++) {
+            for (j = j_min; j <= j_max; j++) {
+                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                double dist = getPoint3DDistance(point_of_interest, current_point);
                 if (dist <= radius) {
                     sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, imageData.length)] - result.mean_data, 2);
                 }
