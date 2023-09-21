@@ -594,6 +594,252 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 
 //===========================================================
 
+bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius) {
+	size_t i, j, k, x;
+
+	for (k = 0; k < imageData.height; k++) {
+		for (i = 0; i < imageData.length; i++) {
+			for (j = 0; j < imageData.width; j++) {
+				x = x_new(i, j, imageData.length);
+				Point3D current_point = { i, j, k };
+				current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+				Statistics current_stats = getStats(imageData, current_point, radius);
+				statsImage.maximum[k][x] = current_stats.max_data;
+				statsImage.minimum[k][x] = current_stats.min_data;
+				statsImage.mean[k][x] = current_stats.mean_data;
+				statsImage.sd[k][x] = current_stats.sd_data;
+			}
+		}
+	}
+	return true;
+}
+
+bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statictics_Pointers statsImage, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params) {
+
+	size_t i, j, k;
+	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+	const size_t dim2D = length * width;
+
+	size_t i0 = (size_t)seedPoints[0].y, j0 = (size_t)seedPoints[0].x, k0 = (size_t)seedPoints[0].z;
+	size_t i1 = (size_t)seedPoints[1].y, j1 = (size_t)seedPoints[1].x, k1 = (size_t)seedPoints[1].z;
+
+	dataType** gradientVectorX = new dataType * [height];
+	dataType** gradientVectorY = new dataType * [height];
+	dataType** gradientVectorZ = new dataType * [height];
+	dataType** edgeDetector = new dataType * [height];
+	dataType** potential_pet = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		gradientVectorX[k] = new dataType[dim2D];
+		gradientVectorY[k] = new dataType[dim2D];
+		gradientVectorZ[k] = new dataType[dim2D];
+		edgeDetector[k] = new dataType[dim2D];
+		potential_pet[k] = new dataType[dim2D];
+	}
+	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || edgeDetector == NULL || potential_pet == NULL)
+		return false;
+
+	//Initialization
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			gradientVectorX[k][i] = 0.0;
+			gradientVectorY[k][i] = 0.0;
+			gradientVectorZ[k][i] = 0.0;
+			edgeDetector[k][i] = 0.0;
+			potential_pet[k][i] = 0.0;
+		}
+	}
+
+	Image_Data interpolatedPET; interpolatedPET.imageDataPtr = potential_pet;
+	interpolatedPET.height = height; interpolatedPET.length = length; interpolatedPET.width = width;
+	interpolatedPET.origin = ctImageData.origin; interpolatedPET.spacing = ctImageData.spacing; interpolatedPET.orientation = ctImageData.orientation;
+
+	imageInterpolation3D(petImageData, interpolatedPET, NEAREST_NEIGHBOR);
+
+	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
+
+	//generateStatisticsImages(ctImageData, statsImage, radius);
+	//store3dRawData<dataType>(statsImage.maximum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_max_r4.raw");
+	//store3dRawData<dataType>(statsImage.minimum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_min_r4.raw");
+	//store3dRawData<dataType>(statsImage.mean, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_mean_r4.raw");
+	//store3dRawData<dataType>(statsImage.sd, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_sd_r4.raw");
+
+	size_t seedIndice0 = x_new(j0, i0, width), seedIndice1 = x_new(j1, i1, width), currentIndx = 0;
+	dataType seedValCT = (ctImageData.imageDataPtr[k0][seedIndice0] + ctImageData.imageDataPtr[k1][seedIndice1]) / 2.0;
+	dataType seedValPET = (potential_pet[k0][seedIndice0] + potential_pet[k1][seedIndice1]) / 2.0;
+	dataType seedValMean = (statsImage.mean[k0][seedIndice0] + statsImage.mean[k1][seedIndice1]) / 2.0;
+	dataType seedValMax = (statsImage.maximum[k0][seedIndice0] + statsImage.maximum[k1][seedIndice1]) / 2.0;
+	dataType seedValMin = (statsImage.minimum[k0][seedIndice0] + statsImage.minimum[k1][seedIndice1]) / 2.0;
+	dataType seedValSd = (statsImage.sd[k0][seedIndice0] + statsImage.sd[k1][seedIndice1]) / 2.0;
+
+	dataType ux = 0.0, uy = 0.0, uz = 0.0;
+
+	//Computation of potential function
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				currentIndx = x_new(j, i, width);
+				potential[k][currentIndx] = abs(seedValCT - ctImageData.imageDataPtr[k][currentIndx]);
+				potential_pet[k][currentIndx] = abs(seedValPET - potential_pet[k][currentIndx]);
+				statsImage.mean[k][currentIndx] = abs(seedValMean - statsImage.mean[k][currentIndx]);
+				statsImage.maximum[k][currentIndx] = abs(seedValMax - statsImage.maximum[k][currentIndx]);
+				statsImage.minimum[k][currentIndx] = abs(seedValMin - statsImage.minimum[k][currentIndx]);
+				statsImage.sd[k][currentIndx] = abs(seedValSd - statsImage.sd[k][currentIndx]);
+			}
+		}
+	}
+
+	//Find the max of each potential for normalization
+	dataType maxImage = -1 * INFINITY, maxPET = -1 * INFINITY, maxMax = -1 * INFINITY, maxMin = -1 * INFINITY, maxMean = -1 * INFINITY, maxSd = -1 * INFINITY;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				currentIndx = x_new(j, i, width);
+				if (potential[k][currentIndx] > maxImage) {
+					maxImage = potential[k][currentIndx];
+				}
+				if (potential_pet[k][currentIndx] > maxPET) {
+					maxPET = potential_pet[k][currentIndx];
+				}
+				if (statsImage.maximum[k][currentIndx] > maxMax) {
+					maxMax = statsImage.maximum[k][currentIndx];
+				}
+				if (statsImage.minimum[k][currentIndx] > maxMin) {
+					maxMin = statsImage.minimum[k][currentIndx];
+				}
+				if (statsImage.mean[k][currentIndx] > maxMean) {
+					maxMean = statsImage.mean[k][currentIndx];
+				}
+				if (statsImage.sd[k][currentIndx] > maxSd) {
+					maxSd = statsImage.sd[k][currentIndx];
+				}
+			}
+		}
+	}
+
+	//Normalization
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				currentIndx = x_new(j, i, width);
+				ux = gradientVectorX[k][currentIndx];
+				uy = gradientVectorY[k][currentIndx];
+				uz = gradientVectorZ[k][currentIndx];
+				dataType edge_value = 1 + params.K * (ux * ux + uy * uy + uz * uz);
+				edgeDetector[k][currentIndx] = edge_value;
+				potential[k][currentIndx] = params.epsilon + sqrt( params.c_ct * pow(potential[k][currentIndx] / maxImage, 2) 
+											+ params.c_pet * pow(potential_pet[k][currentIndx] / maxPET, 2)
+				                            + params.c_max * pow(statsImage.maximum[k][currentIndx] / maxMax, 2)
+											+ params.c_min * pow(statsImage.minimum[k][currentIndx] / maxMin, 2)
+											+ params.c_mean * pow(statsImage.mean[k][currentIndx] / maxMean, 2)
+											+ params.c_sd * pow(statsImage.sd[k][currentIndx] / maxSd, 2)) * edge_value;
+			}
+		}
+	}
+	//store3dRawData<dataType>(edgeDetector, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/edge_k_1.raw");
+
+	for (k = 0; k < height; k++) {
+		delete[] gradientVectorX[k];
+		delete[] gradientVectorY[k];
+		delete[] gradientVectorZ[k];
+		delete[] edgeDetector[k];
+		delete[] potential_pet[k];
+	}
+	delete[] gradientVectorX;
+	delete[] gradientVectorY;
+	delete[] gradientVectorZ;
+	delete[] edgeDetector;
+	delete[] potential_pet;
+
+	return true;
+}
+
+bool newPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoints, double radius) {
+
+	size_t i, j, k;
+	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+	const size_t dim2D = length * width;
+
+	size_t i0 = (size_t)seedPoints[0].y, j0 = (size_t)seedPoints[0].x, k0 = (size_t)seedPoints[0].z;
+	//size_t i1 = (size_t)seedPoints[1].y, j1 = (size_t)seedPoints[1].x, k1 = (size_t)seedPoints[1].z;
+
+	Point3D seed = { (dataType)j0, (dataType)i0, (dataType)k0};
+	getRealCoordFromImageCoord3D(seed, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	Statistics imageStats = getStats(ctImageData, seed, radius);
+	dataType seedMean = imageStats.mean_data;
+	dataType seedVariance = pow(imageStats.sd_data, 2);
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				Point3D current_point = { (dataType)j, (dataType)i, (dataType)k };
+				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+				imageStats = getStats(ctImageData, current_point, radius);
+				potential[k][x_new(j, i, width)] = 1.0 + 1.0 * pow((imageStats.mean_data / radius) - (seedMean / radius), 2)
+					+ 1.0 * pow((pow(imageStats.sd_data, 2) / radius) - (seedVariance / radius), 2);
+			}
+		}
+	}
+	return true;
+}
+
+bool potentialOnEdgeImage(dataType** imageData, dataType** potential, Point3D* seeds, const size_t length, const size_t width, const size_t height) {
+	
+	if (imageData == NULL || potential == NULL || seeds == NULL)
+		return false;
+
+	size_t i, j, k;
+	const size_t dim2D = length * width;
+	size_t i0 = (size_t)seeds[0].y, j0 = (size_t)seeds[0].x, k0 = (size_t)seeds[0].z;
+	size_t i1 = (size_t)seeds[1].y, j1 = (size_t)seeds[1].x, k1 = (size_t)seeds[1].z;
+
+	dataType** gradientVectorX = new dataType * [height];
+	dataType** gradientVectorY = new dataType * [height];
+	dataType** gradientVectorZ = new dataType * [height];
+	dataType** edgeDetector = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		gradientVectorX[k] = new dataType[dim2D];
+		gradientVectorY[k] = new dataType[dim2D];
+		gradientVectorZ[k] = new dataType[dim2D];
+		edgeDetector[k] = new dataType[dim2D];
+	}
+	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || edgeDetector == NULL)
+		return false;
+
+	compute3dImageGradient(imageData, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
+
+	size_t seedIndice = x_new(j0, i0, width), currentIndx = 0;
+	dataType seedVal = (imageData[k0][x_new(j0, i0, width)] + imageData[k1][x_new(j1, i1, width)]) / 2;
+	dataType epsilon = 0.01, K = 1000, ux = 0.0, uy = 0.0, uz = 0.0;
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				potential[k][i] = epsilon;
+				currentIndx = x_new(j, i, width);
+				ux = gradientVectorX[k][currentIndx];
+				uy = gradientVectorY[k][currentIndx];
+				uz = gradientVectorZ[k][currentIndx];
+				dataType edge_value = 1 + K * (ux * ux + uy * uy + uz * uz);
+			}
+		}
+	}
+
+	for (k = 0; k < height; k++) {
+		delete[] gradientVectorX[k];
+		delete[] gradientVectorY[k];
+		delete[] gradientVectorZ[k];
+		delete[] edgeDetector[k];
+	}
+	delete[] gradientVectorX;
+	delete[] gradientVectorY;
+	delete[] gradientVectorZ;
+	delete[] edgeDetector;
+
+	return true;
+}
+
+//===========================================================
+ 
 //Functions for 3D images
 // 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
 dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
@@ -758,16 +1004,18 @@ dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t d
 	return min(k_minus, k_plus);
 }
 
-dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
+double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
 	
-	size_t i, j, k, xd;
-	dataType norm_array = 0.0;
+	size_t i = 0, j = 0, k = 0, xd = 0;
+	double norm_array = 0.0;
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
 				xd = x_new(j, i, width);
-				norm_array = norm_array + pow(gradientVectorX[k][xd], 2) + pow(gradientVectorY[k][xd], 2) + pow(gradientVectorZ[k][xd], 2);
+				norm_array = norm_array + gradientVectorX[k][xd] * gradientVectorX[k][xd] 
+					         + gradientVectorY[k][xd] * gradientVectorY[k][xd]
+					         + gradientVectorZ[k][xd] * gradientVectorZ[k][xd];
 			}
 		}
 	}
@@ -775,14 +1023,14 @@ dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVe
 	return sqrt(norm_array);
 }
 
-bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, dataType h) {
+bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h) {
 
 	if (imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL) {
 		return false;
 	}
 
-	size_t i, j, k, currentInd;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0;
+	size_t i = 0, j = 0, k = 0, currentInd = 0;
+	double ux = 0.0, uy = 0.0, uz = 0.0;
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < lenght; i++) {
@@ -791,44 +1039,98 @@ bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX,
 				currentInd = x_new(j, i, width);
 
 				if (k == 0) {
-					uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k][currentInd]) / h;
+					if (imageDataPtr[k + 1][currentInd] == imageDataPtr[k][currentInd]) {
+						uz = 0.0;
+					}
+					else {
+						uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k][currentInd]) / h;
+					}
+					//uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k][currentInd]) / h;
 				}
 				else {
 					if (k == (height - 1)) {
-						uz = (imageDataPtr[k][currentInd] - imageDataPtr[k - 1][currentInd]) / h;
+						if (imageDataPtr[k][currentInd] == imageDataPtr[k - 1][currentInd]) {
+							uz = 0.0;
+						}
+						else {
+							uz = (imageDataPtr[k][currentInd] - imageDataPtr[k - 1][currentInd]) / h;
+						}
+						//uz = (imageDataPtr[k][currentInd] - imageDataPtr[k - 1][currentInd]) / h;
 					}
 					else {
-						uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k - 1][currentInd]) / (2 * h);
+						if (imageDataPtr[k + 1][currentInd] == imageDataPtr[k - 1][currentInd]) {
+							uz = 0.0;
+						}
+						else {
+							uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k - 1][currentInd]) / (2 * h);
+						}
+						//uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k - 1][currentInd]) / (2 * h);
 					}
 				}
 
 				if (i == 0) {
-					uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
+					if (imageDataPtr[k][x_new(j, i + 1, width)] == imageDataPtr[k][x_new(j, i, width)]) {
+						uy = 0;
+					}
+					else {
+						uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
+					}
+					//uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
 				}
 				else {
 					if (i == (lenght - 1)) {
-						uy = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / h;
+						if (imageDataPtr[k][x_new(j, i, width)] == imageDataPtr[k][x_new(j, i - 1, width)]) {
+							uy = 0;
+						}
+						else {
+							uy = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / h;
+						}
+						//uy = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / h;
 					}
 					else {
-						uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / (2 * h);
+						if (imageDataPtr[k][x_new(j, i + 1, width)] == imageDataPtr[k][x_new(j, i - 1, width)]) {
+							uy = 0;
+						}
+						else {
+							uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / (2 * h);
+						}
+						//uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / (2 * h);
 					}
 				}
 
 				if (j == 0) {
-					ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
+					if (imageDataPtr[k][x_new(j + 1, i, width)] == imageDataPtr[k][x_new(j, i, width)]) {
+						ux = 0.0;
+					}
+					else {
+						ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
+					}
+					//ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
 				}
 				else {
 					if (j == (width - 1)) {
-						ux = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / h;
+						if (imageDataPtr[k][x_new(j, i, width)] == imageDataPtr[k][x_new(j - 1, i, width)]) {
+							ux = 0.0;
+						}
+						else {
+							ux = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / h;
+						}
+						//ux = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / h;
 					}
 					else {
-						ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / (2 * h);
+						if (imageDataPtr[k][x_new(j + 1, i, width)] == imageDataPtr[k][x_new(j - 1, i, width)]) {
+							ux = 0.0;
+						}
+						else {
+							ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / (2 * h);
+						}
+						//ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / (2 * h);
 					}
 				}
 
-				gradientVectorX[k][currentInd] = ux; // j
-				gradientVectorY[k][currentInd] = uy; // i
-				gradientVectorZ[k][currentInd] = uz; // k
+				gradientVectorX[k][currentInd] = (dataType)ux;
+				gradientVectorY[k][currentInd] = (dataType)uy;
+				gradientVectorZ[k][currentInd] = (dataType)uz;
 
 			}
 		}
@@ -836,33 +1138,53 @@ bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX,
 	return true;
 }
 
-bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
+bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints) {
 
 	if (imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
 		return false;
 
 	size_t i, j, k;
 	const size_t dim2D = length * width;
-	size_t i0 = seedPoints[0].y, j0 = seedPoints[0].x, k0 = seedPoints[0].z;
-	size_t i1 = seedPoints[1].y, j1 = seedPoints[1].x, k1 = seedPoints[1].z;
+	size_t i0 = (size_t)seedPoints[0].y, j0 = (size_t)seedPoints[0].x, k0 = (size_t)seedPoints[0].z;
+	size_t i1 = (size_t)seedPoints[1].y, j1 = (size_t)seedPoints[1].x, k1 = (size_t)seedPoints[1].z;
 
 	dataType** gradientVectorX = new dataType* [height];
 	dataType** gradientVectorY = new dataType* [height];
 	dataType** gradientVectorZ = new dataType* [height];
+	dataType** edgeDetector = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		gradientVectorX[k] = new dataType [dim2D];
 		gradientVectorY[k] = new dataType [dim2D];
 		gradientVectorZ[k] = new dataType [dim2D];
+		edgeDetector[k] = new dataType [dim2D];
 	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
+	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || edgeDetector == NULL)
 		return false;
 	
 	compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
 
 	size_t seedIndice = x_new(j0, i0, width), currentIndx = 0;
 	dataType seedVal = (imageDataPtr[k0][x_new(j0, i0, width)] + imageDataPtr[k1][x_new(j1, i1, width)]) / 2;
+
+	//Point3D imageOrigin = {-300.0, -230.0, -1022.5};
+	//VoxelSpacing imageSpacing = { 1.171875, 1.171875, 2.5 };
+	//OrientationMatrix orientation; orientation.v1 = { 1.0, 0.0, 0.0 };
+	//orientation.v2 = { 0.0, 1.0, 0.0 }; orientation.v3 = { 0.0, 0.0, 1.0 };
+	//Image_Data ImageData; ImageData.height = height; ImageData.width = width; ImageData.length = length;
+	//ImageData.origin = imageOrigin; ImageData.spacing = imageSpacing; ImageData.orientation = orientation;
+	//ImageData.imageDataPtr = imageDataPtr;
+	//Statistics imageStats = {0.0, 0.0, 0.0, 0.0};
+	//Point3D pointTest1 = { j0, i0, k0 }, pointTest2 = {j1, i1, k1};
+	//pointTest1 = getRealCoordFromImageCoord3D(pointTest1, imageOrigin, imageSpacing, orientation);
+	//pointTest2 = getRealCoordFromImageCoord3D(pointTest2, imageOrigin, imageSpacing, orientation);
+	//imageStats = getStats(ImageData, pointTest1, 3.0);
+	//dataType mean1 = imageStats.mean_data;
+	//imageStats = getStats(ImageData, pointTest2, 3.0);
+	//dataType mean2 = imageStats.mean_data;
+	//dataType threshold = (mean1 + mean2) / 2.0;
+	
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
-	dataType epsilon = 0.01, K = 0.00005;
+	dataType epsilon = 0.01, K = 0.005; // new : K = 0.005
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -895,19 +1217,36 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 				ux = gradientVectorX[k][currentIndx];
 				uy = gradientVectorY[k][currentIndx];
 				uz = gradientVectorZ[k][currentIndx];
-				potentialFuncPtr[k][currentIndx] = epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) *(1 + K * (ux * ux + uy * uy + uz * uz));
+				dataType edge_value = 1 + K * (ux * ux + uy * uy + uz * uz);
+				//edgeDetector[k][currentIndx] = edge_value;
+				//Point3D current_point = { j, i, k };
+				//getRealCoordFromImageCoord3D(current_point, imageOrigin, imageSpacing, orientation);
+				//imageStats = getStats(ImageData, current_point, 4.0);
+				//if (imageStats.sd_data <= threshold) {
+				//	potentialFuncPtr[k][currentIndx] = epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) * edge_value;
+				//}
+				//else {
+				//	potentialFuncPtr[k][currentIndx] = epsilon + max_potential * edge_value;
+				//}
+
+				potentialFuncPtr[k][currentIndx] = epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) * edge_value;
+				//potentialFuncPtr[k][currentIndx] = 1.0 / (abs(imageDataPtr[k][currentIndx] - seedVal) + 10.0);
+				//potentialFuncPtr[k][currentIndx] = pow(abs(imageDataPtr[k][currentIndx] - threshold), 2) + 0.01;
 			}
 		}
 	}
+	//store3dRawData<dataType>(edgeDetector, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/edge_k100000.raw");
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
 		delete[] gradientVectorY[k];
 		delete[] gradientVectorZ[k];
+		delete[] edgeDetector[k];
 	}
 	delete[] gradientVectorX; 
 	delete[] gradientVectorY; 
 	delete[] gradientVectorZ;
+	delete[] edgeDetector;
 
 	return true;
 }
@@ -997,7 +1336,7 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 }
 
-bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
+bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints) {
 
 	if (imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL) {
 		return false;
@@ -1029,7 +1368,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		}
 	}
 
-	compute3dPotential(imageDataPtr, potentialFuncPtr, length, width, height, seedPoints);
+	//compute3dPotential(imageDataPtr, potentialFuncPtr, length, width, height, seedPoints);
 
 	//Processed the initial point
 	pointFastMarching3D current;
@@ -1366,15 +1705,15 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 	return true;
 }
 
-bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, point3d* seedPoints) {
+bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints) {
 
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
-	size_t i, j, k, xd, dim2d = length * width, max_iter = 1000000000; //width* length* height;
-	dataType tau = 0.8, tol = 1.0;
-	size_t i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
-	size_t i_end = seedPoints[1].y, j_end = seedPoints[1].x, k_end = seedPoints[1].z;
+	size_t i, j, k, xd, dim2d = length * width, max_iter = 1000000000;
+	double tau = 0.8, tol = 1.0;
+	double i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
+	size_t i_end = (size_t)seedPoints[1].y, j_end = (size_t)seedPoints[1].x, k_end = (size_t)seedPoints[1].z;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
@@ -1383,21 +1722,23 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		gradientVectorX[k] = new dataType [dim2d];
 		gradientVectorY[k] = new dataType [dim2d];
 		gradientVectorZ[k] = new dataType [dim2d];
+		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL)
+			return false;
 	}
 	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
 		return false;
 
 	//Normalization of the gradient
 	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
-	dataType norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
+	double norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
 				xd = x_new(j, i, width);
-				gradientVectorX[k][xd] = gradientVectorX[k][xd] / norm_of_gradient;
-				gradientVectorY[k][xd] = gradientVectorY[k][xd] / norm_of_gradient;
-				gradientVectorZ[k][xd] = gradientVectorZ[k][xd] / norm_of_gradient;
+				gradientVectorX[k][xd] = (dataType)(gradientVectorX[k][xd] / norm_of_gradient);
+				gradientVectorY[k][xd] = (dataType)(gradientVectorY[k][xd] / norm_of_gradient);
+				gradientVectorZ[k][xd] = (dataType)(gradientVectorZ[k][xd] / norm_of_gradient);
 			}
 		}
 	}
@@ -1410,11 +1751,11 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	size_t currentIndx = x_new(j_current, i_current, width);
 	resultedPath[k_current][currentIndx] = 1;
 
-	dataType iNew = i_current;
-	dataType jNew = j_current;
-	dataType kNew = k_current;
-	dataType currentDist = 0.0;
-	dataType dist_min = 0.0;
+	double iNew = i_current;
+	double jNew = j_current;
+	double kNew = k_current;
+	double currentDist = 0.0;
+	double dist_min = 0.0;
 
 	do {
 

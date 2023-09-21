@@ -16,6 +16,7 @@
 #include "../src/endianity_bl.h"
 #include <stdio.h>
 #include <string.h>
+#include<../src/imageInterpolation.h>
 
 using namespace std;
 
@@ -63,11 +64,37 @@ using namespace std;
 	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints);
 
 	//==============================================================
-	 
-	//3D functions
+
+	typedef struct
+	{
+		dataType** minimum;
+		dataType** maximum;
+		dataType** mean;
+		dataType** sd;
+	} statictics_Pointers;
+
 	typedef struct {
-		size_t x, y, z;
-	} point3d;
+		dataType K, epsilon;
+		dataType c_min, c_max, c_mean, c_sd, c_ct, c_pet;
+	} Potential_Parameters;
+
+	/// <summary>
+	/// : This function create statistics images from statistics computed in each voxel
+	/// in a small ball defined by the radius
+	/// </summary>
+	/// <param name="imageData"> : Structure to hold the input image</param>
+	/// <param name="statsImage"> : Structure to hold the statistics images</param>
+	/// <param name="radius"> : radius to be considered for the statistics</param>
+	/// <returns></returns>
+	bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius);
+
+	bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statictics_Pointers statsImage, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params);
+
+	bool newPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoints, double radius);
+
+	bool potentialOnEdgeImage(dataType** imageData, dataType** potential, Point3D* seeds, const size_t length, const size_t width, const size_t height);
+
+	//================================================================
 
 	typedef struct {
 		size_t x, y, z;
@@ -82,11 +109,11 @@ using namespace std;
 
 	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
-	dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
+	double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
 
-	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, dataType h);
+	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
 
-	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
+	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
 	//heap functions
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
@@ -101,9 +128,9 @@ using namespace std;
 
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
 
-	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
+	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
-	bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, point3d* seedPoints);
+	bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints);
 
 	//================================================================
 
