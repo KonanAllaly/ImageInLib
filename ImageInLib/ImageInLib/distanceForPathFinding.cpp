@@ -658,10 +658,10 @@ bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statict
 	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
 
 	//generateStatisticsImages(ctImageData, statsImage, radius);
-	//store3dRawData<dataType>(statsImage.maximum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_max_r4.raw");
-	//store3dRawData<dataType>(statsImage.minimum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_min_r4.raw");
-	//store3dRawData<dataType>(statsImage.mean, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_mean_r4.raw");
-	//store3dRawData<dataType>(statsImage.sd, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_sd_r4.raw");
+	//store3dRawData<dataType>(statsImage.maximum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_max_r5.raw");
+	//store3dRawData<dataType>(statsImage.minimum, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_min_r5.raw");
+	//store3dRawData<dataType>(statsImage.mean, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_mean_r5.raw");
+	//store3dRawData<dataType>(statsImage.sd, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/Im_sd_r5.raw");
 
 	size_t seedIndice0 = x_new(j0, i0, width), seedIndice1 = x_new(j1, i1, width), currentIndx = 0;
 	dataType seedValCT = (ctImageData.imageDataPtr[k0][seedIndice0] + ctImageData.imageDataPtr[k1][seedIndice1]) / 2.0;
@@ -806,20 +806,45 @@ bool potentialOnEdgeImage(dataType** imageData, dataType** potential, Point3D* s
 		return false;
 
 	compute3dImageGradient(imageData, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
+	dataType epsilon = 0.01, K = 10000, ux = 0.0, uy = 0.0, uz = 0.0;
+	size_t currentIndx = 0;
 
-	size_t seedIndice = x_new(j0, i0, width), currentIndx = 0;
-	dataType seedVal = (imageData[k0][x_new(j0, i0, width)] + imageData[k1][x_new(j1, i1, width)]) / 2;
-	dataType epsilon = 0.01, K = 1000, ux = 0.0, uy = 0.0, uz = 0.0;
-
+	//Compute the edge detector
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
-				potential[k][i] = epsilon;
 				currentIndx = x_new(j, i, width);
 				ux = gradientVectorX[k][currentIndx];
 				uy = gradientVectorY[k][currentIndx];
 				uz = gradientVectorZ[k][currentIndx];
-				dataType edge_value = 1 + K * (ux * ux + uy * uy + uz * uz);
+				edgeDetector[k][currentIndx] =  1.0 / (1 + K * (ux * ux + uy * uy + uz * uz));
+			}
+		}
+	}
+	store3dRawData<dataType>(edgeDetector, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/edge_k1000000.raw");
+
+	size_t seedIndice = x_new(j0, i0, width);
+	dataType seedVal = (edgeDetector[k0][x_new(j0, i0, width)] + edgeDetector[k1][x_new(j1, i1, width)]) / 2;
+
+	dataType maxPotential = 0.0;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				currentIndx = x_new(j, i, width);
+				potential[k][currentIndx] = abs(seedVal - edgeDetector[k][currentIndx]);
+				if (potential[k][currentIndx] > maxPotential) {
+					maxPotential = potential[k][currentIndx];
+				}
+			}
+		}
+	}
+
+	//Normalization
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				currentIndx = x_new(j, i, width);
+				potential[k][currentIndx] = epsilon + potential[k][currentIndx] / maxPotential;
 			}
 		}
 	}
@@ -1218,6 +1243,7 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 				uy = gradientVectorY[k][currentIndx];
 				uz = gradientVectorZ[k][currentIndx];
 				dataType edge_value = 1 + K * (ux * ux + uy * uy + uz * uz);
+				
 				//edgeDetector[k][currentIndx] = edge_value;
 				//Point3D current_point = { j, i, k };
 				//getRealCoordFromImageCoord3D(current_point, imageOrigin, imageSpacing, orientation);
@@ -1229,13 +1255,13 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 				//	potentialFuncPtr[k][currentIndx] = epsilon + max_potential * edge_value;
 				//}
 
-				potentialFuncPtr[k][currentIndx] = epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) * edge_value;
+				potentialFuncPtr[k][currentIndx] = 1; //epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) * edge_value;
 				//potentialFuncPtr[k][currentIndx] = 1.0 / (abs(imageDataPtr[k][currentIndx] - seedVal) + 10.0);
 				//potentialFuncPtr[k][currentIndx] = pow(abs(imageDataPtr[k][currentIndx] - threshold), 2) + 0.01;
 			}
 		}
 	}
-	//store3dRawData<dataType>(edgeDetector, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/edge_k100000.raw");
+	//store3dRawData<dataType>(edgeDetector, length, width, height, "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw");
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -1355,7 +1381,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 	dataType x = 0.0, y = 0.0, z = 0.0;
 	size_t currentIndx = 0;
 
-
 	//Initialization
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
@@ -1399,18 +1424,19 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		labelArray[kminus][currentIndx] = 2;
 	}
 
-	//Bottom
-	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
-		kplus = k + 1;
-		x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
-		y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
-		z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
-		coefSpeed = potentialFuncPtr[kplus][currentIndx];
-		dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-		pointFastMarching3D BottomNeighbor = { j, i, kplus, dBottom };
-		distanceFuncPtr[kplus][currentIndx] = dBottom;
-		inProcess.push_back(BottomNeighbor);
-		labelArray[kplus][currentIndx] = 2;
+	//East
+	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
+		iplus = i + 1;
+		indxEast = x_new(j, iplus, width);
+		x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
+		y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
+		z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
+		coefSpeed = potentialFuncPtr[k][indxEast];
+		dEast = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D EastNeighbor = { j, iplus, k, dEast };
+		distanceFuncPtr[k][indxEast] = dEast;
+		inProcess.push_back(EastNeighbor);
+		labelArray[k][indxEast] = 2;
 	}
 
 	//North
@@ -1428,36 +1454,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		labelArray[k][indxNorth] = 2;
 	}
 
-	//South
-	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
-		jplus = j + 1;
-		indxSouth = x_new(jplus, i, width);
-		x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
-		y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
-		z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
-		coefSpeed = potentialFuncPtr[k][indxSouth];
-		dSouth = solve3dQuadratic(x, y, z, coefSpeed);
-		pointFastMarching3D SouthNeighbor = { jplus, i, k, dSouth };
-		distanceFuncPtr[k][indxSouth] = dSouth;
-		inProcess.push_back(SouthNeighbor);
-		labelArray[k][indxSouth] = 2;
-	}
-
-	//East
-	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
-		iplus = i + 1;
-		indxEast = x_new(j, iplus, width);
-		x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
-		y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
-		z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
-		coefSpeed = potentialFuncPtr[k][indxEast];
-		dEast = solve3dQuadratic(x, y, z, coefSpeed);
-		pointFastMarching3D EastNeighbor = { j, iplus, k, dEast };
-		distanceFuncPtr[k][indxEast] = dEast;
-		inProcess.push_back(EastNeighbor);
-		labelArray[k][indxEast] = 2;
-	}
-
 	//West
 	if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
 		iminus = i - 1;
@@ -1473,7 +1469,34 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		labelArray[k][indxWest] = 2;
 	}
 
-	//int n = inProcess.size();
+	//South
+	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
+		jplus = j + 1;
+		indxSouth = x_new(jplus, i, width);
+		x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
+		y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
+		z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
+		coefSpeed = potentialFuncPtr[k][indxSouth];
+		dSouth = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D SouthNeighbor = { jplus, i, k, dSouth };
+		distanceFuncPtr[k][indxSouth] = dSouth;
+		inProcess.push_back(SouthNeighbor);
+		labelArray[k][indxSouth] = 2;
+	}
+
+	//Bottom
+	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
+		kplus = k + 1;
+		x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+		y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+		z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
+		coefSpeed = potentialFuncPtr[kplus][currentIndx];
+		dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D BottomNeighbor = { j, i, kplus, dBottom };
+		distanceFuncPtr[kplus][currentIndx] = dBottom;
+		inProcess.push_back(BottomNeighbor);
+		labelArray[kplus][currentIndx] = 2;
+	}
 
 	heapifyVector3D(inProcess);
 	size_t label = 0;
@@ -1490,42 +1513,10 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		currentIndx = x_new(j, i, width);
 		labelArray[k][currentIndx] = 1;
 		distanceFuncPtr[k][currentIndx] = current.arrival;
-		//l = inProcess.size();
-		//swap3dPoints(&inProcess[0], &inProcess[l - 1]);
-		//inProcess.pop_back();
-		//heapifyDown3D(inProcess, 0);
 		deleteRootHeap3D(inProcess);
 
 		//Treat neighbors of the minimum in the narrow band
-		//Bottom
-		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
-			kplus = k + 1;
-			label = labelArray[kplus][currentIndx];
-			if (label != 1) {
-				x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
-				y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
-				z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
-				coefSpeed = potentialFuncPtr[kplus][currentIndx];
-				dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-				if (label == 3) {
-					distanceFuncPtr[kplus][currentIndx] = dBottom;
-					labelArray[kplus][currentIndx] = 2;
-					pointFastMarching3D BottomNeighbor = { j, i, kplus, dBottom };
-					//inProcess.push_back(BottomNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
-					addPointHeap3D(inProcess, BottomNeighbor);
-				}
-				else {
-					if (label == 2) {
-						if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
-							distanceFuncPtr[kplus][currentIndx] = dBottom;
-						}
-					}
-				}
-			}
-		}
-
+		
 		//Top
 		if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
 			kminus = k - 1;
@@ -1540,9 +1531,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[kminus][currentIndx] = dTop;
 					labelArray[kminus][currentIndx] = 2;
 					pointFastMarching3D TopNeighbor = { j, i, kminus, dTop };
-					//inProcess.push_back(TopNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, TopNeighbor);
 				}
 				else {
@@ -1570,45 +1558,12 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxEast] = dEast;
 					labelArray[k][indxEast] = 2;
 					pointFastMarching3D EastNeighbor = { j, iplus, k, dEast };
-					//inProcess.push_back(EastNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, EastNeighbor);
 				}
 				else {
 					if (label == 2) {
 						if (dEast < distanceFuncPtr[k][indxEast]) {
 							distanceFuncPtr[k][indxEast] = dEast;
-						}
-					}
-				}
-			}
-		}
-
-		//West
-		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
-			iminus = i - 1;
-			indxWest = x_new(j, iminus, width);
-			label = labelArray[k][indxWest];
-			if (label != 1) {
-				x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
-				y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
-				z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
-				coefSpeed = potentialFuncPtr[k][indxWest];
-				dWest = solve3dQuadratic(x, y, z, coefSpeed);
-				if (label == 3) {
-					distanceFuncPtr[k][indxWest] = dWest;
-					labelArray[k][indxWest] = 2;
-					pointFastMarching3D WestNeighbor = { j, iminus, k, dWest };
-					//inProcess.push_back(WestNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
-					addPointHeap3D(inProcess, WestNeighbor);
-				}
-				else {
-					if (label == 2) {
-						if (dWest < distanceFuncPtr[k][indxWest]) {
-							distanceFuncPtr[k][indxWest] = dWest;
 						}
 					}
 				}
@@ -1630,15 +1585,39 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxNorth] = dNorth;
 					labelArray[k][indxNorth] = 2;
 					pointFastMarching3D NorthNeighbor = { jminus, i, k, dNorth };
-					//inProcess.push_back(NorthNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, NorthNeighbor);
 				}
 				else {
 					if (label == 2) {
 						if (dNorth < distanceFuncPtr[k][indxNorth]) {
 							distanceFuncPtr[k][indxNorth] = dNorth;
+						}
+					}
+				}
+			}
+		}
+
+		//West
+		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
+			iminus = i - 1;
+			indxWest = x_new(j, iminus, width);
+			label = labelArray[k][indxWest];
+			if (label != 1) {
+				x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
+				y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
+				z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
+				coefSpeed = potentialFuncPtr[k][indxWest];
+				dWest = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					distanceFuncPtr[k][indxWest] = dWest;
+					labelArray[k][indxWest] = 2;
+					pointFastMarching3D WestNeighbor = { j, iminus, k, dWest };
+					addPointHeap3D(inProcess, WestNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dWest < distanceFuncPtr[k][indxWest]) {
+							distanceFuncPtr[k][indxWest] = dWest;
 						}
 					}
 				}
@@ -1660,9 +1639,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxSouth] = dSouth;
 					labelArray[k][indxSouth] = 2;
 					pointFastMarching3D SouthNeighbor = { jplus, i, k, dSouth };
-					//inProcess.push_back(SouthNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, SouthNeighbor);
 				}
 				else {
@@ -1674,28 +1650,34 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 				}
 			}
 		}
-	}
 
-	//size_t cpt1 = 0, cpt2 = 0,cpt3 = 0 ;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			currentIndx = x_new(j, i, width);
-	//			if (distanceFuncPtr[k][currentIndx] == INFINITY) {
-	//				cpt1++;
-	//			}
-	//			if (labelArray[k][currentIndx] == 2) {
-	//				cpt2++;
-	//			}
-	//			if (labelArray[k][currentIndx] == 3) {
-	//				cpt3++;
-	//			}
-	//		}
-	//	}
-	//}
-	//cout << cpt1 << " point(s) with distance = INFINITY" << endl;;
-	//cout << cpt2 << " point(s) with label = 2" << endl;
-	//cout << cpt3 << " point(s) with label = 3" << endl;
+		//Bottom
+		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
+			kplus = k + 1;
+			label = labelArray[kplus][currentIndx];
+			if (label != 1) {
+				x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+				y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+				z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
+				coefSpeed = potentialFuncPtr[kplus][currentIndx];
+				dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					distanceFuncPtr[kplus][currentIndx] = dBottom;
+					labelArray[kplus][currentIndx] = 2;
+					pointFastMarching3D BottomNeighbor = { j, i, kplus, dBottom };
+					addPointHeap3D(inProcess, BottomNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
+							distanceFuncPtr[kplus][currentIndx] = dBottom;
+						}
+					}
+				}
+			}
+		}
+
+	}
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
@@ -1710,7 +1692,7 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
-	size_t i, j, k, xd, dim2d = length * width, max_iter = 1000000000;
+	size_t i, j, k, xd, dim2d = length * width, max_iter = 1000;
 	double tau = 0.8, tol = 1.0;
 	double i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 	size_t i_end = (size_t)seedPoints[1].y, j_end = (size_t)seedPoints[1].x, k_end = (size_t)seedPoints[1].z;
@@ -1730,12 +1712,13 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 
 	//Normalization of the gradient
 	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
-	double norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
+	//double norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
 				xd = x_new(j, i, width);
+				dataType norm_of_gradient = sqrt(pow(gradientVectorX[k][xd], 2) + pow(gradientVectorY[k][xd], 2) + pow(gradientVectorZ[k][xd], 2));
 				gradientVectorX[k][xd] = (dataType)(gradientVectorX[k][xd] / norm_of_gradient);
 				gradientVectorY[k][xd] = (dataType)(gradientVectorY[k][xd] / norm_of_gradient);
 				gradientVectorZ[k][xd] = (dataType)(gradientVectorZ[k][xd] / norm_of_gradient);
@@ -1757,6 +1740,12 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	double currentDist = 0.0;
 	double dist_min = 0.0;
 
+	//FILE* file;
+	//if (fopen_s(&file, "C:/Users/Konan Allaly/Documents/Tests/output/points_found_eucl.csv", "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+
 	do {
 
 		currentIndx = x_new(j_current, i_current, width);
@@ -1769,12 +1758,18 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		i_current = (size_t)(round(iNew)); 
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
-		resultedPath[k_current][x_new(j_current, i_current, width)] = 1;
+		resultedPath[k_current][x_new(j_current, i_current, width)] = 1.0;
+		
+		//cout << "(" << j_current << ", " << i_current << ", " << k_current << ")" << endl;
+		
+		//fprintf(file, "%d, %d, %d \n", j_current, i_current, k_current);
 
 		//currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
+
+	//fclose(file);
 
 	cout << "\nDistance to the end point : " << dist_min << endl;
 	cout << "\nNumber of iterations : " << cpt << endl;
