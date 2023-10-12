@@ -90,8 +90,6 @@ using namespace std;
 
 	bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statictics_Pointers statsImage, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params);
 
-	bool newPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoints, double radius);
-
 	bool potentialOnEdgeImage(dataType** imageData, dataType** potential, Point3D* seeds, const size_t length, const size_t width, const size_t height);
 
 	//================================================================
@@ -133,6 +131,12 @@ using namespace std;
 	bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints);
 
 	//================================================================
+
+	bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params);
+
+	bool findPathBetweenTwoGivenPoints(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+
+	bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
 
 //#ifdef __cplusplus
 //}

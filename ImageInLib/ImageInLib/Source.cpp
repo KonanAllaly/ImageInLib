@@ -12,6 +12,7 @@
 #include "../src/imageInterpolation.h"
 #include "filtering.h"
 #include "../src/segmentation3D_subsurf.h"
+#include "../src/segmentation3d_gsubsurf.h"
 
 using namespace std;
 
@@ -33,9 +34,12 @@ int main() {
 	int Length = ctContainer->dimensions[1];
 	int Width = ctContainer->dimensions[0];
 
+	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
+	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
+
 	int i, j, k, x, dim2D = Length * Width;
 
-	//Find min max data in order to rescalle data range positive
+	////Find min max data in order to rescalle data range positive
 	//dataType min_ct = 100000000.0, max_ct = -100000000.0;
 	//for (k = 0; k < Height; k++) {
 	//	for (i = 0; i < Length * Width; i++) {
@@ -47,7 +51,7 @@ int main() {
 	//		}
 	//	}
 	//}
-	////cout << "min data = " << min_data << ", max data = " << max_data << endl;
+	//cout << "min data = " << min_ct << ", max data = " << max_ct << endl;
 
 	//if (min_ct < 0) {
 	//	//Rescale to positive range
@@ -59,45 +63,33 @@ int main() {
 	//	}
 	//}
 	//rescaleNewRange(ctContainer->dataPointer, Length, Width, Height, 0.0, 1.0, max_ct, min_ct);
+
+	string outputImagePath = outputPath + "patient2_rescalled.raw";
+	////manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
 	
 	/*================  Data container for fast marching and path finding ============*/
 
 	dataType ** imageData = new dataType * [Height];
 	dataType** imageFiltered = new dataType * [Height];
-	dataType** distance = new dataType * [Height];
-	dataType** path = new dataType * [Height];
-	dataType** potential = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D];
-		distance[k] = new dataType[dim2D];
-		path[k] = new dataType[dim2D];
-		potential[k] = new dataType[dim2D];
 		imageFiltered[k] = new dataType[dim2D];
-
-		if (imageData[k] == NULL || distance[k] == NULL || path[k] == NULL || potential[k] == NULL || imageFiltered[k] == NULL)
+		if (imageData[k] == NULL || imageFiltered[k] == NULL)
 			return false;
 	}
-	if (imageData == NULL || distance == NULL || path == NULL || potential == NULL || imageFiltered == NULL)
+	if (imageData == NULL || imageFiltered == NULL)
 		return false;
 
 	//Initialization
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			imageData[k][i] = 0;//ctContainer->dataPointer[k][i];
-			distance[k][i] = 0.0;
-			path[k][i] = 0.0;
-			potential[k][i] = 0.0;
+			imageData[k][i] = 0.0; //ctContainer->dataPointer[k][i];
 			imageFiltered[k][i] = 0.0;
 		}
 	}
 
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/Im_sd_r4.raw";
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/filteredGMC.raw";
+	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filteredGMC_p2.raw";
 	manageRAWFile3D<dataType>(imageFiltered, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
-
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
 
 	/*================== Image Filtering =============================================*/
 
@@ -108,52 +100,20 @@ int main() {
 	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-2; filter_parameters.maxNumberOfSolverIteration = 100;
 	//filter_parameters.timeStepsNum = 1; filter_parameters.coef = 1e-6; 
 	//filterImage(ImageData, filter_parameters, GEODESIC_MEAN_CURVATURE_FILTER);
-	//string outputImagePath = outputPath + "filteredGMC.raw";
+	//outputImagePath = outputPath + "filteredGMC.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
-
-	/*================== Fast marching and path finding ==============================*/
-
-	//point3d* seeds = new point3d[2];
-	//Patient 2
-	//seeds[1].x = 262; seeds[1].y = 254; seeds[1].z = 250; // top
-	
-	//seeds[0].x = 256; seeds[0].y = 251; seeds[0].z = 251;
-	//seeds[0].x = 256; seeds[0].y = 249; seeds[0].z = 254;
-	//seeds[1].x = 293; seeds[1].y = 312; seeds[1].z = 265;
-	//down
-	//seeds[1].x = 264; seeds[1].y = 261; seeds[1].z = 170;
-	//seeds[0].x = 295; seeds[0].y = 314; seeds[0].z = 265;
-
-	//seeds[1].x = 284; seeds[1].y = 285; seeds[1].z = 278; // middle
-	//seeds[0].x = 265; seeds[0].y = 259; seeds[0].z = 143; // down
-
-	////Patient 3
-	//seeds[0].x = 285; seeds[0].y = 306; seeds[0].z = 369;
-	//seeds[1].x = 259; seeds[1].y = 258; seeds[1].z = 274;
-
-	////Patient 4
-	//seeds[1].x = 292; seeds[1].y = 286; seeds[1].z = 235;
-	//seeds[0].x = 265; seeds[0].y = 265; seeds[0].z = 152;
-
-	////Patient 4
-	//seeds[1].x = 292; seeds[1].y = 286; seeds[1].z = 235;
-	//seeds[0].x = 265; seeds[0].y = 265; seeds[0].z = 152;
-
-	////Patient 6
-	//seeds[1].x = 268; seeds[1].y = 246; seeds[1].z = 486;
-	//seeds[0].x = 284; seeds[0].y = 276; seeds[0].z = 652;
 
 	//=================== Interpolation ====================================
 
-	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	petContainer->operation = copyFrom;
+	//Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
+	//petContainer->operation = copyFrom;
 
-	inputImagePath = inputPath + "Patient2_pet.vtk";
+	//inputImagePath = inputPath + "Patient3_pet.vtk";
 	//readVtkFile(inputImagePath.c_str(), petContainer);
 
-	int height = petContainer->dimensions[2];
-	int length = petContainer->dimensions[1];
-	int width = petContainer->dimensions[0];
+	//int height = petContainer->dimensions[2];
+	//int length = petContainer->dimensions[1];
+	//int width = petContainer->dimensions[0];
 
 	////Find min max data in order to rescalle data range positive
 	//dataType min_pet = 100000000.0, max_pet = -100000000.0;
@@ -177,14 +137,9 @@ int main() {
 	//		}
 	//	}
 	//}
-	////rescaleNewRange(petContainer->dataPointer, length, width, height, 0.0, 1.0, max_pet, min_pet);
-	
 	//rescaleToIntervalZeroOne(petContainer->dataPointer, length, width, height);
 
-	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
-	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
-
-	Image_Data CT; CT.imageDataPtr = imageData;
+	Image_Data CT; CT.imageDataPtr = imageFiltered;
 	CT.height = Height; CT.length = Length; CT.width = Width;
 	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
 
@@ -195,139 +150,249 @@ int main() {
 	//PET.height = height; PET.length = length; PET.width = width;
 	//PET.orientation = orientation; PET.origin = petOrigin; PET.spacing = petSpacing;
 
-	//================== New Potential ====================================
-	dataType max_pot = 0.0;
-	for (k = 0; k < Height; k++) {
+	const size_t height_new = (size_t)((ctContainer->dimensions[2] * ctContainer->spacing[2]) / ctContainer->spacing[0]);
+	cout << "Interpolated height : " << height_new << endl;
+	cout << "spacing : " << ctContainer->spacing[0] << endl;
+
+	dataType** imageInterpolated = new dataType * [height_new];
+	dataType** distance = new dataType * [height_new];
+	dataType** path = new dataType * [height_new];
+	dataType** potential = new dataType * [height_new];
+	dataType** image_mean = new dataType * [height_new];
+	for (k = 0; k < height_new; k++) {
+		imageInterpolated[k] = new dataType[dim2D];
+		distance[k] = new dataType[dim2D];
+		path[k] = new dataType[dim2D];
+		potential[k] = new dataType[dim2D];
+		image_mean[k] = new dataType[dim2D];
+		if (imageInterpolated[k] == NULL || distance[k] == NULL || path[k] == NULL || potential[k] == NULL || image_mean[k] == NULL)
+			return false;
+	}
+	if (imageInterpolated == NULL || distance == NULL || path == NULL || potential == NULL || image_mean == NULL)
+		return false;
+
+	//Initialization
+	for (k = 0; k < height_new; k++) {
 		for (i = 0; i < dim2D; i++) {
-			potential[k][i] = abs(imageData[k][i] - imageFiltered[k][i]);
-			if (potential[k][i] > max_pot) {
-				max_pot = potential[k][i];
-			}
+			imageInterpolated[k][i] = 0.0;
+			distance[k][i] = 0.0;
+			path[k][i] = 0.0;
+			potential[k][i] = 0.0;
+			image_mean[k][i] = 0.0;
 		}
 	}
 
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			potential[k][i] = 1.0 / (0.01 + abs(potential[k][i] - max_pot));
-		}
-	}
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/initial_seg.raw";
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/path_p3.raw";
+	//manageRAWFile3D<dataType>(distance, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
-	string outputImagePath = outputPath + "new_potential.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	////create initial segment
+	//size_t l, m, n;
+	//for (k = 0; k < height_new; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			x = x_new(i, j, Length);
+	//			if (distance[k][x] == 1.0) {
+	//				Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+	//				for (l = 0; l < height_new; l++) {
+	//					for (m = 0; m < Length; m++) {
+	//						for (n = 0; n < Width; n++) {
+	//							Point3D temporary_point = { (dataType)m, (dataType)n, (dataType)l };
+	//							double dist = getPoint3DDistance(current_point, temporary_point);
+	//							if (dist <= 3.0) {
+	//								path[l][x_new(m, n, Length)] = 1.0;
+	//							}
+	//						}
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	//outputImagePath = outputPath + "initial_seg.raw";
+	//manageRAWFile3D<dataType>(path, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
+
+	Image_Data Interpolated; Interpolated.imageDataPtr = imageInterpolated;
+	Interpolated.height = height_new; Interpolated.length = Length; Interpolated.width = Width;
+	Interpolated.orientation = orientation; Interpolated.origin = ctOrigin; 
+	Interpolated.spacing.sx = ctSpacing.sx; Interpolated.spacing.sy = ctSpacing.sy; Interpolated.spacing.sz = ctSpacing.sx;
+	imageInterpolation3D(CT, Interpolated, NEAREST_NEIGHBOR);
+	//outputImagePath = outputPath + "interpolated.raw";
+	//manageRAWFile3D<dataType>(imageInterpolated, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
+
+	//outputImagePath = outputPath + "interpolated.raw";
+	//manageRAWFile3D<dataType>(imageInterpolated, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
+
+	//================== Downsampling =====================================
+
+	//const size_t height = (size_t)(height_new / 4);
+	//cout << "heigth down : " << height << endl;
+	//const size_t length = (size_t)(Length / 4);
+	//const size_t width = (size_t)(Width / 4);
+
+	//dataType** downsampled_image = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	downsampled_image[k] = new dataType[length * width];
+	//}
+
+	////Initialization
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length * width; i++) {
+	//		downsampled_image[k][i] = 0.0;
+	//	}
+	//}
+
+	//Image_Data Downsampled; 
+	//Downsampled.imageDataPtr = downsampled_image; 
+	//Downsampled.length = length; Downsampled.width = width; Downsampled.height = height;
+	//Downsampled.origin = ctOrigin; Downsampled.orientation = orientation;
+	//Downsampled.spacing.sx = ctSpacing.sx * 4; Downsampled.spacing.sy = ctSpacing.sy * 4; Downsampled.spacing.sz = ctSpacing.sx * 4;
+	////cout << "spacing down : " << Downsampled.spacing.sx << endl;
+	//
+	//imageInterpolation3D(Interpolated, Downsampled, TRILINEAR);
+
+	//outputImagePath = outputPath + "path_down.raw";
+	//manageRAWFile3D<dataType>(downsampled_image, length, width, height, outputImagePath.c_str(), STORE_DATA, false);
+
+	//================== Segmentation =====================================
+
+	//Point3D* center_seg = new Point3D[1];
+	//center_seg->x = 0; center_seg->y = 0; center_seg->z = 0; // not used in the current version of the code
+
+	//dataType** initial_seg = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	initial_seg[k] = new dataType[length * width];
+	//}
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < width * length; i++) {
+	//		initial_seg[k][i] = 0.0;
+	//	}
+	//}
+
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/path_down.raw";
+	//manageRAWFile3D<dataType>(initial_seg, length, width, height, inputImagePath.c_str(), LOAD_DATA, false);
+
+	//outputImagePath = outputPath + "/segmentation/_seg_func_00.raw";
+	//manageRAWFile3D<dataType>(initial_seg, length, width, height, outputImagePath.c_str(), STORE_DATA, false);
+
+	//Image_Data ImageToBeSegmented;
+	//ImageToBeSegmented.imageDataPtr = downsampled_image;
+	//ImageToBeSegmented.height = height; ImageToBeSegmented.length = length; ImageToBeSegmented.width = width;
+
+	//Segmentation_Parameters seg_params;
+	//seg_params.tau = 1.0; seg_params.h = 1.0; seg_params.omega_c = 1.4; seg_params.mod = 1;
+	//seg_params.maxNoGSIteration = 100; seg_params.coef = 50000; seg_params.gauss_seidelTolerance = 1e-3;
+	//seg_params.maxNoOfTimeSteps = 300; seg_params.segTolerance = 1e-6; seg_params.eps2 = 1e-6;
+	//seg_params.coef_conv = 1.0; seg_params.coef_dif = 0.010;
+
+	////Smoothing by heat equation so we don't need all the parameters
+	//Filter_Parameters parameters; parameters.coef = 1e-4;
+	//parameters.h = seg_params.h; parameters.timeStepSize = parameters.h / 6.0; parameters.timeStepsNum = 1; //10
+	////Filter_Parameters parameters; parameters.coef = 1e-4; parameters.edge_detector_coefficient = 1000; parameters.eps2 = 1e-4;
+	////parameters.h = 6.0; parameters.maxNumberOfSolverIteration = 100; parameters.omega_c = 1.4; parameters.p = 1;
+	////parameters.sigma = 0.1; parameters.timeStepSize = 1.0; parameters.timeStepsNum = 1; parameters.tolerance = 1e-6;
+
+	//unsigned char segmentPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/segmentation/";
+	//generalizedSubsurfSegmentation(ImageToBeSegmented, initial_seg, seg_params, parameters, center_seg, 1, segmentPath);
 
 	//================== Fast Marching and Path finding ===================
 
-	dataType** image_max = new dataType * [Height];
-	dataType** image_min = new dataType * [Height];
-	dataType** image_mean = new dataType * [Height];
-	dataType** image_sd = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		image_max[k] = new dataType[dim2D];
-		image_min[k] = new dataType[dim2D];
-		image_mean[k] = new dataType[dim2D];
-		image_sd[k] = new dataType[dim2D];
-	}
+	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient2/Im_mean_r5.raw";
+	manageRAWFile3D<dataType>(image_mean, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
-	//Initialization
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			image_max[k][i] = 0.0;
-			image_min[k][i] = 0.0;
-			image_mean[k][i] = 0.0;
-			image_sd[k][i] = 0.0;
-		}
-	}
+	//patient 2
+	Point3D final_point = { 262, 254, 250 }; // top 
+	//Point3D final_point = { 258, 250, 253 }; // top ---> second test
+	Point3D initial_point = { 263, 257, 146 }; // bottom
+	//Point3D middle_point = { 285, 284, 278 }; // middle
 
-	statictics_Pointers statsImage; statsImage.maximum = image_max; statsImage.minimum = image_min;
-	statsImage.mean = image_mean; statsImage.sd = image_sd;
+	////Patient3
+	//Point3D initial_point = { 259, 255, 244 };
+	//Point3D initial_point = { 262, 251, 261 }; // new test
+	//Point3D final_point = { 260, 248, 348 };
+	//Point3D middle_point = { 285, 301, 372 };
 
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/Im_mean_r5.raw";
-	//manageRAWFile3D<dataType>(image_mean, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
+	////Patient4
+	////Point3D middle_point = { 292, 277, 240 };
+	//Point3D final_point = { 255, 224, 222 };
+	//Point3D initial_point = { 269, 231, 111 };
 
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/Im_max_r5.raw";
-	//manageRAWFile3D<dataType>(image_max, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
+	////Patient5
+	////Point3D middle_point = { 260, 307, 247 };
+	//Point3D final_point = { 273, 229, 230 };
+	//Point3D initial_point = { 281, 229, 132 };
 
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/Im_min_r5.raw";
-	//manageRAWFile3D<dataType>(image_min, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
+	////Patient6
+	////Point3D middle_point = { 285, 266, 662 };
+	////Point3D final_point = { 243, 221, 637 }; // test 1 
+	//Point3D final_point = { 241, 214, 627 }; // test 2
+	//Point3D initial_point = { 265, 244, 486 };// test 1
+	////Point3D initial_point = { 267, 244, 480 };// test 2 ---> not working
 
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/Im_sd_r5.raw";
-	//manageRAWFile3D<dataType>(image_sd, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
+	////Patient7
+	////Point3D middle_point = { 277, 346, 476 };
+	//Point3D final_point = { 252, 288, 442 };
+	//Point3D initial_point = { 254, 299, 261 };
 
-	Point3D point1 = { 262, 254, 250 }; // top 
-	//Point3D point_new1 = { 263, 259, 170 }; // point new 1
-	//Point3D point_new2 = { 267, 269, 192 }; // point new 2
-	//Point3D point_new3 = { 272, 277, 205 }; // point new 3
-	//Point3D point_new4 = { 296, 317, 250 }; // point new 4
-	Point3D point2 = { 263, 257, 146 }; // bottom
-	//Point3D point2 = { 285, 284, 278 }; // middle
-	Point3D* seedPoints = new Point3D[2];
-	//seedPoints[0] = point2; 
-	seedPoints[0] = point2;
-	seedPoints[1] = point1;
+	final_point = getRealCoordFromImageCoord3D(final_point, ctOrigin, ctSpacing, orientation);
+	final_point = getImageCoordFromRealCoord3D(final_point, ctOrigin, Interpolated.spacing, orientation);
+
+	initial_point = getRealCoordFromImageCoord3D(initial_point, ctOrigin, ctSpacing, orientation);
+	initial_point = getImageCoordFromRealCoord3D(initial_point, ctOrigin, Interpolated.spacing, orientation);
+	
+	Point3D* seedPoints = new Point3D[2]; 
+	seedPoints[0] = initial_point;
+	seedPoints[1] = final_point;
 
 	Potential_Parameters parameters;
 	parameters.K = 0.005; parameters.epsilon = 0.01;
-	parameters.c_ct = 0.0; parameters.c_pet = 0.0;
-	parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 1.0;
+	parameters.c_ct = 1.0; parameters.c_pet = 0.0;
+	parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 0.0;
 
-	//compute3dPotential(imageData, potential, Length, Width, Height, seedPoints);
-
-	//computePotential_N(CT, PET, statsImage, potential, seedPoints, 5.0, parameters);
-
-	//newPotential(CT, potential, seedPoints, 3.0);
-
-	//potentialOnEdgeImage(imageData, potential, seedPoints, Length, Width, Height);
-
-	fastMarching3D_N(imageData, distance, potential, Length, Width, Height, seedPoints);
-
-	//string outputImagePath = outputPath + "potential_eucl.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
-
-	outputImagePath = outputPath + "distance.raw";
-	manageRAWFile3D<dataType>(distance, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
-
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/distance_ct_mean.raw";
-	//manageRAWFile3D<dataType>(distance, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
-
-	shortestPath3d(distance, path, Length, Width, Height, 1.0, seedPoints);
-
+	//findPathBetweenTwoGivenPoints(Interpolated, image_mean, path, seedPoints, parameters);
+	findPathFromOneGivenPoint(Interpolated, image_mean, path, seedPoints, parameters);
 	outputImagePath = outputPath + "path.raw";
-	manageRAWFile3D<dataType>(path, Length, Width, Height, outputImagePath.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(path, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
 
-	//ctContainer->operation = copyTo;
-	//ctContainer->dataPointer = path;
-	//outputImagePath = outputPath + "path.vtk";
-	//storeVtkFile(outputImagePath.c_str(), ctContainer, dta_binary);
+	//computePotentialNew(Interpolated, image_mean, potential, seedPoints, 3.0, parameters);
+	//computePotential_N(Interpolated, PET, statsImage, potential, seedPoints, 3.0, parameters);
+	//fastMarching3D_N(imageInterpolated, distance, potential, Length, Width, height_new, seedPoints);
+	//outputImagePath = outputPath + "distance_from_initial_point.raw";
+	//manageRAWFile3D<dataType>(distance, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
 
-	//========================= Free memory ============================
-
-	for (k = 0; k < Height; k++) {
-		delete[] image_max[k];
-		delete[] image_min[k];
-		delete[] image_mean[k];
-		delete[] image_sd[k];
-	}
-	delete[] image_max;
-	delete[] image_min;
-	delete[] image_mean;
-	delete[] image_sd;
+	//========================= Free memory ==================================
 
 	delete[] seedPoints;
 	free(ctContainer);
-	free(petContainer);
+
+	//delete[] center_seg;
+	//for (k = 0; k < height; k++) {
+	//	delete[] downsampled_image[k];
+	//	//delete[] initial_seg[k];
+	//}
+	//delete[] downsampled_image;
+	////delete[] initial_seg;
 	
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
-		delete[] distance[k];
-		delete[] path[k];
-		delete[] potential[k];
 		delete[] imageFiltered[k];
 	}
 	delete[] imageData;
+	delete[] imageFiltered;
+
+	for (k = 0; k < height_new; k++) {
+		delete[] imageInterpolated[k];
+		delete[] distance[k];
+		delete[] path[k];
+		delete[] potential[k];
+		delete[] image_mean[k];
+	}
+	delete[] imageInterpolated;
 	delete[] distance;
 	delete[] path;
 	delete[] potential;
-	delete[] imageFiltered;
+	delete[] image_mean;
 
 	return EXIT_SUCCESS;
 }
