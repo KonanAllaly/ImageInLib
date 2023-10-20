@@ -2263,19 +2263,74 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 
 //==================================================================
 
-/*
-bool croppVolume(Image_Data ctImageData, Image_Data croppedImage, Point3D* seedPoints, const size_t offset) {
-	
-	if (ctImageData.imageDataPtr == NULL || seedPoints == NULL)
-		return false;
+imageMetaData croppVolume(Image_Data ctImageData, Point3D* seedPoints, const size_t offset){
 
+	imageMetaData croppedImageMetaData;
+
+	croppedImageMetaData.spacing.sx = ctImageData.spacing.sx;
+	croppedImageMetaData.spacing.sy = ctImageData.spacing.sy;
+	croppedImageMetaData.spacing.sz = ctImageData.spacing.sz;
+
+	size_t height = ctImageData.height;
+	size_t length = ctImageData.length;
+	size_t width = ctImageData.width;
+
+	size_t k, i, j, x;
+	size_t i_min = length, j_min = width, k_min = height, i_max = 0, j_max = 0, k_max = 0;
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				x = x_new(i, j, length);
+				if (ctImageData.imageDataPtr[k][x] == 1.0) {
+					//find i_min
+					if (i < i_min) {
+						i_min = i;
+					}
+					//find i_max
+					if (i > i_max) {
+						i_max = i;
+					}
+
+					//find j_min
+					if (j < j_min) {
+						j_min = j;
+					}
+					//find j_max
+					if (j > j_max) {
+						j_max = j;
+					}
+
+					//find k_min
+					if (k < k_min) {
+						k_min = k;
+					}
+					//find k_max
+					if (k > k_max) {
+						k_max = k;
+					}
+				}
+			}
+		}
+	}
+
+	Point3D croppOrigin = { i_min, j_min, k_min };
+	croppOrigin = getRealCoordFromImageCoord3D(croppOrigin, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+
+	croppedImageMetaData.dimension[0] = (size_t)(i_max - i_min + 2 * offset);
+	croppedImageMetaData.dimension[1] = (size_t)(j_max - j_min + 2 * offset);
+	croppedImageMetaData.dimension[2] = (size_t)(k_max - k_min + 2 * offset);
+
+	/*
 	size_t i_min = (size_t)(seedPoints[1].y - offset);
 	size_t i_max = (size_t)(seedPoints[0].y - offset);
 	size_t j_max = (size_t)(seedPoints[1].x - offset);
 	size_t j_min = (size_t)(seedPoints[0].x - offset);
 	size_t k_min = (size_t)(seedPoints[1].z - offset);
 	size_t k_max = (size_t)(seedPoints[0].z - offset);
+	*/
 
+	/*
 	croppedImage.origin.x = j_min; croppedImage.origin.y = i_min; croppedImage.origin.z = k_min;
 	croppedImage.origin = getRealCoordFromImageCoord3D(croppedImage.origin, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	cout << "origin cropped image : (" << croppedImage.origin.x << ", " << croppedImage.origin.y << ", " << croppedImage.origin.z << ")" << endl;
@@ -2286,14 +2341,13 @@ bool croppVolume(Image_Data ctImageData, Image_Data croppedImage, Point3D* seedP
 	croppedImage.height = (size_t)(k_max - k_min + 1);
 	croppedImage.length = (size_t)(i_max - i_min + 1);
 	croppedImage.width = (size_t)(j_max - j_min + 1);
+	*/
 
-	size_t k, i, j, x;
-
+	/*
 	croppedImage.imageDataPtr = new dataType * [croppedImage.height];
 	for (k = 0; k < croppedImage.height; k++) {
 		croppedImage.imageDataPtr[k] = new dataType[croppedImage.length * croppedImage.width]{0};
 	}
-
 	for (k = k_min; k < croppedImage.height; k++) {
 		for (i = i_min; i < croppedImage.length; i++) {
 			for (j = j_min; j < croppedImage.width; j++) {
@@ -2302,7 +2356,7 @@ bool croppVolume(Image_Data ctImageData, Image_Data croppedImage, Point3D* seedP
 			}
 		}
 	}
+	*/
 
-	return true;
+	return croppedImageMetaData;
 }
-*/

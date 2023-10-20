@@ -1,8 +1,4 @@
-/*
-* Author: Konan ALLALY
-* Purpose: INFLANET project - Image Processing in Nuclear Medicine (2D/3D)
-* * Language:  C and C++
-*/
+
 //#ifdef __cplusplus
 //extern "C" {
 //#endif
@@ -126,6 +122,8 @@ using namespace std;
 
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
 
+	//================================================================
+
 	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
 
 	bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints);
@@ -140,7 +138,13 @@ using namespace std;
 
 	//=================================================================
 
-	//bool croppVolume(Image_Data ctImageData, Image_Data croppedImage, Point3D* seedPoints, const size_t offset);
+	typedef struct {
+		Point3D origin;
+		VoxelSpacing spacing;
+		size_t dimension[3];
+	}imageMetaData;
+
+	imageMetaData croppVolume(Image_Data ctImageData, Point3D* seedPoints, const size_t offset);
 
 //#ifdef __cplusplus
 //}
