@@ -145,7 +145,6 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 
 	//compute coefficients from presmoothed image
 	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
-	//generalizedGFunctionForImageToBeSegmented(inputImageData, inputImageData.imageDataPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
 
 	//Array for name construction
 	unsigned char  name[500];
@@ -157,12 +156,11 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	strcat_s(name, sizeof(name), name_ending);
 
 	manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
-	//manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_smoothed_image.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	//manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 
 	firstCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
 	//loop for segmentation time steps
@@ -194,6 +192,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 		copyDataToAnotherArray(gauss_seidelPtr, prevSol_extPtr, height_ext, length_ext, width_ext);
 
 		//writing density.
+		
 		if ((i % segParameters.mod) == 0)
 		{
 			strcpy_s(name, sizeof name, outputPathPtr);
@@ -203,7 +202,9 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 			printf("Step is %zd\n", segParameters.numberOfTimeStep);
 			printf("Error = %lf\n", difference_btw_current_and_previous_sol);
 		}
+		
 		i++;
+
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 
 	//secondCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
@@ -676,6 +677,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 		}
 
 	} while (mean_square_residue > segParameters.gauss_seidelTolerance && z < segParameters.maxNoGSIteration);
+	printf("number of iteration is %zd\n", z);
 
 	/*if ((segParameters.maxNoOfTimeSteps % 10) == 0) {
 		printf("Step is %zd\n", segParameters.numberOfTimeStep);
