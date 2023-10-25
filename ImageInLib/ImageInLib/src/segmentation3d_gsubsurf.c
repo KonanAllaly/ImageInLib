@@ -638,12 +638,12 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 
 					// SOR implementation using Gauss-Seidel
 					//dataType new_value = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
-					//gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
+					gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 
-					//don't change if the old value was 1.0
-					if(gauss_seidelPtr[k_ext][x_ext] != 1.0){
-						gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
-					}
+					////don't change if the old value was 1.0
+					//if(gauss_seidelPtr[k_ext][x_ext] != 1.0){
+					//	gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
+					//}
 
 					////don't change if the old value is higher than the new one
 					//if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
