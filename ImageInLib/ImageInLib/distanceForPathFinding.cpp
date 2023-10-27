@@ -1785,7 +1785,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 
 	seedStats = getStats(ctImageData, initial_point, 3.0);
 	dataType v1_ct = seedStats.mean_data;
-	seedStats = getStats(ctImageData, final_point, 3.0);
+	//seedStats = getStats(ctImageData, final_point, 3.0);
 	//dataType v2_ct = seedStats.mean_data;
 	dataType seedValCT = v1_ct; //(v1_ct + v2_ct) / 2.0;
 
@@ -1794,7 +1794,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	meanImage.origin = ctImageData.origin; meanImage.spacing = ctImageData.spacing; meanImage.orientation = ctImageData.orientation;
 	seedStats = getStats(meanImage, initial_point, 3.0);
 	dataType v1_mean = seedStats.mean_data;
-	seedStats = getStats(meanImage, final_point, 3.0);
+	//seedStats = getStats(meanImage, final_point, 3.0);
 	//dataType v2_mean = seedStats.mean_data;
 	dataType seedValMean = v1_mean; //(v1_mean + v2_mean) / 2.0;
 
@@ -2075,8 +2075,8 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints, radius, parameters);
 	fastMarching3D_N(ctImageData.imageDataPtr, actionPtr, potentialPtr, length, width, height, initial_point);
 	
-	//saving_name = path_name + "action_map_0.raw";
-	//store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
+	saving_name = path_name + "action_map_0.raw";
+	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 
 	//find next point inside the aorta
 	min_distance = BIG_VALUE;
@@ -2102,8 +2102,8 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	seeds[1] = temporary_point;
 	shortestPath3d(actionPtr, resultedPath, length, width, height, 1.0, seeds);
 	
-	//saving_name = path_name + "path_0.raw";
-	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+	saving_name = path_name + "path_0.raw";
+	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
 	while (cpt < 10) {
 
@@ -2131,19 +2131,19 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 			}
 		}
 
-		//saving_name = path_name + "mask_" + extension + ".raw";
-		//store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
+		saving_name = path_name + "mask_" + extension + ".raw";
+		store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
 
 		seeds[0] = seeds[1];
 		initial_point = seeds[1];
 		
 		//cout << "new starting point : (" << initial_point.x << ", " << initial_point.y << ", " << initial_point.z << ")" << endl;
-		//computePotentialNew(ctImageData, meanImagePtr, potentialPtr, initial_point, radius, parameters);
 		
+		//computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seeds, radius, parameters);
 		fastMarching3D_N(ctImageData.imageDataPtr, newActionPtr, potentialPtr, length, width, height, initial_point);
 		
-		//saving_name = path_name + "action_map_" + extension + ".raw";
-		//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
+		saving_name = path_name + "action_map_" + extension + ".raw";
+		store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
 
 		//Find the temporary point
 		min_distance = BIG_VALUE;
@@ -2173,18 +2173,18 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		seeds[1] = temporary_point;
 		shortestPath3d(newActionPtr, resultedPath, length, width, height, 1.0, seeds);
 		
-		//saving_name = path_name + "path_" + extension + ".raw";
-		//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+		saving_name = path_name + "path_" + extension + ".raw";
+		store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 		
 		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
 		cpt++;
 	}
 
-	saving_name = path_name + "mask.raw";
-	store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
+	//saving_name = path_name + "mask.raw";
+	//store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
 
-	saving_name = path_name + "path.raw";
-	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+	//saving_name = path_name + "path.raw";
+	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
 	for (k = 0; k < height; k++) {
 		delete[] actionPtr[k];
@@ -2202,6 +2202,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	return true;
 }
 
+/*
 bool findPathBetweenTwoGivenPoints(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL || meanImagePtr == NULL || resultedPath == NULL || seedPoints == NULL)
@@ -2390,6 +2391,7 @@ bool findPathBetweenTwoGivenPoints(Image_Data ctImageData, dataType** meanImageP
 
 	return true;
 }
+*/
 
 //==================================================================
 
