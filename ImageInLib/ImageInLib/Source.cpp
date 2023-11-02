@@ -28,20 +28,20 @@ int main() {
 	ctContainer->operation = copyFrom;
 
 	std::string inputImagePath = inputPath + "Patient7_ct.vtk";
-	//std::string inputImagePath = inputPath + "LiverP3.vtk";
-	readVtkFile(inputImagePath.c_str(), ctContainer);
+	////std::string inputImagePath = inputPath + "LiverP3.vtk";
+	//readVtkFile(inputImagePath.c_str(), ctContainer);
 
-	int Height = ctContainer->dimensions[2];
-	int Length = ctContainer->dimensions[1];
-	int Width = ctContainer->dimensions[0];
-	int dim2D = Length * Width;
-	cout << "Input image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << ctContainer->dimensions[2] << "" << endl;
+	//int Height = ctContainer->dimensions[2];
+	//int Length = ctContainer->dimensions[1];
+	//int Width = ctContainer->dimensions[0];
+	//int dim2D = Length * Width;
+	//cout << "Input image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << ctContainer->dimensions[2] << "" << endl;
 
-	cout << "Image origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << endl;
-	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
-	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
+	//cout << "Image origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << endl;
+	//Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
+	//VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 
-	int i = 0, j = 0, k = 0, x = 0, x2 = 0;
+	//int i = 0, j = 0, k = 0, x = 0, x2 = 0;
 
 	//inputImagePath = inputPath + "Aorta_P3.vtk";
 	//readVtkFile(inputImagePath.c_str(), ctContainer);
@@ -56,41 +56,46 @@ int main() {
 
 	/*================  Data container for fast marching and path finding ============*/
 
-	dataType** imageFiltered = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageFiltered[k] = new dataType[dim2D]{0};
-		if (imageFiltered[k] == NULL)
-			return false;
-	}
-	if (imageFiltered == NULL)
-		return false;
-
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filteredGMC_p7.raw";
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/_edge_detector_p3.raw";
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
-	manageRAWFile3D<dataType>(imageFiltered, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
-
-	Image_Data CT; CT.imageDataPtr = imageFiltered;
-	CT.height = Height; CT.length = Length; CT.width = Width;
-	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
-
-	//FILE* file;
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
-	//if (fopen_s(&file, inputImagePath.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
+	//dataType** imageFiltered = new dataType * [Height];
+	//for (k = 0; k < Height; k++) {
+	//	imageFiltered[k] = new dataType[dim2D]{0};
+	//	if (imageFiltered[k] == NULL)
+	//		return false;
 	//}
-	//char first_line[1000];
-	//size_t count = 0;
+	//if (imageFiltered == NULL)
+	//	return false;
+
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filteredGMC_p7.raw";
+	////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/_edge_detector_p3.raw";
+	////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
+	//manageRAWFile3D<dataType>(imageFiltered, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
+
+	//Image_Data CT; CT.imageDataPtr = imageFiltered;
+	//CT.height = Height; CT.length = Length; CT.width = Width;
+	//CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
+
+	FILE* file;
+	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
+	if (fopen_s(&file, inputImagePath.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	const size_t number_of_element = 4;
+	char first_line[number_of_element];
+	size_t count = 0, datasize = number_of_element * sizeof(double);
+	fgets(first_line, datasize, file);
+	printf("first line : %s", first_line);
 	//while (feof(file) != true) {
 	//	count++;
-	//	fgets(first_line, 1000, file);
+	//	fgets(first_line, datasize, file);
 	//	if (count == 1) {
 	//		printf("first line : %s", first_line);
 	//	}
 	//}
-	//fclose(file);
-	//exit(0);
+
+	fclose(file);
+
 	/*================ Find the slice with the largest piece of the liver ==============*/
 
 	////size_t max_number = 0, count = 0, k_max = 0;
@@ -566,10 +571,10 @@ int main() {
 
 	//delete[] center_seg;
 	
-	for (k = 0; k < Height; k++) {
-		delete[] imageFiltered[k];
-	}
-	delete[] imageFiltered;
+	//for (k = 0; k < Height; k++) {
+	//	delete[] imageFiltered[k];
+	//}
+	//delete[] imageFiltered;
 
 	//for (k = 0; k < height_new; k++) {
 	//	delete[] imageInterpolated[k];
