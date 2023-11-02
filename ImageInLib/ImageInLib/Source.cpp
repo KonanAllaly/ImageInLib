@@ -74,6 +74,23 @@ int main() {
 	CT.height = Height; CT.length = Length; CT.width = Width;
 	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
 
+	//FILE* file;
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
+	//if (fopen_s(&file, inputImagePath.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//char first_line[1000];
+	//size_t count = 0;
+	//while (feof(file) != true) {
+	//	count++;
+	//	fgets(first_line, 1000, file);
+	//	if (count == 1) {
+	//		printf("first line : %s", first_line);
+	//	}
+	//}
+	//fclose(file);
+	//exit(0);
 	/*================ Find the slice with the largest piece of the liver ==============*/
 
 	////size_t max_number = 0, count = 0, k_max = 0;
@@ -121,32 +138,32 @@ int main() {
 
 	//=================== Interpolation ====================================
 
-	const size_t height_new = (size_t)((ctContainer->dimensions[2] * ctContainer->spacing[2]) / ctContainer->spacing[0]);
-	cout << "Interpolated height : " << height_new << endl;
-	cout << "spacing : " << ctContainer->spacing[0] << endl;
+	//const size_t height_new = (size_t)((ctContainer->dimensions[2] * ctContainer->spacing[2]) / ctContainer->spacing[0]);
+	//cout << "Interpolated height : " << height_new << endl;
+	//cout << "spacing : " << ctContainer->spacing[0] << endl;
 
-	dataType** imageInterpolated = new dataType * [height_new];
-	dataType** distance = new dataType * [height_new];
-	dataType** path = new dataType * [height_new];
-	dataType** potential = new dataType * [height_new];
-	dataType** image_mean = new dataType * [height_new];
-	for (k = 0; k < height_new; k++) {
-		imageInterpolated[k] = new dataType[dim2D]{0};
-		distance[k] = new dataType[dim2D]{0};
-		path[k] = new dataType[dim2D]{0};
-		potential[k] = new dataType[dim2D]{0};
-		image_mean[k] = new dataType[dim2D]{0};
-		if (imageInterpolated[k] == NULL || distance[k] == NULL || path[k] == NULL || potential[k] == NULL || image_mean[k] == NULL)
-			return false;
-	}
-	if (imageInterpolated == NULL || distance == NULL || path == NULL || potential == NULL || image_mean == NULL)
-		return false;
+	//dataType** imageInterpolated = new dataType * [height_new];
+	//dataType** distance = new dataType * [height_new];
+	//dataType** path = new dataType * [height_new];
+	//dataType** potential = new dataType * [height_new];
+	//dataType** image_mean = new dataType * [height_new];
+	//for (k = 0; k < height_new; k++) {
+	//	imageInterpolated[k] = new dataType[dim2D]{0};
+	//	distance[k] = new dataType[dim2D]{0};
+	//	path[k] = new dataType[dim2D]{0};
+	//	potential[k] = new dataType[dim2D]{0};
+	//	image_mean[k] = new dataType[dim2D]{0};
+	//	if (imageInterpolated[k] == NULL || distance[k] == NULL || path[k] == NULL || potential[k] == NULL || image_mean[k] == NULL)
+	//		return false;
+	//}
+	//if (imageInterpolated == NULL || distance == NULL || path == NULL || potential == NULL || image_mean == NULL)
+	//	return false;
 
-	Image_Data Interpolated; Interpolated.imageDataPtr = imageInterpolated;
-	Interpolated.height = height_new; Interpolated.length = Length; Interpolated.width = Width;
-	Interpolated.orientation = orientation; Interpolated.origin = ctOrigin;
-	Interpolated.spacing.sx = ctSpacing.sx; Interpolated.spacing.sy = ctSpacing.sy; Interpolated.spacing.sz = ctSpacing.sx;
-	imageInterpolation3D(CT, Interpolated, NEAREST_NEIGHBOR);
+	//Image_Data Interpolated; Interpolated.imageDataPtr = imageInterpolated;
+	//Interpolated.height = height_new; Interpolated.length = Length; Interpolated.width = Width;
+	//Interpolated.orientation = orientation; Interpolated.origin = ctOrigin;
+	//Interpolated.spacing.sx = ctSpacing.sx; Interpolated.spacing.sy = ctSpacing.sy; Interpolated.spacing.sz = ctSpacing.sx;
+	//imageInterpolation3D(CT, Interpolated, NEAREST_NEIGHBOR);
 
 	////string outputImagePath = outputPath + "interpolated.raw";
 	////manageRAWFile3D<dataType>(imageInterpolated, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
@@ -240,11 +257,11 @@ int main() {
 
 	//================== Fast Marching and Path finding ===================
 
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient7/Im_mean_r3.raw";
-	manageRAWFile3D<dataType>(image_mean, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient7/Im_mean_r3.raw";
+	//manageRAWFile3D<dataType>(image_mean, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/path_p7.raw";
-	manageRAWFile3D<dataType>(path, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/path_p7.raw";
+	//manageRAWFile3D<dataType>(path, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
 	//////patient 2
 	////Point3D final_point = { 262, 254, 250 }; // top 
@@ -272,74 +289,74 @@ int main() {
 	////Point3D final_point = { 241, 214, 627 }; // test 2
 	////Point3D initial_point = { 265, 244, 486 };// test 1
 
-	//Patient7
-	//Point3D middle_point = { 277, 346, 476 };
-	Point3D final_point = { 252, 288, 442 };
-	Point3D initial_point = { 254, 299, 261 };
+	////Patient7
+	////Point3D middle_point = { 277, 346, 476 };
+	//Point3D final_point = { 252, 288, 442 };
+	//Point3D initial_point = { 254, 299, 261 };
 
-	//Get corresponding point in interpolated image
-	initial_point = getRealCoordFromImageCoord3D(initial_point, ctOrigin, ctSpacing, orientation);
-	initial_point = getImageCoordFromRealCoord3D(initial_point, ctOrigin, Interpolated.spacing, orientation);
-	initial_point.x = (size_t)initial_point.x; initial_point.y = (size_t)initial_point.y; initial_point.z = (size_t)initial_point.z;
+	////Get corresponding point in interpolated image
+	//initial_point = getRealCoordFromImageCoord3D(initial_point, ctOrigin, ctSpacing, orientation);
+	//initial_point = getImageCoordFromRealCoord3D(initial_point, ctOrigin, Interpolated.spacing, orientation);
+	//initial_point.x = (size_t)initial_point.x; initial_point.y = (size_t)initial_point.y; initial_point.z = (size_t)initial_point.z;
 
-	//Get corresponding point in interpolated image
-	final_point = getRealCoordFromImageCoord3D(final_point, ctOrigin, ctSpacing, orientation);
-	final_point = getImageCoordFromRealCoord3D(final_point, ctOrigin, Interpolated.spacing, orientation);
-	final_point.x = (size_t)final_point.x; final_point.y = (size_t)final_point.y; final_point.z = (size_t)final_point.z;
+	////Get corresponding point in interpolated image
+	//final_point = getRealCoordFromImageCoord3D(final_point, ctOrigin, ctSpacing, orientation);
+	//final_point = getImageCoordFromRealCoord3D(final_point, ctOrigin, Interpolated.spacing, orientation);
+	//final_point.x = (size_t)final_point.x; final_point.y = (size_t)final_point.y; final_point.z = (size_t)final_point.z;
 
-	Point3D* seedPoints = new Point3D[2]; 
-	seedPoints[0] = initial_point;
-	seedPoints[1] = final_point;
+	//Point3D* seedPoints = new Point3D[2]; 
+	//seedPoints[0] = initial_point;
+	//seedPoints[1] = final_point;
 
-	Potential_Parameters parameters;
-	parameters.K = 0.005; parameters.epsilon = 0.01;
-	parameters.c_ct = 1.0; parameters.c_pet = 0.0;
-	parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 0.0;
+	//Potential_Parameters parameters;
+	//parameters.K = 0.005; parameters.epsilon = 0.01;
+	//parameters.c_ct = 1.0; parameters.c_pet = 0.0;
+	//parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 0.0;
 
-	//FILE* ct;
-	//if (fopen_s(&ct, "C:/Users/Konan Allaly/Documents/Tests/output/image_value_path.csv", "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//FILE* pot;
-	//if (fopen_s(&pot, "C:/Users/Konan Allaly/Documents/Tests/output/potential_value_path.csv", "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	computePotentialNew(Interpolated, image_mean, potential, seedPoints, 3.0, parameters);
-	string outputImagePath = outputPath + "potential_p7.raw";
-	manageRAWFile3D<dataType>(distance, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
-	for (k = 0; k < height_new; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				x = x_new(j, i, Width);
-				if (path[k][x] == 1.0 && potential[k][x] >= 0.01 && potential[k][x] <= 0.013) {
-					distance[k][x] = 1.0;
-					//fprintf(ct, "%d, %d, %d, %f \n", j, i, k, Interpolated.imageDataPtr[k][x]);
-					//fprintf(pot, "%d, %d, %d, %f \n", j, i, k, potential[k][x]);
-				}
-			}
-		}
-	}
-	//fclose(ct);
-	//fclose(pot);
-
-	//Point3D max_potential = { 319, 272, 597 };
+	////FILE* ct;
+	////if (fopen_s(&ct, "C:/Users/Konan Allaly/Documents/Tests/output/image_value_path.csv", "w") != 0) {
+	////	printf("Enable to open");
+	////	return false;
+	////}
+	////FILE* pot;
+	////if (fopen_s(&pot, "C:/Users/Konan Allaly/Documents/Tests/output/potential_value_path.csv", "w") != 0) {
+	////	printf("Enable to open");
+	////	return false;
+	////}
+	//computePotentialNew(Interpolated, image_mean, potential, seedPoints, 3.0, parameters);
+	//string outputImagePath = outputPath + "potential_p7.raw";
+	//manageRAWFile3D<dataType>(distance, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
 	//for (k = 0; k < height_new; k++) {
 	//	for (i = 0; i < Length; i++) {
 	//		for (j = 0; j < Width; j++) {
 	//			x = x_new(j, i, Width);
-	//			distance[k][x] = path[k][x];
-	//			Point3D current_point = { j, i, k };
-	//			double dist = getPoint3DDistance(max_potential, current_point);
-	//			if (dist <= 3.0) {
+	//			if (path[k][x] == 1.0 && potential[k][x] >= 0.01 && potential[k][x] <= 0.013) {
 	//				distance[k][x] = 1.0;
+	//				//fprintf(ct, "%d, %d, %d, %f \n", j, i, k, Interpolated.imageDataPtr[k][x]);
+	//				//fprintf(pot, "%d, %d, %d, %f \n", j, i, k, potential[k][x]);
 	//			}
 	//		}
 	//	}
 	//}
-	outputImagePath = outputPath + "path_potential.raw";
-	manageRAWFile3D<dataType>(distance, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
+	////fclose(ct);
+	////fclose(pot);
+
+	////Point3D max_potential = { 319, 272, 597 };
+	////for (k = 0; k < height_new; k++) {
+	////	for (i = 0; i < Length; i++) {
+	////		for (j = 0; j < Width; j++) {
+	////			x = x_new(j, i, Width);
+	////			distance[k][x] = path[k][x];
+	////			Point3D current_point = { j, i, k };
+	////			double dist = getPoint3DDistance(max_potential, current_point);
+	////			if (dist <= 3.0) {
+	////				distance[k][x] = 1.0;
+	////			}
+	////		}
+	////	}
+	////}
+	//outputImagePath = outputPath + "path_potential.raw";
+	//manageRAWFile3D<dataType>(distance, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
 
 	//findPathFromOneGivenPoint(Interpolated, image_mean, path, seedPoints, parameters);
 	
@@ -554,18 +571,18 @@ int main() {
 	}
 	delete[] imageFiltered;
 
-	for (k = 0; k < height_new; k++) {
-		delete[] imageInterpolated[k];
-		delete[] distance[k];
-		delete[] path[k];
-		delete[] potential[k];
-		delete[] image_mean[k];
-	}
-	delete[] imageInterpolated;
-	delete[] distance;
-	delete[] path;
-	delete[] potential;
-	delete[] image_mean;
+	//for (k = 0; k < height_new; k++) {
+	//	delete[] imageInterpolated[k];
+	//	delete[] distance[k];
+	//	delete[] path[k];
+	//	delete[] potential[k];
+	//	delete[] image_mean[k];
+	//}
+	//delete[] imageInterpolated;
+	//delete[] distance;
+	//delete[] path;
+	//delete[] potential;
+	//delete[] image_mean;
 
 	return EXIT_SUCCESS;
 }
