@@ -12,7 +12,7 @@
 
 #define BIG_VALUE INFINITY
 
-using namespace std;
+//using namespace std;
 
 //J.A Sethian, A Fast Marching Level Set method for Monotonically advancing fronts, 1995, page 8 and 10.
 //link to article ---> http://ugweb.cs.ualberta.ca/~vis/courses/CompVis/readings/modelrec/sethian95fastlev.pdf
@@ -579,8 +579,8 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	}
 	while(dist_min > tol && cpt < 10000000);
 
-	cout << "\nDistance to the end point : " << dist_min << endl;
-	cout << "\nNumber of iterations : " << cpt << endl;
+	std::cout << "\nDistance to the end point : " << dist_min << std::endl;
+	std::cout << "\nNumber of iterations : " << cpt << std::endl;
 
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
@@ -1651,7 +1651,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 	return true;
 }
 
-bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints) {
+bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, string path_curvature, FILE * file_curve) {
 
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
@@ -1690,7 +1690,7 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	}
 	
 	//Find the closest point till the last point
-	size_t cpt = 0;
+	size_t cpt = 1;
 	size_t i_current = i_end;
 	size_t j_current = j_end;
 	size_t k_current = k_end;
@@ -1703,11 +1703,18 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	double currentDist = 0.0;
 	double dist_min = 0.0;
 
+	////"C:/Users/Konan Allaly/Documents/Tests/output/points_found.csv"
 	//FILE* file;
-	//if (fopen_s(&file, "C:/Users/Konan Allaly/Documents/Tests/output/points_found.csv", "w") != 0) {
+	//if (fopen_s(&file, path_curvature.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
 	//}
+
+	//update 31/10/2023
+	Point3D point1 = seedPoints[1];
+	Point3D point2 = { 0.0, 0.0, 0.0 }, previous_point = {0.0, 0.0, 0.0}, current_point = { 0.0, 0.0, 0.0 }, next_point = { 0.0, 0.0, 0.0 };
+	vector<Point3D> list_of_path_point, list_inverted;
+	list_of_path_point.push_back(point1);
 
 	do {
 
@@ -1715,6 +1722,12 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
 		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
 		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
+		
+		point2.x = jNew; point2.y = iNew; point2.z = kNew;
+		list_of_path_point.push_back(point2);
+		//distance_between_point = getPoint3DDistance(point1, point2);
+		//cout << "Step " << cpt << " : distance between point = " << distance_between_point << endl;
+		//point1 = point2;
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1722,19 +1735,58 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
 		resultedPath[k_current][x_new(j_current, i_current, width)] = 1.0;
+
+		//point2.x = j_current; point2.y = i_current; point2.z = k_current;
+		//list_of_path_point.push_back(point2);
 		
 		//cout << "(" << j_current << ", " << i_current << ", " << k_current << ")" << endl;
 		//fprintf(file, "%d, %d, %d \n", j_current, i_current, k_current);
 
-		currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
+		//currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
 
 	//fclose(file);
-
 	//cout << "\nDistance to the end point : " << dist_min << endl;
-	cout << "\nNumber of iterations : " << cpt << endl;
+	//std::cout << "\nNumber of iterations : " << cpt << std::endl;
+
+	//update 31/07/2023
+	int l = list_of_path_point.size(), n = 0;
+	for (n = l - 1; n > -1; n--){
+		list_inverted.push_back(list_of_path_point[n]);
+	}
+	double* distance_between_points = new double[l] {0};
+	for (i = 1; i < l; i++) {
+		distance_between_points[i] = getPoint3DDistance(list_inverted[i], list_inverted[i - 1]);
+		//fprintf(file_curve, "%lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z);
+	}
+	//fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[0].x, list_inverted[0].y, list_inverted[0].z, 0.0);
+	double coef = 0.0, x_component = 0.0, y_component = 0.0, z_component = 0.0, curvature = 0.0, max_curvature = 0.0;
+	for (i = 1; i < l - 1; i++) {
+		previous_point = list_inverted[i - 1];
+		current_point = list_inverted[i];
+		next_point = list_inverted[i + 1];
+		coef = 2 / (distance_between_points[i + 1] + distance_between_points[i]);
+		x_component = coef * (((next_point.x - current_point.x) / distance_between_points[i + 1]) - ((current_point.x - previous_point.x) / distance_between_points[i]));
+		y_component = coef * (((next_point.y - current_point.y) / distance_between_points[i + 1]) - ((current_point.y - previous_point.y) / distance_between_points[i]));
+		z_component = coef * (((next_point.z - current_point.z) / distance_between_points[i + 1]) - ((current_point.z - previous_point.z) / distance_between_points[i]));
+		curvature = sqrt(x_component * x_component + y_component * y_component + z_component * z_component);
+		fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z, curvature);
+		
+		//fprintf(file, "%d, %lf \n", i, curvature);
+		//fprintf(file_curve, "%d, %d, %d \n", j, i, k);
+		//cout << "Step " << i << " : curvature = " << curvature << endl;
+
+		//if (curvature > max_curvature) {
+		//	max_curvature = curvature;
+		//	point1 = previous_point;
+		//	point2 = current_point;
+		//}
+
+	}
+	//fclose(file);
+	delete[] distance_between_points;
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -2072,11 +2124,18 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension;
 
+	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path_plus_curvature.csv";
+	FILE* file;
+	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
 	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints, radius, parameters);
 	fastMarching3D_N(ctImageData.imageDataPtr, actionPtr, potentialPtr, length, width, height, initial_point);
 	
-	saving_name = path_name + "action_map_0.raw";
-	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
+	//saving_name = path_name + "action_map_0.raw";
+	//store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 
 	//find next point inside the aorta
 	min_distance = BIG_VALUE;
@@ -2100,12 +2159,14 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	
 	//path between initial point and second point
 	seeds[1] = temporary_point;
-	shortestPath3d(actionPtr, resultedPath, length, width, height, 1.0, seeds);
+	saving_name = path_name + "curvature_0.csv";
+	shortestPath3d(actionPtr, resultedPath, length, width, height, 1.0, seeds, saving_name.c_str(), file);
 	
-	saving_name = path_name + "path_0.raw";
-	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+	//saving_name = path_name + "path_0.raw";
+	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
-	while (cpt < 10) {
+	//exit(0);
+	while (cpt < 13) {
 
 		cout << "STEP " << cpt << " : " << endl;
 		extension = to_string(cpt);
@@ -2131,8 +2192,8 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 			}
 		}
 
-		saving_name = path_name + "mask_" + extension + ".raw";
-		store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
+		//saving_name = path_name + "mask_" + extension + ".raw";
+		//store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
 
 		seeds[0] = seeds[1];
 		initial_point = seeds[1];
@@ -2142,8 +2203,8 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		//computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seeds, radius, parameters);
 		fastMarching3D_N(ctImageData.imageDataPtr, newActionPtr, potentialPtr, length, width, height, initial_point);
 		
-		saving_name = path_name + "action_map_" + extension + ".raw";
-		store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
+		//saving_name = path_name + "action_map_" + extension + ".raw";
+		//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
 
 		//Find the temporary point
 		min_distance = BIG_VALUE;
@@ -2171,14 +2232,17 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		//path between points
 		cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << endl;
 		seeds[1] = temporary_point;
-		shortestPath3d(newActionPtr, resultedPath, length, width, height, 1.0, seeds);
+		saving_name = path_name + "curvature_" + extension + ".csv";
+		shortestPath3d(newActionPtr, resultedPath, length, width, height, 1.0, seeds, saving_name.c_str(), file);
 		
-		saving_name = path_name + "path_" + extension + ".raw";
-		store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+		//saving_name = path_name + "path_" + extension + ".raw";
+		//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 		
 		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
 		cpt++;
 	}
+
+	fclose(file);
 
 	//saving_name = path_name + "mask.raw";
 	//store3dRawData<dataType>(maskDistance, length, width, height, saving_name.c_str());
