@@ -74,18 +74,25 @@ int main() {
 	//CT.height = Height; CT.length = Length; CT.width = Width;
 	//CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
 
-	FILE* file;
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
-	if (fopen_s(&file, inputImagePath.c_str(), "r") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	//FILE* file;
+	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
+	//if (fopen_s(&file, inputImagePath.c_str(), "r") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
 
-	const size_t number_of_element = 4;
-	char first_line[number_of_element];
-	size_t count = 0, datasize = number_of_element * sizeof(double);
-	fgets(first_line, datasize, file);
-	printf("first line : %s", first_line);
+	//const size_t datasize = 5 * sizeof(double);
+	////const size_t number_of_element = datasize;
+	//char first_line[datasize];
+	//fgets(first_line, datasize, file);
+	//char* token;
+	////token = strtok_s(first_line, ",");
+	//while (token != NULL) {
+	//	printf("Token : %s", token);
+	//	//token = strtok_s(NULL, ",");
+	//}
+	////printf("first line : %s", first_line);
+	
 	//while (feof(file) != true) {
 	//	count++;
 	//	fgets(first_line, datasize, file);
@@ -94,7 +101,7 @@ int main() {
 	//	}
 	//}
 
-	fclose(file);
+	//fclose(file);
 
 	/*================ Find the slice with the largest piece of the liver ==============*/
 
