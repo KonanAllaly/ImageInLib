@@ -1651,7 +1651,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 	return true;
 }
 
-bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, string path_curvature, FILE * file_curve) {
+bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataType** ctImageData, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, string path_curvature, FILE * file_curve) {
 
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
@@ -1725,9 +1725,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		
 		point2.x = jNew; point2.y = iNew; point2.z = kNew;
 		list_of_path_point.push_back(point2);
-		//distance_between_point = getPoint3DDistance(point1, point2);
-		//cout << "Step " << cpt << " : distance between point = " << distance_between_point << endl;
-		//point1 = point2;
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1735,9 +1732,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
 		resultedPath[k_current][x_new(j_current, i_current, width)] = 1.0;
-
-		//point2.x = j_current; point2.y = i_current; point2.z = k_current;
-		//list_of_path_point.push_back(point2);
 		
 		//cout << "(" << j_current << ", " << i_current << ", " << k_current << ")" << endl;
 		//fprintf(file, "%d, %d, %d \n", j_current, i_current, k_current);
@@ -1756,23 +1750,32 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	for (n = l - 1; n > -1; n--){
 		list_inverted.push_back(list_of_path_point[n]);
 	}
+	
 	double* distance_between_points = new double[l] {0};
-	for (i = 1; i < l; i++) {
-		distance_between_points[i] = getPoint3DDistance(list_inverted[i], list_inverted[i - 1]);
-		//fprintf(file_curve, "%lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z);
+	for (n = 1; n < l; n++) {
+		distance_between_points[n] = getPoint3DDistance(list_inverted[n], list_inverted[n - 1]);
 	}
-	//fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[0].x, list_inverted[0].y, list_inverted[0].z, 0.0);
+	
 	double coef = 0.0, x_component = 0.0, y_component = 0.0, z_component = 0.0, curvature = 0.0, max_curvature = 0.0;
-	for (i = 1; i < l - 1; i++) {
-		previous_point = list_inverted[i - 1];
-		current_point = list_inverted[i];
-		next_point = list_inverted[i + 1];
-		coef = 2 / (distance_between_points[i + 1] + distance_between_points[i]);
-		x_component = coef * (((next_point.x - current_point.x) / distance_between_points[i + 1]) - ((current_point.x - previous_point.x) / distance_between_points[i]));
-		y_component = coef * (((next_point.y - current_point.y) / distance_between_points[i + 1]) - ((current_point.y - previous_point.y) / distance_between_points[i]));
-		z_component = coef * (((next_point.z - current_point.z) / distance_between_points[i + 1]) - ((current_point.z - previous_point.z) / distance_between_points[i]));
+	dataType ctVal = 0.0, potVal = 0.0;
+	
+	for (n = 1; n < l - 1; n++) {
+		previous_point = list_inverted[n - 1];
+		current_point = list_inverted[n];
+		next_point = list_inverted[n + 1];
+		coef = 2 / (distance_between_points[n + 1] + distance_between_points[n]);
+		x_component = coef * (((next_point.x - current_point.x) / distance_between_points[n + 1]) - ((current_point.x - previous_point.x) / distance_between_points[n]));
+		y_component = coef * (((next_point.y - current_point.y) / distance_between_points[n + 1]) - ((current_point.y - previous_point.y) / distance_between_points[n]));
+		z_component = coef * (((next_point.z - current_point.z) / distance_between_points[n + 1]) - ((current_point.z - previous_point.z) / distance_between_points[n]));
 		curvature = sqrt(x_component * x_component + y_component * y_component + z_component * z_component);
-		fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z, curvature);
+		//fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z, curvature); // original code
+		
+		j = (size_t)list_inverted[n].x; i = (size_t)list_inverted[n].y; k = (size_t)list_inverted[n].z;
+		xd = x_new(j, i, width);
+		ctVal = ctImageData[k][xd];
+		potVal = potentialPtr[k][xd];
+
+		fprintf(file_curve, "%lf, %lf, %lf, %lf, %f, %f \n", list_inverted[n].x, list_inverted[n].y, list_inverted[n].z, curvature, ctVal, potVal);
 		
 		//fprintf(file, "%d, %lf \n", i, curvature);
 		//fprintf(file_curve, "%d, %d, %d \n", j, i, k);
@@ -2124,7 +2127,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension;
 
-	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path_plus_curvature.csv";
+	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path_plus_curvature_ct_potential.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2159,13 +2162,11 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	
 	//path between initial point and second point
 	seeds[1] = temporary_point;
-	saving_name = path_name + "curvature_0.csv";
-	shortestPath3d(actionPtr, resultedPath, length, width, height, 1.0, seeds, saving_name.c_str(), file);
+	shortestPath3d(actionPtr, resultedPath, ctImageData.imageDataPtr, potentialPtr, length, width, height, 1.0, seeds, saving_name.c_str(), file);
 	
 	//saving_name = path_name + "path_0.raw";
 	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
-	//exit(0);
 	while (cpt < 13) {
 
 		cout << "STEP " << cpt << " : " << endl;
@@ -2200,7 +2201,6 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		
 		//cout << "new starting point : (" << initial_point.x << ", " << initial_point.y << ", " << initial_point.z << ")" << endl;
 		
-		//computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seeds, radius, parameters);
 		fastMarching3D_N(ctImageData.imageDataPtr, newActionPtr, potentialPtr, length, width, height, initial_point);
 		
 		//saving_name = path_name + "action_map_" + extension + ".raw";
@@ -2233,7 +2233,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << endl;
 		seeds[1] = temporary_point;
 		saving_name = path_name + "curvature_" + extension + ".csv";
-		shortestPath3d(newActionPtr, resultedPath, length, width, height, 1.0, seeds, saving_name.c_str(), file);
+		shortestPath3d(newActionPtr, resultedPath, ctImageData.imageDataPtr, potentialPtr, length, width, height, 1.0, seeds, saving_name.c_str(), file);
 		
 		//saving_name = path_name + "path_" + extension + ".raw";
 		//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
