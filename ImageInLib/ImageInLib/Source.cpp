@@ -27,8 +27,8 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 
-	std::string inputImagePath = inputPath + "Patient7_ct.vtk";
-	////std::string inputImagePath = inputPath + "LiverP3.vtk";
+	std::string inputImagePath = inputPath + "Patient3_ct.vtk";
+	//////std::string inputImagePath = inputPath + "LiverP3.vtk";
 	readVtkFile(inputImagePath.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -65,21 +65,104 @@ int main() {
 	if (imageFiltered == NULL)
 		return false;
 
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filteredGMC_p7.raw";
-	////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/_edge_detector_p3.raw";
-	////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
+	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filteredGMC_p3.raw";
+	//////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/_edge_detector_p3.raw";
+	//////inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/raw/patient2_ct_rescaled.raw";
 	manageRAWFile3D<dataType>(imageFiltered, Length, Width, Height, inputImagePath.c_str(), LOAD_DATA, false);
 
 	Image_Data CT; CT.imageDataPtr = imageFiltered;
 	CT.height = Height; CT.length = Length; CT.width = Width;
 	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
 
-	//FILE* file;
-	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature.csv";
-	//if (fopen_s(&file, inputImagePath.c_str(), "r") != 0) {
+	//================ Load and manage .csv =============================
+
+	//FILE* global_file;
+	//string inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/points_path_plus_curvature_ct_potential.csv";
+	//if (fopen_s(&global_file, inputImagePath.c_str(), "r") != 0) {
 	//	printf("Enable to open");
 	//	return false;
 	//}
+
+	//const size_t array_length = 803;
+
+	//dataType* Xcomponent = new dataType[array_length]{0};
+	//dataType* Ycomponent = new dataType[array_length]{0};
+	//dataType* Zcomponent = new dataType[array_length]{0};
+	//dataType* curvature = new dataType[array_length]{0};
+	//dataType* ctImageData = new dataType[array_length]{0};
+	//dataType* potential = new dataType[array_length]{0};
+	//for (i = 0; i < array_length; i++) {
+	//	fscanf_s(global_file, "%f", &(Xcomponent[i]));
+	//	fscanf_s(global_file, ",");
+	//	fscanf_s(global_file, "%f", &(Ycomponent[i]));
+	//	fscanf_s(global_file, ",");
+	//	fscanf_s(global_file, "%f", &(Zcomponent[i]));
+	//	fscanf_s(global_file, ",");
+	//	fscanf_s(global_file, "%f", &(curvature[i]));
+	//	fscanf_s(global_file, ",");
+	//	fscanf_s(global_file, "%f", &(ctImageData[i]));
+	//	fscanf_s(global_file, ",");
+	//	fscanf_s(global_file, "%f", &(potential[i]));
+	//	fscanf_s(global_file, "\n");
+	//}
+	//fclose(global_file);
+
+	////find min max curvature
+	//dataType min_curv = 100, max_curv = 0;
+	////dataType max_ct = 0, min_ct = 100;
+	//dataType max_pot = 0, min_pot = 100;
+	//for (i = 0; i < array_length; i++) {
+	//	//curvatyre
+	//	if (min_curv > curvature[i]) {
+	//		min_curv = curvature[i];
+	//	}
+	//	if (max_curv < curvature[i]) {
+	//		max_curv = curvature[i];
+	//	}
+	//	////ct
+	//	//if (min_ct > ctImageData[i]) {
+	//	//	min_ct = ctImageData[i];
+	//	//}
+	//	//if (max_ct < ctImageData[i]) {
+	//	//	max_ct = ctImageData[i];
+	//	//}
+	//	//pot
+	//	if (min_pot > potential[i]) {
+	//		min_pot = potential[i];
+	//	}
+	//	if (max_pot < potential[i]) {
+	//		max_pot = potential[i];
+	//	}
+	//}
+
+	////Rescaling
+	//dataType diff_old = max_pot - min_pot;
+	//dataType diff_new = max_curv - min_curv;
+	//dataType scale_factor = diff_new / diff_old;
+	//for (i = 0; i < array_length; i++) {
+	//	//ctImageData[i] = scale_factor * (ctImageData[i] - max_ct) + max_curv;
+	//	potential[i] = scale_factor * (potential[i] - max_pot) + max_curv;
+	//}
+
+	//FILE* ct_file;
+	//string outputImagePath = "C:/Users/Konan Allaly/Documents/Tests/output/pot_curvature.csv";
+	//if (fopen_s(&ct_file, outputImagePath.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+
+	//for (i = 0; i < array_length; i++) {
+	//	//fprintf(ct_file, "%f, %f \n", ctImageData[i], curvature[i]);
+	//	fprintf(ct_file, "%f, %f \n", potential[i], curvature[i]);
+	//}
+	//fclose(ct_file);
+
+	//delete[] Xcomponent;
+	//delete[] Ycomponent;
+	//delete[] Zcomponent;
+	//delete[] curvature;
+	//delete[] ctImageData;
+	//delete[] potential;
 
 	//const size_t datasize = 5 * sizeof(double);
 	////const size_t number_of_element = datasize;
@@ -268,21 +351,21 @@ int main() {
 
 	//================== Fast Marching and Path finding ===================
 
-	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient7/Im_mean_r3.raw";
+	inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient3/Im_mean_r5.raw";
 	manageRAWFile3D<dataType>(image_mean, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
 	//inputImagePath = "C:/Users/Konan Allaly/Documents/Tests/input/path_p7.raw";
 	//manageRAWFile3D<dataType>(path, Length, Width, height_new, inputImagePath.c_str(), LOAD_DATA, false);
 
-	//////patient 2
-	////Point3D final_point = { 262, 254, 250 }; // top 
-	////Point3D initial_point = { 263, 257, 146 }; // bottom
-	//////Point3D middle_point = { 285, 284, 278 }; // middle
+	////patient 2
+	//Point3D final_point = { 262, 254, 250 }; // top 
+	//Point3D initial_point = { 263, 257, 146 }; // bottom
+	////Point3D middle_point = { 285, 284, 278 }; // middle
 
-	//////Patient3
-	////Point3D initial_point = { 259, 255, 244 };
-	////Point3D final_point = { 260, 248, 348 };
-	////Point3D middle_point = { 285, 301, 372 };
+	//Patient3
+	Point3D initial_point = { 259, 255, 244 };
+	Point3D final_point = { 260, 248, 348 };
+	Point3D middle_point = { 285, 301, 372 };
 
 	//////Patient4
 	//////Point3D middle_point = { 292, 277, 240 };
@@ -300,10 +383,10 @@ int main() {
 	////Point3D final_point = { 241, 214, 627 }; // test 2
 	////Point3D initial_point = { 265, 244, 486 };// test 1
 
-	//Patient7
-	//Point3D middle_point = { 277, 346, 476 };
-	Point3D final_point = { 252, 288, 442 };
-	Point3D initial_point = { 254, 299, 261 };
+	////Patient7
+	////Point3D middle_point = { 277, 346, 476 };
+	//Point3D final_point = { 252, 288, 442 };
+	//Point3D initial_point = { 254, 299, 261 };
 
 	//Get corresponding point in interpolated image
 	initial_point = getRealCoordFromImageCoord3D(initial_point, ctOrigin, ctSpacing, orientation);
@@ -381,12 +464,13 @@ int main() {
 	//Point3D point_max = { 241.9134, 303.439, 689.771 }; // max p7
 	//manageRAWFile3D<dataType>(path, Length, Width, height_new, outputImagePath.c_str(), LOAD_DATA, false);
 
+	////Point3D point_out = { 275.433, 281.357, 664.367 };
 	//for (k = 0; k < height_new; k++) {
 	//	for (i = 0; i < Length; i++) {
 	//		for (j = 0; j < Width; j++) {
 	//			x = x_new(j, i, Width);
 	//			Point3D current_point = { j, i, k };
-	//			double dist = getPoint3DDistance(point_max, current_point);
+	//			double dist = getPoint3DDistance(point_out, current_point);
 	//			if (dist <= 3.0) {
 	//				path[k][x] = 1.0;
 	//			}
@@ -394,7 +478,7 @@ int main() {
 	//	}
 	//}
 
-	//outputImagePath = outputPath + "path_with_max.raw";
+	//string outputImagePath = outputPath + "path_first_point_out.raw";
 	//manageRAWFile3D<dataType>(path, Length, Width, height_new, outputImagePath.c_str(), STORE_DATA, false);
 
 	//================== Automatic Cropping =========================================
@@ -553,7 +637,7 @@ int main() {
 
 	//========================= Free memory ==================================
 
-	//delete[] seedPoints;
+	delete[] seedPoints;
 
 	free(ctContainer);
 

@@ -2118,7 +2118,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	Point3D initial_point = seedPoints[0];
 	Point3D temporary_point = { 0.0, 0.0, 0.0 };
 
-	double step = 50, dist = 0.0;
+	double step = 70, dist = 0.0;
 	double position_temporary_point = 0.0;
 	dataType min_distance = BIG_VALUE, value_temp = 0.0;
 	int cpt = 1;
@@ -2167,7 +2167,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	//saving_name = path_name + "path_0.raw";
 	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
-	while (cpt < 13) {
+	while (cpt < 11) {
 
 		cout << "STEP " << cpt << " : " << endl;
 		extension = to_string(cpt);
