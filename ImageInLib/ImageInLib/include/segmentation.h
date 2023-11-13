@@ -23,6 +23,9 @@ extern "C" {
 		Curve2D* pinitial_condition;	// Initial curve
 		size_t num_points;// Number of initial segmentation curve points
 		dataType time_step_size;	//discrete time step size
+		dataType mu;	//influence of edge detector gradient field
+		dataType lambda; //weight between projected gradient field and intensity similarity field
+		dataType eps;	//influence of curvature
 		bool open_curve;
 	} Lagrangean2DSegmentationParameters;
 
