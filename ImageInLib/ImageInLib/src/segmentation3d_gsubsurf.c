@@ -645,10 +645,10 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 					//	gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 					//}
 
-					////don't change if the old value is higher than the new one
-					//if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
-					//	gauss_seidelPtr[k_ext][x_ext] = new_value;
-					//}
+					//don't change if the old value is higher than the new one
+					if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
+						gauss_seidelPtr[k_ext][x_ext] = new_value;
+					}
 
 				}
 			}
