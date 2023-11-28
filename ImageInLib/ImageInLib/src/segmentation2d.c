@@ -245,7 +245,7 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 	Storage_Flags flags = { false,false };
 
 	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	store2dRawData(gAverage, height, width, name, flags);
 
