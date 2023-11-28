@@ -1710,11 +1710,11 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 	//	return false;
 	//}
 
-	//update 31/10/2023
-	Point3D point1 = seedPoints[1];
-	Point3D point2 = { 0.0, 0.0, 0.0 }, previous_point = {0.0, 0.0, 0.0}, current_point = { 0.0, 0.0, 0.0 }, next_point = { 0.0, 0.0, 0.0 };
-	vector<Point3D> list_of_path_point, list_inverted;
-	list_of_path_point.push_back(point1);
+	////update 31/10/2023
+	//Point3D point1 = seedPoints[1];
+	//Point3D point2 = { 0.0, 0.0, 0.0 }, previous_point = {0.0, 0.0, 0.0}, current_point = { 0.0, 0.0, 0.0 }, next_point = { 0.0, 0.0, 0.0 };
+	//vector<Point3D> list_of_path_point, list_inverted;
+	//list_of_path_point.push_back(point1);
 
 	do {
 
@@ -1723,8 +1723,8 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
 		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
 		
-		point2.x = jNew; point2.y = iNew; point2.z = kNew;
-		list_of_path_point.push_back(point2);
+		//point2.x = jNew; point2.y = iNew; point2.z = kNew;
+		//list_of_path_point.push_back(point2);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1745,51 +1745,47 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 	//cout << "\nDistance to the end point : " << dist_min << endl;
 	//std::cout << "\nNumber of iterations : " << cpt << std::endl;
 
-	//update 31/07/2023
-	int l = list_of_path_point.size(), n = 0;
-	for (n = l - 1; n > -1; n--){
-		list_inverted.push_back(list_of_path_point[n]);
-	}
-	
-	double* distance_between_points = new double[l] {0};
-	for (n = 1; n < l; n++) {
-		distance_between_points[n] = getPoint3DDistance(list_inverted[n], list_inverted[n - 1]);
-	}
-	
-	double coef = 0.0, x_component = 0.0, y_component = 0.0, z_component = 0.0, curvature = 0.0, max_curvature = 0.0;
-	dataType ctVal = 0.0, potVal = 0.0;
-	
-	for (n = 1; n < l - 1; n++) {
-		previous_point = list_inverted[n - 1];
-		current_point = list_inverted[n];
-		next_point = list_inverted[n + 1];
-		coef = 2 / (distance_between_points[n + 1] + distance_between_points[n]);
-		x_component = coef * (((next_point.x - current_point.x) / distance_between_points[n + 1]) - ((current_point.x - previous_point.x) / distance_between_points[n]));
-		y_component = coef * (((next_point.y - current_point.y) / distance_between_points[n + 1]) - ((current_point.y - previous_point.y) / distance_between_points[n]));
-		z_component = coef * (((next_point.z - current_point.z) / distance_between_points[n + 1]) - ((current_point.z - previous_point.z) / distance_between_points[n]));
-		curvature = sqrt(x_component * x_component + y_component * y_component + z_component * z_component);
-		//fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z, curvature); // original code
-		
-		j = (size_t)list_inverted[n].x; i = (size_t)list_inverted[n].y; k = (size_t)list_inverted[n].z;
-		xd = x_new(j, i, width);
-		ctVal = ctImageData[k][xd];
-		potVal = potentialPtr[k][xd];
-
-		fprintf(file_curve, "%lf, %lf, %lf, %lf, %f, %f \n", list_inverted[n].x, list_inverted[n].y, list_inverted[n].z, curvature, ctVal, potVal);
-		
-		//fprintf(file, "%d, %lf \n", i, curvature);
-		//fprintf(file_curve, "%d, %d, %d \n", j, i, k);
-		//cout << "Step " << i << " : curvature = " << curvature << endl;
-
-		//if (curvature > max_curvature) {
-		//	max_curvature = curvature;
-		//	point1 = previous_point;
-		//	point2 = current_point;
-		//}
-
-	}
-	//fclose(file);
-	delete[] distance_between_points;
+	////update 31/07/2023
+	//int l = list_of_path_point.size(), n = 0;
+	//for (n = l - 1; n > -1; n--){
+	//	list_inverted.push_back(list_of_path_point[n]);
+	//}
+	//
+	//double* distance_between_points = new double[l] {0};
+	//for (n = 1; n < l; n++) {
+	//	distance_between_points[n] = getPoint3DDistance(list_inverted[n], list_inverted[n - 1]);
+	//}
+	//
+	//double coef = 0.0, x_component = 0.0, y_component = 0.0, z_component = 0.0, curvature = 0.0, max_curvature = 0.0;
+	//dataType ctVal = 0.0, potVal = 0.0;
+	//
+	//for (n = 1; n < l - 1; n++) {
+	//	previous_point = list_inverted[n - 1];
+	//	current_point = list_inverted[n];
+	//	next_point = list_inverted[n + 1];
+	//	coef = 2 / (distance_between_points[n + 1] + distance_between_points[n]);
+	//	x_component = coef * (((next_point.x - current_point.x) / distance_between_points[n + 1]) - ((current_point.x - previous_point.x) / distance_between_points[n]));
+	//	y_component = coef * (((next_point.y - current_point.y) / distance_between_points[n + 1]) - ((current_point.y - previous_point.y) / distance_between_points[n]));
+	//	z_component = coef * (((next_point.z - current_point.z) / distance_between_points[n + 1]) - ((current_point.z - previous_point.z) / distance_between_points[n]));
+	//	curvature = sqrt(x_component * x_component + y_component * y_component + z_component * z_component);
+	//	//fprintf(file_curve, "%lf, %lf, %lf, %lf \n", list_inverted[i].x, list_inverted[i].y, list_inverted[i].z, curvature); // original code
+	//	
+	//	j = (size_t)list_inverted[n].x; i = (size_t)list_inverted[n].y; k = (size_t)list_inverted[n].z;
+	//	xd = x_new(j, i, width);
+	//	ctVal = ctImageData[k][xd];
+	//	potVal = potentialPtr[k][xd];
+	//	//fprintf(file_curve, "%lf, %lf, %lf, %lf, %f, %f \n", list_inverted[n].x, list_inverted[n].y, list_inverted[n].z, curvature, ctVal, potVal);
+	//	
+	//	//fprintf(file, "%d, %lf \n", i, curvature);
+	//	//fprintf(file_curve, "%d, %d, %d \n", j, i, k);
+	//	//cout << "Step " << i << " : curvature = " << curvature << endl;
+	//	//if (curvature > max_curvature) {
+	//	//	max_curvature = curvature;
+	//	//	point1 = previous_point;
+	//	//	point2 = current_point;
+	//	//}
+	//}
+	//delete[] distance_between_points;
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -2127,6 +2123,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension;
 
+	//file to save the curvature
 	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path_plus_curvature_ct_potential.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
@@ -2134,11 +2131,9 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 		return false;
 	}
 
+	//compute potential function from initial point
 	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints, radius, parameters);
 	fastMarching3D_N(ctImageData.imageDataPtr, actionPtr, potentialPtr, length, width, height, initial_point);
-	
-	//saving_name = path_name + "action_map_0.raw";
-	//store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 
 	//find next point inside the aorta
 	min_distance = BIG_VALUE;
@@ -2163,9 +2158,6 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, 
 	//path between initial point and second point
 	seeds[1] = temporary_point;
 	shortestPath3d(actionPtr, resultedPath, ctImageData.imageDataPtr, potentialPtr, length, width, height, 1.0, seeds, saving_name.c_str(), file);
-	
-	//saving_name = path_name + "path_0.raw";
-	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
 	while (cpt < 11) {
 
