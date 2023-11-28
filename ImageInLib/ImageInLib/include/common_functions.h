@@ -184,6 +184,14 @@ extern "C" {
 	//==============================================================================
 	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
 	//==============================================================================
+	void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
+	//==============================================================================
+	void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
+	//==============================================================================
+	dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width);
+	//==============================================================================
+	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
+	//==============================================================================
 
 #endif // !COMMON_FUNCTIONS
 

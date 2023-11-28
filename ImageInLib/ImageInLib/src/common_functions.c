@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h> 
 #include <memory.h>
 #include <math.h>
 #include "common_functions.h"
@@ -295,4 +298,417 @@ Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t leng
 		}
 	}
 	return result;
+}
+//==============================================================================
+void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius) {
+	
+	size_t i, j, xd, dim2D = length * width;
+
+	double epsilon = 0.0, offset = 3.0;
+	size_t i_min, i_max, j_min, j_max;
+	Point2D center_circle = { 0.0, 0.0 }, current_point = { 0.0, 0.0 };
+
+	double ind_x = 0.0, ind_y = 0.0, dist_point = 0.0;
+	size_t n, count_vote = 0, max_count = 0, N = 6;
+	size_t i_new, j_new, xd_new;
+	dataType perimeter = 0.0; //(dataType)(2 * 3.14 * radius);
+
+	//initialization
+	for (i = 0; i < dim2D; i++) {
+		houghSpacePtr[i] = 0.0;
+		votingArray[i] = 0.0;
+	}
+
+	//Find the number of foreground pixel lying on circle with given radius
+	size_t count_neighbor = 0;
+	dataType ratio = 0.0, neighbor_ratio = 0.0, surface = 0.0;
+
+	for (n = 1; n < N; n++) {
+		
+		epsilon = 0.1 * n;
+		perimeter = (dataType)(((2 * 3.14 * (radius - epsilon)) + (2 * 3.14 * (radius + epsilon))) / 2);
+		surface = (dataType)(3.14 * (radius - epsilon) * (radius - epsilon));
+		
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				
+				xd = x_new(i, j, length);
+				center_circle.x = i; 
+				center_circle.y = j;
+				
+				if (imageDataPtr[xd] == 0.0) {
+
+					//find the bounding box
+					ind_x = (double)i - (radius + offset);
+					if (ind_x <= 0) {
+						i_min = 0;
+					}
+					else {
+						i_min = (size_t)ind_x;
+					}
+					ind_y = (double)j - (radius + offset);
+					if (ind_y <= 0) {
+						j_min = 0;
+					}
+					else {
+						j_min = (size_t)ind_y;
+					}
+					ind_x = (double)i_min + 2 * radius + offset;
+					if (ind_x >= (length - 1)) {
+						i_max = length - 1;
+					}
+					else {
+						i_max = (size_t)ind_x;
+					}
+					ind_y = (double)j_min + 2 * radius + offset;
+					if (ind_y >= (width - 1)) {
+						j_max = width - 1;
+					}
+					else {
+						j_max = (size_t)ind_y;
+					}
+					
+					//vote
+					count_vote = 0;
+					count_neighbor = 0;
+					for (i_new = i_min; i_new <= i_max; i_new++) {
+						for (j_new = j_min; j_new <= j_max; j_new++) {
+							
+							xd_new = x_new(i_new, j_new, length);
+							current_point.x = i_new;
+							current_point.y = j_new;
+							dist_point = getPoint2DDistance(center_circle, current_point);
+
+							//count foreground pixels in the band
+							if (imageDataPtr[xd_new] == 1.0 && dist_point >= (radius - epsilon) && dist_point <= (radius + epsilon)) {
+								count_vote++;
+							}
+
+							//count foreground pixels close to the current center
+							if (dist_point < (radius - epsilon) && imageDataPtr[xd_new] == 1.0) {
+								count_neighbor++;
+							}
+
+						}
+					}
+
+					ratio = (dataType)count_vote / perimeter;
+					neighbor_ratio = (dataType)count_neighbor / surface;
+
+					if (neighbor_ratio <= 0.1) {
+						votingArray[xd] += ratio;
+					}
+					else {
+						votingArray[xd] += 0.0;
+					}
+
+				}
+				else {
+					votingArray[xd] += 0.0;
+				}
+			}
+		}
+	}
+
+	//Normalization of the ratio
+	for (i = 0; i < dim2D; i++) {
+		votingArray[i] = votingArray[i] / (N - 1);
+	}
+
+	//find the max ratio
+	dataType max_ratio = 0.0;
+	for (i = 0; i < dim2D; i++) {
+		if (votingArray[i] > max_ratio) {
+			max_ratio = votingArray[i];
+		}
+	}
+	
+	//Draw the circle with maximum ratio
+	dataType min_ratio = 0.5;
+	//size_t min_size = 28; //(size_t)(radius * 2 * 4 * min_ratio);
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+			
+			xd = x_new(i, j, length);
+			if (votingArray[xd] == max_ratio) {
+				center_circle.x = i; 
+				center_circle.y = j;
+				ind_x = (double)i - (radius + offset);
+				if (ind_x <= 0) {
+					i_min = 0;
+				}
+				else {
+					i_min = (size_t)ind_x;
+				}
+				ind_y = (double)j - (radius + offset);
+				if (ind_y <= 0) {
+					j_min = 0;
+				}
+				else {
+					j_min = (size_t)ind_y;
+				}
+
+				ind_x = (double)i_min + 2 * radius + offset;
+				if (ind_x >= (length - 1)) {
+					i_max = length - 1;
+				}
+				else {
+					i_max = (size_t)ind_x;
+				}
+				ind_y = (double)j_min + 2 * radius + offset;
+				if (ind_y >= (width - 1)) {
+					j_max = width - 1;
+				}
+				else {
+					j_max = (size_t)ind_y;
+				}
+				
+				for (i_new = i_min; i_new <= i_max; i_new++) {
+					for (j_new = j_min; j_new <= j_max; j_new++) {
+						xd_new = x_new(i_new, j_new, length);
+						current_point.x = i_new; 
+						current_point.y = j_new;
+						dist_point = getPoint2DDistance(center_circle, current_point);
+						if (dist_point <= radius) {
+							houghSpacePtr[xd_new] = 1.0;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+}
+//==============================================================================
+void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius) {
+
+	size_t i, j, xd, dim2D = length * width;
+
+	double offset = 3.0;
+	size_t i_min, i_max, j_min, j_max;
+
+	size_t i_seed = (size_t)seed.x;
+	size_t j_seed = (size_t)seed.y;
+
+	//find the bounding box of the seed point
+	double ind_x = 0.0, ind_y = 0.0, dist_point = 0.0;
+	ind_x = (double)i_seed - (radius + offset);
+	if (ind_x <= 0) {
+		i_min = 0;
+	}
+	else {
+		i_min = (size_t)ind_x;
+	}
+	ind_y = (double)j_seed - (radius + offset);
+	if (ind_y <= 0) {
+		j_min = 0;
+	}
+	else {
+		j_min = (size_t)ind_y;
+	}
+	ind_x = (double)i_min + 2 * radius + offset;
+	if (ind_x >= (length - 1)) {
+		i_max = length - 1;
+	}
+	else {
+		i_max = (size_t)ind_x;
+	}
+	ind_y = (double)j_min + 2 * radius + offset;
+	if (ind_y >= (width - 1)) {
+		j_max = width - 1;
+	}
+	else {
+		j_max = (size_t)ind_y;
+	}
+
+	Point2D center_circle = { 0.0, 0.0 }, current_point = { 0.0, 0.0 };
+
+	size_t i_new, j_new, xd_new;
+	dataType perimeter = 0.0;
+
+	//initialization
+	for (i = 0; i < dim2D; i++) {
+		houghSpacePtr[i] = 0.0;
+		votingArray[i] = 0.0;
+	}
+
+	//Find the number of foreground pixel lying on circle with given radius
+	size_t count_neighbor = 0;
+	dataType ratio = 0.0, neighbor_ratio = 0.0, surface = 0.0;
+
+	size_t n, count_vote = 0, max_count = 0, N = 6;
+	double epsilon = 0.0;
+	for (n = 1; n < N; n++) {
+		epsilon = 0.1 * n;
+		perimeter = (dataType)(((2 * 3.14 * (radius - epsilon)) + (2 * 3.14 * (radius + epsilon))) / 2);
+		surface = (dataType)(3.14 * (radius - epsilon) * (radius - epsilon));
+
+		for (i = i_min; i <= i_max; i++) {
+			for (j = j_min; j <= j_max; j++) {
+
+				xd = x_new(i, j, length);
+				center_circle.x = i;
+				center_circle.y = j;
+
+				if (imageDataPtr[xd] == 0.0) {
+					//vote
+					count_vote = 0;
+					count_neighbor = 0;
+					for (i_new = i_min; i_new <= i_max; i_new++) {
+						for (j_new = j_min; j_new <= j_max; j_new++) {
+
+							xd_new = x_new(i_new, j_new, length);
+							current_point.x = i_new;
+							current_point.y = j_new;
+							dist_point = getPoint2DDistance(center_circle, current_point);
+
+							//count foreground pixels in the band
+							if (imageDataPtr[xd_new] == 1.0 && dist_point >= (radius - epsilon) && dist_point <= (radius + epsilon)) {
+								count_vote++;
+							}
+
+							//count foreground pixels close to the current center
+							if (dist_point < (radius - epsilon) && imageDataPtr[xd_new] == 1.0) {
+								count_neighbor++;
+							}
+						}
+					}
+
+					ratio = (dataType)count_vote / perimeter;
+					neighbor_ratio = (dataType)count_neighbor / surface;
+
+					if (neighbor_ratio <= 0.1) {
+						votingArray[xd] += ratio;
+					}
+					else {
+						votingArray[xd] += 0.0;
+					}
+
+				}
+				else {
+					votingArray[xd] += 0.0;
+				}
+			}
+		}
+	}
+
+	//Normalization of the ratio
+	for (i = i_min; i <= i_max; i++) {
+		for (j = j_min; j <= j_max; j++) {
+			xd = x_new(i, j, length);
+			votingArray[xd] = votingArray[xd] / (N - 1);
+		}
+	}
+
+	//find the max ratio
+	dataType max_ratio = 0.0;
+	for (i = i_min; i <= i_max; i++) {
+		for (j = j_min; j <= j_max; j++) {
+			xd = x_new(i, j, length);
+			if (votingArray[xd] > max_ratio) {
+				max_ratio = votingArray[xd];
+				center_circle.x = i;
+				center_circle.y = j;
+			}
+		}
+	}
+
+	//bounding box arounf the center with the max ratio
+	ind_x = 0.0, ind_y = 0.0, dist_point = 0.0;
+	ind_x = (double)center_circle.x - (radius + offset);
+	if (ind_x <= 0) {
+		i_min = 0;
+	}
+	else {
+		i_min = (size_t)ind_x;
+	}
+	ind_y = (double)center_circle.y - (radius + offset);
+	if (ind_y <= 0) {
+		j_min = 0;
+	}
+	else {
+		j_min = (size_t)ind_y;
+	}
+	ind_x = (double)i_min + 2 * radius + offset;
+	if (ind_x >= (length - 1)) {
+		i_max = length - 1;
+	}
+	else {
+		i_max = (size_t)ind_x;
+	}
+	ind_y = (double)j_min + 2 * radius + offset;
+	if (ind_y >= (width - 1)) {
+		j_max = width - 1;
+	}
+	else {
+		j_max = (size_t)ind_y;
+	}
+
+	//Draw the circle with maximum ratio
+	for (i_new = i_min; i_new <= i_max; i_new++) {
+		for (j_new = j_min; j_new <= j_max; j_new++) {
+			xd_new = x_new(i_new, j_new, length);
+			current_point.x = i_new;
+			current_point.y = j_new;
+			dist_point = getPoint2DDistance(center_circle, current_point);
+			if (dist_point <= radius) {
+				houghSpacePtr[xd_new] = 1.0;
+			}
+		}
+	}
+
+	////Draw the circle with maximum ratio
+	//for (i = i_min; i <= i_max; i++) {
+	//	for (j = j_min; j <= j_max; j++) {
+	//		xd = x_new(i, j, length);
+	//		if (votingArray[xd] == max_ratio) {
+	//			center_circle.x = i;
+	//			center_circle.y = j;
+	//			for (i_new = i_min; i_new <= i_max; i_new++) {
+	//				for (j_new = j_min; j_new <= j_max; j_new++) {
+	//					xd_new = x_new(i_new, j_new, length);
+	//					current_point.x = i_new;
+	//					current_point.y = j_new;
+	//					dist_point = getPoint2DDistance(center_circle, current_point);
+	//					if (dist_point <= radius) {
+	//						houghSpacePtr[xd_new] = 1.0;
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+}
+//==============================================================================
+dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width) {
+	dataType max_value = 0.0;
+	for (size_t i = 0; i < length * width; i++) {
+		if (imageDataPtr[i] > max_value) {
+			max_value = imageDataPtr[i];
+		}
+	}
+	return max_value;
+}
+//==============================================================================
+void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew) {
+	
+	size_t i, dim2D = imageLength * imageWidth;
+	dataType min_data = 100000.0, max_data = 0.0;
+	// Find the Min and Max Intensity
+	for (i = 0; i < dim2D; i++) {
+		if (imageDataPtr[i] > max_data) {
+			max_data = imageDataPtr[i];
+		}
+		if (imageDataPtr[i] < min_data) {
+			min_data = imageDataPtr[i];
+		}
+	}
+	// Rescale from min_new to max_new
+	dataType diffOld = max_data - min_data;
+	dataType diffNew = maxNew - minNew;
+	dataType scale_factor = (diffNew) / (diffOld);
+	for (i = 0; i < dim2D; i++) {
+		imageDataPtr[i] = scale_factor * (imageDataPtr[i] - max_data) + maxNew;
+	}
 }
