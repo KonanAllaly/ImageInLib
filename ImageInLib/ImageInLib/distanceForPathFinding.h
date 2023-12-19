@@ -174,9 +174,18 @@ using namespace std;
 	/// <returns></returns>
 	bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius);
 
+	/// <summary>
+	/// compute potential function for fast marching
+	/// </summary>
+	/// <param name="ctImageData">structure for input CT image data</param>
+	/// <param name="petImageData">structure for input PET image data</param>
+	/// <param name="statsImage">point for images created from statistics</param>
+	/// <param name="potential">point to hold computed potential</param>
+	/// <param name="seedPoints">initial and final points</param>
+	/// <param name="radius">radius to find statistics</param>
+	/// <param name="params">potential function parameters</param>
+	/// <returns></returns>
 	bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statictics_Pointers statsImage, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params);
-
-	//bool potentialOnEdgeImage(dataType** imageData, dataType** potential, Point3D* seeds, const size_t length, const size_t width, const size_t height);
 
 	//================================================================
 
@@ -185,14 +194,65 @@ using namespace std;
 		dataType arrival;
 	}pointFastMarching3D;
 
+	/// <summary>
+	/// solve quadratic equation
+	/// </summary>
+	/// <param name="X">first quadratic coefficient</param>
+	/// <param name="Y">second quadratic coefficient</param>
+	/// <param name="Z">third quadratic coefficient</param>
+	/// <param name="W">second member</param>
+	/// <returns></returns>
 	dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W);
 
+	/// <summary>
+	/// discretization in x-direction
+	/// </summary>
+	/// <param name="distanceFuncPtr">action map</param>
+	/// <param name="dimI">image length</param>
+	/// <param name="dimJ">image width</param>
+	/// <param name="dimK">image height</param>
+	/// <param name="I">coordinate in y direction</param>
+	/// <param name="J">coordinate in x direction</param>
+	/// <param name="K">coordinate in z direction</param>
+	/// <returns></returns>
 	dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
+	/// <summary>
+	/// discretization in y-direction
+	/// </summary>
+	/// <param name="distanceFuncPtr">action map</param>
+	/// <param name="dimI">image length</param>
+	/// <param name="dimJ">image width</param>
+	/// <param name="dimK">image height</param>
+	/// <param name="I">coordinate in y direction</param>
+	/// <param name="J">coordinate in x direction</param>
+	/// <param name="K">coordinate in z direction</param>
+	/// <returns></returns>
 	dataType select3dY(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
+	/// <summary>
+	/// discretization in z-direction
+	/// </summary>
+	/// <param name="distanceFuncPtr">action map</param>
+	/// <param name="dimI">image length</param>
+	/// <param name="dimJ">image width</param>
+	/// <param name="dimK">image height</param>
+	/// <param name="I">coordinate in y direction</param>
+	/// <param name="J">coordinate in x direction</param>
+	/// <param name="K">coordinate in z direction</param>
+	/// <returns></returns>
 	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
+	/// <summary>
+	/// compute 3d l2-norm
+	/// </summary>
+	/// <param name="gradientVectorX">gradient component in x direction</param>
+	/// <param name="gradientVectorY">gradient component in y direction</param>
+	/// <param name="gradientVectorZ">gradient component in z direction</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <returns></returns>
 	double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
 
 	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
@@ -246,6 +306,9 @@ using namespace std;
 
 	//=================================================================
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+
+	//=================================================================
+	bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
 
 //#ifdef __cplusplus
 //}
