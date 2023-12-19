@@ -184,14 +184,32 @@ extern "C" {
 	//==============================================================================
 	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
 	//==============================================================================
-	void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
+	//void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
 	//==============================================================================
-	void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
+	void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius, double offset);
 	//==============================================================================
 	dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width);
 	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
+	void houghTransform(dataType* imageDataPtr, dataType* houghSpace, const size_t length, const size_t width);
+	//================================================================================
+	typedef struct {
+		size_t i_min, i_max, j_min, j_max;
+	} BoundingBox2D;
+
+	/// <summary>
+	/// Find the bounding box for given 2D point
+	/// </summary>
+	/// <param name="point">point of interest</param>
+	/// <param name="length">length of the image</param>
+	/// <param name="width">width of the image</param>
+	/// <param name="radius">radius to be considered for the bounding box</param>
+	/// <param name="offset">offset</param>
+	/// <returns></returns>
+	BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, double radius, double offset);
+	//================================================================================
+	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);
 
 #endif // !COMMON_FUNCTIONS
 
