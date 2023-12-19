@@ -210,7 +210,7 @@ int main() {
 	Point3D final_point = { 262, 254, 250 }; // top 
 	//Point3D initial_point = { 263, 257, 146 }; // bottom
 
-	Point3D initial_point = { 263, 257, 146 }; // bottom
+	Point3D initial_point = { 257.0, 257.0, 518 }; // bottom
 
 	////Patient3
 	//Point3D initial_point = { 259, 255, 244 };
@@ -245,7 +245,9 @@ int main() {
 	//findPathFromOneGivenPointWithStopingCriterium(interpolated, image_mean, path, seedPoints, parameters);
 	//findPathFromOneGivenPointWithCircleDetection(interpolated, image_mean, path, seedPoints, parameters);
 
-	findPathFromOneGivenPoint(interpolated, image_mean, path, seedPoints, parameters);
+	//findPathFromOneGivenPoint(interpolated, image_mean, path, seedPoints, parameters);
+
+	findPath(interpolated, image_mean, path, seedPoints, parameters);
 
 	//===================== 2D Hough transform from path points ==========
 
