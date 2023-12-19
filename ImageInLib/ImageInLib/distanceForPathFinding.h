@@ -243,17 +243,7 @@ using namespace std;
 	/// <returns></returns>
 	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
-	/// <summary>
-	/// compute 3d l2-norm
-	/// </summary>
-	/// <param name="gradientVectorX">gradient component in x direction</param>
-	/// <param name="gradientVectorY">gradient component in y direction</param>
-	/// <param name="gradientVectorZ">gradient component in z direction</param>
-	/// <param name="length">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="height">image height</param>
-	/// <returns></returns>
-	double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
+	//double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
 
 	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
 

@@ -1002,6 +1002,7 @@ dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t d
 	return min(k_minus, k_plus);
 }
 
+/*
 double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
 	
 	size_t i = 0, j = 0, k = 0, xd = 0;
@@ -1020,6 +1021,7 @@ double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVect
 	
 	return sqrt(norm_array);
 }
+*/
 
 bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h) {
 
@@ -1129,7 +1131,6 @@ bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX,
 				gradientVectorX[k][currentInd] = (dataType)ux;
 				gradientVectorY[k][currentInd] = (dataType)uy;
 				gradientVectorZ[k][currentInd] = (dataType)uz;
-
 			}
 		}
 	}
@@ -1739,10 +1740,10 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 	//}
 
 	////update 31/10/2023
-	//Point3D point1 = seedPoints[1];
+	Point3D point1 = seedPoints[1], point2 = { 0.0, 0.0, 0.0 };
 	//Point3D point2 = { 0.0, 0.0, 0.0 }, previous_point = {0.0, 0.0, 0.0}, current_point = { 0.0, 0.0, 0.0 }, next_point = { 0.0, 0.0, 0.0 };
-	//vector<Point3D> list_of_path_point, list_inverted;
-	//list_of_path_point.push_back(point1);
+	vector<Point3D> list_of_path_point, list_inverted;
+	list_of_path_point.push_back(point1);
 
 	do {
 
@@ -1750,9 +1751,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
 		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
 		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
-		
-		//point2.x = jNew; point2.y = iNew; point2.z = kNew;
-		//list_of_path_point.push_back(point2);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1764,10 +1762,21 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataTyp
 		//cout << "(" << j_current << ", " << i_current << ", " << k_current << ")" << endl;
 		//fprintf(file, "%d, %d, %d \n", j_current, i_current, k_current);
 
+		point2.x = j_current; 
+		point2.y = i_current; 
+		point2.z = k_current;
+		list_of_path_point.push_back(point2);
+
 		//currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
+
+	int l = list_of_path_point.size(), n = 0;
+	for (n = l - 1; n > -1; n--){
+		//list_inverted.push_back(list_of_path_point[n]);
+		fprintf(file_curve, "%f,%f,%f,\n", list_of_path_point[n].x, list_of_path_point[n].y, list_of_path_point[n].z);
+	}
 
 	//fclose(file);
 	//cout << "\nDistance to the end point : " << dist_min << endl;
@@ -2913,9 +2922,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	}
 
 	std::cout << "Initial point : (" << seedPoints[0].x << ", " << seedPoints[0].y << " , " << seedPoints[0].z << ")" << std::endl;
-	//fprintf(file, "---------------\n");
-	//fprintf(file, "Initial point : (%f, %f, %f)\n", seedPoints[0].x, seedPoints[0].y, seedPoints[0].z);
-	//fprintf(file, "---------------\n");
 
 	dataType** actionPtr = new dataType * [height];
 	dataType** newActionPtr = new dataType * [height];
@@ -2969,9 +2975,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	}
 	count_step++;
 	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
-	//fprintf(file, "---------------\n");
-	//fprintf(file, "Point found after step %d : (%f, %f, %f)\n", count_step, temporary_point.x, temporary_point.y, temporary_point.z);
-	//fprintf(file, "---------------\n");
 
 	//vector for path points
 	vector<Point3D> path_points;
@@ -3331,7 +3334,7 @@ bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** result
 	string saving_name, extension;
 
 	//file to save the curvature
-	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path_plus_curvature_ct_potential.csv";
+	saving_name = "C:/Users/Konan Allaly/Documents/Tests/output/points_path.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -3345,7 +3348,8 @@ bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** result
 	//find next point inside the aorta
 	min_distance = BIG_VALUE;
 	size_t matching_point = 0;
-	for (k = 0; k < height; k++) {
+	size_t k_min = (size_t)seedPoints[0].z;
+	for (k = k_min; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
 				x = x_new(j, i, width);
@@ -3360,23 +3364,27 @@ bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** result
 						temporary_point.y = (dataType)i;
 						temporary_point.z = (dataType)k;
 						value_temp = actionPtr[k][x];
-						matching_point++;
 					}
+					//matching_point++;
+					//std::cout << " point " << matching_point << " : (" << j << ", " << i << ", " << k << ")" << ", value = " << actionPtr[k][x] << std::endl;
 				}
 			}
 		}
 	}
+	saving_name = path_name + "action_map.raw";
+	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
+	
 	std::cout << matching_point << " points match with the condition" << endl;
 	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
-	exit(0);
 
 	//path between initial point and second point
 	seeds[1] = temporary_point;
 	shortestPath3d(actionPtr, resultedPath, ctImageData.imageDataPtr, potentialPtr, length, width, height, 1.0, seeds, saving_name.c_str(), file);
+	
 	saving_name = path_name + "path.raw";
 	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
-	while (cpt < 8) {
+	while (cpt < 10) {
 
 		std::cout << "STEP " << cpt << " : " << std::endl;
 		extension = to_string(cpt);
@@ -3443,6 +3451,7 @@ bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** result
 		seeds[1] = temporary_point;
 		//saving_name = path_name + "curvature_" + extension + ".csv";
 		shortestPath3d(newActionPtr, resultedPath, ctImageData.imageDataPtr, potentialPtr, length, width, height, 1.0, seeds, saving_name.c_str(), file);
+		
 		saving_name = path_name + "path.raw";
 		store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 
