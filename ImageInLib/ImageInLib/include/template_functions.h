@@ -188,7 +188,6 @@ inline bool store2dRawData(T* imageDataPtr, const size_t length, const size_t wi
 	return true;
 }
 
-
 template<typename T>
 bool manageRAWFile2D(T* imageDataPtr, const size_t length, const size_t width, const char* pathPtr, Operation operation, bool revert);
 
