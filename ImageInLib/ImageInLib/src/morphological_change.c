@@ -15,6 +15,7 @@
 #include "heat_equation.h"
 #include "../include/morphological_change.h"
 
+//3D functions
 
 //Erosion removes floating pixels and thin lines so that only substantive objects remain
 bool erosion3D(dataType** imageDataPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType object, dataType background) {
@@ -504,6 +505,143 @@ bool dilatation3dHeighteenNeigbours(dataType** imageDataPtr, const size_t xDim, 
 	}
 	free(extendedImage);
 	free(maskImage);
+
+	return true;
+}
+
+//2D functions
+bool erosion2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background) {
+	
+	if (imageDataPtr == NULL)
+		return false;
+
+	const size_t length_ext = length + 2, width_ext = width + 2, dim2D_ext = length_ext * width_ext;
+	size_t i, j, count_neighbor = 0;
+
+	dataType* extendedArray = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+	dataType* mask = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+
+	//initialization
+	for (i = 0; i < dim2D_ext; i++) {
+		extendedArray[i] = 0.0;
+		mask[i] = 0.0;
+	}
+
+	copyDataTo2dExtendedArea(imageDataPtr, extendedArray,length, width);
+	reflection2D(extendedArray, length_ext, width_ext);
+	copyDataTo2dExtendedArea(imageDataPtr, mask, length, width);
+	reflection2D(mask, length_ext, width_ext);
+
+	for (i = 1; i < length_ext - 1; i++) {
+		for (j = 1; j < width_ext - 1; j++) {
+			
+			count_neighbor = 0;
+
+			if (extendedArray[x_new(i - 1, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (extendedArray[x_new(i - 1, j, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (extendedArray[x_new(i - 1, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (count_neighbor < 8) {
+				mask[x_new(i, j, length_ext)] = background;
+			}
+		}
+	}
+
+	copyDataTo2dReducedArea(imageDataPtr, mask, length, width);
+
+	free(extendedArray);
+	free(mask);
+
+	return true;
+}
+
+bool dilatation2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background) {
+
+	if (imageDataPtr == NULL)
+		return false;
+
+	const size_t length_ext = length + 2, width_ext = width + 2, dim2D_ext = length_ext * width_ext;
+	size_t i, j, count_neighbor = 0;
+
+	dataType* extendedArray = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+	dataType* mask = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+
+	//initialization
+	for (i = 0; i < dim2D_ext; i++) {
+		extendedArray[i] = 0.0;
+		mask[i] = 0.0;
+	}
+
+	copyDataTo2dExtendedArea(imageDataPtr, extendedArray, length, width);
+	reflection2D(extendedArray, length_ext, width_ext);
+	copyDataTo2dExtendedArea(imageDataPtr, mask, length, width);
+	reflection2D(mask, length_ext, width_ext);
+
+	for (i = 1; i < length_ext - 1; i++) {
+		for (j = 1; j < width_ext - 1; j++) {
+
+			count_neighbor = 0;
+
+			if (extendedArray[x_new(i - 1, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j - 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (extendedArray[x_new(i - 1, j, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (extendedArray[x_new(i - 1, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+			if (extendedArray[x_new(i + 1, j + 1, length_ext)] == object) {
+				count_neighbor++;
+			}
+
+			if (count_neighbor >= 1) {
+				mask[x_new(i, j, length_ext)] = object;
+			}
+		}
+	}
+
+	copyDataTo2dReducedArea(imageDataPtr, mask, length, width);
+
+	free(extendedArray);
+	free(mask);
 
 	return true;
 }

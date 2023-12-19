@@ -1,7 +1,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #pragma once
 #include "common_functions.h"
 #include <stdbool.h>
@@ -17,10 +16,18 @@ extern "C" {
 
 	bool dilatation3dHeighteenNeigbours(dataType** imageDataPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType object, dataType background);
 
-	/*
-	bool imageGradient(dataType** imageDataPtr, const char* pathSavePtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType h);
-	bool edgesDetector(dataType** imageDataPtr, const char* pathSavePtr, const size_t xDim, const size_t yDim, const size_t zDim, Filter_Parameters smoothParameters);
-	*/
+	/// <summary>
+	/// Perform 2D image erosion. Turn foreground pixels with background pixel to background pixels
+	/// </summary>
+	/// <param name="imageDataPtr">Binary input image</param>
+	/// <param name="length">image Length</param>
+	/// <param name="width">image Width</param>
+	/// <param name="object">forground pixel</param>
+	/// <param name="background">background pixel</param>
+	/// <returns></returns>
+	bool erosion2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background);
+
+	bool dilatation2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background);
 #ifdef __cplusplus
 }
 #endif
