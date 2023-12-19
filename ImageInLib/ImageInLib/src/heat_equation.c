@@ -266,7 +266,8 @@ void heatImplicit2dScheme(Image_Data2D imageData, const Filter_Parameters implic
 
 		} while (cpt < maxIteration && error > tol);
 
-		printf("The number of iterations is %zd for timeStep %zd\n", cpt, n + 1);
+		//printf("The number of iterations is %zd for timeStep %zd\n", cpt, n + 1);
+		
 		//printf("Error is %e for timeStep %zd\n", error, n + 1);
 		//printf("###########################################\n");
 

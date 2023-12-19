@@ -34,6 +34,7 @@
     <ClCompile Include="src\generate_3d_shapes.c" />
     <ClCompile Include="src\geodesic_mean_curvature_equation.c" />
     <ClCompile Include="src\heat_equation.c" />
+    <ClCompile Include="src\hough_transform.cpp" />
     <ClCompile Include="src\imageInterpolation.c" />
     <ClCompile Include="src\image_difference.c" />
     <ClCompile Include="src\image_norm.c" />
@@ -76,6 +77,7 @@
     <ClInclude Include="include\distanceMaps.h" />
     <ClInclude Include="include\file.h" />
     <ClInclude Include="include\filtering.h" />
+    <ClInclude Include="include\hough_transform.h" />
     <ClInclude Include="include\Labelling.h" />
     <ClInclude Include="include\morphological_change.h" />
     <ClInclude Include="include\noiseGeneration.h" />

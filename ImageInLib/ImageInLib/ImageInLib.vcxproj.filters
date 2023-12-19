@@ -326,6 +326,9 @@
     <ClCompile Include="src\segmentation2d.c">
       <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
+    <ClCompile Include="src\hough_transform.cpp">
+      <Filter>Source Files\Transformation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -486,6 +489,9 @@
     </ClInclude>
     <ClInclude Include="include\segmentation2d.h">
       <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\hough_transform.h">
+      <Filter>Header Files\Transformation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
