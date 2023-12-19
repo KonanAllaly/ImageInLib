@@ -12,6 +12,7 @@ extern "C" {
 #include <stddef.h>
 #include "common_functions.h"
 
+	//3D function
 	/* image3DPtr is pointer to the 3D image, xDim, yDim and zDim are dimensions of x, y, and z respectively.
 	* inputbgvalue is the value the voxel value (image3DPtr[k][i]) will be set to if the voxel value is
 	less or equal to the threshold value
@@ -28,6 +29,9 @@ extern "C" {
 	bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType forGround);
 
 	bool thresholdingOTSU(dataType ** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType background, dataType forground);
+
+	//2D function
+	bool thresholding2DFunction(dataType* image2DPtr, const size_t xDim, const size_t yDim, dataType thres_min, dataType thres_max);
 
 #ifdef __cplusplus
 }

@@ -1,9 +1,4 @@
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4D Image Segmentation Methods
-* Language:  C
-* Update : Konan ALLALY (OTSU Threshold and Threshold according range)
-*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "thresholding.h"
@@ -235,5 +230,35 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t xDim, const size_t yDi
 
 	free(histogram); free(interClassVariance);
 
+	return true;
+}
+
+//2D function
+bool thresholding2DFunction(dataType* image2DPtr, const size_t xDim, const size_t yDim, dataType thres_min, dataType thres_max) {
+	if (image2DPtr == NULL)
+		return false;
+
+	size_t i, dim2D = xDim * yDim;
+	if (thres_min == thres_max) {
+		dataType thres = thres_min;
+		for (i = 0; i < dim2D; i++) {
+			if (image2DPtr[i] < thres) {
+				image2DPtr[i] = 1.0;
+			}
+			else {
+				image2DPtr[i] = 0.0;
+			}
+		}
+	}
+	else {
+		for (i = 0; i < dim2D; i++) {
+			if (image2DPtr[i] >= thres_min && image2DPtr[i] <= thres_max) {
+				image2DPtr[i] = 1.0;
+			}
+			else {
+				image2DPtr[i] = 0.0;
+			}
+		}
+	}
 	return true;
 }
