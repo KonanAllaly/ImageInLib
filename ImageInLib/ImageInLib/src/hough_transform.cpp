@@ -178,7 +178,7 @@ void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dat
 
 }
 
-void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath) {
+void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo) {
 
 	size_t i, j, xd, dim2D = length * width;
 	size_t i_new, j_new, xd_new;
@@ -271,7 +271,6 @@ void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 									count_vote++;
 								}
 							}
-
 							//count foreground pixels close to the current center
 							if (dist_point < (radius - params.epsilon) && maskThreshold[xd_new] == foreground) {
 								count_neighbor++;
@@ -316,7 +315,7 @@ void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 		radius += params.radius_step;
 	}
 
-	printf("Found radius = %f\n", found_radius);
+	printf("Found radius = %lf\n", found_radius);
 	//printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
 
 	//add the seed
@@ -355,10 +354,198 @@ void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	//copy back
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
+	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
+	fprintf(saveInfo, "%f,%f\n", max_ratio, found_radius);
+
 	free(edgeDetector);
 	free(maskThreshold);
 	free(houghSpaceMax);
 	free(gradientX);
 	free(gradientY);
+}
 
+void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo) {
+
+	size_t i, j, xd, dim2D = length * width;
+	size_t i_new, j_new, xd_new;
+	BoundingBox2D box = { 0, 0, 0, 0 };
+	Point2D center_circle = { 0.0, 0.0 }, current_point = { 0.0, 0.0 }, found_center = { 0.0, 0.0 };
+
+	double dist_point = 0.0, found_radius, radius = 0.0;
+	bool test_max = false;
+
+	params.radius_min = params.radius_min * params.spacing;
+	params.radius_max = params.radius_max * params.spacing;
+
+	dataType* maskThreshold = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* houghSpaceMax = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* gradientX = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* gradientY = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* gradientAngle = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* normGradient = (dataType*)malloc(sizeof(dataType) * dim2D);
+	size_t* statusPixel = (size_t*)malloc(sizeof(size_t) * dim2D);
+
+	initialize2dArray(maskThreshold, length, width);
+	initialize2dArray(houghSpaceMax, length, width);
+	initialize2dArray(gradientX, length, width);
+	initialize2dArray(gradientY, length, width);
+	initialize2dArray(gradientAngle, length, width);
+	initialize2dArray(normGradient, length, width);
+	initialize2dArray(foundCirclePtr, length, width);
+
+	computeImageGradient(imageDataPtr, gradientX, gradientY, length, width, params.h);
+	computeAngleFromGradient(gradientAngle, gradientX, gradientY, length, width);
+	
+	//norm of gradient
+	for (i = 0; i < dim2D; i++) {
+		normGradient[i] = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
+	}
+	
+	nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, length, width);
+	thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
+
+	////Erosion
+	erosion2D(maskThreshold, length, width, foreground, background);
+	dilatation2D(maskThreshold, length, width, foreground, background);
+
+	//saving_path = outputPath + "threshold.raw";
+	store2dRawData(maskThreshold, length, width, savingPath.c_str());
+
+	size_t count_vote = 0, count_neighbor = 0, total_neighbor = 0;
+	dataType hough_ratio = 0.0, found_ratio = 0.0, max_ratio = 0.0;
+	size_t i_min = 0, i_max = 0, j_min = 0, j_max = 0;
+	radius = params.radius_min;
+	found_radius = 0.0;
+	while (radius <= params.radius_max) {
+		initialize2dArray(houghSpacePtr, length, width);
+		//find the bounding box of the seed point
+		box = findBoundingBox2D(seed, length, width, radius, params.offset);
+		//small bounding box
+		i_min = (size_t)(box.i_min + radius + params.epsilon);
+		if (box.i_max >= radius) {
+			i_max = (size_t)(box.i_max - radius - params.epsilon);
+		}
+		j_min = (size_t)(box.j_min + radius + params.epsilon);
+		if (box.j_max >= radius) {
+			j_max = (size_t)(box.j_max - radius - params.epsilon);
+		}
+
+		//visit all the pixels in the bounding box
+		for (i = i_min; i <= i_max; i++) {
+			for (j = j_min; j <= j_max; j++) {
+				xd = x_new(i, j, length);
+				center_circle.x = (dataType)i;
+				center_circle.y = (dataType)j;
+
+				//vote
+				count_vote = 0;
+				count_neighbor = 0;
+				total_neighbor = 0;
+				if (maskThreshold[xd] == background) {
+					for (i_new = box.i_min; i_new <= box.i_max; i_new++) {
+						for (j_new = box.j_min; j_new <= box.j_max; j_new++) {
+							xd_new = x_new(i_new, j_new, length);
+							current_point.x = (dataType)i_new;
+							current_point.y = (dataType)j_new;
+							dist_point = getPoint2DDistance(center_circle, current_point);
+							//count foreground pixels in the band
+							if (dist_point >= (radius - params.epsilon) && dist_point <= (radius + params.epsilon)) {
+								total_neighbor++;
+								if (maskThreshold[xd_new] == foreground) {
+									count_vote++;
+								}
+							}
+							//count foreground pixels close to the current center
+							if (dist_point < (radius - params.epsilon) && maskThreshold[xd_new] == foreground) {
+								count_neighbor++;
+							}
+
+						}
+					}
+				}
+				//compute ratios
+				hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
+				//houghSpacePtr[xd] = hough_ratio;
+				if (count_neighbor == 0) {
+					houghSpacePtr[xd] = hough_ratio;
+				}
+			}
+		}
+
+		//keep the maximal ratio for each pixel
+		for (i = box.i_min; i <= box.i_max; i++) {
+			for (j = box.j_min; j <= box.j_max; j++) {
+				xd = x_new(i, j, length);
+				if (houghSpacePtr[xd] > houghSpaceMax[xd]) {
+					houghSpaceMax[xd] = houghSpacePtr[xd];
+				}
+			}
+		}
+
+		//find the maximal ratio for current radius
+		max_ratio = getTheMaxValue(houghSpacePtr, length, width);
+		//find the maximal ratio for whole radius range
+		if (max_ratio > found_ratio) {
+			found_ratio = max_ratio;
+			found_radius = radius;
+			test_max = true;
+			//copyDataToAnother2dArray(houghSpacePtr, houghSpaceMax, length, width);
+		}
+		//update the found_center if the value of found_ratio was updated
+		if (test_max == true) {
+			found_center = getPointWithMaximalValue2D(houghSpaceMax, length, width);
+			test_max = false;
+		}
+		radius += params.radius_step;
+	}
+
+	printf("Found radius = %lf\n", found_radius);
+	//printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
+
+	//add the seed
+	foundCirclePtr[x_new((size_t)seed.x, (size_t)seed.y, length)] = 1.0;
+
+	//draw maximal bounding box
+	double radius_max_box = params.radius_max + params.epsilon;
+	box = findBoundingBox2D(seed, length, width, radius_max_box, params.offset);
+	for (i = box.i_min; i <= box.i_max; i++) {
+		for (j = box.j_min; j <= box.j_max; j++) {
+			xd = x_new(i, j, length);
+			if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+				foundCirclePtr[xd] = 1.0;
+			}
+		}
+	}
+
+	if (found_center.x != 0 && found_center.y != 0) {
+		//add found center
+		foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
+		//draw the found circle
+		box = findBoundingBox2D(found_center, length, width, found_radius, params.offset);
+		for (i = box.i_min; i <= box.i_max; i++) {
+			for (j = box.j_min; j <= box.j_max; j++) {
+				xd = x_new(i, j, length);
+				current_point.x = (dataType)i;
+				current_point.y = (dataType)j;
+				dist_point = getPoint2DDistance(found_center, current_point);
+				if (dist_point >= (found_radius - params.epsilon) && dist_point <= (found_radius + params.epsilon)) {
+					foundCirclePtr[xd] = 1.0;
+				}
+			}
+		}
+	}
+
+	//copy back
+	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
+
+	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
+	fprintf(saveInfo, "%f,%f\n", max_ratio, found_radius);
+
+	free(maskThreshold);
+	free(houghSpaceMax);
+	free(gradientX);
+	free(gradientY);
+	free(normGradient);
+	free(gradientAngle);
+	free(statusPixel);
 }
