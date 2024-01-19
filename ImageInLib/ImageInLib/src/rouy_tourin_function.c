@@ -11,6 +11,12 @@
 #include "distance_function.h"
 #include "common_functions.h"
 
+dataType min0(dataType x, dataType y) {
+	if (y - x > 0) 
+		return pow(x - y, 2);
+	else 
+		return 0;
+}
 
 bool rouyTourinFunction_3D(dataType ** distance3DPtr, dataType ** image3DPtr, dataType tolerance,
 	const size_t xDim, const size_t yDim, const size_t zDim, dataType tau, const dataType h)
@@ -102,6 +108,99 @@ bool rouyTourinFunction_3D(dataType ** distance3DPtr, dataType ** image3DPtr, da
 		free(zPtrtemp[i]);
 
 	free(zPtrtemp);
+	return true;
+}
+
+bool rouyTourin2D(dataType* imageDataPtr, dataType* distancePtr, const size_t length, const size_t width, dataType tolerance, dataType tau, dataType h) {
+
+	if (imageDataPtr == NULL || distancePtr == NULL)
+		return false;
+
+	dataType mass = 10.0;
+	size_t i, j, xd, count = 0, max_iter = 50000;
+	size_t i_ext, j_ext, xd_ext;
+
+	size_t length_ext = length + 2, width_ext = width + 2;
+
+	dataType* extendedArray = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
+
+	for (i = 0; i < length_ext * width_ext; i++){
+		extendedArray[i] = 0.0;
+	}
+	
+	//copyDataTo2dExtendedArea(imageDataPtr, extendedArray, length, width);
+	//reflection2D(extendedArray, length_ext, width_ext);
+
+	while (mass > tolerance && count < max_iter) {
+		
+		count++;
+		mass = 0.0;
+		copyDataTo2dExtendedArea(distancePtr, extendedArray, length, width);
+		reflection2D(extendedArray, length_ext, width_ext);
+
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+				
+				xd = x_new(i, j, length);
+				xd_ext = x_new(i_ext, j_ext, length_ext);
+
+				if (imageDataPtr[xd] == 1.0) {
+					distancePtr[xd] = extendedArray[xd_ext] + tau - (tau / h) * sqrt( max(min(extendedArray[x_new(i_ext, j_ext - 1, length_ext)] - extendedArray[x_new(i_ext, j_ext, length_ext)], 0), min(extendedArray[x_new(i_ext, j_ext + 1, length_ext)] - extendedArray[x_new(i_ext, j_ext, length_ext)], 0.0) ) +
+						                                                   max(min(extendedArray[x_new(i_ext - 1, j_ext, length_ext)] - extendedArray[x_new(i_ext, j_ext, length_ext)], 0.0), min(extendedArray[x_new(i_ext + 1, j_ext, length_ext)] - extendedArray[x_new(i_ext, j_ext, length_ext)], 0.0)) );
+				}
+				else {
+					distancePtr[xd] = 0.0;
+				}
+				mass += pow(extendedArray[xd_ext] - distancePtr[xd], 2);
+			}
+		}
+		mass = sqrt(mass);
+
+	}
+
+	free(extendedArray);
+	return true;
+}
+
+bool bruteForceDistanceMap(dataType* imageDataPtr, dataType* distancePtr, const size_t length, const size_t width) {
+	if (imageDataPtr == NULL || distancePtr == NULL)
+		return false;
+
+	size_t i, j, xd, in, jn, xdn;
+	size_t min_distance;
+	Point2D p1, p2;
+	double dist = 0.0;
+
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+
+			xd = x_new(i, j, length);
+			p1.x = i; 
+			p1.y = j;
+
+			min_distance = 100000000.0;
+
+			for (in = 0; in < length; in++) {
+				for (jn = 0; jn < width; jn++) {
+
+					xdn = x_new(in, jn, length);
+					p2.x = in; 
+					p2.y = jn;
+
+					if (imageDataPtr[xdn] == 1.0) {
+						dist = getPoint2DDistance(p1, p2);
+						if (min_distance > dist) {
+							min_distance = dist;
+						}
+					}
+
+				}
+			}
+
+			distancePtr[xd] = min_distance;
+		}
+	}
+
 	return true;
 }
 
