@@ -30,6 +30,15 @@ extern "C" {
 	bool edgeDetection2dFunctionUC(unsigned char * image2DPtr, unsigned char * edge2DPtr, const size_t xDim,
 		const size_t yDim, const unsigned char bgroundvalue, const unsigned char fgroundvalue);
 
+	//Functions for Canny edge detector
+	//void generateGaussianMask(dataType * filter_shape, const size_t filter_size, dataType sigma);
+
+	void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType* gradientY, const size_t length, const size_t width);
+
+	void nonMaximumSuppression(dataType* resultPtr, dataType* normOfGradient, dataType* anglePtr, const size_t length, const size_t width);
+
+	void thresholdByHyteresis(dataType* resultPtr, dataType* normOfGradient, size_t* status, const size_t length, const size_t width, dataType thres_min, dataType thres_max);
+
 #ifdef __cplusplus
 }
 #endif

@@ -9,6 +9,9 @@
 #include "data_initialization.h"
 #include "thresholding.h"
 #include "common_functions.h"
+#include "math.h"
+
+#define M_PI 3.14159265358979323846
 
 void edgeDetection3dFunctionD(dataType** image3DPtr, dataType** edge3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType bgroundvalue, dataType fgroundvalue, dataType insideValue)
 {
@@ -693,4 +696,153 @@ bool edgeDetection2dFunctionUC(unsigned char * image2DPtr, unsigned char * edge2
 
 
 	return true;
+}
+
+//Functions for Canny edge detector
+/*
+void generateGaussianMask(dataType* filter_shape, const size_t filter_size, dataType sigma) {
+	
+	size_t half_size = filter_size / 2, index = 0;
+	dataType normal = 0.0, exp_term = 0.0;
+
+	int i, j, start = -half_size;
+
+	for (i = start; i <= half_size; i++) {
+		for (j = start; j <= half_size; j++) {
+			normal = 1.0 / (2.0 * M_PI * sigma * sigma);
+			exp_term = exp(-(i * i + j * j) / (2.0 * sigma * sigma));
+			filter_shape[index] = normal * exp_term;
+			index += 1;
+		}
+	}
+}
+*/
+
+void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType* gradientY, const size_t length, const size_t width) {
+	size_t i, j, xd;
+
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+			xd = x_new(i, j, length);
+			anglePtr[xd] = atan(gradientY[xd] / (gradientX[xd] + 0.000001));
+		}
+	}
+
+	for (i = 0; i < length * width; i++) {
+		anglePtr[i] = anglePtr[i] * 180 / M_PI;
+		if (anglePtr[i] < 0) {
+			anglePtr[i] += 180;
+		}
+	}
+}
+
+void nonMaximumSuppression(dataType* resultPtr, dataType* normOfGradient, dataType* anglePtr, const size_t length, const size_t width) {
+	
+	dataType q, r;
+	size_t i, j, xd;
+
+	for (i = 1; i < length - 1; i++) {
+		for (j = 1; j < width - 1; j++) {
+			
+			q = 1.0;
+			r = 1.0;
+			xd = x_new(i, j, length);
+
+			if ((anglePtr[xd] >= 0 && anglePtr[xd] < 22.5) || (anglePtr[xd] >= 157.5 && anglePtr[xd] <= 180)) {
+				r = normOfGradient[x_new(i, j - 1, length)];
+				q = normOfGradient[x_new(i, j + 1, length)];
+			}
+			else {
+				if (anglePtr[xd] >= 22.5 && anglePtr[xd] < 67.5) {
+					r = normOfGradient[x_new(i - 1, j + 1, length)];
+					q = normOfGradient[x_new(i + 1, j - 1, length)];
+				}
+				else {
+					if (anglePtr[xd] >= 67.5 && anglePtr[xd] < 112.5) {
+						r = normOfGradient[x_new(i - 1, j, length)];
+						q = normOfGradient[x_new(i + 1, j - 1, length)];
+					}
+					else {
+						if (anglePtr[xd] >= 112.5 && anglePtr[xd] < 157.5) {
+							r = normOfGradient[x_new(i + 1, j + 1, length)];
+							q = normOfGradient[x_new(i - 1, j - 1, length)];
+						}
+					}
+				}
+			}
+
+			if (normOfGradient[xd] >= q && normOfGradient[xd] >= r) {
+				resultPtr[xd] = normOfGradient[xd];
+			}
+			else {
+				resultPtr[xd] = 0.0;
+			}
+		}
+	}
+}
+
+void thresholdByHyteresis(dataType* resultPtr, dataType* normOfGradient, size_t* status, const size_t length, const size_t width, dataType thres_min, dataType thres_max) {
+	size_t i, j, xd, count_neighbor = 0;
+
+	for (i = 0; i < length * width; i++) {
+		if (normOfGradient[i] > thres_max) {
+			status[i] = 3;
+			resultPtr[i] = 1.0;
+		}
+		else {
+			if (normOfGradient[i] < thres_min) {
+				status[i] = 1;
+				resultPtr[i] = 0.0;
+			}
+			else {
+				status[i] = 2;
+			}
+		}
+	}
+
+	for (i = 1; i < length - 1; i++) {
+		for (j = 1; j < width - 1; j++) {
+			
+			xd = x_new(i, j, length);
+			count_neighbor = 0;
+
+			if (status[xd] == 2) {
+
+				if (status[x_new(i - 1, j - 1, length)] == 3) {
+					count_neighbor++;
+				}
+				if (status[x_new(i, j - 1, length)] == 3) {
+					count_neighbor++;
+				}
+				if (status[x_new(i + 1, j - 1, length)] == 3) {
+					count_neighbor++;
+				}
+
+				if (status[x_new(i - 1, j, length)] == 3) {
+					count_neighbor++;
+				}
+				if (status[x_new(i + 1, j, length)] == 3) {
+					count_neighbor++;
+				}
+
+				if (status[x_new(i - 1, j + 1, length)] == 3) {
+					count_neighbor++;
+				}
+				if (status[x_new(i, j + 1, length)] == 3) {
+					count_neighbor++;
+				}
+				if (status[x_new(i + 1, j + 1, length)] == 3) {
+					count_neighbor++;
+				}
+
+				if (count_neighbor > 0) {
+					resultPtr[xd] = 1.0;
+				}
+				else {
+					resultPtr[xd] = 0.0;
+				}
+
+			}
+		}
+	}
 }
