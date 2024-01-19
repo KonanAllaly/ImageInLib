@@ -295,10 +295,12 @@ using namespace std;
 	imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset);
 
 	//=================================================================
-	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
 	//=================================================================
-	bool findPath(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+	bool findPath(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+
+	bool computePotentialFromOnePoint(Image_Data ctImageData, dataType** potential, Point3D seed, double radius, Potential_Parameters parameters);
 
 //#ifdef __cplusplus
 //}
