@@ -514,7 +514,8 @@ void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType*
 	for (i = box.i_min; i <= box.i_max; i++) {
 		for (j = box.j_min; j <= box.j_max; j++) {
 			xd = x_new(i, j, length);
-			center_circle.x = i; center_circle.y = j;
+			center_circle.x = (dataType)i; 
+			center_circle.y = (dataType)j;
 			//vote for just background pixels
 			if (imageDataPtr[xd] == background) {
 				//vote
@@ -523,8 +524,8 @@ void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType*
 				for (i_new = box.i_min; i_new <= box.i_max; i_new++) {
 					for (j_new = box.j_min; j_new <= box.j_max; j_new++) {
 						xd_new = x_new(i_new, j_new, length);
-						current_point.x = i_new;
-						current_point.y = j_new;
+						current_point.x = (dataType)i_new;
+						current_point.y = (dataType)j_new;
 						dist_point = getPoint2DDistance(center_circle, current_point);
 						//count foreground pixels in the band
 						if (dist_point >= (radius - epsilon) && dist_point <= (radius + epsilon)) {
