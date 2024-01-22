@@ -12,7 +12,7 @@ typedef struct {
 	dataType h; // space discretisation for gradien computation
 	dataType thres; //threshold of the edge detector
 	dataType radius_step; //step for changing the radius 
-	dataType spacing; //pixels size
+	PixelSpacing spacing; //pixels size
 } HoughParameters;
 
 
