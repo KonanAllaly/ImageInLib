@@ -7,6 +7,7 @@
 
 #include"hough_transform.h"
 #include"morphological_change.h"
+#include"../src/imageInterpolation.h"
 
 #define M_PI 3.14159265358979323846
 #define foreground 1.0
@@ -364,7 +365,7 @@ void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	free(gradientY);
 }
 
-void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo) {
+Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo) {
 
 	size_t i, j, xd, dim2D = length * width;
 	size_t i_new, j_new, xd_new;
@@ -374,8 +375,9 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	double dist_point = 0.0, found_radius, radius = 0.0;
 	bool test_max = false;
 
-	params.radius_min = params.radius_min * params.spacing;
-	params.radius_max = params.radius_max * params.spacing;
+	Point2D originImage = { 0.0, 0.0 };
+	OrientationMatrix2D orientation;
+	orientation.v1 = { 1.0, 0.0 }; orientation.v2 = { 0.0, 1.0 };
 
 	dataType* maskThreshold = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* houghSpaceMax = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -416,7 +418,9 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	size_t i_min = 0, i_max = 0, j_min = 0, j_max = 0;
 	radius = params.radius_min;
 	found_radius = 0.0;
+
 	while (radius <= params.radius_max) {
+		//initialize the 2D array
 		initialize2dArray(houghSpacePtr, length, width);
 		//find the bounding box of the seed point
 		box = findBoundingBox2D(seed, length, width, radius, params.offset);
@@ -434,8 +438,10 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 		for (i = i_min; i <= i_max; i++) {
 			for (j = j_min; j <= j_max; j++) {
 				xd = x_new(i, j, length);
+
 				center_circle.x = (dataType)i;
 				center_circle.y = (dataType)j;
+				getRealCoordFromImageCoord2D(center_circle, originImage, params.spacing, orientation);
 
 				//vote
 				count_vote = 0;
@@ -445,9 +451,12 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 					for (i_new = box.i_min; i_new <= box.i_max; i_new++) {
 						for (j_new = box.j_min; j_new <= box.j_max; j_new++) {
 							xd_new = x_new(i_new, j_new, length);
+							
 							current_point.x = (dataType)i_new;
 							current_point.y = (dataType)j_new;
+							getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
 							dist_point = getPoint2DDistance(center_circle, current_point);
+
 							//count foreground pixels in the band
 							if (dist_point >= (radius - params.epsilon) && dist_point <= (radius + params.epsilon)) {
 								total_neighbor++;
@@ -463,9 +472,9 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 						}
 					}
 				}
+
 				//compute ratios
 				hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
-				//houghSpacePtr[xd] = hough_ratio;
 				if (count_neighbor == 0) {
 					houghSpacePtr[xd] = hough_ratio;
 				}
@@ -518,16 +527,24 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	}
 
 	if (found_center.x != 0 && found_center.y != 0) {
+		
 		//add found center
 		foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
+		
 		//draw the found circle
 		box = findBoundingBox2D(found_center, length, width, found_radius, params.offset);
+		found_center = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
+
 		for (i = box.i_min; i <= box.i_max; i++) {
 			for (j = box.j_min; j <= box.j_max; j++) {
 				xd = x_new(i, j, length);
+				
 				current_point.x = (dataType)i;
 				current_point.y = (dataType)j;
+				current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
+
 				dist_point = getPoint2DDistance(found_center, current_point);
+
 				if (dist_point >= (found_radius - params.epsilon) && dist_point <= (found_radius + params.epsilon)) {
 					foundCirclePtr[xd] = 1.0;
 				}
@@ -548,4 +565,6 @@ void localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 	free(normGradient);
 	free(gradientAngle);
 	free(statusPixel);
+
+	return found_center;
 }
