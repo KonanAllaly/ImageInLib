@@ -3220,8 +3220,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 //==================================================================
 
-// new implementation written on december 19th
-// this new implementation aims to do all the steps inside the while loop
 bool findPath(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL || resultedPath == NULL || seedPoints == NULL)
@@ -3410,8 +3408,6 @@ bool findPath(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoin
 
 	return true;
 }
-
-//==================================================================
 
 bool computePotentialFromOnePoint(Image_Data ctImageData, dataType** potential, Point3D seed, double radius, Potential_Parameters parameters) {
 

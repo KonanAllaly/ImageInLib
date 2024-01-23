@@ -39,7 +39,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 
-	std::string inputImagePath = inputPath + "vtk/Patient2_ct.vtk";
+	std::string inputImagePath = inputPath + "vtk/Patient6_ct.vtk";
 	readVtkFile(inputImagePath.c_str(), ctContainer);
 
 
@@ -679,10 +679,7 @@ int main() {
 		mean_image[k] = new dataType[dim2D]{ 0 };
 	}
 
-	//loading_name = inputPath + "raw/filteredGMC_p2.raw";
-	//load3dArrayRAW<dataType>(imageData, Length, Width, Height, loading_name.c_str(), false);
-
-	loading_name = inputPath + "interpolated/patient2/Im_mean_r5.raw";
+	loading_name = inputPath + "interpolated/patient6/Im_mean_r3.raw";
 	load3dArrayRAW<dataType>(mean_image, Length, Width, height, loading_name.c_str(), false);
 
 	Image_Data CT; CT.imageDataPtr = imageData; CT.height = Height; CT.length = Length; CT.width = Width;
@@ -695,12 +692,29 @@ int main() {
 	cout << "interpolated image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << height << "" << endl;
 	imageInterpolation3D(CT, interpolated, NEAREST_NEIGHBOR);
 
-	//saving_name = outputPath + "filtered_p2.raw";
-	//store3dRawData<dataType>(image_interp, Length, Width, height, saving_name.c_str());
+	////patient 2
+	//Point3D final_point = { 262, 254, 250 }; // top 
+	//Point3D initial_point = { 263, 257, 146 }; // bottom
 
-	//patient 2
-	Point3D final_point = { 262, 254, 250 }; // top 
-	Point3D initial_point = { 263, 257, 146 }; // bottom
+	////Patient3
+	//Point3D initial_point = { 259, 255, 244 };
+	//Point3D final_point = { 260, 248, 348 };
+
+	////Patient4
+	//Point3D final_point = { 255, 224, 222 };
+	//Point3D initial_point = { 269, 231, 111 };
+
+	////Patient5
+	//Point3D final_point = { 273, 229, 230 };
+	//Point3D initial_point = { 281, 229, 132 };
+
+	////Patient6
+	Point3D final_point = { 243, 221, 637 }; // test 1 
+	Point3D initial_point = { 262, 243, 469 };// test 1
+
+	////Patient7
+	//Point3D final_point = { 252, 288, 442 };
+	//Point3D initial_point = { 254, 299, 261 };
 
 	//Get corresponding point in interpolated image
 	initial_point = getRealCoordFromImageCoord3D(initial_point, ctOrigin, ctSpacing, orientation);
@@ -732,25 +746,51 @@ int main() {
 	//}
 	//compute3dImageGradient(imageData, gradientX, gradientY, gradientZ, Length, Width, Height, 1.0);
 
+	//dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
 	//for (k = 0; k < Height; k++) {
 	//	for (i = 0; i < dim2D; i++) {
-	//		dataType norm_of_gradient = sqrt(gradientX[k][i] * gradientX[k][i] + gradientY[k][i] * gradientY[k][i] + gradientZ[k][i] * gradientZ[k][i]);
+	//		ux = gradientX[k][i];
+	//		uy = gradientY[k][i];
+	//		uz = gradientZ[k][i];
+	//		norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
 	//		imageData[k][i] = gradientFunction(norm_of_gradient, 1000);
 	//		
 	//		if (imageData[k][i] < 0.15) {
-	//			imageData[k][i] = 1.0;
+	//			imageData[k][i] = 0.0;
 	//		}
 	//		else {
-	//			imageData[k][i] = 0.0;
+	//			imageData[k][i] = 1.0;
 	//		}
 	//	}
 	//}
 
-	//dataType tol = 0.5, tau = 0.4, h = 1.0;
-	//rouyTourinFunction_3D(distanceMap, imageData, tol, Length, Width, Height, tau, h);
-
-	//saving_name = outputPath + "loaded_p7.raw";
+	//saving_name = outputPath + "threshold.raw";
 	//store3dRawData<dataType>(imageData, Length, Width, Height, saving_name.c_str());
+
+	//dataType tol = 0.5, tau = 0.4, h = 1.0;
+	////rouyTourinFunction_3D(distanceMap, imageData, tol, Length, Width, Height, tau, h);
+	//fastSweepingFunction_3D(distanceMap, imageData, Length, Width, Height, h, 10000000.0, 0.0);
+
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (distanceMap[k][i] > 15) {
+	//			distanceMap[k][i] = 0.0;
+	//		}
+	//		distanceMap[k][i] = distanceMap[k][i] / 15;
+	//	}
+	//}
+
+	//saving_name = outputPath + "distanceMapNormalized.raw";
+	//store3dRawData<dataType>(distanceMap, Length, Width, Height, saving_name.c_str());
+
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		distanceMap[k][i] = 1 / (1 + distanceMap[k][i]);
+	//	}
+	//}
+
+	//saving_name = outputPath + "distance_transformed.raw";
+	//store3dRawData<dataType>(distanceMap, Length, Width, Height, saving_name.c_str());
 
 	//thresholding3dFunctionN(imageData, Length, Width, Height, 200, 450, 0.0, 1.0);
 	//saving_name = outputPath + "threshold_p7.raw";
@@ -775,7 +815,7 @@ int main() {
 	//findPath(interpolated, path, seeds, parameters);
 	//findPathFromOneGivenPoint(interpolated, mean_image, path, seeds, parameters);
 
-	//findPathFromOneGivenPointWithCircleDetection(interpolated, mean_image, path, seeds, parameters, 4);
+	findPathFromOneGivenPointWithCircleDetection(interpolated, mean_image, path, seeds, parameters, 4);
 
 	for (k = 0; k < height; k++) {
 		delete[] image_interp[k];
@@ -788,7 +828,7 @@ int main() {
 	delete[] path;
 	delete[] potential;
 
-	//delete[] seeds;
+	delete[] seeds;
 	free(ctContainer);
 	for (k = 0; k < Height; k++) {
 		delete[] distanceMap[k];
