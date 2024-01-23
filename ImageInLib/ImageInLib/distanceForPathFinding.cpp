@@ -2656,7 +2656,7 @@ bool shortestPath3dWithoutCurvature(dataType** distanceFuncPtr, dataType** resul
 	size_t j_current = j_end;
 	size_t k_current = k_end;
 	size_t currentIndx = x_new(j_current, i_current, width);
-	resultedPath[k_current][currentIndx] = 1;
+	resultedPath[k_current][currentIndx] = 1.0;
 
 	double iNew = i_current;
 	double jNew = j_current;
@@ -2664,8 +2664,6 @@ bool shortestPath3dWithoutCurvature(dataType** distanceFuncPtr, dataType** resul
 	double currentDist = 0.0;
 	double dist_min = 0.0;
 
-	//vector for path points (non ordered)
-	//vector<Point3D> local_path_points;
 	Point3D current_point = {0.0, 0.0, 0.0};
 
 	do {
@@ -2689,14 +2687,6 @@ bool shortestPath3dWithoutCurvature(dataType** distanceFuncPtr, dataType** resul
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
-
-	//ordering the found points without first node
-	//int l = local_path_points.size();
-	//int l = path_points.size();
-	//cout << l << " point where found\n" << endl;
-	//for (i = l - 1; i >= 0; i--) {
-	//	path_points.push_back(local_path_points[i]);
-	//}
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
