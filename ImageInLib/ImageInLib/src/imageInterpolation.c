@@ -411,15 +411,7 @@ Statistics getStatistics(Image_Data imageData, Point3D point_ct, dataType radius
 Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radius) {
 
     size_t i, j, k, nb_point = 0;
-    Statistics result;
-
-    //get the image coordinate of he point of interest
-    //point_of_interest = getImageCoordFromRealCoord3D(point_of_interest, imageData.origin, imageData.spacing, imageData.orientation);
-    //int i_point = (int)point_of_interest.x, j_point = (int)point_of_interest.y, k_point = (int)point_of_interest.z;
-
-    //dataType x_top = point_of_interest.x - radius;
-    //dataType y_top = point_of_interest.y - radius;
-    //dataType z_top = point_of_interest.z - radius;
+    Statistics result = {0.0, 0.0, 0.0, 0.0};
 
     Point3D top_left_neighbor = { point_of_interest.x - radius, point_of_interest.y - radius, point_of_interest.z - radius };
 
