@@ -1531,7 +1531,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
-	int i, j, k, xd, dim2d = length * width, max_iter = 1000;
+	int i, j, k, xd, dim2D = length * width, max_iter = 1000;
 	double tau = 0.8, tol = 1.0;
 	double i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 	int i_end = (size_t)seedPoints[1].y, j_end = (size_t)seedPoints[1].x, k_end = (size_t)seedPoints[1].z;
@@ -1540,9 +1540,9 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	dataType** gradientVectorY = new dataType * [height];
 	dataType** gradientVectorZ = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2d];
-		gradientVectorY[k] = new dataType[dim2d];
-		gradientVectorZ[k] = new dataType[dim2d];
+		gradientVectorX[k] = new dataType[dim2D];
+		gradientVectorY[k] = new dataType[dim2D];
+		gradientVectorZ[k] = new dataType[dim2D];
 		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL)
 			return false;
 	}
@@ -1552,15 +1552,16 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	//Normalization of the gradient
 	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
 
+	dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(j, i, width);
-				dataType norm_of_gradient = sqrt(pow(gradientVectorX[k][xd], 2) + pow(gradientVectorY[k][xd], 2) + pow(gradientVectorZ[k][xd], 2));
-				gradientVectorX[k][xd] = (dataType)(gradientVectorX[k][xd] / norm_of_gradient);
-				gradientVectorY[k][xd] = (dataType)(gradientVectorY[k][xd] / norm_of_gradient);
-				gradientVectorZ[k][xd] = (dataType)(gradientVectorZ[k][xd] / norm_of_gradient);
-			}
+		for (i = 0; i < dim2D; i++) {
+			ux = gradientVectorX[k][i];
+			uy = gradientVectorY[k][i];
+			uz = gradientVectorZ[k][i];
+			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
+			gradientVectorX[k][i] = (dataType)(ux / norm_of_gradient);
+			gradientVectorY[k][i] = (dataType)(uy / norm_of_gradient);
+			gradientVectorZ[k][i] = (dataType)(uz / norm_of_gradient);
 		}
 	}
 
