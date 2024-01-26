@@ -456,7 +456,6 @@ int main() {
 	delete[] voteArray;
 	*/
 	
-
 	//===================== Hough transform on 2D Slice ==================
 
 	/*
@@ -520,144 +519,6 @@ int main() {
 	delete[] voteArray;
 	*/
 	
-	//=================== Test 2D erosion =============================================
-	
-	/*
-	const size_t Length = 512, Width = 512, dim2D = Length * Width;
-	size_t i;
-
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* edgeDetector = new dataType[dim2D]{ 0 };
-	dataType* gradientX = new dataType[dim2D]{ 0 };
-	dataType* gradientY = new dataType[dim2D]{ 0 };
-
-	//load Slice
-	string inputImagePath = inputPath + "slice_0038.raw";
-	load2dArrayRAW<dataType>(imageSlice, Length, Width, inputImagePath.c_str(), false);
-
-	saving_name = outputPath + "loaded.raw";
-	store2dRawData(imageSlice, Length, Width, saving_name.c_str());
-
-	//Compute edge detector
-	dataType norm_of_gradient = 0.0, K = 1000.0;
-	computeImageGradient(imageSlice, gradientX, gradientY, Length, Width, 1.0);
-	for (i = 0; i < dim2D; i++) {
-		norm_of_gradient = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
-		edgeDetector[i] = gradientFunction(norm_of_gradient, K);
-	}
-
-	dataType thres = 0.15;
-	thresholding2DFunction(edgeDetector, Length, Width, thres, thres);
-
-	saving_name = outputPath + "threshold.raw";
-	store2dRawData(edgeDetector, Length, Width, saving_name.c_str());
-
-	erosion2D(edgeDetector, Length, Width, 1.0, 0.0);
-	erosion2D(edgeDetector, Length, Width, 1.0, 0.0);
-	saving_name = outputPath + "eroded_two_times.raw";
-	store2dRawData(edgeDetector, Length, Width, saving_name.c_str());
-	*/
-
-	//=================== Free memory =================================================
-
-	//delete[] seedPoints;
-	//for (k = 0; k < height; k++) {
-	//	delete[] image_interp[k];
-	//	delete[] path[k];
-	//	delete[] image_mean[k];
-	//}
-	//delete[] image_interp;
-	//delete[] path;
-	//delete[] image_mean;
-
-	//free(ctContainer);
-	//for (k = 0; k < Height; k++) {
-	//	delete[] imageData[k];
-	//}
-	//delete[] imageData;
-
-	//================== Test for Canny Edge detector =================================
-	
-	/*
-	const size_t filter_size = 5, Length = 512, Width = 512, dim2D = Length * Width;
-	size_t i = 0;
-	dataType sigma = sqrt(2), h = 1.0;
-	dataType* maskGaussian = new dataType[filter_size * filter_size]{0};
-	dataType* imageData = new dataType[dim2D]{0};
-	dataType* gradientCompX = new dataType[dim2D]{0};
-	dataType* gradientCompY = new dataType[dim2D]{0};
-	dataType* gradientAngle = new dataType[dim2D]{0};
-	dataType* normGradient = new dataType[dim2D]{0};
-	size_t* statusPixel = new size_t[dim2D]{0};
-
-	loading_name = inputPath + "slice/Image2.raw";
-	load2dArrayRAW<dataType>(imageData, Length, Width, loading_name.c_str(), false);
-
-	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
-
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-	Image_Data2D IMAGE; IMAGE.imageDataPtr = imageData;
-	IMAGE.height = Length; IMAGE.width = Width;
-	heatImplicit2dScheme(IMAGE, filter_parameters);
-
-	computeImageGradient(imageData, gradientCompX, gradientCompY, Length, Width, h);
-
-	computeAngleFromGradient(gradientAngle, gradientCompX, gradientCompY, Length, Width);
-
-	//compute norm of gradient
-	for (i = 0; i < dim2D; i++) {
-		normGradient[i] = sqrt(gradientCompX[i] * gradientCompX[i] + gradientCompY[i] * gradientCompY[i]);
-	}
-
-	nonMaximumSuppression(imageData, normGradient, gradientAngle, Length, Width);
-
-	thresholdByHyteresis(imageData, normGradient, statusPixel, Length, Width, 0.005, 0.009);
-
-	saving_name = outputPath + "edgeImageV2.raw";
-	store2dRawData<dataType>(imageData, Length, Width, saving_name.c_str());
-
-	//generateGaussianMask(maskGaussian, filter_size, sigma);
-
-	//for (i = 0; i < filter_size * filter_size; i++) {
-	//	cout << maskGaussian[i] << endl;
-	//}
-
-	delete[] maskGaussian;
-	delete[] imageData;
-	delete[] gradientCompX;
-	delete[] gradientCompY;
-	delete[] gradientAngle;
-	delete[] normGradient;
-	delete[] statusPixel;
-	*/
-
-	//================== Test for 2D distance transform ===============================
-
-	/*
-	const size_t Length = 512, Width = 512, dim2D = Length * Width;
-	size_t i = 0;
-	dataType* imageData = new dataType[dim2D]{ 0 };
-	dataType* distanceMap = new dataType[dim2D]{ 0 };
-
-	loading_name = inputPath + "slice/threshold.raw";
-	load2dArrayRAW<dataType>(imageData, Length, Width, loading_name.c_str(), false);
-
-	//dataType tol = 0.5, tau = 0.4, h = 1.0;
-	//rouyTourin2D(imageData, distanceMap, Length, Width, tol, tau, h);
-
-	bruteForceDistanceMap(imageData, distanceMap, Length, Width);
-
-	saving_name = outputPath + "distance.raw";
-	store2dRawData<dataType>(distanceMap, Length, Width, saving_name.c_str());
-
-	delete[] imageData;
-	delete[] distanceMap;
-	*/
-
 	//================== Test new potential function ==================================
 
 	dataType** distanceMap = new dataType * [Height];
@@ -709,8 +570,9 @@ int main() {
 	//Point3D initial_point = { 281, 229, 132 };
 
 	////Patient6
-	Point3D final_point = { 243, 221, 637 }; // test 1 
+	Point3D final_point = { 243, 221, 637 };
 	Point3D initial_point = { 262, 243, 469 };// test 1
+	//Point3D initial_point = { 265, 244, 469 };// test 2
 
 	////Patient7
 	//Point3D final_point = { 252, 288, 442 };
@@ -736,85 +598,6 @@ int main() {
 	parameters.c_ct = 0.0; parameters.c_pet = 0.0;
 	parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 0.0; 
 
-	//dataType** gradientX = new dataType * [Height];
-	//dataType** gradientY = new dataType * [Height];
-	//dataType** gradientZ = new dataType * [Height];
-	//for (k = 0; k < Height; k++) {
-	//	gradientX[k] = new dataType[dim2D]{ 0 };
-	//	gradientY[k] = new dataType[dim2D]{ 0 };
-	//	gradientZ[k] = new dataType[dim2D]{ 0 };
-	//}
-	//compute3dImageGradient(imageData, gradientX, gradientY, gradientZ, Length, Width, Height, 1.0);
-
-	//dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		ux = gradientX[k][i];
-	//		uy = gradientY[k][i];
-	//		uz = gradientZ[k][i];
-	//		norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-	//		imageData[k][i] = gradientFunction(norm_of_gradient, 1000);
-	//		
-	//		if (imageData[k][i] < 0.15) {
-	//			imageData[k][i] = 0.0;
-	//		}
-	//		else {
-	//			imageData[k][i] = 1.0;
-	//		}
-	//	}
-	//}
-
-	//saving_name = outputPath + "threshold.raw";
-	//store3dRawData<dataType>(imageData, Length, Width, Height, saving_name.c_str());
-
-	//dataType tol = 0.5, tau = 0.4, h = 1.0;
-	////rouyTourinFunction_3D(distanceMap, imageData, tol, Length, Width, Height, tau, h);
-	//fastSweepingFunction_3D(distanceMap, imageData, Length, Width, Height, h, 10000000.0, 0.0);
-
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (distanceMap[k][i] > 15) {
-	//			distanceMap[k][i] = 0.0;
-	//		}
-	//		distanceMap[k][i] = distanceMap[k][i] / 15;
-	//	}
-	//}
-
-	//saving_name = outputPath + "distanceMapNormalized.raw";
-	//store3dRawData<dataType>(distanceMap, Length, Width, Height, saving_name.c_str());
-
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		distanceMap[k][i] = 1 / (1 + distanceMap[k][i]);
-	//	}
-	//}
-
-	//saving_name = outputPath + "distance_transformed.raw";
-	//store3dRawData<dataType>(distanceMap, Length, Width, Height, saving_name.c_str());
-
-	//thresholding3dFunctionN(imageData, Length, Width, Height, 200, 450, 0.0, 1.0);
-	//saving_name = outputPath + "threshold_p7.raw";
-	//store3dRawData<dataType>(imageData, Length, Width, Height, saving_name.c_str());
-	
-	//dilatation3dHeighteenNeigbours(imageData, Length, Width, Height, 1.0, 0.0);
-	//erosion3dHeighteenNeigbours(imageData, Length, Width, Height, 1.0, 0.0);
-	
-	//saving_name = outputPath + "threshold.raw";
-	//store3dRawData<dataType>(imageData, Length, Width, Height, saving_name.c_str());
-
-	//computePotentialFromOnePoint(interpolated, potential, seeds[0], radius, parameters);
-	//computePotentialNew(interpolated, mean_image, potential, seeds, radius, parameters);
-
-	//thresholding3dFunctionN(imageData, Length, Width, Height, 995, 1250, 0.0, 1.0);
-	//dataType tol = 0.5, tau = 0.4, h = 1.0;
-	//rouyTourinFunction_3D(distanceMap, imageData, tol, Length, Width, Height, tau, h);
-
-	//saving_name = outputPath + "potential.raw";
-	//store3dRawData<dataType>(potential, Length, Width, height, saving_name.c_str());
-
-	//findPath(interpolated, path, seeds, parameters);
-	//findPathFromOneGivenPoint(interpolated, mean_image, path, seeds, parameters);
-
 	findPathFromOneGivenPointWithCircleDetection(interpolated, mean_image, path, seeds, parameters, 4);
 
 	for (k = 0; k < height; k++) {
@@ -834,16 +617,10 @@ int main() {
 		delete[] distanceMap[k];
 		delete[] imageData[k];
 		delete[] maskTreshold[k];
-		//delete[] gradientX[k];
-		//delete[] gradientY[k];
-		//delete[] gradientZ[k];
 	}
 	delete[] distanceMap;
 	delete[] imageData;
 	delete[] maskTreshold;
-	//delete[] gradientX;
-	//delete[] gradientY;
-	//delete[] gradientZ;
 
 	//======================== Labeling to segment Lungs and their bounding box =================
 	
