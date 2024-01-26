@@ -2085,24 +2085,3 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	return true;
 }
 
-/*
-bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius) {
-	size_t i, j, k, x;
-
-	for (k = 0; k < imageData.height; k++) {
-		for (i = 0; i < imageData.length; i++) {
-			for (j = 0; j < imageData.width; j++) {
-				x = x_new(i, j, imageData.length);
-				Point3D current_point = { i, j, k };
-				current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-				Statistics current_stats = getStats(imageData, current_point, radius);
-				statsImage.maximum[k][x] = current_stats.max_data;
-				statsImage.minimum[k][x] = current_stats.min_data;
-				statsImage.mean[k][x] = current_stats.mean_data;
-				statsImage.sd[k][x] = current_stats.sd_data;
-			}
-		}
-	}
-	return true;
-}
-*/

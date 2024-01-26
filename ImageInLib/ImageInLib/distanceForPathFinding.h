@@ -164,21 +164,6 @@ using namespace std;
 		dataType c_min, c_max, c_mean, c_sd, c_ct, c_pet;
 	} Potential_Parameters;
 
-	//bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius);
-
-	/// <summary>
-	/// compute potential function for fast marching
-	/// </summary>
-	/// <param name="ctImageData">structure for input CT image data</param>
-	/// <param name="petImageData">structure for input PET image data</param>
-	/// <param name="statsImage">point for images created from statistics</param>
-	/// <param name="potential">point to hold computed potential</param>
-	/// <param name="seedPoints">initial and final points</param>
-	/// <param name="radius">radius to find statistics</param>
-	/// <param name="params">potential function parameters</param>
-	/// <returns></returns>
-	//bool computePotential_N(Image_Data ctImageData, Image_Data petImageData, statictics_Pointers statsImage, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters params);
-
 	//================================================================
 
 	typedef struct {
@@ -235,13 +220,10 @@ using namespace std;
 	/// <returns></returns>
 	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
-	//double computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height);
-
 	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
 
 	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
-	//heap functions
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
 
 	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i);
@@ -254,36 +236,13 @@ using namespace std;
 
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
 
-	//================================================================
-
 	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
-
-	//bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, dataType** ctImageData, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, string path_curvature, FILE* file_curve);
-
-	//================================================================
 
 	bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters);
 
-	//bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
-	//bool findPathFromOneGivenPointWithStopingCriterium(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
-
 	bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, vector<Point3D>& path_points);
 
-	//=================================================================
-
-	//typedef struct {
-	//	Point3D origin;
-	//	VoxelSpacing spacing;
-	//	size_t dimension[3];
-	//}imageMetaData;
-	//imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset);
-
-	//=================================================================
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
-
-	//=================================================================
-	//bool findPath(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
-	//bool computePotentialFromOnePoint(Image_Data ctImageData, dataType** potential, Point3D seed, double radius, Potential_Parameters parameters);
 
 //#ifdef __cplusplus
 //}
