@@ -153,6 +153,12 @@
     <Filter Include="Source Files\morphology">
       <UniqueIdentifier>{4391e895-a529-434c-b679-ffc255f9b1ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Cropping">
+      <UniqueIdentifier>{d8438042-3568-4278-8c68-f98d59edbded}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cropping">
+      <UniqueIdentifier>{70d2e55e-2560-45eb-82d5-200f87bcd642}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\transformations.c">
@@ -329,6 +335,9 @@
     <ClCompile Include="src\hough_transform.cpp">
       <Filter>Source Files\Transformation</Filter>
     </ClCompile>
+    <ClCompile Include="src\cropping.c">
+      <Filter>Source Files\Cropping</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -492,6 +501,9 @@
     </ClInclude>
     <ClInclude Include="include\hough_transform.h">
       <Filter>Header Files\Transformation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\cropping.h">
+      <Filter>Header Files\Cropping</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
