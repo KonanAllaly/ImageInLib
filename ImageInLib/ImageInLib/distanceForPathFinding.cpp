@@ -1384,10 +1384,6 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	size_t i0 = (size_t)seedPoint.y;
-	size_t j0 = (size_t)seedPoint.x;
-	size_t k0 = (size_t)seedPoint.z;
-
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
 	dataType** gradientVectorZ = new dataType * [height];
@@ -1663,38 +1659,13 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	double step = 50.0, dist = 0.0;
 	dataType min_distance = BIG_VALUE, value_temp = 0.0;
 
-	//=========== Hough transform parameters ==================
-	
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* houghSpace = new dataType[dim2D]{ 0 };
-	dataType* voteArray = new dataType[dim2D]{ 0 };
-
-	//Slice extraction
-	Point2D seed2D = { 0.0, 0.0 };
-	int i_n = 0, k_n = 0;
-
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-	Image_Data2D IMAGE; IMAGE.imageDataPtr = imageSlice;
-	IMAGE.height = length; IMAGE.width = width;
-
-	size_t m = 0, n = 0, p = 0;
-
-	Point2D center2D = { 0.0, 0.0 };
-	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
-	HoughParameters params = { 4.0, 15.0, 0.5, 5.0, 1000, 1.0, 0.15, 0.5, spacing };
-	dataType max_ratio = 1.0;
-
 	//================ find next point inside the aorta ============
 	
-	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, initial_point, 5.0, parameters);
+	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints[0], 5.0, parameters);
 	saving_name = path_name + "potential.raw";
 	store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
 
-	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point);
+	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seedPoints[0]);
 	saving_name = path_name + "action_field_initial.raw";
 	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 	
@@ -1737,8 +1708,33 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	saving_name = path_name + "path.raw";
 	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
 	
-	//===============================================
-	//Use circle detection as path finding stopping criterium
+	//=========== Hough transform parameters ==================
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* houghSpace = new dataType[dim2D]{ 0 };
+	dataType* voteArray = new dataType[dim2D]{ 0 };
+
+	//Slice extraction
+	Point2D seed2D = { 0.0, 0.0 };
+	int i_n = 0, k_n = 0;
+
+	//filtering parameters
+	Filter_Parameters filter_parameters;
+	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
+	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
+	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
+
+	Image_Data2D IMAGE;
+	IMAGE.imageDataPtr = imageSlice;
+	IMAGE.height = length; IMAGE.width = width;
+
+	size_t m = 0, n = 0, p = 0;
+
+	Point2D center2D = { 0.0, 0.0 };
+	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
+	HoughParameters params = { 4.0, 15.0, 0.5, 5.0, 1000, 1.0, 0.15, 0.5, spacing };
+	dataType max_ratio = 1.0;
+
+	//================ Use circle detection as path finding stopping criterium =====================
 	size_t num_slice_processed = 0;
 	int len = path_points.size();
 	std::cout << len << " point to be processed" << std::endl;
