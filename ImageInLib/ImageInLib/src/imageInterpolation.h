@@ -16,6 +16,14 @@ extern "C" {
 		TRILINEAR // for 3D image
 	} interpolationMethod;
 
+	typedef struct
+	{
+		dataType** minimum;
+		dataType** maximum;
+		dataType** mean;
+		dataType** sd;
+	} statictics_Pointers;
+
 	//====================
 	//3D Functions
 
@@ -147,6 +155,16 @@ extern "C" {
 	Statistics getStatistics(Image_Data imageData, Point3D point_ct, dataType radius);
 
 	Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radius);
+
+	/// <summary>
+	/// : This function create statistics images from statistics computed in each voxel
+	/// in a small ball defined by the radius
+	/// </summary>
+	/// <param name="imageData"> : Structure to hold the input image</param>
+	/// <param name="statsImage"> : Structure to hold the statistics images</param>
+	/// <param name="radius"> : radius to be considered for the statistics</param>
+	/// <returns></returns>
+	bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius);
 
 #ifdef __cplusplus
 }
