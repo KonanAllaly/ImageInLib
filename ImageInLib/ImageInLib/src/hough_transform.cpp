@@ -410,8 +410,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	erosion2D(maskThreshold, length, width, foreground, background);
 	dilatation2D(maskThreshold, length, width, foreground, background);
 
-	//saving_path = outputPath + "threshold.raw";
-	store2dRawData(maskThreshold, length, width, savingPath.c_str());
+	//store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
 	size_t count_vote = 0, count_neighbor = 0, total_neighbor = 0;
 	dataType hough_ratio = 0.0, found_ratio = 0.0, max_ratio = 0.0;
@@ -508,6 +507,11 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 		radius += params.radius_step;
 	}
 
+	//save distance between found center en seed point
+	Point2D f_point = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
+	Point2D s_point = getRealCoordFromImageCoord2D(seed, originImage, params.spacing, orientation);
+	double d_point = getPoint2DDistance(f_point, s_point);
+
 	printf("Found radius = %lf\n", found_radius);
 	//printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
 
@@ -526,6 +530,8 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 		}
 	}
 
+	Point2D draw_circle = { 0.0, 0.0 };
+
 	if (found_center.x != 0 && found_center.y != 0) {
 		
 		//add found center
@@ -533,7 +539,8 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 		
 		//draw the found circle
 		box = findBoundingBox2D(found_center, length, width, found_radius, params.offset);
-		found_center = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
+		
+		draw_circle = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
 
 		for (i = box.i_min; i <= box.i_max; i++) {
 			for (j = box.j_min; j <= box.j_max; j++) {
@@ -543,7 +550,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 				current_point.y = (dataType)j;
 				current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
 
-				dist_point = getPoint2DDistance(found_center, current_point);
+				dist_point = getPoint2DDistance(draw_circle, current_point);
 
 				if (dist_point >= (found_radius - params.epsilon) && dist_point <= (found_radius + params.epsilon)) {
 					foundCirclePtr[xd] = 1.0;
@@ -556,7 +563,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
 	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-	fprintf(saveInfo, "%f,%f\n", max_ratio, found_radius);
+	fprintf(saveInfo, "%f,%f,%f\n", max_ratio, found_radius, d_point);
 
 	free(maskThreshold);
 	free(houghSpaceMax);
