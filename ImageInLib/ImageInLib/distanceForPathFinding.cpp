@@ -1380,11 +1380,13 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	if (ctImageData.imageDataPtr == NULL || meanImagePtr == NULL || potential == NULL)
 		return false;
 	
-	size_t i = 0, j = 0, k = 0, x = 0, currentIndx = 0;
+	size_t i = 0, k = 0;
 	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	size_t i0 = (size_t)seedPoint.y, j0 = (size_t)seedPoint.x, k0 = (size_t)seedPoint.z;
+	size_t i0 = (size_t)seedPoint.y;
+	size_t j0 = (size_t)seedPoint.x;
+	size_t k0 = (size_t)seedPoint.z;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
@@ -1400,7 +1402,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	//Load filtered image for the ct contribution (make the computation faster)
 	dataType** filtered = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		filtered[k] = new dataType[dim2D]{ 0 };
+		filtered[k] = new dataType[dim2D]{0};
 	}
 	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient6/filtered_p6.raw";
 	load3dArrayRAW<dataType>(filtered, length, width, height, path.c_str(), false);
@@ -1416,8 +1418,8 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	dataType** distance = new dataType * [height];
 	dataType** edgeDetector = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		distance[k] = new dataType[dim2D]{ 0 };
-		edgeDetector[k] = new dataType[dim2D]{ 0 };
+		distance[k] = new dataType[dim2D]{0};
+		edgeDetector[k] = new dataType[dim2D]{0};
 	}
 	
 	dataType norm_of_gradient = 0.0, edge_coef = 1000.0;
@@ -1425,21 +1427,18 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				ux = gradientVectorX[k][currentIndx];
-				uy = gradientVectorY[k][currentIndx];
-				uz = gradientVectorZ[k][currentIndx];
-				norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-				edgeDetector[k][currentIndx] = gradientFunction(norm_of_gradient, edge_coef);
-				//threshold
-				if (edgeDetector[k][currentIndx] < 0.15) {
-					edgeDetector[k][currentIndx] = 0.0;
-				}
-				else {
-					edgeDetector[k][currentIndx] = 1.0;
-				}
+		for (i = 0; i < dim2D; i++) {
+			ux = gradientVectorX[k][i];
+			uy = gradientVectorY[k][i];
+			uz = gradientVectorZ[k][i];
+			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
+			edgeDetector[k][i] = gradientFunction(norm_of_gradient, edge_coef);
+			//threshold
+			if (edgeDetector[k][i] < 0.15) {
+				edgeDetector[k][i] = 0.0;
+			}
+			else {
+				edgeDetector[k][i] = 1.0;
 			}
 		}
 	}
@@ -1473,49 +1472,39 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	meanImage.height = height; meanImage.length = length; meanImage.width = width;
 	meanImage.origin = ctImageData.origin; meanImage.spacing = ctImageData.spacing; meanImage.orientation = ctImageData.orientation;
 	seedStats = getStats(meanImage, initial_point, 3.0);
-	dataType v1_mean = seedStats.mean_data;
-	dataType seedValMean = v1_mean;
+	dataType seedValMean = seedStats.mean_data;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				potential[k][currentIndx] = abs(seedValCT - ctImageData.imageDataPtr[k][currentIndx]);
-				meanImagePtr[k][currentIndx] = abs(seedValMean - meanImagePtr[k][currentIndx]);
-			}
+		for (i = 0; i < dim2D; i++) {
+			potential[k][i] = abs(seedValCT - Filtered.imageDataPtr[k][i]);
+			meanImagePtr[k][i] = abs(seedValMean - meanImagePtr[k][i]);
 		}
 	}
 
 	//Find the max of each potential for normalization
 	dataType maxImage = 0.0, maxMean = 0.0;
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				if (potential[k][currentIndx] > maxImage) {
-					maxImage = potential[k][currentIndx];
-				}
-				if (meanImagePtr[k][currentIndx] > maxMean) {
-					maxMean = meanImagePtr[k][currentIndx];
-				}
+		for (i = 0; i < dim2D; i++) {
+			if (potential[k][i] > maxImage) {
+				maxImage = potential[k][i];
+			}
+			if (meanImagePtr[k][i] > maxMean) {
+				maxMean = meanImagePtr[k][i];
 			}
 		}
 	}
 
 	//Normalization
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				ux = gradientVectorX[k][currentIndx];
-				uy = gradientVectorY[k][currentIndx];
-				uz = gradientVectorZ[k][currentIndx];
-				dataType edge_value = 1 + parameters.K * (ux * ux + uy * uy + uz * uz);
-				dataType weight_dist = distance[k][currentIndx];
-				potential[k][currentIndx] = parameters.epsilon + sqrt( parameters.c_ct * pow(potential[k][currentIndx] / maxImage, 2)
-					+ parameters.c_mean * pow(meanImagePtr[k][currentIndx] / maxMean, 2) ) * edge_value * weight_dist;
-			}
+		for (i = 0; i < dim2D; i++) {
+			ux = gradientVectorX[k][i];
+			uy = gradientVectorY[k][i];
+			uz = gradientVectorZ[k][i];
+			dataType edge_value = 1 + parameters.K * (ux * ux + uy * uy + uz * uz);
+			dataType weight_dist = distance[k][i];
+			potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
+				+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
 		}
 	}
 
