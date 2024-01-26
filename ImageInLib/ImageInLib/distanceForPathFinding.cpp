@@ -1031,9 +1031,9 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 }
 
-bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint) {
+bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint) {
 
-	if (imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL) {
+	if (distanceFuncPtr == NULL || potentialFuncPtr == NULL) {
 		return false;
 	}
 
@@ -1694,7 +1694,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	saving_name = path_name + "potential.raw";
 	store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
 
-	fastMarching3D_N(ctImageData.imageDataPtr, actionPtr, potentialPtr, length, width, height, initial_point);
+	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point);
 	saving_name = path_name + "action_field_initial.raw";
 	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 	
@@ -1884,7 +1884,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		seeds[0] = seeds[1];
 		initial_point = seeds[1];
 		
-		fastMarching3D_N(ctImageData.imageDataPtr, newActionPtr, potentialPtr, length, width, height, initial_point);
+		fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, initial_point);
 
 		saving_name = path_name + "action_field" + extension + ".raw";
 		store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
