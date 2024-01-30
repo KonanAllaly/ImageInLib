@@ -16,8 +16,6 @@
 
 using namespace std;
 
-	//2D functions
-
 	typedef struct {
 		size_t x, y;
 	} point2D;
@@ -27,7 +25,17 @@ using namespace std;
 		dataType arrival;
 	}pointFastMarching2D;
 
-	// heap functions
+	typedef struct {
+		size_t x, y, z;
+		dataType arrival;
+	}pointFastMarching3D;
+
+	typedef struct {
+		dataType K, epsilon;
+		dataType c_min, c_max, c_mean, c_sd, c_ct, c_pet;
+	} Potential_Parameters;
+
+	// 2D functions
 
 	/// <summary>
 	/// swap two given points 
@@ -149,27 +157,9 @@ using namespace std;
 	/// <returns></returns>
 	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints);
 
-	//==============================================================
-
-	//typedef struct
-	//{
-	//	dataType** minimum;
-	//	dataType** maximum;
-	//	dataType** mean;
-	//	dataType** sd;
-	//} statictics_Pointers;
-
-	typedef struct {
-		dataType K, epsilon;
-		dataType c_min, c_max, c_mean, c_sd, c_ct, c_pet;
-	} Potential_Parameters;
-
 	//================================================================
 
-	typedef struct {
-		size_t x, y, z;
-		dataType arrival;
-	}pointFastMarching3D;
+	//3D functions
 
 	/// <summary>
 	/// solve quadratic equation
@@ -220,28 +210,120 @@ using namespace std;
 	/// <returns></returns>
 	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
 
+	/// <summary>
+	/// Compute 3D image gradient
+	/// </summary>
+	/// <param name="imageDataPtr">input image</param>
+	/// <param name="gradientVectorX">gradient X component</param>
+	/// <param name="gradientVectorY">gradient Y component</param>
+	/// <param name="gradientVectorZ">gradient Z component</param>
+	/// <param name="lenght">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="h">space discretization</param>
+	/// <returns>return true after succes</returns>
 	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
 
+	/// <summary>
+	/// compute 3D potential function for front propagation (Fast Marching)
+	/// </summary>
+	/// <param name="imageDataPtr">input image data</param>
+	/// <param name="potentialFuncPtr">potential function</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="seedPoints">seed point</param>
+	/// <returns>return true after succes</returns>
 	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
+	/// <summary>
+	/// swap 3D variables
+	/// </summary>
+	/// <param name="a">first variable</param>
+	/// <param name="b">second variable</param>
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
 
+	/// <summary>
+	/// create heap sorting from last element 
+	/// </summary>
+	/// <param name="in_Process">vector containing all the elements</param>
+	/// <param name="i">index where to start heapifying</param>
 	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i);
 
+	/// <summary>
+	/// create heap structure from vector
+	/// </summary>
+	/// <param name="in_Process">vector containing the elements</param>
 	void heapifyVector3D(vector<pointFastMarching3D>& in_Process);
 
+	/// <summary>
+	/// heapify from the root element
+	/// </summary>
+	/// <param name="in_Process">vector of all the elements</param>
+	/// <param name="i">index of element where to start the heapifying</param>
 	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i);
 
+	/// <summary>
+	/// delete root element from the heap structure
+	/// </summary>
+	/// <param name="in_Process">vector containing all the elements</param>
 	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
 
+	/// <summary>
+	/// add new point in the heap structure and heapifung
+	/// </summary>
+	/// <param name="in_Process">vector containing all the elements</param>
+	/// <param name="point">element to be added</param>
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
 
+	/// <summary>
+	/// 3D fast marching (front propagation), starting by one seed point
+	/// </summary>
+	/// <param name="distanceFuncPtr">pointer to caintaining computed action field</param>
+	/// <param name="potentialFuncPtr">pointer containing the potential (speed) in each point</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="seedPoint">ssed point</param>
+	/// <returns>return true after succes</returns>
 	bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
 
+	/// <summary>
+	/// compute speed (potential) in each point
+	/// </summary>
+	/// <param name="ctImageData">input image data</param>
+	/// <param name="meanImagePtr">image generate by averaging around each point</param>
+	/// <param name="potential">potential (speed) function</param>
+	/// <param name="seedPoint">seed point</param>
+	/// <param name="radius">radius for averaging</param>
+	/// <param name="parameters">parameters for potential computation</param>
+	/// <returns></returns>
 	bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters);
 
+	/// <summary>
+	/// find the shortest path between two given points
+	/// </summary>
+	/// <param name="distanceFuncPtr">action field computed by fast marching from given seed point</param>
+	/// <param name="resultedPath">shortest path between two given points</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="h">space discretization</param>
+	/// <param name="seedPoints">seed points</param>
+	/// <param name="path_points">vector to keep all the path points coordinates</param>
+	/// <returns></returns>
 	bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, vector<Point3D>& path_points);
 
+	/// <summary>
+	/// find a path inside the aorta from given one point
+	/// </summary>
+	/// <param name="ctImageData">input image data</param>
+	/// <param name="meanImagePtr">mean image obtained by averaging pixel value around each pixel</param>
+	/// <param name="resultedPath">shortest path inside the aorta</param>
+	/// <param name="seedPoints">seed points</param>
+	/// <param name="parameters">parameters for potential function computation</param>
+	/// <param name="stop_criterium">stopping criterium</param>
+	/// <returns></returns>
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
 //#ifdef __cplusplus
