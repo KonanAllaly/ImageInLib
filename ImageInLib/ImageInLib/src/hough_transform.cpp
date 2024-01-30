@@ -410,7 +410,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	erosion2D(maskThreshold, length, width, foreground, background);
 	dilatation2D(maskThreshold, length, width, foreground, background);
 
-	//store2dRawData(maskThreshold, length, width, savingPath.c_str());
+	store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
 	size_t count_vote = 0, count_neighbor = 0, total_neighbor = 0;
 	dataType hough_ratio = 0.0, found_ratio = 0.0, max_ratio = 0.0;
@@ -497,7 +497,6 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 			found_ratio = max_ratio;
 			found_radius = radius;
 			test_max = true;
-			//copyDataToAnother2dArray(houghSpacePtr, houghSpaceMax, length, width);
 		}
 		//update the found_center if the value of found_ratio was updated
 		if (test_max == true) {
