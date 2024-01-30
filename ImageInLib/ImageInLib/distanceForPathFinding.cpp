@@ -1400,7 +1400,8 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	for (k = 0; k < height; k++) {
 		filtered[k] = new dataType[dim2D]{0};
 	}
-	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient6/filtered_p6.raw";
+	
+	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient2/filtered_p2.raw";
 	load3dArrayRAW<dataType>(filtered, length, width, height, path.c_str(), false);
 
 	Image_Data Filtered; Filtered.imageDataPtr = filtered;
@@ -1461,13 +1462,13 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	seedStats = getStats(Filtered, initial_point, 3.0);
+	seedStats = getStats(Filtered, initial_point, radius);
 	dataType seedValCT = seedStats.mean_data;
 
 	Image_Data meanImage; meanImage.imageDataPtr = meanImagePtr;
 	meanImage.height = height; meanImage.length = length; meanImage.width = width;
 	meanImage.origin = ctImageData.origin; meanImage.spacing = ctImageData.spacing; meanImage.orientation = ctImageData.orientation;
-	seedStats = getStats(meanImage, initial_point, 3.0);
+	seedStats = getStats(meanImage, initial_point, radius);
 	dataType seedValMean = seedStats.mean_data;
 
 	//Computation of potential function
@@ -1497,7 +1498,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 			ux = gradientVectorX[k][i];
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
-			dataType edge_value = 1 + parameters.K * (ux * ux + uy * uy + uz * uz);
+			dataType edge_value = (dataType)(1.0 + parameters.K * (ux * ux + uy * uy + uz * uz));
 			dataType weight_dist = distance[k][i];
 			potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
 				+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
@@ -1529,8 +1530,9 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 
 	int i, j, k, xd, dim2D = length * width, max_iter = 1000;
 	double tau = 0.8, tol = 1.0;
-	double i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
-	int i_end = (size_t)seedPoints[1].y, j_end = (size_t)seedPoints[1].x, k_end = (size_t)seedPoints[1].z;
+	dataType i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
+
+	cout << "initial point : (" << j_init << "," << i_init << "," << k_init << ")" << endl;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
@@ -1546,7 +1548,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		return false;
 
 	//Normalization of the gradient
-	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
+	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, h);
 
 	dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
 	for (k = 0; k < height; k++) {
@@ -1563,15 +1565,16 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 
 	//Find the closest point till the last point
 	size_t cpt = 1;
-	size_t i_current = i_end;
-	size_t j_current = j_end;
-	size_t k_current = k_end;
+	size_t i_current = (size_t)seedPoints[1].y;
+	size_t j_current = (size_t)seedPoints[1].x;
+	size_t k_current = (size_t)seedPoints[1].z;
+	cout << "final point : (" << j_current << "," << i_current << "," << k_current << ")" << endl;
 	size_t currentIndx = x_new(j_current, i_current, width);
 	resultedPath[k_current][currentIndx] = 1.0;
 
-	double iNew = i_current;
-	double jNew = j_current;
-	double kNew = k_current;
+	dataType iNew = (dataType)i_current;
+	dataType jNew = (dataType)j_current;
+	dataType kNew = (dataType)k_current;
 	double currentDist = 0.0;
 	double dist_min = 0.0;
 
@@ -1654,23 +1657,30 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	seeds[0] = seedPoints[0];
 	Point3D initial_point = seedPoints[0];
 	Point3D temporary_point = { 0.0, 0.0, 0.0 };
-	Point3D current_point = { 0.0, 0.0, 0.0 }, real_world = {0.0, 0.0, 0.0};
+	Point3D current_point = { 0.0, 0.0, 0.0 };
+	//Point3D real_world = { 0.0, 0.0, 0.0 };
 
 	double step = 50.0, dist = 0.0;
-	dataType min_distance = BIG_VALUE, value_temp = 0.0;
+	dataType min_distance = BIG_VALUE, value_temp = 0.0, h = 1.0;
 
 	//================ find next point inside the aorta ============
 	
-	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints[0], 5.0, parameters);
-	saving_name = path_name + "potential.raw";
+	double radius_to_find_mean = 3.0;
+	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seedPoints[0], radius_to_find_mean, parameters);
+	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/potential.raw";
+	//load3dArrayRAW<dataType>(potentialPtr, length, width, height, saving_name.c_str(), false);
+	
+	saving_name = path_name + "potential_initial.raw";
 	store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
 
-	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seedPoints[0]);
+	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/action_field.raw";
+	//load3dArrayRAW<dataType>(actionPtr, length, width, height, saving_name.c_str(), false);
+	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point);
 	saving_name = path_name + "action_field_initial.raw";
 	store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
 	
-	//get real world coordinate of the initial point
-	real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	////get real world coordinate of the initial point
+	//real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
 	int count_step = 0;
 	min_distance = BIG_VALUE;
@@ -1681,8 +1691,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 				current_point.x = (dataType)j;
 				current_point.y = (dataType)i;
 				current_point.z = (dataType)k;
-				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-				dist = getPoint3DDistance(real_world, current_point);
+				//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+				//dist = getPoint3DDistance(real_world, current_point);
+				dist = getPoint3DDistance(initial_point, current_point);
 				if (dist >= (step - 0.01) && dist <= (step + 0.01)) {
 					if (actionPtr[k][x] < min_distance) {
 						min_distance = actionPtr[k][x];
@@ -1703,7 +1714,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	//path between initial point and second point
 	seeds[1] = temporary_point;
-	shortestPath3D(actionPtr, resultedPath, length, width, height, 1.0, seeds, path_points);
+	shortestPath3D(actionPtr, resultedPath, length, width, height, h, seeds, path_points);
 	
 	saving_name = path_name + "path.raw";
 	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
@@ -1715,7 +1726,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	//Slice extraction
 	Point2D seed2D = { 0.0, 0.0 };
-	int i_n = 0, k_n = 0;
+	int i_n = 0, k_n = 0, k_center = 0;
 
 	//filtering parameters
 	Filter_Parameters filter_parameters;
@@ -1739,6 +1750,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	int len = path_points.size();
 	std::cout << len << " point to be processed" << std::endl;
 	
+	Point3D next_point = { 0.0, 0.0, 0.0 };
 	for (i_n = len - 1; i_n > -1; i_n--) {
 
 		num_slice_processed++;
@@ -1788,50 +1800,55 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		max_ratio = getTheMaxValue(voteArray, length, width);
 		if (max_ratio != 0.0) {
 			centeredPath[k_n][x_new((size_t)center2D.x, (size_t)center2D.y, length)] = 1.0;
+			//k_center = k_n;
+			next_point.x = center2D.x;
+			next_point.y = center2D.y;
+			next_point.z = k_n;
 		}
 
-		//if (num_slice_processed < 10) {
-		//	saving_name = path_name + "slice_000" + extension + ".raw";
-		//	store2dRawData(imageSlice, length, width, saving_name.c_str());
-		//	saving_name = path_name + "found_circle_000" + extension + ".raw";
-		//	store2dRawData(houghSpace, length, width, saving_name.c_str());
-		//	saving_name = path_name + "ratio_000" + extension + ".raw";
-		//	store2dRawData(voteArray, length, width, saving_name.c_str());
-		//}
-		//else {
-		//	if (num_slice_processed < 100) {
-		//		saving_name = path_name + "slice_00" + extension + ".raw";
-		//		store2dRawData(imageSlice, length, width, saving_name.c_str());
-		//		saving_name = path_name + "found_circle_00" + extension + ".raw";
-		//		store2dRawData(houghSpace, length, width, saving_name.c_str());
-		//		saving_name = path_name + "ratio_00" + extension + ".raw";
-		//		store2dRawData(voteArray, length, width, saving_name.c_str());
-		//	}
-		//	else {
-		//		if (num_slice_processed < 1000) {
-		//			saving_name = path_name + "slice_0" + extension + ".raw";
-		//			store2dRawData(imageSlice, length, width, saving_name.c_str());
-		//			saving_name = path_name + "found_circle_0" + extension + ".raw";
-		//			store2dRawData(houghSpace, length, width, saving_name.c_str());
-		//			saving_name = path_name + "ratio_0" + extension + ".raw";
-		//			store2dRawData(voteArray, length, width, saving_name.c_str());
-		//		}
-		//		else {
-		//			saving_name = path_name + "slice_" + extension + ".raw";
-		//			store2dRawData(imageSlice, length, width, saving_name.c_str());
-		//			saving_name = path_name + "found_circle_" + extension + ".raw";
-		//			store2dRawData(houghSpace, length, width, saving_name.c_str());
-		//			saving_name = path_name + "ratio_" + extension + ".raw";
-		//			store2dRawData(voteArray, length, width, saving_name.c_str());
-		//		}
-		//	}
-		//}
+		if (num_slice_processed < 10) {
+			saving_name = path_name + "slice_000" + extension + ".raw";
+			store2dRawData(imageSlice, length, width, saving_name.c_str());
+			saving_name = path_name + "found_circle_000" + extension + ".raw";
+			store2dRawData(houghSpace, length, width, saving_name.c_str());
+			saving_name = path_name + "ratio_000" + extension + ".raw";
+			store2dRawData(voteArray, length, width, saving_name.c_str());
+		}
+		else {
+			if (num_slice_processed < 100) {
+				saving_name = path_name + "slice_00" + extension + ".raw";
+				store2dRawData(imageSlice, length, width, saving_name.c_str());
+				saving_name = path_name + "found_circle_00" + extension + ".raw";
+				store2dRawData(houghSpace, length, width, saving_name.c_str());
+				saving_name = path_name + "ratio_00" + extension + ".raw";
+				store2dRawData(voteArray, length, width, saving_name.c_str());
+			}
+			else {
+				if (num_slice_processed < 1000) {
+					saving_name = path_name + "slice_0" + extension + ".raw";
+					store2dRawData(imageSlice, length, width, saving_name.c_str());
+					saving_name = path_name + "found_circle_0" + extension + ".raw";
+					store2dRawData(houghSpace, length, width, saving_name.c_str());
+					saving_name = path_name + "ratio_0" + extension + ".raw";
+					store2dRawData(voteArray, length, width, saving_name.c_str());
+				}
+				else {
+					saving_name = path_name + "slice_" + extension + ".raw";
+					store2dRawData(imageSlice, length, width, saving_name.c_str());
+					saving_name = path_name + "found_circle_" + extension + ".raw";
+					store2dRawData(houghSpace, length, width, saving_name.c_str());
+					saving_name = path_name + "ratio_" + extension + ".raw";
+					store2dRawData(voteArray, length, width, saving_name.c_str());
+				}
+			}
+		}
 
 	}
 
-	////update the seed point to the found center
+	//update the seed point with the found center
+	seeds[1] = next_point;
 	//if (center2D.x != 0 && center2D.y != 0) {
-	//	seeds[1].z = path_points[0].z;
+	//	seeds[1].z = k_center;
 	//	seeds[1].x = center2D.x;
 	//	seeds[1].y = center2D.y;
 	//}
@@ -1864,8 +1881,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 					current_point.x = (dataType)j;
 					current_point.y = (dataType)i;
 					current_point.z = (dataType)k;
-					current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-					dist = getPoint3DDistance(real_world, current_point);
+					//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+					//dist = getPoint3DDistance(real_world, current_point);
+					dist = getPoint3DDistance(initial_point, current_point);
 					if (dist <= (step + 0.01) && actionPtr[k][x] <= value_temp) {
 						maskDistance[k][x] = 10000.0;
 					}
@@ -1887,8 +1905,10 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 		//Find the temporary point
 		min_distance = BIG_VALUE;
-		//get real world coordinate of the initial point
-		real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		
+		////get real world coordinate of the initial point
+		//real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		
 		for (k = 0; k < height; k++) {
 			for (i = 0; i < length; i++) {
 				for (j = 0; j < width; j++) {
@@ -1896,8 +1916,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 					current_point.x = (dataType)j;
 					current_point.y = (dataType)i;
 					current_point.z = (dataType)k;
-					current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-					dist = getPoint3DDistance(real_world, current_point);
+					//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+					//dist = getPoint3DDistance(real_world, current_point);
+					dist = getPoint3DDistance(initial_point, current_point);
 					if (dist >= (step - 0.01) && dist <= (step + 0.01) && maskDistance[k][x] != 10000.0) {
 						if (newActionPtr[k][x] < min_distance) {
 							min_distance = newActionPtr[k][x];
@@ -1914,7 +1935,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
 		
 		seeds[1] = temporary_point;
-		shortestPath3D(newActionPtr, resultedPath, length, width, height, 1.0, seeds, path_points);
+		shortestPath3D(newActionPtr, resultedPath, length, width, height, h, seeds, path_points);
 		
 		saving_name = path_name + "path.raw";
 		store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
@@ -1925,7 +1946,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		//find circles
 		len = path_points.size();
 		std::cout << len << " point to be processed" << std::endl;
-		//count_stop = 0;
+		
+		count_stop = 0;
 		for (i_n = len - 1; i_n > -1; i_n--) {
 			num_slice_processed++;
 			extension = to_string(num_slice_processed);
@@ -1974,44 +1996,48 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 			max_ratio = getTheMaxValue(voteArray, length, width);
 			if (max_ratio != 0.0) {
 				centeredPath[k_n][x_new((size_t)center2D.x, (size_t)center2D.y, length)] = 1.0;
+				//k_center = k_n;
+				next_point.x = center2D.x;
+				next_point.y = center2D.y;
+				next_point.z = k_n;
 			}
 
-			//if (num_slice_processed < 10) {
-			//	saving_name = path_name + "slice_000" + extension + ".raw";
-			//	store2dRawData(imageSlice, length, width, saving_name.c_str());
-			//	saving_name = path_name + "found_circle_000" + extension + ".raw";
-			//	store2dRawData(houghSpace, length, width, saving_name.c_str());
-			//	saving_name = path_name + "ratio_000" + extension + ".raw";
-			//	store2dRawData(voteArray, length, width, saving_name.c_str());
-			//}
-			//else {
-			//	if (num_slice_processed < 100) {
-			//		saving_name = path_name + "slice_00" + extension + ".raw";
-			//		store2dRawData(imageSlice, length, width, saving_name.c_str());
-			//		saving_name = path_name + "found_circle_00" + extension + ".raw";
-			//		store2dRawData(houghSpace, length, width, saving_name.c_str());
-			//		saving_name = path_name + "ratio_00" + extension + ".raw";
-			//		store2dRawData(voteArray, length, width, saving_name.c_str());
-			//	}
-			//	else {
-			//		if (num_slice_processed < 1000) {
-			//			saving_name = path_name + "slice_0" + extension + ".raw";
-			//			store2dRawData(imageSlice, length, width, saving_name.c_str());
-			//			saving_name = path_name + "found_circle_0" + extension + ".raw";
-			//			store2dRawData(houghSpace, length, width, saving_name.c_str());
-			//			saving_name = path_name + "ratio_0" + extension + ".raw";
-			//			store2dRawData(voteArray, length, width, saving_name.c_str());
-			//		}
-			//		else {
-			//			saving_name = path_name + "slice_" + extension + ".raw";
-			//			store2dRawData(imageSlice, length, width, saving_name.c_str());
-			//			saving_name = path_name + "found_circle_" + extension + ".raw";
-			//			store2dRawData(houghSpace, length, width, saving_name.c_str());
-			//			saving_name = path_name + "ratio_" + extension + ".raw";
-			//			store2dRawData(voteArray, length, width, saving_name.c_str());
-			//		}
-			//	}
-			//}
+			if (num_slice_processed < 10) {
+				saving_name = path_name + "slice_000" + extension + ".raw";
+				store2dRawData(imageSlice, length, width, saving_name.c_str());
+				saving_name = path_name + "found_circle_000" + extension + ".raw";
+				store2dRawData(houghSpace, length, width, saving_name.c_str());
+				saving_name = path_name + "ratio_000" + extension + ".raw";
+				store2dRawData(voteArray, length, width, saving_name.c_str());
+			}
+			else {
+				if (num_slice_processed < 100) {
+					saving_name = path_name + "slice_00" + extension + ".raw";
+					store2dRawData(imageSlice, length, width, saving_name.c_str());
+					saving_name = path_name + "found_circle_00" + extension + ".raw";
+					store2dRawData(houghSpace, length, width, saving_name.c_str());
+					saving_name = path_name + "ratio_00" + extension + ".raw";
+					store2dRawData(voteArray, length, width, saving_name.c_str());
+				}
+				else {
+					if (num_slice_processed < 1000) {
+						saving_name = path_name + "slice_0" + extension + ".raw";
+						store2dRawData(imageSlice, length, width, saving_name.c_str());
+						saving_name = path_name + "found_circle_0" + extension + ".raw";
+						store2dRawData(houghSpace, length, width, saving_name.c_str());
+						saving_name = path_name + "ratio_0" + extension + ".raw";
+						store2dRawData(voteArray, length, width, saving_name.c_str());
+					}
+					else {
+						saving_name = path_name + "slice_" + extension + ".raw";
+						store2dRawData(imageSlice, length, width, saving_name.c_str());
+						saving_name = path_name + "found_circle_" + extension + ".raw";
+						store2dRawData(houghSpace, length, width, saving_name.c_str());
+						saving_name = path_name + "ratio_" + extension + ".raw";
+						store2dRawData(voteArray, length, width, saving_name.c_str());
+					}
+				}
+			}
 			
 			if (max_ratio == 0.0) {
 				count_stop++;
@@ -2027,9 +2053,10 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 			
 		}
 
-		////update the seed point to the found center
+		//update the seed point to the found center
+		seeds[1] = next_point;
 		//if (center2D.x != 0 && center2D.y != 0) {
-		//	seeds[1].z = path_points[0].z;
+		//	seeds[1].z = k_center;
 		//	seeds[1].x = center2D.x;
 		//	seeds[1].y = center2D.y;
 		//}

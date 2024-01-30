@@ -39,7 +39,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 
-	std::string inputImagePath = inputPath + "vtk/Patient6_ct.vtk";
+	std::string inputImagePath = inputPath + "vtk/Patient2_ct.vtk";
 	readVtkFile(inputImagePath.c_str(), ctContainer);
 
 
@@ -519,14 +519,18 @@ int main() {
 	delete[] voteArray;
 	*/
 	
-	//================== Test new potential function ==================================
+	//=========== Path finding and Hough transform for stopping criterium ==================================
 
+	/*
 	dataType** distanceMap = new dataType * [Height];
 	dataType** maskTreshold = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		distanceMap[k] = new dataType[dim2D]{0};
 		maskTreshold[k] = new dataType[dim2D]{0};
 	}
+
+	//loading_name = inputPath + "raw/filteredGMC_p6.raw";
+	//load3dArrayRAW<dataType>(imageData, Length, Width, Height, loading_name.c_str(), false);
 
 	int height = (int)((Height * ctSpacing.sz) / ctSpacing.sx);
 	dataType** image_interp = new dataType * [height];
@@ -540,10 +544,11 @@ int main() {
 		mean_image[k] = new dataType[dim2D]{ 0 };
 	}
 
-	loading_name = inputPath + "interpolated/patient6/Im_mean_r3.raw";
+	loading_name = inputPath + "interpolated/patient2/Im_mean_r5.raw";
 	load3dArrayRAW<dataType>(mean_image, Length, Width, height, loading_name.c_str(), false);
 
-	Image_Data CT; CT.imageDataPtr = imageData; CT.height = Height; CT.length = Length; CT.width = Width;
+	Image_Data CT; CT.imageDataPtr = imageData;
+	CT.height = Height; CT.length = Length; CT.width = Width;
 	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
 
 	Image_Data interpolated; interpolated.imageDataPtr = image_interp;
@@ -553,9 +558,9 @@ int main() {
 	cout << "interpolated image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << height << "" << endl;
 	imageInterpolation3D(CT, interpolated, NEAREST_NEIGHBOR);
 
-	////patient 2
-	//Point3D final_point = { 262, 254, 250 }; // top 
-	//Point3D initial_point = { 263, 257, 146 }; // bottom
+	//patient 2
+	Point3D final_point = { 262, 254, 250 }; // top 
+	Point3D initial_point = { 263, 257, 146 }; // bottom
 
 	////Patient3
 	//Point3D initial_point = { 259, 255, 244 };
@@ -569,10 +574,10 @@ int main() {
 	//Point3D final_point = { 273, 229, 230 };
 	//Point3D initial_point = { 281, 229, 132 };
 
-	////Patient6
-	Point3D final_point = { 243, 221, 637 };
-	Point3D initial_point = { 262, 243, 469 };// test 1
-	//Point3D initial_point = { 265, 244, 469 };// test 2
+	//////Patient6
+	//Point3D final_point = { 243, 221, 637 };
+	//Point3D initial_point = { 262, 243, 469 };// test 1
+	////Point3D initial_point = { 265, 244, 469 };// test 2
 
 	////Patient7
 	//Point3D final_point = { 252, 288, 442 };
@@ -610,17 +615,18 @@ int main() {
 	delete[] mean_image;
 	delete[] path;
 	delete[] potential;
+	*/
 
-	delete[] seeds;
-	free(ctContainer);
-	for (k = 0; k < Height; k++) {
-		delete[] distanceMap[k];
-		delete[] imageData[k];
-		delete[] maskTreshold[k];
-	}
-	delete[] distanceMap;
-	delete[] imageData;
-	delete[] maskTreshold;
+	//delete[] seeds;
+	//free(ctContainer);
+	//for (k = 0; k < Height; k++) {
+	//	delete[] imageData[k];
+	//	//delete[] distanceMap[k];
+	//	//delete[] maskTreshold[k];
+	//}
+	//delete[] imageData;
+	////delete[] distanceMap;
+	////delete[] maskTreshold;
 
 	//======================== Labeling to segment Lungs and their bounding box =================
 	
@@ -726,6 +732,15 @@ int main() {
 	delete[] imageData;
 	delete[] maskTreshold;
 	*/
+
+	//======================= Cropping and investigation on Lungs and its region ==========
+
+	
+	free(ctContainer);
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+	}
+	delete[] imageData;
 
 	return EXIT_SUCCESS;
 }
