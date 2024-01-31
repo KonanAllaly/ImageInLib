@@ -1401,7 +1401,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		filtered[k] = new dataType[dim2D]{0};
 	}
 	
-	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient2/filtered_p2.raw";
+	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient6/filtered_p6_v2.raw";
 	load3dArrayRAW<dataType>(filtered, length, width, height, path.c_str(), false);
 
 	Image_Data Filtered; Filtered.imageDataPtr = filtered;
@@ -1846,7 +1846,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	}
 
 	//update the seed point with the found center
-	seeds[1] = next_point;
+	//seeds[1] = next_point;
 	//if (center2D.x != 0 && center2D.y != 0) {
 	//	seeds[1].z = k_center;
 	//	seeds[1].x = center2D.x;
@@ -2054,7 +2054,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		}
 
 		//update the seed point to the found center
-		seeds[1] = next_point;
+		//seeds[1] = next_point;
 		//if (center2D.x != 0 && center2D.y != 0) {
 		//	seeds[1].z = k_center;
 		//	seeds[1].x = center2D.x;
