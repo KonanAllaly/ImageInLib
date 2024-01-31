@@ -699,24 +699,6 @@ bool edgeDetection2dFunctionUC(unsigned char * image2DPtr, unsigned char * edge2
 }
 
 //Functions for Canny edge detector
-/*
-void generateGaussianMask(dataType* filter_shape, const size_t filter_size, dataType sigma) {
-	
-	size_t half_size = filter_size / 2, index = 0;
-	dataType normal = 0.0, exp_term = 0.0;
-
-	int i, j, start = -half_size;
-
-	for (i = start; i <= half_size; i++) {
-		for (j = start; j <= half_size; j++) {
-			normal = 1.0 / (2.0 * M_PI * sigma * sigma);
-			exp_term = exp(-(i * i + j * j) / (2.0 * sigma * sigma));
-			filter_shape[index] = normal * exp_term;
-			index += 1;
-		}
-	}
-}
-*/
 
 void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType* gradientY, const size_t length, const size_t width) {
 	size_t i, j, xd;
