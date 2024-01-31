@@ -1,3 +1,4 @@
+/*
 #include "cropping.h"
 #include "imageInterpolation.h"
 
@@ -20,6 +21,7 @@ imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
 				x = x_new(i, j, length);
+				
 				if (ctImageData.imageDataPtr[k][x] == 1.0) {
 
 					//find i_min
@@ -59,9 +61,10 @@ imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset) {
 
 	croppedImageMetaData.origin = getRealCoordFromImageCoord3D(croppedImageMetaData.origin, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
-	croppedImageMetaData.dimension[0] = (size_t)(i_max - i_min + 2 * offset);
-	croppedImageMetaData.dimension[1] = (size_t)(j_max - j_min + 2 * offset);
-	croppedImageMetaData.dimension[2] = (size_t)(k_max - k_min + 2 * offset);
+	croppedImageMetaData.length = (size_t)(i_max - i_min + 2 * offset);
+	croppedImageMetaData.width = (size_t)(j_max - j_min + 2 * offset);
+	croppedImageMetaData.height = (size_t)(k_max - k_min + 2 * offset);
 
 	return croppedImageMetaData;
 }
+*/
