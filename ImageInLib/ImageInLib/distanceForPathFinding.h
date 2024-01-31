@@ -326,6 +326,20 @@ using namespace std;
 	/// <returns></returns>
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
+	typedef struct {
+		Point3D origin;
+		VoxelSpacing spacing;
+		size_t length, width, height;
+	}imageMetaData;
+
+	/// <summary>
+	/// This function find automatically the bounding box of input binary image
+	/// </summary>
+	/// <param name="ctImageData"> : structure holding the image to be cropped</param>
+	/// <param name="offset"> : offset</param>
+	/// <returns> : the meta data of the image cropped image</returns>
+	imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset);
+
 //#ifdef __cplusplus
 //}
 //#endif

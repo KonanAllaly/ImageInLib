@@ -2098,3 +2098,67 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	return true;
 }
 
+imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset) {
+
+	imageMetaData croppedImageMetaData;
+
+	croppedImageMetaData.spacing.sx = ctImageData.spacing.sx;
+	croppedImageMetaData.spacing.sy = ctImageData.spacing.sy;
+	croppedImageMetaData.spacing.sz = ctImageData.spacing.sz;
+
+	size_t height = ctImageData.height;
+	size_t length = ctImageData.length;
+	size_t width = ctImageData.width;
+
+	size_t k, i, j, x;
+	size_t i_min = length, j_min = width, k_min = height, i_max = 0, j_max = 0, k_max = 0;
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				x = x_new(i, j, length);
+
+				if (ctImageData.imageDataPtr[k][x] == 1.0) {
+					//find i_min
+					if (i_min > i) {
+						i_min = i;
+					}
+					//find i_max
+					if (i_max < i) {
+						i_max = i;
+					}
+
+					//find j_min
+					if (j_min > j) {
+						j_min = j;
+					}
+					//find j_max
+					if (j_max < j) {
+						j_max = j;
+					}
+
+					//find k_min
+					if (k_min > k) {
+						k_min = k;
+					}
+					//find k_max
+					if (k_max < k) {
+						k_max = k;
+					}
+				}
+			}
+		}
+	}
+
+	croppedImageMetaData.origin.x = i_min;
+	croppedImageMetaData.origin.y = j_min;
+	croppedImageMetaData.origin.z = k_min;
+
+	croppedImageMetaData.origin = getRealCoordFromImageCoord3D(croppedImageMetaData.origin, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+
+	croppedImageMetaData.length = (size_t)(i_max - i_min + 2 * offset);
+	croppedImageMetaData.width = (size_t)(j_max - j_min + 2 * offset);
+	croppedImageMetaData.height = (size_t)(k_max - k_min + 2 * offset);
+
+	return croppedImageMetaData;
+}
