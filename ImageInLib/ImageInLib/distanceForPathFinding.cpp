@@ -1442,6 +1442,9 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	
 	fastSweepingFunction_3D(distance, edgeDetector, length, width, height, 1.0, 10000000.0, 0.0);
 
+	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
+	store3dRawData<dataType>(distance, length, width, height, path.c_str());
+
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//keep point with distance lower than 15
@@ -1455,7 +1458,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		}
 	}
 
-	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
+	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMapNormalized.raw";
 	store3dRawData<dataType>(distance, length, width, height, path.c_str());
 
 	//get real world coordinates of the seed point
