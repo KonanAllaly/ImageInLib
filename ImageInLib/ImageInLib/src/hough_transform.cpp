@@ -506,11 +506,6 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 		radius += params.radius_step;
 	}
 
-	//save distance between found center en seed point
-	Point2D f_point = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
-	Point2D s_point = getRealCoordFromImageCoord2D(seed, originImage, params.spacing, orientation);
-	double d_point = getPoint2DDistance(f_point, s_point);
-
 	printf("Found radius = %lf\n", found_radius);
 	//printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
 
@@ -531,7 +526,13 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 
 	Point2D draw_circle = { 0.0, 0.0 };
 
+	double d_point = 0.0;
 	if (found_center.x != 0 && found_center.y != 0) {
+
+		//save distance between found center en seed point
+		Point2D f_point = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
+		Point2D s_point = getRealCoordFromImageCoord2D(seed, originImage, params.spacing, orientation);
+		d_point = getPoint2DDistance(f_point, s_point);
 		
 		//add found center
 		foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
