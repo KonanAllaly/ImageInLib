@@ -39,9 +39,10 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 
-	std::string inputImagePath = inputPath + "vtk/Patient2_ct.vtk";
+	//std::string inputImagePath = inputPath + "vtk/Patient6_ct.vtk";
+	std::string inputImagePath = inputPath + "vtk/Aorta_p6.vtk";
+	//std::string inputImagePath = inputPath + "crop_lungs_p6.vtk";
 	readVtkFile(inputImagePath.c_str(), ctContainer);
-
 
 	int Height = ctContainer->dimensions[2];
 	int Length = ctContainer->dimensions[1];
@@ -57,30 +58,39 @@ int main() {
 	//define 3D data structure
 	int k, i, j, xd;
 	dataType** imageData = new dataType * [Height];
+	dataType** lungsContainer = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{0};
+		imageData[k] = new dataType[dim2D]{ 0 };
+		lungsContainer[k] = new dataType[dim2D]{ 0 };
 	}
 
-	//find minimum and maximum
-	dataType min_data = 100000.0, max_data = 0.0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (ctContainer->dataPointer[k][i] > max_data) {
-				max_data = ctContainer->dataPointer[k][i];
-			}
-			if (ctContainer->dataPointer[k][i] < min_data) {
-				min_data = ctContainer->dataPointer[k][i];
-			}
-		}
-	}
-	std::cout << "min data = " << min_data << ", max data = " << max_data << std::endl;
+	////find minimum and maximum
+	//dataType min_data = 100000.0, max_data = 0.0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (ctContainer->dataPointer[k][i] > max_data) {
+	//			max_data = ctContainer->dataPointer[k][i];
+	//		}
+	//		if (ctContainer->dataPointer[k][i] < min_data) {
+	//			min_data = ctContainer->dataPointer[k][i];
+	//		}
+	//	}
+	//}
+	//std::cout << "min data = " << min_data << ", max data = " << max_data << std::endl;
 
 	//rescal to positive range
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			imageData[k][i] = ctContainer->dataPointer[k][i] + (- 1) * min_data;
+			imageData[k][i] = ctContainer->dataPointer[k][i];
+			//imageData[k][i] = ctContainer->dataPointer[k][i] +(-1) * min_data;
+			//ctContainer->dataPointer[k][i] = ctContainer->dataPointer[k][i] + (-1) * min_data;
 		}
 	}
+
+	////save with extension .vtk
+	//saving_name = outputPath + "transformed.vtk";
+	//vtkDataForm data_form = dta_binary;
+	//storeVtkFile(saving_name.c_str(), ctContainer, data_form);
 	
 	//===================== Interpolation =================================
 	
@@ -733,14 +743,82 @@ int main() {
 	delete[] maskTreshold;
 	*/
 
-	//======================= Cropping and investigation on Lungs and its region ==========
+	//======================== Cropping Lungs  ==================================
+	
+	/*
+	loading_name = inputPath + "lungs_p6.raw";
+	load3dArrayRAW<dataType>(lungsContainer, Length, Width, Height, loading_name.c_str(), false);
 
+	Image_Data CT; 
+	CT.imageDataPtr = lungsContainer;
+	CT.height = Height; CT.length = Length; CT.width = Width;
+	CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
+
+	imageMetaData croppedImage;
+	
+	size_t offset = 5;
+	croppedImage = croppImage3D(CT, offset);
+
+	cout << "cropped image origin : (" << croppedImage.origin.x << "," << croppedImage.origin.y << "," << croppedImage.origin.z << ")" << endl;
+	cout << "cropped image length = (" << croppedImage.length << ", width = " << croppedImage.width << ", height = " << croppedImage.height << ")" << endl;
+
+	size_t length = croppedImage.length, width = croppedImage.width, height = croppedImage.height;
+
+	dataType** cropped = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		cropped[k] = new dataType[length * width]{0};
+	}
+
+	Point3D origin_cropped = getImageCoordFromRealCoord3D(croppedImage.origin, ctOrigin, ctSpacing, orientation);
+	size_t i0 = (size_t)origin_cropped.x, j0 = (size_t)origin_cropped.y, k0 = (size_t)origin_cropped.z;
+	size_t i1, j1, k1;
+	for (k = 0, k1 = k0; k < height; k++, k1++) {
+		for (i = 0, i1 = i0; i < length; i++, i1++) {
+			for (j = 0, j1 = j0; j < width; j++, j1++) {
+				cropped[k][x_new(i, j, length)] = imageData[k1][x_new(i1, j1, Length)];
+			}
+		}
+	}
+
+	//saving_name = outputPath + "cropped.raw";
+	//store3dRawData<dataType>(cropped, length, width, height, saving_name.c_str());
+
+	Vtk_File_Info* croppedImageContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
+	croppedImageContainer->dataPointer = cropped;
+	croppedImageContainer->dimensions[0] = length; croppedImageContainer->dimensions[1] = width; croppedImageContainer->dimensions[2] = height;
+	croppedImageContainer->origin[0] = croppedImage.origin.x; croppedImageContainer->origin[1] = croppedImage.origin.y; croppedImageContainer->origin[2] = croppedImage.origin.z;
+	croppedImageContainer->spacing[0] = croppedImage.spacing.sx; croppedImageContainer->spacing[1] = croppedImage.spacing.sy; croppedImageContainer->spacing[2] = croppedImage.spacing.sz;
+	croppedImageContainer->operation = copyTo; croppedImageContainer->vDataType = dta_Flt;
+	
+	saving_name = outputPath + "crop_lungs_p6.vtk";
+	vtkDataForm data_form = dta_binary;
+	storeVtkFile(saving_name.c_str(), croppedImageContainer, data_form);
+
+	free(croppedImageContainer);
+	for (k = 0; k < height; k++) {
+		delete[] cropped[k];
+	}
+	delete[] cropped;
+	*/
+
+	//======================== Investigate Lungs region =========================
+
+	dataType thres_min = 1200, thres_max = 4000;
+
+	//thresholding3dFunctionN(imageData, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
+	//erosion3dHeighteenNeigbours(imageData, Length, Width, Height, 1.0, 0.0);
+	//erosion3dHeighteenNeigbours(imageData, Length, Width, Height, 1.0, 0.0);
+
+	saving_name = outputPath + "aorta_p6.raw";
+	store3dRawData<dataType>(imageData, Length, Width, Height, saving_name.c_str());
 	
 	free(ctContainer);
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
+		delete[] lungsContainer[k];
 	}
 	delete[] imageData;
+	delete[] lungsContainer;
 
 	return EXIT_SUCCESS;
 }
