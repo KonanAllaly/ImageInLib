@@ -1448,7 +1448,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//keep point with distance lower than 15
-			if (distance[k][i] > 15.0) {
+			if (distance[k][i] >= 3.0 && distance[k][i] <= 15.0) {
 				distance[k][i] = 0.0;
 			}
 			//normalization
@@ -1718,6 +1718,12 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	//path between initial point and second point
 	seeds[1] = temporary_point;
 	shortestPath3D(actionPtr, resultedPath, length, width, height, h, seeds, path_points);
+
+	//write just path points coordinates to file
+	int i_n = 0, k_n = 0, k_center = 0;
+	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+		fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+	}
 	
 	saving_name = path_name + "path.raw";
 	store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
@@ -1729,7 +1735,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	//Slice extraction
 	Point2D seed2D = { 0.0, 0.0 };
-	int i_n = 0, k_n = 0, k_center = 0;
 
 	//filtering parameters
 	Filter_Parameters filter_parameters;
@@ -1764,8 +1769,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 		slice_number = to_string(k_n);
 
-		//write points coordinates to file
-		fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+		////write points coordinates to file
+		//fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
 
 		//Slice extraction
 		for (i = 0; i < dim2D; i++) {
@@ -1939,6 +1944,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		
 		seeds[1] = temporary_point;
 		shortestPath3D(newActionPtr, resultedPath, length, width, height, h, seeds, path_points);
+
+		//write just path points coordinates to file
+		for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+			fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+		}
 		
 		saving_name = path_name + "path.raw";
 		store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
@@ -1960,8 +1970,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 			slice_number = to_string(k_n);
 
-			//write points coordinates to file
-			fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+			////write points coordinates to file
+			//fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
 
 			seed2D.x = path_points[i_n].x;
 			seed2D.y = path_points[i_n].y;
