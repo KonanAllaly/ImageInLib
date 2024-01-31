@@ -563,7 +563,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
 	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-	fprintf(saveInfo, "%f,%f,%f\n", max_ratio, found_radius, d_point);
+	//fprintf(saveInfo, "%f,%f,%f\n", max_ratio, found_radius, d_point);
 
 	free(maskThreshold);
 	free(houghSpaceMax);
