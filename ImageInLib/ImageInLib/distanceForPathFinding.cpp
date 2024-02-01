@@ -1448,7 +1448,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//keep point with distance lower than 15
-			if (distance[k][i] >= 3.0 && distance[k][i] <= 15.0) {
+			if (distance[k][i] < 3.0 || distance[k][i] > 15.0) {
 				distance[k][i] = 0.0;
 			}
 			//normalization
@@ -1535,7 +1535,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	double tau = 0.8, tol = 1.0;
 	dataType i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 
-	cout << "initial point : (" << j_init << "," << i_init << "," << k_init << ")" << endl;
+	//cout << "initial point : (" << j_init << "," << i_init << "," << k_init << ")" << endl;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
@@ -1571,7 +1571,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	size_t i_current = (size_t)seedPoints[1].y;
 	size_t j_current = (size_t)seedPoints[1].x;
 	size_t k_current = (size_t)seedPoints[1].z;
-	cout << "final point : (" << j_current << "," << i_current << "," << k_current << ")" << endl;
+	//cout << "final point : (" << j_current << "," << i_current << "," << k_current << ")" << endl;
 	size_t currentIndx = x_new(j_current, i_current, width);
 	resultedPath[k_current][currentIndx] = 1.0;
 
@@ -1722,7 +1722,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	//write just path points coordinates to file
 	int i_n = 0, k_n = 0, k_center = 0;
 	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-		fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+		fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
 	}
 	
 	saving_name = path_name + "path.raw";
@@ -1947,7 +1947,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 		//write just path points coordinates to file
 		for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-			fprintf(file, "%f,%f,%f,", path_points[i_n].x, path_points[i_n].y, path_points[i_n].z);
+			fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
 		}
 		
 		saving_name = path_name + "path.raw";
