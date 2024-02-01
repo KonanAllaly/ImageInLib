@@ -168,8 +168,6 @@ extern "C" {
 	void centroidImage(dataType** imageDataPtr, dataType* centroid, size_t imageHeight, size_t imageLength, size_t imageWidth, dataType imageBackground);
 	void centroidClipBox(dataType* centroid, ClipBox coord, dataType** imageDataPtr, size_t imageLength, dataType imageBackground);
 	//==============================================================================
-
-	//==============================================================================
 	void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
 	void copyDataTo2dExtendedArea(dataType* originalDataPtr, dataType* extendedDataPtr, const size_t originalHeight, const size_t originalWidth);
@@ -184,8 +182,6 @@ extern "C" {
 	//==============================================================================
 	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
 	//==============================================================================
-	//void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius);
-	//==============================================================================
 	void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius, double offset);
 	//==============================================================================
 	dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width);
@@ -193,10 +189,16 @@ extern "C" {
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
 	void houghTransform(dataType* imageDataPtr, dataType* houghSpace, const size_t length, const size_t width);
-	//================================================================================
+	//==============================================================================
+	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);
+	//==============================================================================
 	typedef struct {
 		size_t i_min, i_max, j_min, j_max;
 	} BoundingBox2D;
+
+	typedef struct {
+		size_t i_min, i_max, j_min, j_max, k_min, k_max;
+	} BoundingBox3D;
 
 	/// <summary>
 	/// Find the bounding box for given 2D point
@@ -208,8 +210,20 @@ extern "C" {
 	/// <param name="offset">offset</param>
 	/// <returns></returns>
 	BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, double radius, double offset);
+
+	/// <summary>
+	/// Find the bounding box of 3D given point
+	/// </summary>
+	/// <param name="point">point of interest</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="radius">radius of the box</param>
+	/// <param name="offset">extend</param>
+	/// <returns></returns>
+	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
 	//================================================================================
-	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);
+	
 
 #endif // !COMMON_FUNCTIONS
 
