@@ -544,6 +544,62 @@ Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radi
     return result;
 }
 
+//point_of_interest is in image coordinates system
+Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_interest, double radius) {
+
+    size_t i, j, k, nb_point = 0;
+    Statistics result = { 0.0, 0.0, 0.0, 0.0 };
+    BoundingBox3D box = { 0, 0, 0, 0, 0, 0 };
+    double offset = 5.0;
+
+    box = findBoundingBox3D(point_of_interest, imageData.length, imageData.width, imageData.height, radius, offset);
+    Point3D seed = getRealCoordFromImageCoord3D(point_of_interest, imageData.origin, imageData.spacing, imageData.orientation);
+
+    double sum = 0.0;
+    result.max_data = 0.0; result.min_data = 1000000000000000;
+
+    for (k = box.k_min; k <= box.k_max; k++) {
+        for (i = box.i_min; i <= box.i_max; i++) {
+            for (j = box.j_min; j <= box.j_max; j++) {
+                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                double dist = getPoint3DDistance(seed, current_point);
+                if (dist <= radius) {
+                    dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, imageData.length)];
+                    if (voxel_value < result.min_data) {
+                        result.min_data = voxel_value;
+                    }
+                    if (voxel_value > result.max_data) {
+                        result.max_data = voxel_value;
+                    }
+                    sum = sum + voxel_value;
+                    nb_point = nb_point + 1;
+                }
+            }
+        }
+    }
+
+    result.mean_data = sum / (dataType)nb_point;
+
+    dataType sum_diff = 0.0;
+    for (k = box.k_min; k <= box.k_max; k++) {
+        for (i = box.i_min; i <= box.i_max; i++) {
+            for (j = box.j_min; j <= box.j_max; j++) {
+                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                double dist = getPoint3DDistance(seed, current_point);
+                if (dist <= radius) {
+                    sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, imageData.length)] - result.mean_data, 2);
+                }
+            }
+        }
+    }
+
+    result.sd_data = sqrt(sum_diff / (dataType)nb_point);
+
+    return result;
+}
+
 bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius) {
     size_t i, j, k, x;
 

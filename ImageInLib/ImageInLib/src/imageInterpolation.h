@@ -156,6 +156,8 @@ extern "C" {
 
 	Statistics getStats(Image_Data imageData, Point3D point_of_interest, double radius);
 
+	Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_interest, double radius);
+
 	/// <summary>
 	/// : This function create statistics images from statistics computed in each voxel
 	/// in a small ball defined by the radius
