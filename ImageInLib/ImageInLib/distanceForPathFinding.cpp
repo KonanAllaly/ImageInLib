@@ -1401,7 +1401,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		filtered[k] = new dataType[dim2D]{0};
 	}
 	
-	string path = "C:/Users/Konan Allaly/Documents/Tests/input/interpolated/patient6/filtered_p6_v2.raw";
+	string path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/cropped/interpolated/interp_filtered_p6.raw";
 	load3dArrayRAW<dataType>(filtered, length, width, height, path.c_str(), false);
 
 	Image_Data Filtered; Filtered.imageDataPtr = filtered;
@@ -1414,9 +1414,11 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	//use distance map in potential
 	dataType** distance = new dataType * [height];
 	dataType** edgeDetector = new dataType * [height];
+	dataType** maskThreshold = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		distance[k] = new dataType[dim2D]{0};
 		edgeDetector[k] = new dataType[dim2D]{0};
+		maskThreshold[k] = new dataType[dim2D]{0};
 	}
 	
 	dataType norm_of_gradient = 0.0, edge_coef = 1000.0;
@@ -1432,15 +1434,18 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 			edgeDetector[k][i] = gradientFunction(norm_of_gradient, edge_coef);
 			//threshold
 			if (edgeDetector[k][i] < 0.15) {
-				edgeDetector[k][i] = 0.0;
+				maskThreshold[k][i] = 0.0;
 			}
 			else {
-				edgeDetector[k][i] = 1.0;
+				maskThreshold[k][i] = 1.0;
 			}
 		}
 	}
+
+	path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw";
+	store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
 	
-	fastSweepingFunction_3D(distance, edgeDetector, length, width, height, 1.0, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
 
 	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
 	store3dRawData<dataType>(distance, length, width, height, path.c_str());
@@ -1501,18 +1506,26 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 			ux = gradientVectorX[k][i];
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
-			dataType edge_value = (dataType)(1.0 + parameters.K * (ux * ux + uy * uy + uz * uz));
+			dataType norm_of_gradient = ux * ux + uy * uy + uz * uz;
+			dataType edge_value = (dataType)(0.5 * (2 - (1.0 / (1.0 + edge_coef * norm_of_gradient))));
 			dataType weight_dist = distance[k][i];
-			potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
-				+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
+			//potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
+			//	+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
+			//potential[k][i] = parameters.epsilon + weight_dist; //(meanImagePtr[k][i] / maxMean);
+			
+			potential[k][i] = parameters.epsilon + (meanImagePtr[k][i] / maxMean) * edge_value * weight_dist;
 		}
 	}
+	
+	//path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector_updated_k1000.raw";
+	//store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
 		delete[] gradientVectorY[k];
 		delete[] gradientVectorZ[k];
 		delete[] edgeDetector[k];
+		delete[] maskThreshold[k];
 		delete[] distance[k];
 		delete[] filtered[k];
 	}
@@ -1520,6 +1533,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	delete[] gradientVectorY;
 	delete[] gradientVectorZ;
 	delete[] edgeDetector;
+	delete[] maskThreshold;
 	delete[] distance;
 	delete[] filtered;
 
@@ -1534,8 +1548,6 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	int i, j, k, xd, dim2D = length * width, max_iter = 1000;
 	double tau = 0.8, tol = 1.0;
 	dataType i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
-
-	//cout << "initial point : (" << j_init << "," << i_init << "," << k_init << ")" << endl;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
@@ -1571,17 +1583,16 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	size_t i_current = (size_t)seedPoints[1].y;
 	size_t j_current = (size_t)seedPoints[1].x;
 	size_t k_current = (size_t)seedPoints[1].z;
-	//cout << "final point : (" << j_current << "," << i_current << "," << k_current << ")" << endl;
 	size_t currentIndx = x_new(j_current, i_current, width);
 	resultedPath[k_current][currentIndx] = 1.0;
 
 	dataType iNew = (dataType)i_current;
 	dataType jNew = (dataType)j_current;
 	dataType kNew = (dataType)k_current;
-	double currentDist = 0.0;
-	double dist_min = 0.0;
+	double dist_to_end = 0.0, dist_current_next = 0.0;
 
-	Point3D current_point = {0.0, 0.0, 0.0};
+	Point3D current_point = { jNew, iNew, kNew }, point_export = {0, 0, 0};
+	Point3D next_point = { 0.0, 0.0, 0.0 }, last_point = { j_init, i_init, k_init };
 
 	do {
 
@@ -1589,22 +1600,26 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
 		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
 		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
+		next_point.x = jNew; next_point.y = iNew; next_point.z = kNew;
 
-		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
+		//dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
+		dist_to_end = getPoint3DDistance(last_point, next_point);
+		dist_current_next = getPoint3DDistance(current_point, next_point);
 
 		i_current = (size_t)(round(iNew));
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
 		resultedPath[k_current][x_new(j_current, i_current, width)] = 1.0;
 		
-		current_point.x = j_current; 
-		current_point.y = i_current; 
-		current_point.z = k_current;
-		path_points.push_back(current_point);
+		point_export.x = j_current;
+		point_export.y = i_current;
+		point_export.z = k_current;
+		path_points.push_back(point_export);
 
+		current_point = next_point;
 		cpt++;
 
-	} while (dist_min > tol && cpt < max_iter);
+	} while (dist_current_next != 0 && dist_to_end > tol && cpt < max_iter);
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -1673,7 +1688,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/potential.raw";
 	//load3dArrayRAW<dataType>(potentialPtr, length, width, height, saving_name.c_str(), false);
 	
-	saving_name = path_name + "potential_initial.raw";
+	saving_name = path_name + "potential.raw";
 	store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
 
 	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/action_field.raw";
@@ -1685,7 +1700,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	////get real world coordinate of the initial point
 	//real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
-	int count_step = 0;
+	int count_step = 1;
 	min_distance = BIG_VALUE;
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
@@ -1721,8 +1736,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	//write just path points coordinates to file
 	int i_n = 0, k_n = 0, k_center = 0;
+	Point3D point_file = { 0.0, 0.0, 0.0 };
 	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-		fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
+		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+		//fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
 	}
 	
 	saving_name = path_name + "path.raw";
@@ -1873,7 +1891,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	std::cout << len << " point remaining after process" << std::endl;
 
 	//============================================
-	size_t count_stop = 0, max_steps = 12;
+	size_t count_stop = 0, max_steps = 20;
 	max_ratio = 1.0;
 
 	while (max_ratio != 0.0 && count_step < max_steps) {
@@ -1947,7 +1965,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 		//write just path points coordinates to file
 		for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-			fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
+			point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+			fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+			//fprintf(file, "%f,%f,%f\n", path_points[i_n].x * ctImageData.spacing.sx, path_points[i_n].y * ctImageData.spacing.sy, path_points[i_n].z * ctImageData.spacing.sz);
 		}
 		
 		saving_name = path_name + "path.raw";
