@@ -555,7 +555,7 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 //===========================================================
  
 //Functions for 3D images
-// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
+// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU^2 + 2bU + c = 0
 dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
 
 	dataType sol = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
@@ -564,12 +564,12 @@ dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
 		a = 2;
 		b = (dataType)(- 2 * (Y + Z));
 		c = (dataType)(pow(Y, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return min(Y, Z) + W;
+			return (dataType)(min(Y, Z) + W);
 		}
 	}
 
@@ -577,12 +577,12 @@ dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
 		a = 2;
 		b = (dataType)(- 2 * (X + Z));
 		c = (dataType)(pow(X, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return min(X, Z) + W;
+			return (dataType)(min(X, Z) + W);
 		}
 	}
 
@@ -590,64 +590,64 @@ dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
 		a = 2;
 		b = (dataType)(- 2 * (X + Y));
 		c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-		delta = b * b - 4 * a * c;
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return min(X, Y) + W;
+			return (dataType)(min(X, Y) + W);
 		}
 	}
 
 	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
 		a = 1;
-		b = -2 * Z;
-		c = pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
+		b = (dataType)(- 2 * Z);
+		c = (dataType)(pow(Z, 2) - W);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return Z + W;
+			return (dataType)(Z + W);
 		}
 	}
 
 	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
 		a = 1;
-		b = -2 * Y;
-		c = pow(Y, 2) - W;
-		delta = b * b - 4 * a * c;
+		b = (dataType)(- 2 * Y);
+		c = (dataType)(pow(Y, 2) - W);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return Y + W;
+			return (dataType)(Y + W);
 		}
 	}
 
 	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
 		a = 1;
-		b = -2 * X;
-		c = pow(X, 2) - W;
-		delta = b * b - 4 * a * c;
+		b = (dataType)(- 2 * X);
+		c = (dataType)(pow(X, 2) - W);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return X + W;
+			return (dataType)(X + W);
 		}
 	}
 
 	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
 		a = 3;
-		b = -2 * (X + Y + Z);
-		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
+		b = (dataType)(- 2 * (X + Y + Z));
+		c = (dataType)(pow(X, 2) + pow(Y, 2) + pow(Z, 2) - W);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return min(X, min(Y, Z)) + W;
+			return (dataType)(min(X, min(Y, Z)) + W);
 		}
 	}
 
@@ -1444,14 +1444,18 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 
 	path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw";
 	store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
+	//exit(0);
 	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
 
 	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
 	store3dRawData<dataType>(distance, length, width, height, path.c_str());
 
+	dataType coef_dist = 100.0;
+
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
+
 			//keep point with distance lower than 15
 			if (distance[k][i] < 3.0 || distance[k][i] > 15.0) {
 				distance[k][i] = 0.0;
@@ -1459,7 +1463,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 			//normalization
 			distance[k][i] = distance[k][i] / 15.0;
 			//inversion
-			distance[k][i] = 1.0 / (1.0 + distance[k][i]);
+			distance[k][i] = 1.0 / (1.0 + coef_dist * distance[k][i]);
 		}
 	}
 
@@ -1503,12 +1507,14 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
+			
 			ux = gradientVectorX[k][i];
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
 			dataType norm_of_gradient = ux * ux + uy * uy + uz * uz;
 			dataType edge_value = (dataType)(0.5 * (2 - (1.0 / (1.0 + edge_coef * norm_of_gradient))));
 			dataType weight_dist = distance[k][i];
+			
 			//potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
 			//	+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
 			//potential[k][i] = parameters.epsilon + weight_dist; //(meanImagePtr[k][i] / maxMean);
@@ -1545,7 +1551,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
-	int i, j, k, xd, dim2D = length * width, max_iter = 1000;
+	int i, j, k, xd, dim2D = length * width, max_iter = 100; // should be chosen according step and tau
 	double tau = 0.8, tol = 1.0;
 	dataType i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 
@@ -1600,7 +1606,10 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
 		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
 		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
-		next_point.x = jNew; next_point.y = iNew; next_point.z = kNew;
+		
+		next_point.x = jNew; 
+		next_point.y = iNew; 
+		next_point.z = kNew;
 
 		//dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 		dist_to_end = getPoint3DDistance(last_point, next_point);
@@ -1619,7 +1628,7 @@ bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		current_point = next_point;
 		cpt++;
 
-	} while (dist_current_next != 0 && dist_to_end > tol && cpt < max_iter);
+	} while (dist_current_next != 0.0 && dist_to_end > tol && cpt < max_iter);
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
