@@ -1427,11 +1427,13 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
+			
 			ux = gradientVectorX[k][i];
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
 			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
 			edgeDetector[k][i] = gradientFunction(norm_of_gradient, edge_coef);
+			
 			//threshold
 			if (edgeDetector[k][i] < 0.15) {
 				maskThreshold[k][i] = 0.0;
@@ -1444,14 +1446,13 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 
 	path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw";
 	store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
-	//exit(0);
 	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
 
 	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
 	store3dRawData<dataType>(distance, length, width, height, path.c_str());
 
-	dataType coef_dist = 100.0;
+	dataType coef_dist = 1.0;
 
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
@@ -1480,6 +1481,7 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 	Image_Data meanImage; meanImage.imageDataPtr = meanImagePtr;
 	meanImage.height = height; meanImage.length = length; meanImage.width = width;
 	meanImage.origin = ctImageData.origin; meanImage.spacing = ctImageData.spacing; meanImage.orientation = ctImageData.orientation;
+	
 	seedStats = getStats(meanImage, initial_point, radius);
 	dataType seedValMean = seedStats.mean_data;
 
@@ -1520,6 +1522,8 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 			//potential[k][i] = parameters.epsilon + weight_dist; //(meanImagePtr[k][i] / maxMean);
 			
 			potential[k][i] = parameters.epsilon + (meanImagePtr[k][i] / maxMean) * edge_value * weight_dist;
+			//potential[k][i] = parameters.epsilon + 0.5 * ((potential[k][i] / maxImage) + (meanImagePtr[k][i] / maxMean)) * edge_value * weight_dist;
+
 		}
 	}
 	
@@ -1763,11 +1767,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	//Slice extraction
 	Point2D seed2D = { 0.0, 0.0 };
 
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
+	////filtering parameters
+	//Filter_Parameters filter_parameters;
+	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
+	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
+	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
 	Image_Data2D IMAGE;
 	IMAGE.imageDataPtr = imageSlice;
@@ -1804,11 +1808,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 			imageSlice[i] = ctImageData.imageDataPtr[k_n][i];
 		}
 
-		//Slice rescaling
-		rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
+		////Slice rescaling
+		//rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
 
-		//Slice filtering
-		heatImplicit2dScheme(IMAGE, filter_parameters);
+		////Slice filtering
+		//heatImplicit2dScheme(IMAGE, filter_parameters);
 
 		seed2D.x = path_points[i_n].x;
 		seed2D.y = path_points[i_n].y;
@@ -2010,11 +2014,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 				imageSlice[i] = ctImageData.imageDataPtr[k_n][i];
 			}
 
-			//Slice rescaling
-			rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
+			////Slice rescaling
+			//rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
 
-			//Slice filtering
-			heatImplicit2dScheme(IMAGE, filter_parameters);
+			////Slice filtering
+			//heatImplicit2dScheme(IMAGE, filter_parameters);
 
 			if (num_slice_processed < 10) {
 				saving_name = path_name + "threshold_000" + extension + ".raw";
