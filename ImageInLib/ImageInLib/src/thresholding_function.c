@@ -113,32 +113,51 @@ bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const siz
 	}
 }
 
-bool thresholdingOTSU(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType background, dataType foreground) {
+bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground) {
 
-	size_t i, j, k;
+	size_t i, j, k, xd;
 
 	//Find min and max data
 	dataType min_data = 1000000, max_data = -10000000;
-	for (k = 0; k < zDim; k++) {
-		for (i = 0; i < xDim; i++) {
-			for (j = 0; j < yDim; j++) {
-				if (image3DPtr[k][x_new(i, j, xDim)] < min_data)
-					min_data = image3DPtr[k][x_new(i, j, xDim)];
-				if (image3DPtr[k][x_new(i, j, xDim)] > max_data)
-					max_data = image3DPtr[k][x_new(i, j, xDim)];
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				
+				xd = x_new(i, j, length);
+				if (image3DPtr[k][xd] < min_data) {
+					min_data = image3DPtr[k][xd];
+				}
+				if (image3DPtr[k][xd] > max_data) {
+					max_data = image3DPtr[k][xd];
+				}
+					
 			}
 		}
 	}
 
-	//Compute histogram
+	//Total number of classes
 	size_t totalClass = (size_t)(max_data - min_data + 1);
-	size_t* histogram = (size_t*)malloc(totalClass * sizeof(size_t));
-	for (i = 0; i < totalClass; i++) 
+
+	//Declare arrays
+	int* histogram = (int*)malloc(totalClass * sizeof(int));
+	dataType* Proba = (dataType*)malloc(totalClass * sizeof(dataType));
+	dataType* interClassVariance = (dataType*)malloc(totalClass * sizeof(dataType));
+	if (histogram == NULL || Proba == NULL || interClassVariance == NULL) {
+		return false;
+	}
+
+	//initialize the array
+	for (i = 0; i < totalClass; i++) {
 		histogram[i] = 0;
-	for (k = 0; k < zDim; k++) {
-		for (i = 0; i < xDim; i++) {
-			for (j = 0; j < yDim; j++) {
-				histogram[(short)image3DPtr[k][x_new(i, j, xDim)]]++;
+		Proba[i] = 0;
+		interClassVariance[i] = 0;
+	}
+	
+	//compute histogram
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				histogram[(size_t)image3DPtr[k][x_new(i, j, length)]]++;
 			}
 		}
 	}
@@ -149,47 +168,52 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t xDim, const size_t yDi
 		numberOfCells = numberOfCells + histogram[i];
 	}
 
-	//Compute probability
-	dataType* Proba = (dataType*)malloc(totalClass * sizeof(dataType));
-	for (i = 0; i < totalClass; i++) Proba[i] = 0;
 	dataType sumProba = 0;
 	for (i = 0; i < totalClass; i++) {
-		Proba[i] = (dataType)histogram[i] / numberOfCells;
-		//sumProba = sumProba + Proba[i];  // just for verification
+		Proba[i] = (dataType)histogram[i] / (dataType)numberOfCells;
 	}
 
-	dataType* interClassVariance = (dataType*)malloc(totalClass * sizeof(dataType));
-	for (i = 0; i < totalClass; i++) interClassVariance[i] = 0;
-	size_t T, optimalThresholdValue = 0;
-	dataType sigma = 0, sum_weight;
+	size_t T;
+	dataType sigma = 0.0, sum_weight = 0.0;
 	dataType weightClass_b, meanClass_b, varClass_b;
 	dataType weightClass_f, meanClass_f, varClass_f;
 
 	for (T = 0; T < totalClass; T++) {
-		weightClass_b = 0, meanClass_b = 0, varClass_b = 0;
-		weightClass_f = 0, meanClass_f = 0, varClass_f = 0;
+		
+		weightClass_b = 0;
+		meanClass_b = 0;
+		varClass_b = 0;
+		weightClass_f = 0;
+		meanClass_f = 0;
+		varClass_f = 0;
+
 		//compute class weight
 		for (i = 0; i <= T; i++) {
 			weightClass_b = weightClass_b + Proba[i];
 		}
+
 		for (i = T + 1; i < totalClass; i++) {
 			weightClass_f = weightClass_f + Proba[i];
 		}
 		sum_weight = weightClass_b + weightClass_f;
+
 		//compute class mean
 		for (i = 0; i <= T; i++) {
 			meanClass_b = meanClass_b + i * Proba[i];
 		}
 		meanClass_b = meanClass_b / weightClass_b;
+
 		for (i = T + 1; i < totalClass; i++) {
 			meanClass_f = meanClass_f + i * Proba[i];
 		}
 		meanClass_f = meanClass_f / weightClass_f;
+
 		//compute class variance
 		for (i = 0; i <= T; i++) {
 			varClass_b = varClass_b + (i - meanClass_b) * (i - meanClass_b) * Proba[i];
 		}
 		varClass_b = varClass_b / weightClass_b;
+
 		for (i = T + 1; i < totalClass; i++) {
 			varClass_f = varClass_f + (i - meanClass_f) * (i - meanClass_f) * Proba[i];
 		}
@@ -197,38 +221,38 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t xDim, const size_t yDi
 
 		//compute inter-class variance
 		sigma = weightClass_b * varClass_b + weightClass_f * varClass_f;
-		//sigma = sqrt(sigma);
 		interClassVariance[T] = sigma;
 	}
 
-	dataType minVariance = 1e10;
+	dataType minVariance = 1e10, optimalThresholdValue = 0.0;
 	for (T = 0; T < totalClass; T++) {
 		if (interClassVariance[T] < minVariance) {
 			minVariance = interClassVariance[T];
+			optimalThresholdValue = (dataType)T;
 		}
 	}
-	for (T = 0; T < totalClass; T++) {
-		if (interClassVariance[T] == minVariance) {
-			optimalThresholdValue = T;
-		}
-	}
-	printf("optimal threshold value = %d \n", optimalThresholdValue);
+
+	printf("optimal threshold value = %f \n", optimalThresholdValue);
 
 	//Threshold
-	for (k = 0; k < zDim; k++) {
-		for (i = 0; i < xDim; i++) {
-			for (j = 0; j < yDim; j++) {
-				if (image3DPtr[k][x_new(i, j, xDim)] < optimalThresholdValue) {
-					image3DPtr[k][x_new(i, j, xDim)] = background;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+
+				xd = x_new(i, j, length);
+				if (image3DPtr[k][xd] < optimalThresholdValue) {
+					image3DPtr[k][xd] = background;
 				}
 				else {
-					image3DPtr[k][x_new(i, j, xDim)] = foreground;
+					image3DPtr[k][xd] = foreground;
 				}
 			}
 		}
 	}
 
-	free(histogram); free(interClassVariance);
+	free(histogram);
+	free(Proba);
+	free(interClassVariance);
 
 	return true;
 }

@@ -28,7 +28,7 @@ extern "C" {
 
 	bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType forGround);
 
-	bool thresholdingOTSU(dataType ** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType background, dataType forground);
+	bool thresholdingOTSU(dataType ** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType forground);
 
 	//2D function
 	bool thresholding2DFunction(dataType* image2DPtr, const size_t xDim, const size_t yDim, dataType thres_min, dataType thres_max);
