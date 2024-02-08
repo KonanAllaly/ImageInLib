@@ -115,22 +115,17 @@ bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const siz
 
 bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground) {
 
-	size_t i, j, k, xd;
+	size_t i, k, dim2D = length * width;
 
 	//Find min and max data
 	dataType min_data = 1000000, max_data = -10000000;
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				
-				xd = x_new(i, j, length);
-				if (image3DPtr[k][xd] < min_data) {
-					min_data = image3DPtr[k][xd];
-				}
-				if (image3DPtr[k][xd] > max_data) {
-					max_data = image3DPtr[k][xd];
-				}
-					
+		for (i = 0; i < dim2D; i++) {
+			if (image3DPtr[k][i] < min_data) {
+				min_data = image3DPtr[k][i];
+			}
+			if (image3DPtr[k][i] > max_data) {
+				max_data = image3DPtr[k][i];
 			}
 		}
 	}
@@ -155,10 +150,8 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t w
 	
 	//compute histogram
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				histogram[(size_t)image3DPtr[k][x_new(i, j, length)]]++;
-			}
+		for (i = 0; i < dim2D; i++) {
+			histogram[(size_t)image3DPtr[k][i]]++;
 		}
 	}
 
@@ -236,16 +229,12 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t w
 
 	//Threshold
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-
-				xd = x_new(i, j, length);
-				if (image3DPtr[k][xd] < optimalThresholdValue) {
-					image3DPtr[k][xd] = background;
-				}
-				else {
-					image3DPtr[k][xd] = foreground;
-				}
+		for (i = 0; i < dim2D; i++) {
+			if (image3DPtr[k][i] < optimalThresholdValue) {
+				image3DPtr[k][i] = background;
+			}
+			else {
+				image3DPtr[k][i] = foreground;
 			}
 		}
 	}
