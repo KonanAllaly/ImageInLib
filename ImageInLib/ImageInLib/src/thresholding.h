@@ -30,6 +30,8 @@ extern "C" {
 
 	bool thresholdingOTSU(dataType ** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType forground);
 
+	bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground);
+
 	//2D function
 	bool thresholding2DFunction(dataType* image2DPtr, const size_t xDim, const size_t yDim, dataType thres_min, dataType thres_max);
 
