@@ -699,15 +699,12 @@ bool edgeDetection2dFunctionUC(unsigned char * image2DPtr, unsigned char * edge2
 }
 
 //Functions for Canny edge detector
-
 void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType* gradientY, const size_t length, const size_t width) {
-	size_t i, j, xd;
+	
+	size_t i, dim2D = length * width;
 
 	for (i = 0; i < length; i++) {
-		for (j = 0; j < width; j++) {
-			xd = x_new(i, j, length);
-			anglePtr[xd] = atan(gradientY[xd] / (gradientX[xd] + 0.000001));
-		}
+		anglePtr[i] = atan(gradientY[i] / (gradientX[i] + 0.000001));
 	}
 
 	for (i = 0; i < length * width; i++) {
