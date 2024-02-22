@@ -93,24 +93,37 @@ bool thresholding2dFunctionD(dataType * image2DPtr, const size_t xDim, const siz
 	return true;
 }
 
-bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType forGround) {
-	size_t i, j, k;
+bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType foreGround) {
+	size_t i, k;
 
 	if (image3DPtr == NULL)
 		return false;
 
-	for (k = 0; k < zDim; k++) {
-		for (i = 0; i < xDim; i++) {
-			for (j = 0; j < yDim; j++) {
-				if (image3DPtr[k][x_new(i, j, xDim)] >= thres_min && image3DPtr[k][x_new(i, j, xDim)] <= thres_max) {
-					image3DPtr[k][x_new(i, j, xDim)] = forGround;
+	if (thres_min != thres_max) {
+		for (k = 0; k < zDim; k++) {
+			for (i = 0; i < xDim * yDim; i++) {
+				if (image3DPtr[k][i] >= thres_min && image3DPtr[k][i] <= thres_max) {
+					image3DPtr[k][i] = foreGround;
 				}
 				else {
-					image3DPtr[k][x_new(i, j, xDim)] = backGround;
+					image3DPtr[k][i] = backGround;
 				}
 			}
 		}
 	}
+	else {
+		for (k = 0; k < zDim; k++) {
+			for (i = 0; i < xDim * yDim; i++) {
+				if (image3DPtr[k][i] <= thres_min) {
+					image3DPtr[k][i] = foreGround;
+				}
+				else {
+					image3DPtr[k][i] = backGround;
+				}
+			}
+		}
+	}
+	
 }
 
 bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground) {
@@ -263,7 +276,7 @@ bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t
 		}
 	}
 
-	dataType optimalThresholdValue = (min_data + max_data) / 2;
+	dataType optimalThresholdValue = 500; //(min_data + max_data) / 2;
 
 	int cpt1 = 0, cpt2 = 0;
 	dataType s1 = 0.0, s2 = 0.0, mean1 = 0.0, mean2 = 0.0;
