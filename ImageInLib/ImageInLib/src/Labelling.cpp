@@ -181,11 +181,7 @@ bool labelling2D(int** imageDataPtr, int** segmentedImage, bool** statusArray, c
 //for 3D images
 bool labelling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType object) {
 
-	if (imageDataPtr == NULL)
-		return false;
-	if (segmentedImage == NULL)
-		return false;
-	if (statusArray == NULL)
+	if (imageDataPtr == NULL || segmentedImage == NULL || statusArray == NULL)
 		return false;
 
 	vector<size_t> iStack, jStack, kStack, iTmpStack, jTmpStack, kTmpStack;
@@ -956,5 +952,174 @@ bool regionGrowing3D_N(Image_Data ctImageData, dataType** segmentedImage, double
 	delete[] distanceMap;
 	delete[] statusArray;
 
+	return true;
+}
+
+//=======================================================
+
+bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object) {
+
+	if (imageDataPtr == NULL || labelArray == NULL || statusArray == NULL)
+		return false;
+
+	int label = 1;
+	size_t i, j, k, xd;
+
+	vector< point2dLabelling> initialStack, tempStack;
+
+	//statusArray has false everywhere at the beginning
+	//false---> non-processed and true---> processed
+	//segmentedImage has 0 everywhere at the begining
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+
+			xd = x_new(i, j, length);
+
+			if (statusArray[xd] == false) {
+				if (imageDataPtr[xd] == object) {
+					
+					//East
+					if (i > 0 && statusArray[x_new(i - 1, j, length)] == false) {
+						if (imageDataPtr[x_new(i - 1, j, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i - 1, j, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i - 1, j, length)] = true;
+						}
+					}
+					//South
+					if (j < width - 1 && statusArray[x_new(i, j + 1, length)] == false) {
+						if (imageDataPtr[x_new(i, j + 1, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i, j + 1, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i, j + 1, length)] = true;
+						}
+					}
+					//West
+					if (i < length - 1 && statusArray[x_new(i + 1, j, length)] == false) {
+						if (imageDataPtr[x_new(i + 1, j, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i + 1, j, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i + 1, j, length)] = true;
+						}
+					}
+					//North
+					if (j > 0 && statusArray[x_new(i, j - 1, length)] == false) {
+						if (imageDataPtr[x_new(i, j - 1, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i, j - 1, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i, j - 1, length)] = true;
+						}
+					}
+					
+					//after checking all neighbors of current element
+					//we set its label, and update its status
+					labelArray[xd] = label;
+					statusArray[xd] = true;
+
+					//Now we check neighbors of elemts in initial stack
+					//we start by the last added element in stacks
+					while (initialStack.size() > 0) {
+						
+						//Processed the last element in the initial stack
+						size_t l = initialStack.size() - 1; // len
+						size_t i_s = initialStack[l].x;
+						size_t j_s = initialStack[l].y;
+						size_t xd_s = x_new(i_s, j_s, length);
+
+						//East
+						if (i_s > 0 && statusArray[x_new(i_s - 1, j_s, length)] == false) {
+							if (imageDataPtr[x_new(i_s - 1, j_s, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s - 1, j_s, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								//Not in region, update status and go to the next neighbor
+								statusArray[x_new(i_s - 1, j_s, length)] = true;
+							}
+						}
+
+						//South
+						if (j_s < width - 1 && statusArray[x_new(i_s, j_s + 1, length)] == false) {
+							if (imageDataPtr[x_new(i_s, j_s + 1, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s, j_s + 1, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s, j_s + 1, length)] = true;
+							}
+						}
+
+						//East
+						if (i_s < length - 1 && statusArray[x_new(i_s + 1, j_s, length)] == false) {
+							if (imageDataPtr[x_new(i_s + 1, j_s, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s + 1, j_s, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s + 1, j_s, length)] = true;
+							}
+						}
+
+						//North
+						if (j_s > 0 && statusArray[x_new(i_s, j_s - 1, length)] == false) {
+							if (imageDataPtr[x_new(i_s, j_s - 1, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s, j_s - 1, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s, j_s - 1, length)] = true;
+							}
+						}
+
+						//updating of processed element before removal
+						labelArray[xd_s] = label;
+						statusArray[xd_s] = true;
+
+						//Remove the processed element from the initial stack
+						initialStack.pop_back();
+
+						//Add new found neighbors in initial stack
+						if (tempStack.size() != 0) {
+							//if no new element is found tempStack is empty 
+							// and nothing will happend
+							for (k = 0; k < tempStack.size(); k++) {
+								initialStack.push_back(tempStack[k]);
+							}
+						}
+						
+						//empty the temporary stack
+						while (tempStack.size() > 0) {
+							tempStack.pop_back();
+						}
+					}
+
+					label++;
+				}
+				else {
+					statusArray[xd] = true;
+				}
+			}
+		}
+	}
 	return true;
 }
