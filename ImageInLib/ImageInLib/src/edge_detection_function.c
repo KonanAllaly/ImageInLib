@@ -703,11 +703,12 @@ void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType*
 	
 	size_t i, dim2D = length * width;
 
-	for (i = 0; i < length; i++) {
-		anglePtr[i] = atan(gradientY[i] / (gradientX[i] + 0.000001));
+	for (i = 0; i < dim2D; i++) {
+		//anglePtr[i] = atan(gradientY[i] / (gradientX[i] + 0.000001));
+		anglePtr[i] = atan(gradientY[i] / gradientX[i]);
 	}
 
-	for (i = 0; i < length * width; i++) {
+	for (i = 0; i < dim2D; i++) {
 		anglePtr[i] = anglePtr[i] * 180 / M_PI;
 		if (anglePtr[i] < 0) {
 			anglePtr[i] += 180;
