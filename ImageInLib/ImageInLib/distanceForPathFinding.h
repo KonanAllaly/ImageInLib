@@ -340,6 +340,8 @@ using namespace std;
 	/// <returns> : the meta data of the image cropped image</returns>
 	imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset);
 
+	bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D seed, Potential_Parameters parameters, const size_t slice_trachea);
+
 //#ifdef __cplusplus
 //}
 //#endif
