@@ -38,7 +38,7 @@ int main() {
 	size_t i, j, k, xd;
 
 	//===================== Load 3D patient data (.vtk) ================================
-
+	
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; orientation.v2 = { 0.0, 1.0, 0.0 }; orientation.v3 = { 0.0, 0.0, 1.0 };
 
@@ -88,29 +88,165 @@ int main() {
 	}
 	cout << "min data = " << min_data << ", max data = " << max_data << endl;
 
-	//thresholding3dFunctionN(ctContainer->dataPointer, Length, Width, Height, thres, thres, 0.0, 1.0);
-	//storing_path = outputPath + "threshold.raw";
-	//store3dRawData<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str());
-
-	////rescale to positive range
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		//imageData[k][i] = ctContainer->dataPointer[k][i] + (-1) * min_data;
-	//		maskThreshold[k][i] = ctContainer->dataPointer[k][i] + (-1) * min_data;
-	//		//maskThreshold[k][i] = ctContainer->dataPointer[k][i];
-	//	}
-	//}
-
-	//Copy to array
+	//rescale to positive range
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			imageData[k][i] = ctContainer->dataPointer[k][i];
+			imageData[k][i] = ctContainer->dataPointer[k][i] + (-1) * min_data;
+			//maskThreshold[k][i] = ctContainer->dataPointer[k][i] + (-1) * min_data;
+			//maskThreshold[k][i] = ctContainer->dataPointer[k][i];
 		}
 	}
 
-	//======================== Path finding ===========================
+	////Copy to array
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		imageData[k][i] = ctContainer->dataPointer[k][i];
+	//	}
+	//}
+
+	//Image_Data CT; CT.imageDataPtr = imageData;
+	//CT.height = Height; CT.length = Length; CT.width = Width;
+	//CT.orientation = orientation; CT.origin = ctOrigin; CT.spacing = ctSpacing;
+
+	//======================== Path finding considering trachea ======================
+
+	/*
+	//Patient 2
+	Point3D seed = { 263, 257, 146 };
+
+	size_t k_min = 110, k_max = 309;
+	//size_t k_trachea = 261;
+	//cout << "trachea slice : " << k_trachea << endl;
+
+	Point3D new_origin = { 0, 0, k_min };
+	new_origin = getRealCoordFromImageCoord3D(new_origin, ctOrigin, ctSpacing, orientation);
+	cout << "New image origin : (" << new_origin.x << ", " << new_origin.y << ", " << new_origin.z << ")" << endl;
+
+	size_t height = (size_t)((ctSpacing.sz / ctSpacing.sx) * (k_max - k_min + 1));
+	cout << "interp height : " << height << endl;
+
+	dataType** filteredImage = new dataType * [height];
+	dataType** meanImage = new dataType * [height];
+	dataType** path = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		filteredImage[k] = new dataType[dim2D]{ 0 };
+		meanImage[k] = new dataType[dim2D]{ 0 };
+		path[k] = new dataType[dim2D]{ 0 };
+	}
+	
+	loading_path = inputPath + "filtered.raw";
+	load3dArrayRAW<dataType>(filteredImage, Length, Width, height, loading_path.c_str(), false);
+
+	loading_path = inputPath + "mean.raw";
+	load3dArrayRAW<dataType>(meanImage, Length, Width, height, loading_path.c_str(), false);
+
+	Image_Data CT; 
+	CT.imageDataPtr = filteredImage;
+	CT.height = height; CT.length = Length; CT.width = Width;
+	CT.orientation = orientation; CT.origin = new_origin; 
+	CT.spacing.sx = ctSpacing.sx; CT.spacing.sy = ctSpacing.sy; CT.spacing.sz = ctSpacing.sz;
+
+	Potential_Parameters parameters;
+	parameters.K = 0.005; parameters.epsilon = 0.01;
+	parameters.c_ct = 0.0; parameters.c_pet = 0.0;
+	parameters.c_max = 0.0; parameters.c_min = 0.0; parameters.c_mean = 1.0; parameters.c_sd = 0.0;
+
+	seed = getRealCoordFromImageCoord3D(seed, ctOrigin, ctSpacing, orientation);
+	seed = getImageCoordFromRealCoord3D(seed, new_origin, CT.spacing, orientation);
+
+	//Point3D origin_trachea = { 0, 0, k_trachea };
+	//origin_trachea = getRealCoordFromImageCoord3D(origin_trachea, ctOrigin, ctSpacing, orientation);
+	//cout << "origin trachea real world coord : " << origin_trachea.x << ", " << origin_trachea.y << ", " << origin_trachea.z << endl;
+	//origin_trachea = getImageCoordFromRealCoord3D(origin_trachea, new_origin, CT.spacing, orientation);
+	//k_trachea = (size_t)origin_trachea.z;
+	//cout << "origin trachea : " << origin_trachea.x << ", " << origin_trachea.y << ", " << origin_trachea.z << endl;
+	//cout << "trachea slice after cropping and interpolation : " << k_trachea << endl;
+
+	size_t k_trachea = 151;
+	findPathFromOneGivenPoint(CT, meanImage, path, seed, parameters, k_trachea);
+
+	storing_path = outputPath + "path.raw";
+	store3dRawData<dataType>(path, Length, Width, height, storing_path.c_str());
+
+	////Interpolation
+	//size_t imageHeight = (size_t)((ctSpacing.sz / ctSpacing.sx) * height);
+	//cout << "new height : " << imageHeight << endl;
+
+	//dataType** pathPoints = new dataType * [imageHeight];
+	//dataType** meanPath = new dataType * [imageHeight];
+	//for (k = 0; k < imageHeight; k++) {
+	//	pathPoints[k] = new dataType[dim2D]{ 0 };
+	//	meanPath[k] = new dataType[dim2D]{ 0 };
+	//}
+	//
+	//size_t kn, in, jn;
+	//
+	//for (k = 0, kn = k_min; k < imageHeight; k++, kn++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			xd = x_new(i, j, Length);
+	//			//meanPath[k][xd] = meanImage[kn][xd];
+	//		}
+	//	}
+	//}
+
+	//storing_path = outputPath + "cropped_mean.raw";
+	//store3dRawData<dataType>(meanPath, Length, Width, imageHeight, storing_path.c_str());
+
+	for (k = 0; k < height; k++) {
+		delete[] meanImage[k];
+		delete[] filteredImage[k];
+		delete[] path[k];
+	}
+	delete[] meanImage;
+	delete[] filteredImage;
+	delete[] path;
+	*/
+
+	//======================== 2D Hough transform on Slice ===========================
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* foundCircle = new dataType[dim2D]{ 0 };
+
+	for (i = 0; i < dim2D; i++) {
+		imageSlice[i] = imageData[261][i];
+	}
+
+	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+
+	storing_path = outputPath + "loaded.raw";
+	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+
+	Image_Data2D IMAGE;
+	IMAGE.imageDataPtr = imageSlice;
+	IMAGE.height = Length; IMAGE.width = Width;
+	
+	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
+	HoughParameters parameters = { 4.0, 15.0, 0.5, 2.0, 1000, 1.0, 0.2, 0.5, spacing };
+	
+	////filtering parameters
+	Filter_Parameters filter_parameters;
+	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
+	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
+	filter_parameters.timeStepsNum = 10; filter_parameters.coef = 1e-6;
+
+	//Slice filtering
+	heatImplicit2dScheme(IMAGE, filter_parameters);
+
+	//storing_path = outputPath + "smooth10.raw";
+	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	
+	storing_path = outputPath + "threshold.raw";
+	houghTransformNew(imageSlice, foundCircle, Length, Width, parameters, storing_path);
+
+	storing_path = outputPath + "found_circles_new.raw";
+	store2dRawData<dataType>(foundCircle, Length, Width, storing_path.c_str());
+
+	delete[] imageSlice;
+	delete[] foundCircle;
 	
 	//======================== Bounding box soft tissue ===============
+	
 	/*
 	size_t i_min = Length, i_max = 0, j_min = Width, j_max = 0, k_min = Height, k_max = 0;
 	
@@ -176,22 +312,9 @@ int main() {
 	//	}
 	//}
 	*/
-	//======================== Region growing ==========================
-	/*
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (maskThreshold[k][i] >= -700 && maskThreshold[k][i] <= -600) {
-				maskThreshold[k][i] = 1.0;
-			}
-			else {
-				maskThreshold[k][i] = 0.0;
-			}
-		}
-	}
-	storing_path = outputPath + "threshold.raw";
-	store3dRawData<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str());
-	*/
+	
 	//======================== Labelling 3D ===================================================================
+	
 	/*
 	////Labelling
 	//thresholdingOTSU(maskThreshold, Length, Width, Height, 0.0, 1.0);
@@ -461,7 +584,9 @@ int main() {
 	delete[] labelArray;
 	delete[] status;
 	*/
+	
 	//======================== Tests on Trachea ================
+	
 	/*
 	loading_path = inputPath + "trachea.raw";
 	load3dArrayRAW<dataType>(tracheaData, Length, Width, Height, loading_path.c_str(), false);
@@ -537,7 +662,9 @@ int main() {
 	storing_path = outputPath + "ball_max.raw";
 	store3dRawData<dataType>(imageData, Length, Width, Height, storing_path.c_str());
 	*/
+	
 	//======================== Labeling 2D =========================
+	
 	/*
 	loading_path = inputPath + "trachea_dilated5_eroded5.raw";
 	load3dArrayRAW<dataType>(maskThreshold, Length, Width, Height, loading_path.c_str(), false);
@@ -633,7 +760,9 @@ int main() {
 	delete[] labelArray;
 	delete[] status;
 	*/
+	
 	//======================== Slice Cropping ================================================================
+	
 	/*
 	imageMetaData croppedLungs;
 	const size_t offset = 5;
@@ -705,230 +834,7 @@ int main() {
 	delete[] cropped_ct;
 	delete[] cropped_lungs;
 	*/
-	//======================== Cropp box ====================================
-	/*
-	imageMetaData croppedLungs;
-	const size_t offset = 5;
-	croppedLungs =  croppImage3D(ctImageData, offset);
-
-	size_t length = croppedLungs.length, width = croppedLungs.width, height = croppedLungs.height;
-	std::cout << "Cropped lungs image dim : " << length << " x " << width << " x " << height << "" << std::endl;
-	Point3D originLungs = croppedLungs.origin;
-	std::cout << "Cropped Lungs origin : (" << originLungs.x << ", " << originLungs.y << ", " << originLungs.z << ")" << std::endl;
-	VoxelSpacing lungsSpacing = croppedLungs.spacing;
-
-	dataType** cropped_ct = new dataType*[height];
-	dataType** cropped_lungs = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		cropped_ct[k] = new dataType[dim2D]{0};
-		cropped_lungs[k] = new dataType[dim2D]{0};
-		if (cropped_ct[k] == NULL || cropped_lungs[k] == NULL)
-			return false;
-	}
-	if (cropped_ct == NULL || cropped_lungs == NULL)
-		return false;
-
-	Point3D origin_cropped = getImageCoordFromRealCoord3D(originLungs, ctOrigin, ctSpacing, orientation);
-	size_t i0 = (size_t)origin_cropped.x, j0 = (size_t)origin_cropped.y, k0 = (size_t)origin_cropped.z;
 	
-	Point3D point_test = { 0.0, 0.0, 0.0 };
-	point_test = getRealCoordFromImageCoord3D(point_test, ctOrigin, ctSpacing, orientation);
-	cout << "Origin cropped image : (" << point_test.x << "," << point_test.y << "," << point_test.z << ")" << endl;
-	
-	size_t i1, j1, k1;
-	for (k = 0, k1 = k0; k < height; k++, k1++) {
-		for (i = 0, i1 = i0; i < length; i++, i1++) {
-			for (j = 0, j1 = j0; j < width; j++, j1++) {
-				cropped_ct[k][x_new(i, j, length)] = imageData[k1][x_new(i1, j1, Length)];
-				cropped_lungs[k][x_new(i, j, length)] = lungsData[k1][x_new(i1, j1, Length)];
-			}
-		}
-	}
-
-	Vtk_File_Info* Container = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	Container->dataPointer = cropped_lungs; // cropped_ct; //
-	Container->dimensions[0] = length; Container->dimensions[1] = width; Container->dimensions[2] = height;
-	Container->origin[0] = originLungs.x; Container->origin[1] = originLungs.y; Container->origin[2] = originLungs.z;
-	Container->spacing[0] = ctSpacing.sx; Container->spacing[1] = ctSpacing.sy; Container->spacing[2] = ctSpacing.sz;
-	Container->operation = copyTo; Container->vDataType = dta_Flt;
-
-	saving_name = outputPath + "box_lungs_p6.vtk";
-	vtkDataForm data_form = dta_binary;
-	storeVtkFile(saving_name.c_str(), Container, data_form);
-
-	free(Container);
-	for (k = 0; k < height; k++) {
-		delete[] cropped_ct[k];
-		delete[] cropped_lungs[k];
-	}
-	delete[] cropped_ct;
-	delete[] cropped_lungs;
-	*/
-	//======================= Hough tranform on whole volume =======================
-	/*
-	//const size_t Length = 512, Width = 512, dim2D = Length * Width;
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* foundCircle = new dataType[dim2D]{ 0 };
-	dataType* houghSpace = new dataType[dim2D]{ 0 };
-	
-	//PixelSpacing spacing = { 1.171875, 1.171875 };
-	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
-	HoughParameters parameters = { 4.0, 15.0, 0.5, 2.0, 1000, 1.0, 0.15, 0.5, spacing };
-
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-
-	Image_Data2D IMAGE;
-	IMAGE.imageDataPtr = imageSlice;
-	IMAGE.height = Length; IMAGE.width = Width;
-
-	////Slice loading
-	//loading_path = inputPath + "raw/slice/Image2.raw";
-	//load2dArrayRAW<dataType>(imageSlice, Length, Width, loading_path.c_str(), false);
-
-	for (k = 0; k < Height; k++) {
-
-		extension = to_string(k);
-
-		cout << "Slice " << k << endl;
-
-		for (i = 0; i < dim2D; i++) {
-			imageSlice[i] = imageData[k][i];
-		}
-
-		//storing_path = outputPath + "loaded.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-
-		//storing_path = outputPath + "rescaled.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		heatImplicit2dScheme(IMAGE, filter_parameters);
-
-		storing_path = outputPath + "slice_" + extension + ".raw";
-		store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		//storing_path = outputPath + "filtered.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		//loading_path = inputPath + "slice_145.raw";
-		//load2dArrayRAW<dataType>(imageSlice, Length, Width, loading_path.c_str(), false);
-		
-		storing_path = outputPath + "threshold_" + extension + ".raw";
-		houghTransform(imageSlice, foundCircle, Length, Width, parameters, storing_path);
-
-		storing_path = outputPath + "found_circle_" + extension + ".raw";
-		store2dRawData<dataType>(foundCircle, Length, Width, storing_path.c_str());
-
-	}
-
-	delete[] imageSlice;
-	delete[] foundCircle;
-	delete[] houghSpace;
-	*/
-	//======================= Hough transform to detect bronchial tree ==========
-	/*
-	//const size_t Length = 512, Width = 512, dim2D = Length * Width;
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* maskThreshold = new dataType[dim2D]{ 0 };
-	dataType* foundCircle = new dataType[dim2D]{ 0 };
-	dataType* gradientX = new dataType[dim2D]{ 0 };
-	dataType* gradientY = new dataType[dim2D]{ 0 };
-	dataType* gradientAngle = new dataType[dim2D]{ 0 };
-	dataType* normGradient = new dataType[dim2D]{ 0 };
-	size_t* statusPixel = new size_t[dim2D]{ 0 };
-
-	//PixelSpacing spacing = { 1.171875, 1.171875 };
-	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
-	HoughParameters parameters = { 5.0, 15.0, 0.5, 5.0, 1000, 1.0, 0.15, 0.5, spacing };
-
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-
-	Image_Data2D IMAGE;
-	IMAGE.imageDataPtr = imageSlice;
-	IMAGE.height = Length; IMAGE.width = Width;
-
-	////Slice loading
-	//loading_path = inputPath + "raw/slice/Image2.raw";
-	//load2dArrayRAW<dataType>(imageSlice, Length, Width, loading_path.c_str(), false);
-
-	for (k = 0; k < Height; k++) {
-		
-		extension = to_string(k);
-
-		cout << "Slice " << k << endl;
-		
-		//Extract slice
-		for (i = 0; i < dim2D; i++) {
-			imageSlice[i] = imageData[k][i];
-		}
-		//storing_path = outputPath + "loaded.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		//Slice rescaling
-		rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-		//storing_path = outputPath + "rescaled.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		//Slice filtering
-		heatImplicit2dScheme(IMAGE, filter_parameters);
-		//storing_path = outputPath + "filtered.raw";
-		//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-		copyDataToAnother2dArray(imageSlice, maskThreshold, Length, Width);
-
-		computeImageGradient(maskThreshold, gradientX, gradientY, Length, Width, parameters.h);
-		computeAngleFromGradient(gradientAngle, gradientX, gradientY, Length, Width);
-
-		//norm of gradient
-		for (i = 0; i < dim2D; i++) {
-			normGradient[i] = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
-		}
-
-		nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, Length, Width);
-		thresholdByHyteresis(maskThreshold, normGradient, statusPixel, Length, Width, 0.005, 0.009);
-
-		//Erosion and Dilation
-		erosion2D(maskThreshold, Length, Width, 1.0, 0.0);
-		dilatation2D(maskThreshold, Length, Width, 1.0, 0.0);
-
-		storing_path = outputPath + "threshold_" + extension + ".raw";
-		store2dRawData<dataType>(maskThreshold, Length, Width, storing_path.c_str());
-
-		houghTransform(maskThreshold, foundCircle, Length, Width, parameters);
-
-		storing_path = outputPath + "found_circle_" + extension + ".raw";
-		store2dRawData<dataType>(foundCircle, Length, Width, storing_path.c_str());
-
-		initialize2dArray(foundCircle, Length, Width);
-		initialize2dArray(maskThreshold, Length, Width);
-		initialize2dArray(normGradient, Length, Width);
-		initialize2dArray(gradientAngle, Length, Width);
-		initialize2dArray(gradientX, Length, Width);
-		initialize2dArray(gradientY, Length, Width);
-		for (i = 0; i < dim2D; i++) {
-			statusPixel[i] = false;
-		}
-
-	}
-
-	//delete[] imageSlice;
-	//delete[] maskThreshold;
-	//delete[] foundCircle;
-	//delete[] gradientX;
-	//delete[] gradientY;
-	//delete[] gradientAngle;
-	//delete[] normGradient;
-	//delete[] statusPixel;
-	*/
 	//======================== Free Memory ======================================
 
 	for (k = 0; k < Height; k++) {
