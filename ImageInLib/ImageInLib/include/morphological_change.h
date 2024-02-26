@@ -28,6 +28,10 @@ extern "C" {
 	bool erosion2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background);
 
 	bool dilatation2D(dataType* imageDataPtr, const size_t length, const size_t width, dataType object, dataType background);
+
+	//=======================================
+
+	bool dilatationTwentySixNeigbours(dataType** imageDataPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType object, dataType background);
 #ifdef __cplusplus
 }
 #endif
