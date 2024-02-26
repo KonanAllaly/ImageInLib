@@ -1401,7 +1401,8 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		filtered[k] = new dataType[dim2D]{0};
 	}
 	
-	string path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/cropped/interpolated/interp_filtered_p6.raw";
+	//string path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/cropped/interpolated/interp_filtered_p6.raw";
+	string path = "C:/Users/Konan Allaly/Documents/Tests/input/filtered_int.raw";
 	load3dArrayRAW<dataType>(filtered, length, width, height, path.c_str(), false);
 
 	Image_Data Filtered; Filtered.imageDataPtr = filtered;
@@ -1444,13 +1445,13 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		}
 	}
 
-	path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw";
-	store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
+	//path = "C:/Users/Konan Allaly/Documents/Tests/output/edgeDetector.raw";
+	//store3dRawData<dataType>(edgeDetector, length, width, height, path.c_str());
 	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
 
-	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
-	store3dRawData<dataType>(distance, length, width, height, path.c_str());
+	//path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMap.raw";
+	//store3dRawData<dataType>(distance, length, width, height, path.c_str());
 
 	dataType coef_dist = 1.0;
 
@@ -1468,8 +1469,8 @@ bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataTy
 		}
 	}
 
-	path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMapNormalized.raw";
-	store3dRawData<dataType>(distance, length, width, height, path.c_str());
+	//path = "C:/Users/Konan Allaly/Documents/Tests/output/distanceMapNormalized.raw";
+	//store3dRawData<dataType>(distance, length, width, height, path.c_str());
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -2144,6 +2145,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	return true;
 }
 
+//=======================================
+
 imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset) {
 
 	imageMetaData croppedImageMetaData;
@@ -2207,4 +2210,233 @@ imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset) {
 	croppedImageMetaData.height = (size_t)(k_max - k_min + 2 * offset);
 
 	return croppedImageMetaData;
+}
+
+//=======================================
+
+bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D seed, Potential_Parameters parameters, const size_t slice_trachea) {
+
+	if (ctImageData.imageDataPtr == NULL || meanImagePtr == NULL || resultedPath == NULL)
+		return false;
+
+	size_t k = 0, i = 0, j = 0, x = 0;
+	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+	const size_t dim2D = length * width;
+
+	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	string saving_name, extension, slice_number;
+
+	saving_name = path_name + "path_points2.csv";
+	FILE* file;
+	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	std::cout << "Initial point : (" << seed.x << ", " << seed.y << " , " << seed.z << ")" << std::endl;
+
+	dataType** actionPtr = new dataType * [height];
+	dataType** newActionPtr = new dataType * [height];
+	dataType** maskDistance = new dataType * [height];
+	dataType** potentialPtr = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		actionPtr[k] = new dataType[dim2D]{ 0 };
+		newActionPtr[k] = new dataType[dim2D]{ 0 };
+		maskDistance[k] = new dataType[dim2D]{ 0 };
+		potentialPtr[k] = new dataType[dim2D]{ 0 };
+	}
+	if (actionPtr == NULL || newActionPtr == NULL || maskDistance == NULL || potentialPtr == NULL)
+		return false;
+
+	Point3D* seeds = new Point3D[2]; // dynamic array needed for path finding.
+	seeds[0] = seed;
+	Point3D initial_point = seed;
+	Point3D temporary_point = { 0.0, 0.0, 0.0 };
+	Point3D current_point = { 0.0, 0.0, 0.0 };
+	//Point3D real_world = { 0.0, 0.0, 0.0 };
+
+	double step = 50.0, dist = 0.0;
+	dataType min_distance = BIG_VALUE, value_temp = 0.0, h = 1.0;
+
+	//================ find next point inside the aorta ============
+
+	double radius_to_find_mean = 3.0;
+	computePotentialNew(ctImageData, meanImagePtr, potentialPtr, seed, radius_to_find_mean, parameters);
+
+	//saving_name = path_name + "potential.raw";
+	//store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
+
+	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point);
+	
+	//saving_name = path_name + "action_field.raw";
+	//store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
+
+	////get real world coordinate of the initial point
+	//real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+
+	int count_step = 0;
+	min_distance = BIG_VALUE;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				x = x_new(j, i, width);
+				current_point.x = (dataType)j;
+				current_point.y = (dataType)i;
+				current_point.z = (dataType)k;
+				//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+				//dist = getPoint3DDistance(real_world, current_point);
+				dist = getPoint3DDistance(initial_point, current_point);
+				if (dist >= (step - 0.01) && dist <= (step + 0.01)) {
+					if (actionPtr[k][x] < min_distance) {
+						min_distance = actionPtr[k][x];
+						temporary_point.x = (dataType)j;
+						temporary_point.y = (dataType)i;
+						temporary_point.z = (dataType)k;
+						value_temp = actionPtr[k][x];
+					}
+				}
+			}
+		}
+	}
+	count_step++;
+	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
+
+	//vector for path points
+	vector<Point3D> path_points;
+
+	//path between initial point and second point
+	seeds[1] = temporary_point;
+	shortestPath3D(actionPtr, resultedPath, length, width, height, h, seeds, path_points);
+
+	//write just path points coordinates to file
+	int i_n = 0, k_n = 0, k_center = 0;
+	Point3D point_file = { 0.0, 0.0, 0.0 };
+	
+	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+	}
+
+	//saving_name = path_name + "path.raw";
+	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+
+	//============================================
+	size_t count_stop = 0, max_steps = 20;
+	size_t slice_stop = (size_t)seeds[1].z;
+	
+	//cout << "current slice stop : " << slice_stop << endl;
+	//cout << "slice trachea : " << slice_trachea << endl;
+
+	Point3D start_next_step = { 0, 0, 0 };
+	size_t slice_ind = 0, meet_slice = 0, max_step = 10;
+
+	while (count_step < max_step) {
+
+		count_step++;
+		std::cout << "STEP " << count_step << " : " << std::endl;
+		//extension = to_string(count_step);
+
+		//mask
+		for (k = 0; k < height; k++) {
+			for (i = 0; i < length; i++) {
+				for (j = 0; j < width; j++) {
+					x = x_new(j, i, width);
+					current_point.x = (dataType)j;
+					current_point.y = (dataType)i;
+					current_point.z = (dataType)k;
+					//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+					//dist = getPoint3DDistance(real_world, current_point);
+					dist = getPoint3DDistance(initial_point, current_point);
+					if (dist <= (step + 0.01) && actionPtr[k][x] <= value_temp) {
+						maskDistance[k][x] = 10000.0;
+					}
+					else {
+						if (maskDistance[k][x] != 10000.0) {
+							maskDistance[k][x] = newActionPtr[k][x];
+						}
+					}
+				}
+			}
+		}
+		seeds[0] = seeds[1];
+		initial_point = seeds[1];
+
+		fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, initial_point);
+
+		//saving_name = path_name + "action_field" + extension + ".raw";
+		//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
+
+		//Find the temporary point
+		min_distance = BIG_VALUE;
+
+		////get real world coordinate of the initial point
+		//real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+
+		for (k = 0; k < height; k++) {
+			for (i = 0; i < length; i++) {
+				for (j = 0; j < width; j++) {
+					x = x_new(j, i, width);
+					current_point.x = (dataType)j;
+					current_point.y = (dataType)i;
+					current_point.z = (dataType)k;
+					//current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+					//dist = getPoint3DDistance(real_world, current_point);
+					dist = getPoint3DDistance(initial_point, current_point);
+					if (dist >= (step - 0.01) && dist <= (step + 0.01) && maskDistance[k][x] != 10000.0) {
+						if (newActionPtr[k][x] < min_distance) {
+							min_distance = newActionPtr[k][x];
+							temporary_point.x = (dataType)j;
+							temporary_point.y = (dataType)i;
+							temporary_point.z = (dataType)k;
+							value_temp = newActionPtr[k][x];
+						}
+					}
+				}
+			}
+		}
+		//path between points
+		std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
+		
+		slice_stop = (size_t)temporary_point.z;
+		//cout << "current slice stop : " << slice_stop << endl;
+
+		seeds[1] = temporary_point;
+		shortestPath3D(newActionPtr, resultedPath, length, width, height, h, seeds, path_points);
+
+		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
+
+		//write just path points coordinates to file
+		for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+			slice_ind = (size_t)path_points[i_n].z;
+			if (slice_ind == slice_trachea) {
+				meet_slice++;
+				if (meet_slice == 2) {
+					exit(0);
+				}
+			}
+			point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+			fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+		}
+
+		//saving_name = path_name + "path.raw";
+		//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
+		
+	}
+
+	fclose(file);
+
+	for (k = 0; k < height; k++) {
+		delete[] actionPtr[k];
+		delete[] newActionPtr[k];
+		delete[] maskDistance[k];
+		delete[] potentialPtr[k];
+	}
+	delete[] actionPtr;
+	delete[] newActionPtr;
+	delete[] maskDistance;
+	delete[] potentialPtr;
+
+	delete[] seeds;
+
+	return true;
 }
