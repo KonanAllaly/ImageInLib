@@ -27,6 +27,10 @@ extern "C" {
 
 	bool regionGrowing3D_N(Image_Data ctImageData, dataType** segmentedImage, double radius, Point3D seedPoint);
 
+	//=======================
+
+	bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object);
+
 #ifdef __cplusplus
 }
 #endif
