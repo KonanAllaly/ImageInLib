@@ -115,7 +115,8 @@ extern "C" {
 	*/
 	size_t x_new(const size_t rowIndex, const size_t columnIndex, const size_t rowLength);
 	//==============================================================================
-	/* Flattens 3D array to 1D array
+	/*
+	Flattens 3D array to 1D array
 	*/
 	size_t x_flat(const size_t rowIndex, const size_t columnIndex, const size_t heightIndex, const size_t rowLength, const size_t columnLength);
 	//==============================================================================
@@ -182,13 +183,9 @@ extern "C" {
 	//==============================================================================
 	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
 	//==============================================================================
-	void localCircularHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* votingArray, const size_t length, const size_t width, double radius, double offset);
-	//==============================================================================
 	dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width);
 	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
-	//==============================================================================
-	void houghTransform(dataType* imageDataPtr, dataType* houghSpace, const size_t length, const size_t width);
 	//==============================================================================
 	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);
 	//==============================================================================
@@ -223,7 +220,7 @@ extern "C" {
 	/// <returns></returns>
 	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
 	//================================================================================
-	
+	//void computeHistogram(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t bins);
 
 #endif // !COMMON_FUNCTIONS
 
