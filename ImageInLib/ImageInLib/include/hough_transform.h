@@ -42,7 +42,7 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 /// <param name="length">image length</param>
 /// <param name="width">image width</param>
 /// <param name="params">hough transform parameters</param>
-void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params);
+//void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params);
 
 /// <summary>
 /// Detect cicles around given point

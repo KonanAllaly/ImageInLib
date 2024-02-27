@@ -37,6 +37,7 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 	return max_point;
 }
 
+/*
 void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters) {
 	
 	size_t i, j, xd, dim2D = length * width;
@@ -178,6 +179,7 @@ void circularHoughTransform(dataType* imageDataPtr, dataType* houghSpacePtr, dat
 	free(gradientY);
 
 }
+*/
 
 void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo) {
 
@@ -238,18 +240,25 @@ void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSp
 		//find the bounding box of the seed point
 		box = findBoundingBox2D(seed, length, width, radius, params.offset);
 		//small bounding box
-		i_min = (size_t)(box.i_min + radius + params.epsilon);
-		if (box.i_max >= radius) {
-			i_max = (size_t)(box.i_max - radius - params.epsilon);
+		i_max = (size_t)(box.i_max + radius + params.epsilon);
+		if (i_max >= length - 1) {
+			i_max = length - 1;
 		}
-		j_min = (size_t)(box.j_min + radius + params.epsilon);
-		if (box.j_max >= radius) {
-			j_max = (size_t)(box.j_max - radius - params.epsilon);
+		if (box.i_min >= radius) {
+			i_min = (size_t)(box.i_min - radius - params.epsilon);
+		}
+		j_max = (size_t)(box.j_max + radius + params.epsilon);
+		if (j_max >= width - 1) {
+			j_max = width - 1;
+		}
+		if (box.j_min >= radius) {
+			j_min = (size_t)(box.j_min - radius - params.epsilon);
 		}
 		
 		//visit all the pixels in the bounding box
 		for (i = i_min; i <= i_max; i++) {
 			for (j = j_min; j <= j_max; j++) {
+				
 				xd = x_new(i, j, length);
 				center_circle.x = (dataType)i;
 				center_circle.y = (dataType)j;
@@ -408,8 +417,8 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
 
 	////Erosion
-	erosion2D(maskThreshold, length, width, foreground, background);
-	dilatation2D(maskThreshold, length, width, foreground, background);
+	//erosion2D(maskThreshold, length, width, foreground, background);
+	//dilatation2D(maskThreshold, length, width, foreground, background);
 
 	store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
@@ -425,13 +434,19 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 		//find the bounding box of the seed point
 		box = findBoundingBox2D(seed, length, width, radius, params.offset);
 		//small bounding box
-		i_min = (size_t)(box.i_min + radius + params.epsilon);
-		if (box.i_max >= radius) {
-			i_max = (size_t)(box.i_max - radius - params.epsilon);
+		i_max = (size_t)(box.i_max + radius + params.epsilon);
+		if (i_max >= length - 1) {
+			i_max = length - 1;
 		}
-		j_min = (size_t)(box.j_min + radius + params.epsilon);
-		if (box.j_max >= radius) {
-			j_max = (size_t)(box.j_max - radius - params.epsilon);
+		if (box.i_min >= radius) {
+			i_min = (size_t)(box.i_min - radius - params.epsilon);
+		}
+		j_max = (size_t)(box.j_max + radius + params.epsilon);
+		if (j_max >= width - 1) {
+			j_max = width - 1;
+		}
+		if (box.j_min >= radius) {
+			j_min = (size_t)(box.j_min - radius - params.epsilon);
 		}
 
 		//visit all the pixels in the bounding box
@@ -441,7 +456,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 
 				center_circle.x = (dataType)i;
 				center_circle.y = (dataType)j;
-				getRealCoordFromImageCoord2D(center_circle, originImage, params.spacing, orientation);
+				center_circle = getRealCoordFromImageCoord2D(center_circle, originImage, params.spacing, orientation);
 
 				//vote
 				count_vote = 0;
@@ -454,7 +469,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 							
 							current_point.x = (dataType)i_new;
 							current_point.y = (dataType)j_new;
-							getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
+							current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
 							dist_point = getPoint2DDistance(center_circle, current_point);
 
 							//count foreground pixels in the band
@@ -634,8 +649,8 @@ void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size
 	////Erosion
 	//erosion2D(maskThreshold, length, width, foreground, background);
 	//erosion2D(maskThreshold, length, width, foreground, background);
-	erosion2D(maskThreshold, length, width, foreground, background);
-	dilatation2D(maskThreshold, length, width, foreground, background);
+	//erosion2D(maskThreshold, length, width, foreground, background);
+	//dilatation2D(maskThreshold, length, width, foreground, background);
 
 	store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
