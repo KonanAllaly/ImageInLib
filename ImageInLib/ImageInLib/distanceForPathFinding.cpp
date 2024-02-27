@@ -1768,11 +1768,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	//Slice extraction
 	Point2D seed2D = { 0.0, 0.0 };
 
-	////filtering parameters
-	//Filter_Parameters filter_parameters;
-	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
+	//filtering parameters
+	Filter_Parameters filter_parameters;
+	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
+	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
+	filter_parameters.timeStepsNum = 10; filter_parameters.coef = 1e-6;
 
 	Image_Data2D IMAGE;
 	IMAGE.imageDataPtr = imageSlice;
@@ -1782,7 +1782,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	Point2D center2D = { 0.0, 0.0 };
 	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
-	HoughParameters params = { 4.0, 15.0, 0.5, 5.0, 1000, 1.0, 0.15, 0.5, spacing };
+	HoughParameters params = { 4.0, 15.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
 	dataType max_ratio = 1.0;
 
 	//================ Use circle detection as path finding stopping criterium =====================
