@@ -55,6 +55,8 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 /// <param name="width">image width</param>
 /// <param name="params">Hough transform parameters</param>
 /// <param name="savingPath">saving path</param>
-void localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE * saveInfo);
+Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath);
 
 Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo);
+
+void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters, std::string savingPath);
