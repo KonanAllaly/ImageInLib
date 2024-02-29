@@ -27,13 +27,25 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 	for (i = 0; i < length; i++) {
 		for (j = 0; j < width; j++) {
 			xd = x_new(i, j, length);
-			if (arrayPtr2D[xd] > max_value) {
+			if (arrayPtr2D[xd] >= max_value) {
 				max_value = arrayPtr2D[xd];
 				max_point.x = (dataType)i;
 				max_point.y = (dataType)j;
 			}
 		}
 	}
+
+	/*
+	//count max
+	int cptMax = 0;
+	for (i = 0; i < length * width; i++) {
+		if (max_value == arrayPtr2D[i]) {
+			cptMax++;
+		}
+	}
+	std::cout << cptMax << " pixels have max ratio" << std::endl;
+	*/
+
 	return max_point;
 }
 
@@ -186,9 +198,9 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	size_t i, j, xd, dim2D = length * width;
 	size_t i_new, j_new, xd_new;
 	BoundingBox2D box = { 0, 0, 0, 0 };
-	Point2D center_circle = { 0.0, 0.0 }, current_point = { 0.0, 0.0 }, found_center = { 0.0, 0.0 };
+	Point2D center_circle = { 0.0, 0.0 }, current_point = {0.0, 0.0}, found_center = { 0.0, 0.0 };
 
-	double dist_point = 0.0, found_radius, radius = 0.0;
+	double dist_point = 0.0, found_radius = 0.0, radius = 0.0;
 	bool test_max = false;
 
 	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
@@ -196,8 +208,7 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 
 	Point2D originImage = { 0.0, 0.0 };
 	OrientationMatrix2D orientation;
-	orientation.v1 = { 1.0, 0.0 };
-	orientation.v2 = { 0.0, 1.0 };
+	orientation.v1 = { 1.0, 0.0 }; orientation.v2 = { 0.0, 1.0 };
 	
 	dataType* edgeDetector = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* maskThreshold = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -221,8 +232,8 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	initialize2dArray(maskThreshold, length, width);
 	copyDataToAnother2dArray(edgeDetector, maskThreshold, length, width);
 
-	saving_path = outputPath + "edge_detector.raw";
-	store2dRawData(edgeDetector, length, width, saving_path.c_str());
+	//saving_path = outputPath + "edge_detector.raw";
+	//store2dRawData(edgeDetector, length, width, saving_path.c_str());
 
 	//thresholding of the edge detector
 	thresholding2DFunction(maskThreshold, length, width, params.thres, params.thres);
@@ -231,58 +242,80 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	erosion2D(maskThreshold, length, width, foreground, background);
 	dilatation2D(maskThreshold, length, width, foreground, background);
 
+	/*
+	//==================
+	//create mask in threshold for second circle detection
+	double r_max = 8.5;
+	Point2D mask_center = { 294, 315 };
+	mask_center = getRealCoordFromImageCoord2D(mask_center, originImage, params.spacing, orientation);
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+			Point2D current_point_mask = { (dataType)i, (dataType)j };
+			current_point_mask = getRealCoordFromImageCoord2D(current_point_mask, originImage, params.spacing, orientation);
+			double dis_mask = getPoint2DDistance(mask_center, current_point_mask);
+			if (dis_mask <= r_max) {
+				maskThreshold[x_new(i, j, length)] = 1.0;
+			}
+		}
+	}
+	//==================
+	*/
+
 	saving_path = outputPath + "threshold.raw";
 	store2dRawData(maskThreshold, length, width, saving_path.c_str());
 
-	initialize2dArray(houghSpaceMax, length, width);
 	initialize2dArray(foundCirclePtr, length, width);
 
-	size_t count_vote = 0, count_neighbor = 0, total_neighbor = 0;
+	int count_vote = 0, count_neighbor = 0, total_neighbor = 0;
 	dataType hough_ratio = 0.0, found_ratio = 0.0, max_ratio = 0.0;
 	size_t i_min = 0, i_max = 0, j_min = 0, j_max = 0;
 	radius = params.radius_min;
-	found_radius = 0.0;
 	
 	double x = 0.0, y = 0.0;
+
+	////find the bounding box of the seed point
+	//box = findBoundingBox2D(seed, length, width, params.radius_max, params.offset);
+
+	initialize2dArray(houghSpaceMax, length, width);
+
 	while (radius <= params.radius_max) {
 		
 		initialize2dArray(houghSpacePtr, length, width);
 		
 		//find the bounding box of the seed point
 		box = findBoundingBox2D(seed, length, width, radius, params.offset);
-		
-		//small bounding box
-		x = box.i_max - radius - params.epsilon;
-		if (x < 0) {
-			i_max = 0;
-		}
-		else {
-			i_max = (size_t)x;
-		}
-		i_min = (size_t)(box.i_min + radius + params.epsilon);
-		if (i_min >= length - 1) {
-			i_min = length - 1;
-		}
-		
-		y = box.j_max - radius - params.epsilon;
-		if (y < 0) {
-			j_max = 0;
-		}
-		else {
-			j_max = (size_t)y;
-		}
 
-		j_min = (size_t)(box.j_min + radius + params.epsilon);
-		if (j_min >= width - 1) {
-			j_min = width - 1;
-		}
+		////small bounding box
+		//x = box.i_max - radius - params.epsilon;
+		//if (x < 0) {
+		//	i_max = 0;
+		//}
+		//else {
+		//	i_max = (size_t)x;
+		//}
+		//i_min = (size_t)(box.i_min + radius + params.epsilon);
+		//if (i_min >= length - 1) {
+		//	i_min = length - 1;
+		//}
+		//
+		//y = box.j_max - radius - params.epsilon;
+		//if (y < 0) {
+		//	j_max = 0;
+		//}
+		//else {
+		//	j_max = (size_t)y;
+		//}
+		//j_min = (size_t)(box.j_min + radius + params.epsilon);
+		//if (j_min >= width - 1) {
+		//	j_min = width - 1;
+		//}
 		
 		//visit all the pixels in the bounding box
-		for (i = i_min; i <= i_max; i++) {
-			for (j = j_min; j <= j_max; j++) {
-				
+		for (i = box.i_min; i <= box.i_max; i++) {
+			for (j = box.j_min; j <= box.j_max; j++) {
+
 				xd = x_new(i, j, length);
-				center_circle.x = (dataType)i;
+				center_circle.x = (dataType)i; 
 				center_circle.y = (dataType)j;
 				center_circle = getRealCoordFromImageCoord2D(center_circle, originImage, params.spacing, orientation);
 				
@@ -295,8 +328,8 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 					for (i_new = box.i_min; i_new <= box.i_max; i_new++) {
 						for (j_new = box.j_min; j_new <= box.j_max; j_new++) {
 							xd_new = x_new(i_new, j_new, length);
-							
-							current_point.x = (dataType)i_new;
+
+							current_point.x = (dataType)i_new; 
 							current_point.y = (dataType)j_new;
 							current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
 							dist_point = getPoint2DDistance(center_circle, current_point);
@@ -308,6 +341,7 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 									count_vote++;
 								}
 							}
+
 							//count foreground pixels close to the current center
 							if (dist_point < (radius - params.epsilon) && maskThreshold[xd_new] == foreground) {
 								count_neighbor++;
@@ -316,40 +350,57 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 						}
 					}
 				}
-				//compute ratios
-				hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
-				//houghSpacePtr[xd] = hough_ratio;
+
+				////compute ratios
+				//hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
+				//hough_ratio = (dataType)count_vote / radius;
+				hough_ratio = (dataType)count_vote;
+
 				if (count_neighbor == 0) {
 					houghSpacePtr[xd] = hough_ratio;
 				}
 			}
 		}
 
+		////keep the maximal ratio for each pixel
+		//for (i = box.i_min; i <= box.i_max; i++) {
+		//	for (j = box.j_min; j <= box.j_max; j++) {
+		//		xd = x_new(i, j, length);
+		//		if (houghSpacePtr[xd] > houghSpaceMax[xd]) {
+		//			houghSpaceMax[xd] = houghSpacePtr[xd];
+		//		}
+		//	}
+		//}
+
 		//keep the maximal ratio for each pixel
-		for (i = box.i_min; i <= box.i_max; i++) {
-			for (j = box.j_min; j <= box.j_max; j++) {
-				xd = x_new(i, j, length);
-				if (houghSpacePtr[xd] > houghSpaceMax[xd]) {
-					houghSpaceMax[xd] = houghSpacePtr[xd];
-				}
+		for (i = 0; i < length * width; i++) {
+			if (houghSpacePtr[i] >= houghSpaceMax[i]) {
+				houghSpaceMax[i] = houghSpacePtr[i];
 			}
 		}
 
 		//find the maximal ratio for current radius
-		max_ratio = getTheMaxValue(houghSpacePtr, length, width);
+		max_ratio = getTheMaxValue(houghSpaceMax, length, width);
+		
 		//find the maximal ratio for whole radius range
 		if (max_ratio > found_ratio) {
 			found_ratio = max_ratio;
 			found_radius = radius;
 			test_max = true;
 		}
+		
 		//update the found_center if the value of found_ratio was updated
 		if (test_max == true) {
 			found_center = getPointWithMaximalValue2D(houghSpaceMax, length, width);
 			test_max = false;
 		}
+
 		radius += params.radius_step;
+
 	}
+
+	//find the point with max ratio
+	found_center = getPointWithMaximalValue2D(houghSpaceMax, length, width);
 
 	printf("Found radius = %lf\n", found_radius);
 	//printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
@@ -372,14 +423,16 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	if (found_center.x != 0 && found_center.y != 0) {
 		//add found center
 		foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
+		Point2D draw_point = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
 		//draw the found circle
 		box = findBoundingBox2D(found_center, length, width, found_radius, params.offset);
 		for (i = box.i_min; i <= box.i_max; i++) {
 			for (j = box.j_min; j <= box.j_max; j++) {
 				xd = x_new(i, j, length);
-				current_point.x = (dataType)i;
+				current_point.x = (dataType)i; 
 				current_point.y = (dataType)j;
-				dist_point = getPoint2DDistance(found_center, current_point);
+				current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
+				dist_point = getPoint2DDistance(draw_point, current_point);
 				if (dist_point >= (found_radius - params.epsilon) && dist_point <= (found_radius + params.epsilon)) {
 					foundCirclePtr[xd] = 1.0;
 				}
@@ -391,7 +444,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
 	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-	//fprintf(saveInfo, "%f,%f\n", max_ratio, found_radius);
 
 	saving_path = outputPath + "found_circle.raw";
 	store2dRawData(foundCirclePtr, length, width, saving_path.c_str());
