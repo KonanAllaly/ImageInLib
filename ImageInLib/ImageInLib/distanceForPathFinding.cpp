@@ -1772,7 +1772,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 	Filter_Parameters filter_parameters;
 	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
 	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	filter_parameters.timeStepsNum = 10; filter_parameters.coef = 1e-6;
+	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
 	Image_Data2D IMAGE;
 	IMAGE.imageDataPtr = imageSlice;
@@ -1813,7 +1813,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 		//rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
 
 		////Slice filtering
-		//heatImplicit2dScheme(IMAGE, filter_parameters);
+		heatImplicit2dScheme(IMAGE, filter_parameters);
 
 		seed2D.x = path_points[i_n].x;
 		seed2D.y = path_points[i_n].y;
@@ -1835,7 +1835,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 			}
 		}
 
-		center2D = localHoughWithCanny(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name, file);
+		//center2D = localHoughWithCanny(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name, file);
+		center2D = localHoughTransform(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name);
 		
 		max_ratio = getTheMaxValue(voteArray, length, width);
 		if (max_ratio != 0.0) {
@@ -2038,7 +2039,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 				}
 			}
 			
-			center2D = localHoughWithCanny(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name, file);
+			//center2D = localHoughWithCanny(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name, file);
+			center2D = localHoughTransform(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name);
 
 			max_ratio = getTheMaxValue(voteArray, length, width);
 			if (max_ratio != 0.0) {
