@@ -342,6 +342,10 @@ using namespace std;
 
 	bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D seed, Potential_Parameters parameters, const size_t slice_trachea);
 
+	bool computePotentialTwoPoints(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters parameters);
+
+	bool findPathTwoSteps(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+
 //#ifdef __cplusplus
 //}
 //#endif
