@@ -423,6 +423,247 @@ bool labelling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArr
 	return true;
 }
 
+int countNumberOfRegionsCells(dataType** binaryImagePtr, const size_t length, const size_t width, const size_t height, dataType object) {
+	if (binaryImagePtr == NULL)
+		return 0;
+	int numberOfRegionCells = 0;
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length * width; i++) {
+			if (binaryImagePtr[k][i] == object) {
+				numberOfRegionCells++;
+			}
+		}
+	}
+	return numberOfRegionCells;
+}
+
+/*
+bool labeling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType object) {
+
+	if (imageDataPtr == NULL || segmentedImage == NULL || statusArray == NULL)
+		return false;
+
+	vector<point3dLabelling> initialStack, tempStack;
+
+	size_t i = 0, j = 0, k = 0, xd, n = 0;
+	int label = 1;
+
+	//statusArray has false everywhere in the beginning
+	//false---> non-processed and true---> processed
+	//segmentedImage has 0 everywhere
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				
+				xd = x_new(i, j, length);
+
+				if (statusArray[k][xd] == false) {
+					
+					if (imageDataPtr[k][xd] == object) {
+
+						//top
+						if (k > 0 && statusArray[k - 1][xd] == false) {
+							if (imageDataPtr[k - 1][xd] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i, j, k - 1, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								//it's not object, so, update its status
+								statusArray[k - 1][xd] = true;
+							}
+						}
+						
+						//down
+						if (k < height - 1 && statusArray[k + 1][xd] == false) {
+							if (imageDataPtr[k + 1][xd] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i, j, k + 1, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								//it's not object, so, update its status
+								statusArray[k + 1][xd] = true;
+							}
+						}
+
+						//west
+						if (i > 0 && statusArray[k][x_new(i - 1, j, length)] == false) {
+							if (imageDataPtr[k][x_new(i - 1, j, length)] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i - 1, j, k, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								statusArray[k][x_new(i - 1, j, length)] = true;
+							}
+						}
+
+						//east
+						if (i < length - 1 && statusArray[k][x_new(i + 1, j, length)] == false) {
+							if (imageDataPtr[k][x_new(i + 1, j, length)] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i + 1, j, k, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								statusArray[k][x_new(i + 1, j, length)] = true;
+							}
+						}
+
+						//north
+						if (j > 0 && statusArray[k][x_new(i, j - 1, length)] == false) {
+							if (imageDataPtr[k][x_new(i, j - 1, length)] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i, j - 1, k, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								statusArray[k][x_new(i, j - 1, length)] = true;
+							}
+						}
+
+						//south neighbor
+						if (j < width - 1 && statusArray[k][x_new(i, j + 1, length)] == false) {
+							if (imageDataPtr[k][x_new(i, j + 1, length)] == object) {
+								//the element is in current region, then add it in the stack
+								point3dLabelling neighbour = { i, j + 1, k, false };
+								initialStack.push_back(neighbour);
+							}
+							else {
+								statusArray[k][x_new(i, j + 1, length)] = true;
+							}
+						}
+
+						//after checking all neighbors of current element
+						//we give its label, and update its status
+						segmentedImage[k][xd] = label;
+						statusArray[k][xd] = true;
+
+						//Now we check neighbors of its neighbors saved in the stacks
+						//I start by the last added element in stacks
+						//If there is no neighbor iStack.size() = jStack.size() = kStack.size() = 0 , and the while loop will no be ran
+						while (initialStack.size() > 0) {
+
+							//Processed the last element in the initial stack
+							size_t l = initialStack.size() - 1; // len
+							size_t i_s = initialStack[l].x;
+							size_t j_s = initialStack[l].y;
+							size_t k_s = initialStack[l].z;
+							size_t xd_s = x_new(i_s, j_s, length);
+
+							//top
+							if (k_s > 0 && statusArray[k_s - 1][xd_s] == false) {
+								if (imageDataPtr[k_s - 1][xd_s] == object) {
+									//If the element is in the current region, then save its coordinates in temporary stacks
+									point3dLabelling current_point = { i_s, j_s, k_s - 1, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s - 1][xd_s] = true;
+								}
+							}
+
+							//down
+							if (k_s < height - 1 && statusArray[k_s + 1][xd_s] == false) {
+								if (imageDataPtr[k_s + 1][xd_s] == object) {
+									point3dLabelling current_point = { i_s, j_s, k_s + 1, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s + 1][xd_s] = true;
+								}
+							}
+
+							//west
+							if (i_s > 0 && statusArray[k_s][x_new(i_s - 1, j_s, length)] == false) {
+								if (imageDataPtr[k_s][x_new(i_s - 1, j_s, length)] == object) {
+									//the element is in the current region, then save its coordinates in temporary stacks
+									point3dLabelling current_point = { i_s - 1, j_s, k_s, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s][x_new(i_s - 1, j_s, length)] = true;
+								}
+							}
+
+							//east
+							if (i_s < length - 1 && statusArray[k_s][x_new(i_s + 1, j_s, length)] == false) {
+								if (imageDataPtr[k_s][x_new(i_s + 1, j_s, length)] == object) {
+									point3dLabelling current_point = { i_s + 1, j_s, k_s, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s][x_new(i_s + 1, j_s, length)] = true;
+								}
+							}
+
+							//north
+							if (j_s > 0 && statusArray[k_s][x_new(i_s, j_s - 1, length)] == false) {
+								if (imageDataPtr[k_s][x_new(i_s, j_s - 1, length)] == object) {
+									//If the element is in the current region, then save its coordinates in temporary stacks
+									point3dLabelling current_point = { i_s, j_s - 1, k_s, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s][x_new(i_s, j_s - 1, length)] = true;
+								}
+							}
+
+							//south
+							if (j_s < width - 1 && statusArray[k_s][x_new(i_s, j_s + 1, length)] == false) {
+								if (imageDataPtr[k_s][x_new(i_s, j_s + 1, length)] == object) {
+									//the element is in the current region, then save its coordinates in temporary stacks
+									point3dLabelling current_point = { i_s, j_s + 1, k_s, false };
+									tempStack.push_back(current_point);
+								}
+								else {
+									//Not in region, update status and go to the next neighbor
+									statusArray[k_s][x_new(i_s, j_s + 1, length)] = true;
+								}
+							}
+
+							//updating of processed element befor removal
+							segmentedImage[k_s][xd_s] = label;
+							statusArray[k_s][xd_s] = true;
+
+							//Remove the processed element of the initial stacks
+							initialStack.pop_back();
+
+							//Add new found neighbors in initial stacks
+							for (n = 0; n < tempStack.size(); n++) {
+								initialStack.push_back(tempStack[n]);
+							}
+
+							//empty the temporary stack
+							while (tempStack.size() > 0) {
+								tempStack.pop_back();
+							}
+
+							//End of big while loop
+						}
+						label++;
+					}
+					else {
+						statusArray[k][xd] = true;
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+*/
+
+//===============================================================================================================
+
 bool regionGrowing(dataType** imageDataPtr, dataType** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType thres_min, dataType thres_max, Point3D * seedPoint) {
 
 	if (imageDataPtr == NULL || segmentedImage == NULL || statusArray == NULL)
