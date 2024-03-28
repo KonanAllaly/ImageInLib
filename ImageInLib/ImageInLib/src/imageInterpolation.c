@@ -550,22 +550,24 @@ Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_inte
     size_t i, j, k, nb_point = 0;
     Statistics result = { 0.0, 0.0, 0.0, 0.0 };
     BoundingBox3D box = { 0, 0, 0, 0, 0, 0 };
-    double offset = 5.0;
+    double offset = 2.0;
+    size_t length = imageData.length;
 
     box = findBoundingBox3D(point_of_interest, imageData.length, imageData.width, imageData.height, radius, offset);
     Point3D seed = getRealCoordFromImageCoord3D(point_of_interest, imageData.origin, imageData.spacing, imageData.orientation);
 
     double sum = 0.0;
-    result.max_data = 0.0; result.min_data = 1000000000000000;
+    result.max_data = 0.0;
+    result.min_data = 1000000000000000;
 
     for (k = box.k_min; k <= box.k_max; k++) {
         for (i = box.i_min; i <= box.i_max; i++) {
             for (j = box.j_min; j <= box.j_max; j++) {
-                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+                Point3D current_point = { i, j, k };
                 current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
                 double dist = getPoint3DDistance(seed, current_point);
                 if (dist <= radius) {
-                    dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, imageData.length)];
+                    dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, length)];
                     if (voxel_value < result.min_data) {
                         result.min_data = voxel_value;
                     }
@@ -579,23 +581,29 @@ Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_inte
         }
     }
 
-    result.mean_data = sum / (dataType)nb_point;
-
-    dataType sum_diff = 0.0;
-    for (k = box.k_min; k <= box.k_max; k++) {
-        for (i = box.i_min; i <= box.i_max; i++) {
-            for (j = box.j_min; j <= box.j_max; j++) {
-                Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-                double dist = getPoint3DDistance(seed, current_point);
-                if (dist <= radius) {
-                    sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, imageData.length)] - result.mean_data, 2);
+    if (nb_point != 0) {
+        result.mean_data = sum / (dataType)nb_point;
+        dataType sum_diff = 0.0;
+        for (k = box.k_min; k <= box.k_max; k++) {
+            for (i = box.i_min; i <= box.i_max; i++) {
+                for (j = box.j_min; j <= box.j_max; j++) {
+                    Point3D current_point = { i, j, k };
+                    current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
+                    double dist = getPoint3DDistance(seed, current_point);
+                    if (dist <= radius) {
+                        sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, length)] - result.mean_data, 2);
+                    }
                 }
             }
         }
+        result.sd_data = sqrt(sum_diff / (dataType)nb_point);
     }
-
-    result.sd_data = sqrt(sum_diff / (dataType)nb_point);
+    else {
+        result.mean_data = 0;
+        result.sd_data = 0;
+        result.max_data = 0.0;
+        result.min_data = 0.0;
+    }
 
     return result;
 }
@@ -619,27 +627,6 @@ bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsIma
     }
     return true;
 }
-
-/*
-bool generateMeanImage(Image_Data imageData, dataType** meanImage, double offset) {
-    
-    size_t i, j, k, x;
-    double radius = offset * imageData.spacing.sx;
-
-    for (k = 0; k < imageData.height; k++) {
-        for (i = 0; i < imageData.length; i++) {
-            for (j = 0; j < imageData.width; j++) {
-                x = x_new(i, j, imageData.length);
-                Point3D current_point = { i, j, k };
-                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-                Statistics current_stats = getStats(imageData, current_point, radius);
-                meanImage[k][x] = current_stats.mean_data;
-            }
-        }
-    }
-    return true;
-}
-*/
 
 //=======================================================
 
