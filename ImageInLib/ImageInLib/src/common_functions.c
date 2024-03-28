@@ -314,7 +314,8 @@ dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_
 void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew) {
 	
 	size_t i, dim2D = imageLength * imageWidth;
-	dataType min_data = 100000.0, max_data = 0.0;
+	//dataType min_data = 100000.0, max_data = 0.0;
+	dataType min_data = imageDataPtr[0], max_data = imageDataPtr[0];
 	// Find the Min and Max Intensity
 	for (i = 0; i < dim2D; i++) {
 		if (imageDataPtr[i] > max_data) {
@@ -324,6 +325,8 @@ void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageW
 			min_data = imageDataPtr[i];
 		}
 	}
+	printf("max = %f, min %f= ", max_data, min_data);
+
 	// Rescale from min_new to max_new
 	dataType diffOld = max_data - min_data;
 	dataType diffNew = maxNew - minNew;
@@ -396,11 +399,11 @@ BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t
 		box.i_min = 0;
 	}
 	else {
-		if (ind_x < length - 1) {
-			box.i_min = (size_t)ind_x;
+		if (ind_x > length - 1) {
+			box.i_min = length - 1;
 		}
 		else {
-			box.i_min = length - 1;
+			box.i_min = (size_t)ind_x;
 		}
 	}
 
@@ -419,11 +422,11 @@ BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t
 		box.j_min = 0;
 	}
 	else {
-		if (ind_y < width - 1) {
-			box.j_min = (size_t)ind_y;
+		if (ind_y > width - 1) {
+			box.j_min = width - 1;
 		}
 		else {
-			box.j_min = width - 1;
+			box.j_min = (size_t)ind_y;
 		}
 	}
 
@@ -442,11 +445,11 @@ BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t
 		box.k_min = 0;
 	}
 	else {
-		if (ind_z < width - 1) {
-			box.k_min = (size_t)ind_z;
+		if (ind_z > height - 1) {
+			box.k_min = height - 1;
 		}
 		else {
-			box.k_min = height - 1;
+			box.k_min = (size_t)ind_z;
 		}
 	}
 
@@ -497,4 +500,25 @@ void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dat
 			gradientVectorY[xd] = uy;
 		}
 	}
+}
+//==============================================================================
+void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height) {
+	size_t i, j, k, slice;
+
+	dataType maxValue;
+	for (slice = 0; slice < height; slice++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+
+				maxValue = 0.0;
+				for (k = 0; k < height; k++) {
+					if (imageData[k][x_new(i, j, length)] > maxValue) {
+						maxValue = imageData[k][x_new(i, j, length)];
+					}
+				}
+				resultImage[slice][x_new(i, j, length)] = maxValue;
+			}
+		}
+	}
+	
 }
