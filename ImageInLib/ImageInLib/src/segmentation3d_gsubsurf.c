@@ -160,10 +160,11 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_smoothed_image.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	//manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 
 	firstCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
 	//loop for segmentation time steps
+	
 	i = 1;
 	do
 	{
@@ -174,8 +175,8 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 		//calcution of coefficients
-		generalizedGaussSeidelCoefficients(imageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
-		//generalizedGaussSeidelCoefficients(imageData, inputImageData.imageDataPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
+		//generalizedGaussSeidelCoefficients(imageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
+		generalizedGaussSeidelCoefficients(imageData, inputImageData.imageDataPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
 
 		// Call to function that will evolve segmentation function in each discrete time step
 		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, segParameters, CoefPtrs, centers, no_of_centers);
@@ -307,8 +308,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	//heatImplicitScheme(presmoothingData, explicit_lhe_Parameters); // unconditionnally stable
-	heatExplicitScheme(presmoothingData, explicit_lhe_Parameters); //faster
+	heatImplicitScheme(presmoothingData, explicit_lhe_Parameters); // unconditionnally stable
 
 	copyDataToReducedArea(inputImageData.imageDataPtr, extendedCoefPtr, height, length, width);
 
