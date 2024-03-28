@@ -123,30 +123,21 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	//compute coefficients from presmoothed image
 	gFunctionForImageToBeSegmented(inputImageData, prevSol_extPtr, GPtrs, segParameters, explicit_lhe_Parameters);
 
-	Vtk_File_Info* vtkInfo = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	if (vtkInfo == NULL) return false;
-	vtkInfo->spacing[0] = 1.0; vtkInfo->spacing[1] = 1.0; vtkInfo->spacing[2] = 1.0;
-	vtkInfo->origin[0] = 0; vtkInfo->origin[1] = 0; vtkInfo->origin[2] = 0;
-	vtkInfo->dimensions[0] = length; vtkInfo->dimensions[1] = width; vtkInfo->dimensions[2] = height;
-	vtkInfo->vDataType = dta_Flt; vtkInfo->operation = copyTo; vtkDataForm dataForm = dta_binary;
-	const char* pathsaveVTK;
-
 	//Array for name construction
 	unsigned char name[350];
 	unsigned char name_ending[100];
 	Storage_Flags flags = {false,false};
 
-	strcpy_s(name, sizeof name, outputPathPtr);
-	sprintf_s(name_ending, sizeof(name_ending), "_edgeEast.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	store3dDataArrayD(GPtrs.GePtr, length, width, height, name, flags);
+	//strcpy_s(name, sizeof name, outputPathPtr);
+	//sprintf_s(name_ending, sizeof(name_ending), "_edgeEast.raw");
+	//strcat_s(name, sizeof(name), name_ending);
+	//store3dDataArrayD(GPtrs.GePtr, length, width, height, name, flags);
 
 	//loop for segmentation time steps
 	i = 1;
 	do
 	{
 		segParameters.numberOfTimeStep = i;
-		//firstCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
 
 		//calcution of coefficients
 		gaussSeidelCoefficients(prevSol_extPtr, imageData, GPtrs, CoefPtrs, segParameters);
@@ -154,14 +145,8 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 		// Call to function that will evolve segmentation function in each discrete time step
 		subsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, GPtrs, segParameters, CoefPtrs, centers, no_of_centers);
 
-		//secondCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
-
 		//Compute the L2 norm of the difference between the current and previous solutions
 		difference_btw_current_and_previous_sol = l2normD(prevSol_extPtr, gauss_seidelPtr, length, width, height, segParameters.h);
-
-		//printf("mass is %e\n", difference_btw_current_and_previous_sol);
-		//printf("segTolerance is %e\n", segParameters.segTolerance);
-		//printf("CPU time: %e secs\n", secondCpuTime - firstCpuTime);
 
 		//writing density.
 		if ((i%segParameters.mod) == 0)
@@ -172,7 +157,9 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 			store3dDataArrayD(imageData.segmentationFuntionPtr, length, width, height, name, flags);
 			printf("Step is %zd\n", segParameters.numberOfTimeStep);
 		}
+
 		i++;
+
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 
 	//printf("finish: Segmentation tolerance is %lf\n", segParameters.segTolerance);
@@ -216,8 +203,6 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	}
 	free(prevSol_extPtr);
 	free(gauss_seidelPtr);
-
-	free(vtkInfo);
 
 	return true;
 }
@@ -557,8 +542,8 @@ bool gFunctionForImageToBeSegmented(Image_Data inputImageData, dataType **extend
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	heatExplicitScheme(presmoothingData, explicit_lhe_Parameters);
-	//heatImplicitScheme(presmoothingData, explicit_lhe_Parameters);
+	//heatExplicitScheme(presmoothingData, explicit_lhe_Parameters);
+	heatImplicitScheme(presmoothingData, explicit_lhe_Parameters);
 	//geodesicMeanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
 	//meanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
 
