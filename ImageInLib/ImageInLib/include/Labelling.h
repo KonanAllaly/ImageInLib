@@ -23,6 +23,19 @@ extern "C" {
 	//For 3D Images
 	bool labelling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType object);
 
+	/// <summary>
+	/// count foreground pixel in binary image
+	/// </summary>
+	/// <param name="binaryImagePtr">input binary image</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="height">image height</param>
+	/// <param name="object">foreground pixel value</param>
+	/// <returns>number of foreground pixels</returns>
+	int countNumberOfRegionsCells(dataType** binaryImagePtr, const size_t length, const size_t width, const size_t height, dataType object);
+
+	//=======================
+
 	bool regionGrowing(dataType** imageDataPtr, dataType** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType thres_min, dataType thres_max, Point3D* seedPoint);
 
 	bool regionGrowing3D_N(Image_Data ctImageData, dataType** segmentedImage, double radius, Point3D seedPoint);
