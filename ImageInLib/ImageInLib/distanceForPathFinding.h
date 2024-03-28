@@ -346,6 +346,8 @@ using namespace std;
 
 	bool findPathTwoSteps(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
 
+	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
+
 //#ifdef __cplusplus
 //}
 //#endif
