@@ -351,3 +351,44 @@ using namespace std;
 //#ifdef __cplusplus
 //}
 //#endif
+
+	//=============== 4D fubctions =========================
+	
+	typedef struct {
+		size_t x, y, z, r;
+		dataType arrival;
+	}pointFastMarching4D;
+
+	typedef struct {
+		size_t x, y, z, r;
+	}Point4D;
+
+	double getDistancePoints4D(Point4D p1, Point4D p2);
+
+	dataType select4DX(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rMax, const size_t i, const size_t j, const size_t k, const size_t r);
+
+	dataType select4DY(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rMax, const size_t i, const size_t j, const size_t k, const size_t r);
+
+	dataType select4DZ(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rMax, const size_t i, const size_t j, const size_t k, const size_t r);
+
+	dataType select4DR(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rMax, const size_t i, const size_t j, const size_t k, const size_t r);
+
+	dataType solve4DQuadratic(dataType X, dataType Y, dataType Z, dataType R, dataType W);
+
+	void swap4DPoints(pointFastMarching4D* a, pointFastMarching4D* b);
+
+	void heapifyDown4D(vector<pointFastMarching4D>& in_Process, int i);
+
+	void heapifyUp4D(vector<pointFastMarching4D>& in_Process, int i);
+
+	void heapifyVector4D(vector<pointFastMarching4D>& in_Process);
+
+	void deleteRootHeap4D(vector<pointFastMarching4D>& in_Process);
+
+	void addPointHeap4D(vector<pointFastMarching4D>& in_Process, pointFastMarching4D point);
+
+	void computePotential4D(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, const size_t radiusLength, dataType radInitial, dataType radScalling);
+	
+	bool fastMarching4D(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint, const size_t minRadius, const size_t maxRadius, const size_t initial_radius);
+
+	bool shortestPath4D(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t minRadius, const size_t maxRadius, const size_t initial_radius, const size_t final_radius);
