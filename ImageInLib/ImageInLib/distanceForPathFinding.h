@@ -92,7 +92,9 @@ using namespace std;
 	//fast marching functions
 
 	/// <summary>
-	/// solve quadratic equation
+	/// solve quadratic equation : 	This fuction is used the solve the following quadratic coming the discretization 
+	/// by upwind principle in the implementation of the fast marching method 
+	/// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
 	/// </summary>
 	/// <param name="X">coefficient related to the first variable</param>
 	/// <param name="Y">coefficient related to the second variable</param>
@@ -352,7 +354,7 @@ using namespace std;
 //}
 //#endif
 
-	//=============== 4D fubctions =========================
+	//=============== 4D functions =========================
 	
 	typedef struct {
 		size_t x, y, z, r;
@@ -387,8 +389,12 @@ using namespace std;
 
 	void addPointHeap4D(vector<pointFastMarching4D>& in_Process, pointFastMarching4D point);
 
-	void computePotential4D(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, const size_t radiusLength, dataType radInitial, dataType radScalling);
+	void computePotential4D(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, const size_t radiusLength, dataType radiusInitial, dataType radiusScale);
 	
-	bool fastMarching4D(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint, const size_t minRadius, const size_t maxRadius, const size_t initial_radius);
+	bool fastMarching4D(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, const size_t radiusLength, Point3D seedPoint, dataType raduisScale, dataType radiusInitial);
 
-	bool shortestPath4D(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t minRadius, const size_t maxRadius, const size_t initial_radius, const size_t final_radius);
+	bool shortestPath4D(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t radiusLength, dataType raduisScale, dataType radiusInitial, dataType radiusFinal);
+
+	bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
+
+	bool shortestPath3DPlus(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t radiusLength, dataType raduisScale, dataType radiusInitial, dataType radiusFinal);
