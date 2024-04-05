@@ -325,7 +325,6 @@ void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageW
 			min_data = imageDataPtr[i];
 		}
 	}
-	printf("max = %f, min %f= ", max_data, min_data);
 
 	// Rescale from min_new to max_new
 	dataType diffOld = max_data - min_data;
