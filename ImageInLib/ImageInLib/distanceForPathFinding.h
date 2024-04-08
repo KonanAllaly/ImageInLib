@@ -224,19 +224,7 @@ using namespace std;
 	/// <param name="height">image height</param>
 	/// <param name="h">space discretization</param>
 	/// <returns>return true after succes</returns>
-	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, double h);
-
-	/// <summary>
-	/// compute 3D potential function for front propagation (Fast Marching)
-	/// </summary>
-	/// <param name="imageDataPtr">input image data</param>
-	/// <param name="potentialFuncPtr">potential function</param>
-	/// <param name="length">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="height">image height</param>
-	/// <param name="seedPoints">seed point</param>
-	/// <returns>return true after succes</returns>
-	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
+	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, VoxelSpacing spacing);
 
 	/// <summary>
 	/// swap 3D variables
@@ -300,7 +288,7 @@ using namespace std;
 	/// <param name="radius">radius for averaging</param>
 	/// <param name="parameters">parameters for potential computation</param>
 	/// <returns></returns>
-	bool computePotentialNew(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters);
+	bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters);
 
 	/// <summary>
 	/// find the shortest path between two given points
@@ -328,25 +316,9 @@ using namespace std;
 	/// <returns></returns>
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
-	typedef struct {
-		Point3D origin;
-		VoxelSpacing spacing;
-		size_t length, width, height;
-	}imageMetaData;
-
-	/// <summary>
-	/// This function find automatically the bounding box of input binary image
-	/// </summary>
-	/// <param name="ctImageData"> : structure holding the image to be cropped</param>
-	/// <param name="offset"> : offset</param>
-	/// <returns> : the meta data of the image cropped image</returns>
-	imageMetaData croppImage3D(Image_Data ctImageData, const size_t offset);
-
 	bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D seed, Potential_Parameters parameters, const size_t slice_trachea);
 
-	bool computePotentialTwoPoints(Image_Data ctImageData, dataType** meanImagePtr, dataType** potential, Point3D* seedPoints, double radius, Potential_Parameters parameters);
-
-	bool findPathTwoSteps(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+	bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
