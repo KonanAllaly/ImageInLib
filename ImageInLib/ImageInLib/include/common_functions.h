@@ -219,10 +219,11 @@ extern "C" {
 	/// <param name="offset">extend</param>
 	/// <returns></returns>
 	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
+
 	//================================================================================
 	//void computeHistogram(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t bins);
 	//================================================================================
-	void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height);
+	//void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height);
 
 #endif // !COMMON_FUNCTIONS
 
