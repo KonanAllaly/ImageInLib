@@ -18,17 +18,7 @@
 
 //J.A Sethian, A Fast Marching Level Set method for Monotonically advancing fronts, 1995, page 8 and 10.
 //link to article ---> http://ugweb.cs.ualberta.ca/~vis/courses/CompVis/readings/modelrec/sethian95fastlev.pdf
-
-//===== Generic functions for 2D, 3D and 4D =====
-
-//void swapPoints(void* a, void* b) {
-//	void c = *a;
-//	*a = *b;
-//	*b = c;
-//
-//}
-
-// ============================================== 
+ 
 
 //Functions for 2D images
 
