@@ -130,114 +130,6 @@ int main() {
 	delete[] imageData;
 	*/
 
-	//========================= Load aorta and save as point cloud .csv =========
-
-	/*
-	string saving_csv = outputPath + "aorta_p2_pointsCloud.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				if (ctContainer->dataPointer[k][x_new(i, j, Length)] == 1.0) {
-					Point3D currentPoint = { i, j, k };
-					currentPoint = getRealCoordFromImageCoord3D(currentPoint, ctOrigin, ctSpacing, orientation);
-					fprintf(file, "%f,%f,%f\n", currentPoint.x, currentPoint.y, currentPoint.z);
-				}
-			}
-		}
-	}
-	fclose(file);
-	*/
-
-	//========================= Update dimension ================================
-
-	/*
-	Vtk_File_Info* newDimContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	newDimContainer->operation = copyFrom;
-	//loading_path = inputPath + "vasculitis/patient_before_treatment/manual/cropped/liver_before_m.vtk";
-	//loading_path = inputPath + "vasculitis/patient_before_treatment/manual/cropped/seg5_before.vtk";
-	//loading_path = inputPath + "vasculitis/patient_before_treatment/manual/cropped/ball_liver_before.vtk";
-	loading_path = inputPath + "vasculitis/patient_before_treatment/manual/cropped/aorta_before.vtk";
-	readVtkFile(loading_path.c_str(), newDimContainer);
-	Point3D newOrigin = { newDimContainer->origin[0], newDimContainer->origin[1], newDimContainer->origin[2] };
-	int height = newDimContainer->dimensions[2];
-	int length = newDimContainer->dimensions[0];
-	int width = newDimContainer->dimensions[1];
-	std::cout << "New dim : " << newDimContainer->dimensions[0] << " x " << newDimContainer->dimensions[1] << " x " << newDimContainer->dimensions[2] << "" << std::endl;
-
-	size_t l = 0, w = 0, h = 0, xdo = 0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				
-				Point3D point_cropped = { i, j, k };
-				point_cropped = getRealCoordFromImageCoord3D(point_cropped, newOrigin, ctSpacing, orientation);
-				Point3D point = getImageCoordFromRealCoord3D(point_cropped, ctOrigin, ctSpacing, orientation);
-				
-				//if (point.x < 0) {
-				//	l = 0;
-				//}
-				//else {
-				//	if (point.x > length - 1) {
-				//		l = length - 1;
-				//	}
-				//	else {
-				//		l = (size_t)point.x;
-				//	}
-				//}
-				//if (point.y < 0) {
-				//	w = 0;
-				//}
-				//else {
-				//	if (point.y > width - 1) {
-				//		w = width - 1;
-				//	}
-				//	else {
-				//		w = (size_t)point.y;
-				//	}
-				//}
-				//if (point.z < 0) {
-				//	h = 0;
-				//}
-				//else {
-				//	if (point.z > height - 1) {
-				//		h = height - 1;
-				//	}
-				//	else {
-				//		h = (size_t)point.z;
-				//	}
-				//}
-
-				l = (size_t)point.x;
-				w = (size_t)point.y;
-				h = (size_t)point.z;
-
-				xdo = x_new(i, j, length);
-				xd = x_new(l, w, Length);
-				if (newDimContainer->dataPointer[k][xdo] != 0.0) {
-					ctContainer->dataPointer[h][xd] = 1.0;
-				}
-			}
-		}
-	}
-	
-	storing_path = outputPath + "aorta_before_m.vtk";
-	vtkDataForm dataForm = dta_binary;
-	newDimContainer->operation = copyTo;
-	storeVtkFile(storing_path.c_str(), ctContainer, dataForm);
-	free(newDimContainer);
-	*/
-
-	//======================== Distance map computed on segmented aorta =========
-
-	//fastSweepingFunction_3D(maskThreshold, ctContainer->dataPointer, Length, Width, Height, 1.0, 10000000.0, 0.0);
-	//storing_path = outputPath + "distance_map.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
 	//======================== Load path .csv ===================================
 
 	/*
@@ -1004,24 +896,6 @@ int main() {
 	//while (points_on_path.size() > 0) {
 	//	points_on_path.pop_back();
 	//}
-	*/
-	
-	//======================== Interplation ====================
-
-	/*
-	dataType** interpolated = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		interpolated[k] = new dataType[dim2D];
-	}
-
-	Image_Data INTERPOL;
-	INTERPOL.imageDataPtr = interpolated;
-	INTERPOL.height = height; INTERPOL.length = Length; INTERPOL.width = Width;
-	INTERPOL.orientation = orientation; INTERPOL.origin = ctOrigin;
-	INTERPOL.spacing.sx = ctSpacing.sx;
-	INTERPOL.spacing.sy = ctSpacing.sy;
-	INTERPOL.spacing.sz = ctSpacing.sx;
-	imageInterpolation3D(CT, INTERPOL, NEAREST_NEIGHBOR);
 	*/
 
 	//======================== Filtering =======================
