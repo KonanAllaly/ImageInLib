@@ -168,6 +168,8 @@ extern "C" {
 	/// <returns></returns>
 	bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius);
 
+	Statistics get2DPointNeighborhoodStats(Image_Data2D imageData, Point2D point_of_interest, double radius);
+
 #ifdef __cplusplus
 }
 
