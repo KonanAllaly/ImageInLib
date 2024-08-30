@@ -87,7 +87,9 @@ using namespace std;
 	/// <param name="width">Width of the input image</param>
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
-	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints);
+	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
+
+	bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
 
 	//fast marching functions
 
@@ -111,7 +113,7 @@ using namespace std;
 	/// <param name="I">y coordinate</param>
 	/// <param name="J">x coordinate</param>
 	/// <returns></returns>
-	dataType selectX(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J);
+	dataType selectX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
 
 	/// <summary>
 	/// selection of neighboring pixels in y direction
@@ -122,19 +124,7 @@ using namespace std;
 	/// <param name="I">y coordinate</param>
 	/// <param name="J">x coordinate</param>
 	/// <returns></returns>
-	dataType selectY(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J);
-
-	//bool computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width, dataType h);
-
-	/// <summary>
-	/// compute norm of 2D gradient
-	/// </summary>
-	/// <param name="gradientVectorX">gradient coordinate in x direction</param>
-	/// <param name="gradientVectorY">gradient coordinate in y direction</param>
-	/// <param name="height">image length</param>
-	/// <param name="width">image width</param>
-	/// <returns></returns>
-	dataType computeGradientNorm2d(dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width);
+	dataType selectY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
 
 	/// <summary>
 	/// compute speed for each pixel for the fast marching
@@ -145,7 +135,7 @@ using namespace std;
 	/// <param name="width">image width</param>
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
-	bool computePotential(dataType * imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, point2D* seedPoints);
+	bool computePotential(dataType * imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, Point2D* seedPoints);
 
 	/// <summary>
 	/// find the shortest path between two given points
@@ -157,7 +147,7 @@ using namespace std;
 	/// <param name="h">space step</param>
 	/// <param name="seedPoints">initial and final points</param>
 	/// <returns></returns>
-	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints);
+	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, Point2D* seedPoints);
 
 	//================================================================
 
@@ -184,7 +174,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
+	dataType select3dX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in y-direction
@@ -197,7 +187,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dY(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
+	dataType select3dY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in z-direction
@@ -210,7 +200,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K);
+	dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// Compute 3D image gradient
@@ -302,7 +292,7 @@ using namespace std;
 	/// <param name="seedPoints">seed points</param>
 	/// <param name="path_points">vector to keep all the path points coordinates</param>
 	/// <returns></returns>
-	bool shortestPath3D(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, vector<Point3D>& path_points);
+	bool shortestPath3D(dataType** distanceFuncPtr, const size_t length, const size_t width, const size_t height, VoxelSpacing spacing, Point3D* seedPoints, vector<Point3D>& path_points);
 
 	/// <summary>
 	/// find a path inside the aorta from given one point
@@ -314,11 +304,9 @@ using namespace std;
 	/// <param name="parameters">parameters for potential function computation</param>
 	/// <param name="stop_criterium">stopping criterium</param>
 	/// <returns></returns>
-	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
-
-	bool findPathFromOneGivenPoint(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D seed, Potential_Parameters parameters, const size_t slice_trachea);
-
-	bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+	//bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
+	//bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seed, Potential_Parameters parameters);
+	//bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
@@ -370,3 +358,8 @@ using namespace std;
 	bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
 
 	bool shortestPath3DPlus(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t radiusLength, dataType raduisScale, dataType radiusInitial, dataType radiusFinal);
+
+	//==================================
+	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
+
+	void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, dataType radiusInitial, dataType radiusMin, dataType radiusMax, dataType radiusStep);
