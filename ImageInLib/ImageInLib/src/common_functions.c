@@ -500,25 +500,3 @@ void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dat
 		}
 	}
 }
-
-////==============================================================================
-//void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height) {
-//	size_t i, j, k, slice;
-//
-//	dataType maxValue;
-//	for (slice = 0; slice < height; slice++) {
-//		for (i = 0; i < length; i++) {
-//			for (j = 0; j < width; j++) {
-//
-//				maxValue = 0.0;
-//				for (k = 0; k < height; k++) {
-//					if (imageData[k][x_new(i, j, length)] > maxValue) {
-//						maxValue = imageData[k][x_new(i, j, length)];
-//					}
-//				}
-//				resultImage[slice][x_new(i, j, length)] = maxValue;
-//			}
-//		}
-//	}
-//	
-//}

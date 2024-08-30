@@ -91,7 +91,7 @@ extern "C" {
 	} Image_Data2D;
 
 	typedef struct {
-		dataType min_data, max_data, mean_data, sd_data;
+		dataType min_data, max_data, mean_data, sd_data, variance;
 	} Statistics;
 
 	//==============================================================================
