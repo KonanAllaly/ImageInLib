@@ -337,7 +337,6 @@ void edgeDetection3dFunctionD(dataType** image3DPtr, dataType** edge3DPtr, const
 	}
 }
 
-
 bool edgeDetection3dFunctionUC(unsigned char ** image3DPtr, unsigned char ** edge3DPtr, const size_t xDim, 
 	const size_t yDim, 	const size_t zDim, const unsigned char bgroundvalue, const unsigned char fgroundvalue)
 {
