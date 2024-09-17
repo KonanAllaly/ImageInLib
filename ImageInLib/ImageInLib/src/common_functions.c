@@ -99,7 +99,6 @@ dataType similarIntensityDetector(dataType currValue, dataType refValue, dataTyp
 	return (dataType)(1.0 / (1 + coef * pow(currValue - refValue,2)));
 }
 
-
 //==============================================================================
 size_t x_new(const size_t rowIndex, const size_t columnIndex, const size_t rowLength)
 {
