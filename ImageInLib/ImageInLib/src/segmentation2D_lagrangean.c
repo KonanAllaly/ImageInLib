@@ -293,7 +293,7 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     
     if (!pSegmentationParams->open_curve)
     {
-        //este treba premysliet, ktora cast tychto dat bude v zretazenom zozname
+        //it is still necessary to think which part of these data will be in the revised list
         size_t length_of_data = linked_curve.number_of_points + 2;
         SchemeData* pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         //current_point = linked_curve.first_point;
@@ -483,7 +483,8 @@ void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     }
     mean /= curve_length;
 
-    pscheme_data[1].alfa = 0.0;	// alfa prveho bodu v poradi - ten sa teda nebude hybat v tangencialnom smere
+    // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
+    pscheme_data[1].alfa = 0.0;	
 
     double alpha_sum = 0;
 
@@ -539,7 +540,7 @@ bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     return true;
 }
 
-//vypocita sa mean curvature z troch susednych elementov - 4 bodov
+//the mean curvature of three adjacent elements is calculated - 4 points
 void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
 {
     if (plinked_curve == NULL ||
