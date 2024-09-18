@@ -17,18 +17,35 @@ extern "C" {
 	bool thresholding3dFunctionUC(unsigned char ** image3DPtr, const size_t xDim, const size_t yDim,
 		const size_t zDim, const unsigned char thresholdvalue, const unsigned char inputbgvalue,
 		const unsigned char inputfgvalue);
+
 	bool thresholding3dFunctionD(dataType ** image3DPtr, const size_t xDim, const size_t yDim,
 		const size_t zDim, const dataType thresholdvalue, const dataType inputbgvalue,
 		const dataType inputfgvalue);
+
+	/*
+	* The function compute the histogram of a 3D given image
+	* In histoPtr, each pixel get the label of the group it belongs to
+	* image3DPtr : input image data
+	* histoPtr : mask for the histogram. Each pixel contains the label of its class
+	* xDim, yDim, zDim : image dimensions
+	* binCount : number of bins (to divide the intensity range)
+	*/
+	bool computeHistogram(dataType** image3DPtr, dataType** histoPtr, const size_t xDim, const size_t yDim, const size_t zDim, const size_t binCount);
 
 	bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType forGround);
 
 	bool thresholdingOTSU(dataType ** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType forground);
 
+	//bool thresholdingOTSUNew(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, const size_t binCount, dataType background, dataType foreground);
+
 	bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground);
 
 	//2D function
 	bool thresholding2DFunction(dataType* image2DPtr, const size_t xDim, const size_t yDim, dataType thres_min, dataType thres_max);
+
+	bool thresholdingOTSU2D(dataType* image2DPtr, const size_t length, const size_t width, dataType background, dataType foreground);
+
+	dataType localOTSU2D(dataType* image2DPtr, const size_t length, const size_t width, Point2D seed, double radius, dataType background, dataType foreground);
 
 #ifdef __cplusplus
 }

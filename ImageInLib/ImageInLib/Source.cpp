@@ -20,9 +20,9 @@
 #include"hough_transform.h"
 #include"../src/edgedetection.h"
 
-#define thres_min -50 // 995
-#define thres_max 199 //1213
-#define thres -500
+//#define thres_min -50 // 995
+//#define thres_max 199 //1213
+//#define thres -500
 
 int main() {
 
@@ -42,6 +42,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -73,6 +74,122 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	*/
+
+	//========================= Test function histogram ============
+	
+	const size_t Length = 512, Width = 512, Height = 406;
+	size_t dim2D = Length * Width;
+
+	dataType** imageDataPtr = new dataType * [Height];
+	dataType** histogramPtr = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageDataPtr[k] = new dataType[dim2D]{ 0 };
+		histogramPtr[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = inputPath + "raw/ct/patient2_ct.raw";
+	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, Height, loading_path.c_str(), false);
+
+	//const size_t binsCount = 6000;
+	//computeHistogram(imageDataPtr, histogramPtr, Length, Width, Height, binsCount);
+	//thresholdingOTSU(imageDataPtr, Length, Width, Height, 0.0, 1.0);
+	//thresholdingOTSUNew(imageDataPtr, Length, Width, Height, binsCount, 0.0, 1.0);
+	//storing_path = outputPath + "thresholdOtsu.raw";
+	//store3dRawData<dataType>(imageDataPtr, Length, Width, Height, storing_path.c_str());
+
+	//storing_path = outputPath + "histogram.raw";
+	//store3dRawData<dataType>(histogramPtr, Length, Width, Height, storing_path.c_str());
+
+	//2D OTSU method
+	//const size_t Length = 260, Width = 260;
+	//const size_t dim2D = Length * Width;
+
+	dataType* image2D = new dataType[dim2D]{ 0 };
+	dataType* threshold = new dataType[dim2D]{ 0 };
+
+	//2D image extraction
+	const size_t slice_number = 210;
+	for (i = 0; i < dim2D; i++) {
+		image2D[i] = imageDataPtr[slice_number][i];
+	}
+
+	//loading_path = inputPath + "raw/slice/memboa.raw";
+	//loading_path = inputPath + "raw/slice/eye_1024_1024.raw";
+	//load2dArrayRAW<dataType>(image2D, Length, Width, loading_path.c_str(), false);
+
+	//storing_path = outputPath + "loaded.raw";
+	//store2dRawData<dataType>(image2D, Length, Width, storing_path.c_str());
+
+	//Point2D seed = {382, 454}; // eye image
+	//Point2D seed = { 154, 77 }; // memboa
+	//Point2D seed = { 188, 282 };
+	Point2D seed1 = { 187, 283 };
+	Point2D seed2 = { 249, 216 };
+	double radius = 25;
+
+	////thresholdingOTSU2D(image2D, 260, 260, 1.0, 0.0);
+	//dataType thres1 = localOTSU2D(image2D, Length, Width, seed1, radius, 1.0, 0.0);
+	//dataType thres2 = localOTSU2D(image2D, Length, Width, seed2, radius, 1.0, 0.0);
+
+	//dataType thres = 0.0;
+	//if (thres1 > thres2) {
+	//	thres = thres1;
+	//}
+	//else {
+	//	thres = thres2;
+	//}
+	//
+	//for (i = 0; i < dim2D; i++) {
+	//	if (image2D[i] <= thres) {
+	//		threshold[i] = 0.0;
+	//	}
+	//	else {
+	//		threshold[i] = 1.0;
+	//	}
+	//}
+
+	double offset = 3;
+	BoundingBox2D box = findBoundingBox2D(seed1, Length, Width, radius, offset);
+	size_t i_min = box.i_min, i_max = box.i_max;
+	size_t j_min = box.j_min, j_max = box.j_max;
+
+	//Find the minimal and the maximal pixel value
+	dataType min_data = 1000000, max_data = -1000000;
+	for (i = i_min; i <= i_max; i++) {
+		for (j = j_min; j <= j_max; j++) {
+			xd = x_new(i, j, Length);
+			if (image2D[xd] < min_data) {
+				min_data = image2D[xd];
+			}
+			if (image2D[xd] > max_data) {
+				max_data = image2D[xd];
+			}
+		}
+	}
+	cout << "min data = " << min_data << ", max data = " << max_data << endl;
+
+	for (i = 0; i < dim2D; i++) {
+		if (image2D[i] >= min_data && image2D[i] <= max_data) {
+			threshold[i] = 1.0;
+		}
+		else {
+			threshold[i] = 0.0;
+		}
+	}
+
+	storing_path = outputPath + "threshold_box.raw";
+	store2dRawData<dataType>(threshold, Length, Width, storing_path.c_str());
+
+	delete[] image2D;
+	delete[] threshold;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageDataPtr[k];
+		delete[] histogramPtr[k];
+	}
+	delete[] imageDataPtr;
+	delete[] histogramPtr;
 
 	//========================= Load segmented liver and ajust dimension ========
 
@@ -1362,6 +1479,7 @@ int main() {
 
 	//======================== Path finding from one seed in the ascending aorta ====
 	
+	/*
 	//const size_t height = 866; // P2
 	//const size_t height = 1351; // P6
 	//const size_t height = 880; // P6
@@ -1496,6 +1614,7 @@ int main() {
 	delete[] action_field;
 	delete[] pathPtr;
 	delete[] imageData;
+	*/
 
 	//======================== Path finding Multiple seeds =======================================
 	
@@ -2726,7 +2845,7 @@ int main() {
 	
 	//======================== Free Memory ======================================
 
-	free(ctContainer);
+	//free(ctContainer);
 	
 	return EXIT_SUCCESS;
 }
