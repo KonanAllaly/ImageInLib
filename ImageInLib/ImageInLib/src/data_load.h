@@ -28,6 +28,8 @@ extern "C" {
 
 	//==================================
 
+	bool load2dArrayRAW(dataType* imageDataPtr, const size_t length, const size_t width, const char* pathPtr, LoadDataType dType);
+
 #ifdef __cplusplus
 }
 #endif

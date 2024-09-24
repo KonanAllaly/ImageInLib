@@ -20,10 +20,10 @@ bool sherman_morris(SchemeData* pscheme_data, const size_t number_of_points)
 
 	for (size_t i = 0; i < number_of_points + 2; i++)
 	{
-		pscheme_data[i].bb = pscheme_data[i].a; // toto bolo popletene pomenovanie
+		pscheme_data[i].bb = pscheme_data[i].a; // this was a misnomer
 	}
 
-	gamma = -pscheme_data[1].a;  //popletene pomenovanie
+	gamma = -pscheme_data[1].a;  // confused naming
 	pscheme_data[1].bb -= gamma;
 	pscheme_data[number_of_points].bb -= alpha * beta / gamma;
 

@@ -1,8 +1,4 @@
 #pragma warning(disable : 4996)
-#pragma warning(disable : 6386)
-#pragma warning(disable : 6031)
-#pragma warning(disable : 6387)
-
 
 #include <stdio.h>
 #include "data_storage.h"

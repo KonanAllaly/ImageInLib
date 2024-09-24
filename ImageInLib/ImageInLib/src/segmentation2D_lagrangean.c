@@ -5,14 +5,21 @@
 #include "file.h"
 #include "solvers.h"
 
+//==================== Function Definition =====================
 bool evolveBySingleStep(Image_Data2D * pimage,Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams);
+
 void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data);
+
 void normal_velocity(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
-    void(*pget_g2)(Image_Data2D*, double, double, double*),
-    const double eps, const double lambda);
+    void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda);
+
 void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double omega);
+
 bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double eps, const double dt);
+
+//=================== Function source code =====================
 
 bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagrangean2DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve2D* pResultSegmentation)
@@ -265,7 +272,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     }
 
     //get edge detector
-
     for (size_t i = 0; i < dataDimension; i++)
     {
         ptmp[i] = edgeDetector(ptmp[i], edge_detector_coef);
@@ -293,10 +299,9 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     
     if (!pSegmentationParams->open_curve)
     {
-        //este treba premysliet, ktora cast tychto dat bude v zretazenom zozname
+        //it is still necessary to think which part of these data will be in the revised list
         size_t length_of_data = linked_curve.number_of_points + 2;
         SchemeData* pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
-        //current_point = linked_curve.first_point;
 
         for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
         {
@@ -347,7 +352,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     const double dt = pparams->time_step_size;
 
     calculateCurvature(plinked_curve, pscheme_data);
-    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, eps, lambda);
+    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda);
     tang_velocity(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients(plinked_curve, pscheme_data, eps, dt))
@@ -402,12 +407,11 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     return true;
 }
 
-
 //beta preparation
 void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
-    void(*pget_g2)(Image_Data2D*, double, double, double*),
-    const double eps, const double lambda)
+    void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda)
 {
     if (plinked_curve == NULL ||
         pscheme_data == NULL ||
@@ -437,7 +441,7 @@ void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* pli
 
         (*pget_velocity)(pedge, current_point->x, current_point->y, &m_pdvx_ij, &m_pdvy_ij);
 
-        (*pget_g2)(pimage, current_point->x, current_point->y, &m_pdg2_ij);
+        (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, g2_coef, &m_pdg2_ij);
 
         pscheme_data[i].f = m_pdvx_ij * (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i) -
             m_pdvy_ij * (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
@@ -483,7 +487,8 @@ void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     }
     mean /= curve_length;
 
-    pscheme_data[1].alfa = 0.0;	// alfa prveho bodu v poradi - ten sa teda nebude hybat v tangencialnom smere
+    // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
+    pscheme_data[1].alfa = 0.0;	
 
     double alpha_sum = 0;
 
@@ -539,7 +544,7 @@ bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     return true;
 }
 
-//vypocita sa mean curvature z troch susednych elementov - 4 bodov
+//the mean curvature of three adjacent elements is calculated - 4 points
 void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
 {
     if (plinked_curve == NULL ||
@@ -595,3 +600,4 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
     pscheme_data[0].curvature = pscheme_data[curve_length].curvature;
     pscheme_data[curve_length + 1].curvature = pscheme_data[curve_length + 1].curvature;
 }
+
