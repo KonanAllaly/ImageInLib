@@ -5,14 +5,21 @@
 #include "file.h"
 #include "solvers.h"
 
+//==================== Function Definition =====================
 bool evolveBySingleStep(Image_Data2D * pimage,Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams);
+
 void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data);
+
 void normal_velocity(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
-    void(*pget_g2)(Image_Data2D*, double, double, double*),
-    const double eps, const double lambda);
+    void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
+    const double ref_intensity, const double coef, const double eps, const double lambda);
+
 void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double omega);
+
 bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double eps, const double dt);
+
+//=================== Function source code =====================
 
 bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagrangean2DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve2D* pResultSegmentation)
@@ -250,6 +257,10 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     const size_t dataSize = dataDimension * sizeof(dataType);
     dataType* ptmp = (dataType*)malloc(dataSize); // absolute value of gradient
 
+    //unsigned char savePath[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
+    //manageFile(inputImage2D.imageDataPtr, 0, inputImage2D.width, inputImage2D.height, savePath, STORE_2D_RAW_DATA, ASCII_DATA, (Storage_Flags) { false, false });
+    //exit(0);
+
     const size_t sizeWidth = sizeof(dataType) * inputImage2D.width;
 
     //get absolute value of gradient
@@ -265,11 +276,13 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     }
 
     //get edge detector
-
     for (size_t i = 0; i < dataDimension; i++)
     {
         ptmp[i] = edgeDetector(ptmp[i], edge_detector_coef);
     }
+
+    //unsigned char savePath [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
+    //manageFile(inputImage2D.imageDataPtr, 0, inputImage2D.width, inputImage2D.height, savePath, STORE_2D_RAW_DATA, ASCII_DATA, (Storage_Flags){ false, false });
 
     Image_Data2D edge = { inputImage2D.height, inputImage2D.width, ptmp };
 
@@ -296,7 +309,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
         //it is still necessary to think which part of these data will be in the revised list
         size_t length_of_data = linked_curve.number_of_points + 2;
         SchemeData* pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
-        //current_point = linked_curve.first_point;
 
         for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
         {
@@ -347,7 +359,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     const double dt = pparams->time_step_size;
 
     calculateCurvature(plinked_curve, pscheme_data);
-    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, eps, lambda);
+    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda);
     tang_velocity(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients(plinked_curve, pscheme_data, eps, dt))
@@ -402,12 +414,11 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     return true;
 }
 
-
 //beta preparation
 void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
-    void(*pget_g2)(Image_Data2D*, double, double, double*),
-    const double eps, const double lambda)
+    void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
+    const double ref_intensity, const double coef, const double eps, const double lambda)
 {
     if (plinked_curve == NULL ||
         pscheme_data == NULL ||
@@ -437,7 +448,7 @@ void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* pli
 
         (*pget_velocity)(pedge, current_point->x, current_point->y, &m_pdvx_ij, &m_pdvy_ij);
 
-        (*pget_g2)(pimage, current_point->x, current_point->y, &m_pdg2_ij);
+        (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, coef, &m_pdg2_ij);
 
         pscheme_data[i].f = m_pdvx_ij * (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i) -
             m_pdvy_ij * (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
@@ -596,3 +607,4 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
     pscheme_data[0].curvature = pscheme_data[curve_length].curvature;
     pscheme_data[curve_length + 1].curvature = pscheme_data[curve_length + 1].curvature;
 }
+
