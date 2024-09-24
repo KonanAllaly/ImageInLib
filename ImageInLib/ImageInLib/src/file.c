@@ -11,6 +11,9 @@ bool manageFile(void* imageDataPtr, const size_t length, const size_t width,
         case LOAD_DATA_RAW:
             status = load3dDataArrayRAW((dataType**)imageDataPtr, length, width, height, pathPtr, dType);
             break;
+        case LOAD_2D_DATA_RAW:
+            status = load2dArrayRAW((dataType*)imageDataPtr, width, height, pathPtr, dType);
+            break;
         case LOAD_2D_DATA_PGM:
             status = load2dPGM((dataType*)imageDataPtr, width, height, pathPtr);
             break;
@@ -26,6 +29,9 @@ bool manageFile(void* imageDataPtr, const size_t length, const size_t width,
                 default:
                     break;
             }
+            break;
+        case STORE_2D_RAW_DATA:
+            store2dRawData((dataType*)imageDataPtr, width, height, pathPtr, flags);
             break;
         case STORE_2D_DATA_PGM:
             status = store2dPGM((dataType*)imageDataPtr, width, height, pathPtr, dType == BINARY_DATA);
