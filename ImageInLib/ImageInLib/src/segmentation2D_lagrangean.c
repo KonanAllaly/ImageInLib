@@ -13,7 +13,7 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data);
 void normal_velocity(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
     void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
-    const double ref_intensity, const double coef, const double eps, const double lambda);
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda);
 
 void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double omega);
 
@@ -257,10 +257,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     const size_t dataSize = dataDimension * sizeof(dataType);
     dataType* ptmp = (dataType*)malloc(dataSize); // absolute value of gradient
 
-    //unsigned char savePath[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
-    //manageFile(inputImage2D.imageDataPtr, 0, inputImage2D.width, inputImage2D.height, savePath, STORE_2D_RAW_DATA, ASCII_DATA, (Storage_Flags) { false, false });
-    //exit(0);
-
     const size_t sizeWidth = sizeof(dataType) * inputImage2D.width;
 
     //get absolute value of gradient
@@ -280,9 +276,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     {
         ptmp[i] = edgeDetector(ptmp[i], edge_detector_coef);
     }
-
-    //unsigned char savePath [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
-    //manageFile(inputImage2D.imageDataPtr, 0, inputImage2D.width, inputImage2D.height, savePath, STORE_2D_RAW_DATA, ASCII_DATA, (Storage_Flags){ false, false });
 
     Image_Data2D edge = { inputImage2D.height, inputImage2D.width, ptmp };
 
@@ -418,7 +411,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
 void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
     void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
-    const double ref_intensity, const double coef, const double eps, const double lambda)
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda)
 {
     if (plinked_curve == NULL ||
         pscheme_data == NULL ||
@@ -448,7 +441,7 @@ void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* pli
 
         (*pget_velocity)(pedge, current_point->x, current_point->y, &m_pdvx_ij, &m_pdvy_ij);
 
-        (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, coef, &m_pdg2_ij);
+        (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, g2_coef, &m_pdg2_ij);
 
         pscheme_data[i].f = m_pdvx_ij * (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i) -
             m_pdvy_ij * (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
