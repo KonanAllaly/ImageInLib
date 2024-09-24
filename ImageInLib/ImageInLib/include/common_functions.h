@@ -371,6 +371,18 @@ extern "C" {
 //id generator	
 	void resetIDGenerator();
 	unsigned long long getNextID();
+
+    //=================================
+	
+	/// <summary>
+	/// Compute the reference intensity
+	/// </summary>
+	/// <param name="pimage">Image data structure</param>
+	/// <param name="point1">First input point or initial circle center</param>
+	/// <param name="point2">Second input point (used to computed the radius of initial circle)</param>
+	/// <returns>Return the mean pixel value in small circle around the first input point</returns>
+	dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D point2);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus

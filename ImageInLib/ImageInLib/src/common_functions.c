@@ -655,3 +655,33 @@ void resetIDGenerator()
 {
 	id = 1;
 }
+
+//==============================
+
+//Compute the reference intensity
+dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D point2) {
+
+	double radius = getPoint2DDistance(point1, point2) * 1.0;
+	dataType meanIntensity = 0.0;
+	size_t countPixel = 0;
+
+	size_t height = pimage.height, width = pimage.width;
+
+	for (size_t i = 0; i < height; i++) {
+		for (size_t j = 0; j < width; j++) {
+			Point2D currentPoint = { i, j };
+			double distancePoints = getPoint2DDistance(point1, currentPoint);
+			if (distancePoints <= radius) {
+				countPixel++;
+				meanIntensity += pimage.imageDataPtr[x_new(j, i, width)];
+			}
+		}
+	}
+	if (countPixel != 0) {
+		meanIntensity = meanIntensity / (dataType)countPixel;
+	}
+	else {
+		meanIntensity = pimage.imageDataPtr[x_new((size_t)point1.x, (size_t)point1.y, width)];
+	}
+	return meanIntensity;
+}
