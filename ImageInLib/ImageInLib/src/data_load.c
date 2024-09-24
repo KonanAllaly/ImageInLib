@@ -125,6 +125,7 @@ bool load3dDataArrayRAW(dataType ** imageDataPtr, const size_t imageLength, cons
 	{
 		return false; // Unindentified read mode, exiting the function
 	}
+
 	// Reading data file
 	if (fopen_s(&file, pathPtr, rmode) != 0) {
 		fprintf(stderr, "Error: Unable to open file %s\n\n", pathPtr);
@@ -235,4 +236,72 @@ bool load2dPGM(dataType* imageDataPtr, const size_t xDim, const size_t yDim, con
 	free(line2);
     fclose(file);
     return true;
+}
+
+//==================================
+//Load 2D .raw image
+
+bool load2dArrayRAW(dataType* imageDataPtr, const size_t length, const size_t width, const char* pathPtr, LoadDataType dType){
+	
+	//checks if the memory was allocated
+	if (imageDataPtr == NULL || pathPtr == NULL) {
+		printf("Not initialized data \n");
+		return false;
+	}
+
+	FILE* file;
+	char rmode[4];
+	const size_t pointsInSlice = length * width;
+	dataType value = 0.0;
+
+	if (dType == BINARY_DATA)
+	{
+		strcpy_s(rmode, sizeof(rmode), "rb");
+	}
+	else if (dType == ASCII_DATA)
+	{
+		strcpy_s(rmode, sizeof(rmode), "r");
+	}
+	else
+	{
+		return false; // Unindentified read mode, exiting the function
+	}
+
+	// Reading data file
+	if (fopen_s(&file, pathPtr, rmode) != 0) {
+		fprintf(stderr, "Error: Unable to open file %s\n\n", pathPtr);
+		return false;
+	}
+	else {
+		if (dType == BINARY_DATA) {
+			fread(imageDataPtr, sizeof(dataType), pointsInSlice, file);
+		}
+		else {
+			if (dType == ASCII_DATA) {
+				for (size_t i = 0; i < length; i++) {
+					for (size_t j = 0; j < width; j++) {
+						fscanf_s(file, "%f", &value);
+						imageDataPtr[x_new(i, j, length)] = (dataType)value;
+					}
+				}			
+			}
+		}
+	}
+
+	//const size_t dataSize = sizeof(dataType);
+	//char* swapBuf = (char*)malloc(dataSize);
+	//revert byte
+	//if (revert == true) {
+	//	for (i = 0; i < pointsInSlice; i++) {
+	//		revertBytesEx(&imageDataPtr[i], dataSize, swapBuf);
+	//	}
+	//}
+
+	//for (size_t i = 0; i < pointsInSlice; i++) {
+	//	revertBytesEx(&imageDataPtr[i], dataSize, swapBuf);
+	//}
+	//free(swapBuf);
+
+	fclose(file);
+	return true;
 }
