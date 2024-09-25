@@ -719,3 +719,83 @@ dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D poin
 
 	return meanIntensity;
 }
+
+bool getGradient3D(dataType** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad)
+{
+	if (pbase_data == NULL || length < 2 || width < 2 || height < 2 ||
+		fVolume.hx == 0 || fVolume.hy == 0 || fVolume.hz == 0) {
+		return false;
+	}
+
+	size_t x = ind_x, y = ind_y, z = ind_z;
+	if (x >= length)
+	{
+		x = length - 1;
+	}
+
+	if (y >= width)
+	{
+		y = width - 1;
+	}
+
+	if (z >= height)
+	{
+		z = height - 1;
+	}
+
+	dataType dx = 0.0, dy = 0.0, dz = 0.0;
+	dataType hx_c = 2 * fVolume.hx;
+	dataType hy_c = 2 * fVolume.hy;
+	dataType hz_c = 2 * fVolume.hz;
+
+	if (x == 0)
+	{
+		dx = (pbase_data[z][x_new(x + 1, y, length)] - pbase_data[z][x_new(x, y, length)]) / fVolume.hx;
+	}
+	else if (x == length - 1)
+	{
+		dx = (pbase_data[z][x_new(x, y, length)] - pbase_data[z][x_new(x - 1, y, length)]) / fVolume.hx;
+	}
+	else
+	{
+		dx = (pbase_data[z][x_new(x + 1, y, length)] - pbase_data[z][x_new(x - 1, y, length)]) / hx_c;
+	}
+
+	if (y == 0)
+	{
+		dy = (pbase_data[z][x_new(x, y + 1, length)] - pbase_data[z][x_new(x, y, length)]) / fVolume.hy;
+	}
+	else if (y == width - 1)
+	{
+		dy = (pbase_data[z][x_new(x, y, length)] - pbase_data[z][x_new(x, y - 1, length)]) / fVolume.hy;
+	}
+	else
+	{
+		dy = (pbase_data[z][x_new(x, y + 1, length)] - pbase_data[z][x_new(x, y - 1, length)]) / hy_c;
+	}
+
+	size_t xd = x_new(x, y, length);
+	if (z == 0)
+	{
+		dz = (pbase_data[z + 1][xd] - pbase_data[z][xd]) / fVolume.hz;
+	}
+	else if (z == height - 1)
+	{
+		dz = (pbase_data[z][xd] - pbase_data[z - 1][xd]) / fVolume.hz;
+	}
+	else
+	{
+		dz = (pbase_data[z + 1][xd] - pbase_data[z - 1][xd]) / hz_c;
+	}
+
+	grad->x = dx;
+	grad->y = dy;
+	grad->z = dz;
+
+	return true;
+}
+
+dataType norm3D(const Point3D pt)
+{
+	return (dataType)sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
+}
