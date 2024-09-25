@@ -84,6 +84,23 @@ extern "C" {
 		dataType x, y, z;
 	} Point3D;
 
+	// 3D point extended by flag indicating, if the point is end point (1st or last)
+	typedef struct {
+		union {
+			struct ptstruct;
+			Point3D pt;
+		};
+		bool isEndPoint;
+		void* prev_point;
+		void* next_point;
+	} CurvePoint3D;
+
+	// 3D Curve - list of CurvePoint3D
+	typedef struct {
+		CurvePoint3D* pPoints;
+		size_t numPoints;
+	} Curve3D;
+
 	//Structure to handle image spacing
 	typedef struct {
 		dataType sx, sy, sz;
@@ -98,6 +115,12 @@ extern "C" {
 		dataType hx;
 		dataType hy;
 	} FiniteVolumeSize2D;
+
+	typedef struct {
+		dataType hx;
+		dataType hy;
+		dataType hz;
+	} FiniteVolumeSize3D;
 
 	// Image Container and Properties
 	typedef struct {
@@ -368,7 +391,7 @@ extern "C" {
 	/// <returns></returns>
 	bool updatePoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y);
 	
-//id generator	
+	//id generator	
 	void resetIDGenerator();
 	unsigned long long getNextID();
 
@@ -381,6 +404,29 @@ extern "C" {
 	/// <param name="radius">Radius of the circle to consider around the first point</>
 	/// <returns>Return the mean pixel value in small circle around the first input point</returns>
 	dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D point2, double radius);
+
+	/// <summary>
+	/// Calculates gradient in 3D point given by central difference on input data
+	/// </summary>
+	/// <param name="pbase_data">base (e.g. image) data</param>
+	/// <param name="length">base data length</param>
+	/// <param name="width">base data width</param>
+	/// <param name="height">base data height</param>
+	/// <param name="ind_x">x coordinate of the finite volume to calculate the gradient component</param>
+	/// <param name="ind_y">y coordinate of the finite volume to calculate the gradient component</param>
+	/// <param name="ind_z">z coordinate of the finite volume to calculate the gradient component</param>
+	/// <param name="fVolume">size of finite volume</param>
+	/// <param name="grad">output - calculated gradient</param>
+	/// <returns>True, if it was possible to estimate gradient</returns>
+	bool getGradient3D(dataType** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad);
+
+	/// <summary>
+	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 
+	/// </summary>
+	/// <param name="pt">Given input point</param>
+	/// <returns>Returns the result of (sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z))</returns>
+	dataType norm3D(const Point3D pt);
+
 
 #endif // !COMMON_FUNCTIONS
 
