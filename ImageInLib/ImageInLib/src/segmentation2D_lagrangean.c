@@ -453,8 +453,8 @@ void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* pli
 
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        pscheme_data[i].beta_ps_expl = pscheme_data[i].f; //beta v pravej strane pre expl.cast//lam2 == 0
-        pscheme_data[i].beta = pscheme_data[i].curvature * eps - pscheme_data[i].beta_ps_expl;//celkova beta
+        pscheme_data[i].beta_ps_expl = pscheme_data[i].f; //beta on the right for expl.cast//lam2 == 0
+        pscheme_data[i].beta = pscheme_data[i].curvature * eps - pscheme_data[i].beta_ps_expl;//total beta
     }
 
     pscheme_data[0].f = pscheme_data[number_of_points].f;
