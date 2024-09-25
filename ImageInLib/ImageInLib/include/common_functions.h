@@ -84,6 +84,23 @@ extern "C" {
 		dataType x, y, z;
 	} Point3D;
 
+	// 3D point extended by flag indicating, if the point is end point (1st or last)
+	typedef struct {
+		union {
+			struct ptstruct;
+			Point3D pt;
+		};
+		bool isEndPoint;
+		void* prev_point;
+		void* next_point;
+	} CurvePoint3D;
+
+	// 3D Curve - list of CurvePoint3D
+	typedef struct {
+		CurvePoint3D* pPoints;
+		size_t numPoints;
+	} Curve3D;
+
 	//Structure to handle image spacing
 	typedef struct {
 		dataType sx, sy, sz;
