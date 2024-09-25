@@ -14,8 +14,11 @@ extern "C" {
 		LABELING,
 		GSUBSURF_ATLAS_MODEL,
 		CURVE_2D_EXPLCIT,
-		CURVE_2D_SEMI_IMPLICIT
+		CURVE_2D_SEMI_IMPLICIT,
+		CURVE_3D_EXPLCIT
 	} SegmentationMethod;
+
+	// Structures and functions for 2D Langrangean segmentation
 
 	// Structure that holds the parameters used during 2d Lagrangean segmentation process.
 	typedef struct
@@ -50,6 +53,26 @@ extern "C" {
 
 	void segment2dImage(Image_Data2D inputImageData, dataType* initialSegment, Segmentation_Parameters segParameters, FilterParameters filteringParameters,
 		point2d* centers, const char* outputPathPtr, const SegmentationMethod model);
+
+	// Structures and functions for 3D Langrangean segmentation
+
+	// Structure that holds the parameters used during 3D Lagrangean segmentation process.
+	typedef struct
+	{
+		size_t num_time_steps;	// Number of time steps
+		Curve3D* pinitial_condition;	// Initial curve
+		size_t num_points;// Number of initial segmentation curve points
+		dataType time_step_size;	//discrete time step size
+		dataType mu;	//influence of edge detector gradient field
+		dataType lambda; //weight between projected gradient field and intensity similarity field
+		dataType eps;	//influence of curvature
+		dataType omega;	//redistribution speed
+		dataType intensityCoef; // coeficient for the similar intensity detector
+		dataType refence_intensity; //The reference intensity for G2
+		void(*get_velocity)(Image_Data*, double, double, double*, double*);//pointer to the function returning the velocity for a given coordinate
+		void(*get_g2)(Image_Data*, double, double, double, double, double*);//pointer to the function returning the g2 value for a given coordinate
+		bool open_curve;
+	} Lagrangean3DSegmentationParameters;
 
 #ifdef __cplusplus
 }
