@@ -43,13 +43,6 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
             Curve2D* resultSegmentationCurve = (Curve2D*)resultSegment;
             lagrangeanSemiImplicit2DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
         }
-        case CURVE_3D_EXPLCIT:
-        {
-            Image_Data inputImageData = *(Image_Data*)pInputImageData;
-            Lagrangean3DSegmentationParameters* pSegmentationParams = (Lagrangean3DSegmentationParameters*)pSegParameters;
-            Curve3D* resultSegmentationCurve = (Curve3D*)resultSegment;
-            lagrangeanExplicit3DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
-        }
         default:
             break;
 	}
