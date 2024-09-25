@@ -116,6 +116,12 @@ extern "C" {
 		dataType hy;
 	} FiniteVolumeSize2D;
 
+	typedef struct {
+		dataType hx;
+		dataType hy;
+		dataType hz;
+	} FiniteVolumeSize3D;
+
 	// Image Container and Properties
 	typedef struct {
 		// Image Dimensions
