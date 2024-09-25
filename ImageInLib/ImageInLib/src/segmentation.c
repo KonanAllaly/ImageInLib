@@ -5,7 +5,6 @@
 #include "segmentation3d_gsubsurf.h"
 #include "../include/segmentation2d.h"
 #include "segmentation2D_lagrangean.h"
-#include "segmentation3D_lagrangean.h"
 
 void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterParameters,
 	const SegmentationMethod model, unsigned char* outputPathPtr, void* resultSegment)
