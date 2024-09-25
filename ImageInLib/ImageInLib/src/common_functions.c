@@ -757,3 +757,8 @@ bool getGradient3D(dataType** pbase_data, const size_t length, const size_t widt
 
 	return true;
 }
+
+dataType norm3D(const Point3D pt)
+{
+	return (dataType)sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
+}

@@ -419,6 +419,13 @@ extern "C" {
 	/// <returns>True, if it was possible to estimate gradient</returns>
 	bool getGradient3D(dataType** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad);
 
+	/// <summary>
+	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 
+	/// </summary>
+	/// <param name="pt">Given input point</param>
+	/// <returns>Returns the result of (sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z))</returns>
+	dataType norm3D(const Point3D pt);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus
