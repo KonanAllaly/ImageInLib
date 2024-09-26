@@ -429,6 +429,14 @@ extern "C" {
 	/// <returns>Returns the result of (sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z))</returns>
 	dataType norm3D(const Point3D pt);
 
+	/// <summary>
+	/// Returns approximation of curve center of gravity
+	/// The function expects, that the curve points are distributed almost uniformly along the curve
+	/// </summary>
+	/// <param name="pcurve">a pointer to the input curve</param>
+	/// <returns>calculted centroid</returns>
+	Point3D get3dCurveCentroid(const Curve3D* pcurve);
+
 
 #endif // !COMMON_FUNCTIONS
 

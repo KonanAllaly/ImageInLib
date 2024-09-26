@@ -799,3 +799,20 @@ dataType norm3D(const Point3D pt)
 {
 	return (dataType)sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
 }
+
+Point3D get3dCurveCentroid(const Curve3D* pcurve)
+{
+	if (pcurve == NULL)
+	{
+		return (Point3D) { 0.0, 0.0, 0.0 };
+	}
+	dataType x = 0, y = 0, z = 0;
+
+	for (size_t i = 0; i < pcurve->numPoints; i++) {
+		x += pcurve->pPoints[i].x;
+		y += pcurve->pPoints[i].y;
+		z += pcurve->pPoints[i].z;
+	}
+
+	return (Point3D) { x / pcurve->numPoints, y / pcurve->numPoints, z / pcurve->numPoints };
+}
