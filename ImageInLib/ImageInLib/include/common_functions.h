@@ -80,7 +80,7 @@ extern "C" {
 	} LinkedCurve;
 
 	// Common 3D Points - {x,y,z}
-	typedef struct ptstruct {
+	typedef struct ptsstruct { //TODO: use better tag to differentiate 2D and 3D points
 		dataType x;
 		dataType y;
 		dataType z;
@@ -89,7 +89,7 @@ extern "C" {
 	// 3D point extended by flag indicating, if the point is end point (1st or last)
 	typedef struct {
 		union {
-			struct ptstruct;
+			struct ptsstruct;
 			Point3D pt;
 		};
 		bool isEndPoint;
@@ -110,7 +110,9 @@ extern "C" {
 
 	//Matrix for rotation
 	typedef struct {
-		Point3D v1, v2, v3;
+		Point3D v1;
+		Point3D v2;
+		Point3D v3;
 	}OrientationMatrix;
 
 	typedef struct {
@@ -311,16 +313,23 @@ extern "C" {
 	/// <returns>Returns the result of (sqrt(pt.x * pt.x + pt.y * pt.y))</returns>
 	dataType norm(const Point2D pt);
 
-	//==============================================================================
+	/// <summary>
+	/// Compute the euclidian distance between two given 3D points
+	/// </summary>
+	/// <param name="a">first point</param>
+	/// <param name="b">second point</param>
+	/// <returns>distance between points</returns>
 	double getPoint3DDistance(const Point3D a, const Point3D b);
-	//==============================================================================
-	/*
-	* Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height)
-	* distanceMapPtr : pointer contaning the computed distance for each pixel
-	* lenght, width, height : image dimension
-	* The function return the coordinates of the voxel with the higest value
-	*/
-	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
+
+	/// <summary>
+	/// Find the point/voxel with the largest value in an array/image
+	/// </summary>
+	/// <param name="arrayPtr"></param>
+	/// <param name="length">length of the array</param>
+	/// <param name="width">width if the array</param>
+	/// <param name="height">height of the array</param>
+	/// <returns>return the corresponding 3D point</returns>
+	Point3D getPointWithTheHighestValue(dataType** arrayPtr, const size_t length, const size_t width, const size_t height);
 
 	/// <summary>
 	/// The function returns the signum of the given value parameter represented
@@ -420,7 +429,7 @@ extern "C" {
 	/// <param name="fVolume">size of finite volume</param>
 	/// <param name="grad">output - calculated gradient</param>
 	/// <returns>True, if it was possible to estimate gradient</returns>
-	bool getGradient3D(dataType** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad);
+	bool getGradient3D(dataType ** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D * grad);
 
 	/// <summary>
 	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 
