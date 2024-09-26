@@ -36,7 +36,7 @@ extern "C" {
 //==============================================================================
 // STRUCTs
 
-// Common 2D Points - {x,y}
+	// Common 2D Points - {x,y}
 	typedef struct ptstruct{
 		dataType x;
 		dataType y;
@@ -79,9 +79,11 @@ extern "C" {
 		double length;
 	} LinkedCurve;
 
-// Common 3D Points - {x,y,z}
-	typedef struct {
-		dataType x, y, z;
+	// Common 3D Points - {x,y,z}
+	typedef struct ptstruct {
+		dataType x;
+		dataType y;
+		dataType z;
 	} Point3D;
 
 	// 3D point extended by flag indicating, if the point is end point (1st or last)
