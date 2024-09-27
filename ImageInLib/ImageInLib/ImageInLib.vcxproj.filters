@@ -332,6 +332,9 @@
     <ClCompile Include="src\solvers.c">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
+    <ClCompile Include="src\segmentation3D_lagrangean.c">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -501,6 +504,9 @@
     </ClInclude>
     <ClInclude Include="src\solvers.h">
       <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\segmentation3D_lagrangean.h">
+      <Filter>Header Files\Segmentation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
