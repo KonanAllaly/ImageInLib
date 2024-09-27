@@ -91,7 +91,7 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     {
         for (size_t i = 0; i < dataDimension; i++)
         {
-            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->refence_intensity, pSegmentationParams->intensityCoef);
+            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->reference_intensity, pSegmentationParams->intensityCoef);
         }
     }
 
@@ -355,7 +355,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     const double dt = pparams->time_step_size;
 
     calculateCurvature(plinked_curve, pscheme_data);
-    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda);
+    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->reference_intensity, pparams->intensityCoef, eps, lambda);
     tang_velocity(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients(plinked_curve, pscheme_data, eps, dt))
