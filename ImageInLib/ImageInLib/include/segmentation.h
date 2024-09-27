@@ -14,7 +14,7 @@ extern "C" {
 		LABELING,
 		GSUBSURF_ATLAS_MODEL,
 		CURVE_2D_EXPLCIT,
-		CURVE_2D_SEMI_IMPLICIT,
+		CURVE_2D_SEMI_IMPLICIT
 	} SegmentationMethod;
 
 	// Structures and functions for 2D Langrangean segmentation
