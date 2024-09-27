@@ -52,3 +52,15 @@ size_t getNumberOfExpected2DCurvePoints(const Point2D* pInitialPoints, const siz
 		return 0;
 	}
 }
+
+//bool generate3DCurve(Curve3D* pcurve, const Point3D* pinitial_points, const size_t initial_points_count, const double points_distance, ShapeType method) {
+//	switch (method)
+//	{
+//	case SPHERE:
+//		return generateCircleCurve(pCurve, pInitialPoints, initialPointsCount, pointsDistance);
+//	case LINE_3D_CURVE:
+//		return generateStraightLineCurve(pCurve, pInitialPoints, initialPointsCount, pointsDistance);
+//	default:
+//		return false;
+//	}
+//}
