@@ -30,6 +30,7 @@ extern "C" {
 		dataType lambda; //weight between projected gradient field and intensity similarity field
 		dataType eps;	//influence of curvature
 		dataType omega;	//redistribution speed
+		dataType edgeCoef; // edge detector coefficient 
 		dataType intensityCoef; // coeficient for the similar intensity detector
 		dataType refence_intensity; //The reference intensity for G2
 		void(*get_velocity)(Image_Data2D*, double, double, double*, double*);//pointer to the function returning the velocity for a given coordinate
