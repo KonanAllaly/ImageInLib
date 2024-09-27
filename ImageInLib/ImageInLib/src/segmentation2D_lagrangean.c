@@ -41,14 +41,14 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     dataType* abs_val_grad = (dataType*)malloc(dataSize); // absolute value of gradient
 
     dataType* edge_detector = (dataType*)malloc(dataSize); // edge detector
-    const dataType edge_detector_coef = 10;// 00000;
+    const dataType edge_detector_coef = 100; //10
     dataType* similar_intensity_detector = NULL;
     if (!pSegmentationParams->open_curve)
     {
         similar_intensity_detector = (dataType*)malloc(dataSize); // similar intensity detector
     }
 
-    const dataType similar_intensity_detector_coef = 10;// 00000;
+    const dataType similar_intensity_detector_coef = 1000;
     const dataType hx = 1, hy = 1;      //spatial discretization step
     const dataType hx_c = 1, hy_c = 1;  //h for central differences
     Point2D current_grad;
@@ -81,6 +81,9 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
         edge_detector[i] = edgeDetector(abs_val_grad[i], edge_detector_coef);
     }
 
+    unsigned char saveEdge[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
+    manageFile(edge_detector, 0, inputImage2D.width, inputImage2D.height, saveEdge, STORE_2D_RAW_DATA, BINARY_DATA, (Storage_Flags) { false, false });
+
     Point2D centroid = getCurveCentroid(pSegmentationParams->pinitial_condition);
     size_t centroid_i = (size_t)(centroid.y + 0.5);
     size_t centroid_j = (size_t)(centroid.x + 0.5);
@@ -93,6 +96,9 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
             similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], ref_intensity, similar_intensity_detector_coef);
         }
     }
+
+    unsigned char saveG2[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/similarIntensityDetect.raw";
+    manageFile(similar_intensity_detector, 0, inputImage2D.width, inputImage2D.height, saveG2, STORE_2D_RAW_DATA, BINARY_DATA, (Storage_Flags) { false, false });
 
     Image_Data2D edgeDetector = { inputImage2D.height, inputImage2D.width, edge_detector };
 
@@ -247,8 +253,8 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
         return false;
     }
 
-    const dataType similar_intensity_detector_coef = 10;// 00000;
-    const dataType edge_detector_coef = 10;
+    const dataType similar_intensity_detector_coef = 10;
+    const dataType edge_detector_coef = 1000;
     const dataType hx = 1, hy = 1;      //spatial discretization step
     const dataType hx_c = 1, hy_c = 1;  //h for central differences
     Point2D current_grad;
