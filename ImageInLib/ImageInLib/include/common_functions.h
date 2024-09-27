@@ -81,9 +81,7 @@ extern "C" {
 
 	// Common 3D Points - {x,y,z}
 	typedef struct ptsstruct { //TODO: use better tag to differentiate 2D and 3D points
-		dataType x;
-		dataType y;
-		dataType z;
+		dataType x, y, z;
 	} Point3D;
 
 	// 3D point extended by flag indicating, if the point is end point (1st or last)
@@ -110,9 +108,7 @@ extern "C" {
 
 	//Matrix for rotation
 	typedef struct {
-		Point3D v1;
-		Point3D v2;
-		Point3D v3;
+		Point3D v1, v2, v3;
 	}OrientationMatrix;
 
 	typedef struct {
