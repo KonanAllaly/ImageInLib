@@ -656,9 +656,8 @@ void resetIDGenerator()
 	id = 1;
 }
 
-dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D point2, double radius) {
+dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, double radius) {
 
-	double offset = 3.0;
 	dataType meanIntensity = 0.0;
 	size_t countPixel = 0;
 
@@ -667,7 +666,7 @@ dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D poin
 	//Find bounding box the around the starting point (point1) based on the radius
 	size_t i_min, i_max, j_min, j_max;
 
-	double ind_x_min = point1.x - (radius + offset);
+	double ind_x_min = point1.x - (radius + 0.5);
 	if (ind_x_min <= 0) {
 		i_min = 0;
 	}
@@ -675,7 +674,7 @@ dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D poin
 		i_min = (size_t)ind_x_min;
 	}
 
-	double ind_y_min = point1.y - (radius + offset);
+	double ind_y_min = point1.y - (radius + 0.5);
 	if (ind_y_min <= 0) {
 		j_min = 0;
 	}
@@ -683,17 +682,17 @@ dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D poin
 		j_min = (size_t)ind_y_min;
 	}
 
-	double ind_x_max = point1.x + (radius + offset);
-	if (ind_x_max >= height) {
-		i_max = height - 1;
+	double ind_x_max = point1.x + (radius + 0.5);
+	if (ind_x_max >= width) {
+		i_max = width - 1;
 	}
 	else {
 		i_max = (size_t)ind_x_max;
 	}
 
-	double ind_y_max = point1.y + (radius + offset);
-	if (ind_y_max >= width) {
-		j_max = width - 1;
+	double ind_y_max = point1.y + (radius + 0.5);
+	if (ind_y_max >= height) {
+		j_max = height - 1;
 	}
 	else {
 		j_max = (size_t)ind_y_max;
