@@ -41,14 +41,12 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     dataType* abs_val_grad = (dataType*)malloc(dataSize); // absolute value of gradient
 
     dataType* edge_detector = (dataType*)malloc(dataSize); // edge detector
-    const dataType edge_detector_coef = 10;// 00000;
     dataType* similar_intensity_detector = NULL;
     if (!pSegmentationParams->open_curve)
     {
         similar_intensity_detector = (dataType*)malloc(dataSize); // similar intensity detector
     }
 
-    const dataType similar_intensity_detector_coef = 10;// 00000;
     const dataType hx = 1, hy = 1;      //spatial discretization step
     const dataType hx_c = 1, hy_c = 1;  //h for central differences
     Point2D current_grad;
@@ -75,22 +73,22 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     }
 
     //get edge detector
-    
     for (size_t i = 0; i < dataDimension; i++)
     {
-        edge_detector[i] = edgeDetector(abs_val_grad[i], edge_detector_coef);
+        edge_detector[i] = edgeDetector(abs_val_grad[i], pSegmentationParams->edgeCoef);
     }
 
     Point2D centroid = getCurveCentroid(pSegmentationParams->pinitial_condition);
     size_t centroid_i = (size_t)(centroid.y + 0.5);
     size_t centroid_j = (size_t)(centroid.x + 0.5);
-    dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
+    //The reference intensity is now computed in the main and incorporated to the segmentation parameters
+    //dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
 
     if (!pSegmentationParams->open_curve)
     {
         for (size_t i = 0; i < dataDimension; i++)
         {
-            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], ref_intensity, similar_intensity_detector_coef);
+            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->refence_intensity, pSegmentationParams->intensityCoef);
         }
     }
 
@@ -247,8 +245,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
         return false;
     }
 
-    const dataType similar_intensity_detector_coef = 10;// 00000;
-    const dataType edge_detector_coef = 10;
     const dataType hx = 1, hy = 1;      //spatial discretization step
     const dataType hx_c = 1, hy_c = 1;  //h for central differences
     Point2D current_grad;
@@ -274,7 +270,7 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     //get edge detector
     for (size_t i = 0; i < dataDimension; i++)
     {
-        ptmp[i] = edgeDetector(ptmp[i], edge_detector_coef);
+        ptmp[i] = edgeDetector(ptmp[i], pSegmentationParams->edgeCoef);
     }
 
     Image_Data2D edge = { inputImage2D.height, inputImage2D.width, ptmp };
@@ -282,7 +278,8 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     Point2D centroid = getCurveCentroid(pSegmentationParams->pinitial_condition);
     size_t centroid_i = (size_t)(centroid.y + 0.5);
     size_t centroid_j = (size_t)(centroid.x + 0.5);
-    dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
+    //The reference intensity is now computed in the main and incorporated to the segmentation parameters
+    //dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
 
     resetIDGenerator();
     //let us consider single curve without topological changes
