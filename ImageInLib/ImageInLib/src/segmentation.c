@@ -5,7 +5,6 @@
 #include "segmentation3d_gsubsurf.h"
 #include "../include/segmentation2d.h"
 #include "segmentation2D_lagrangean.h"
-#include "segmentation3D_lagrangean.h"
 
 void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterParameters,
 	const SegmentationMethod model, unsigned char* outputPathPtr, void* resultSegment)
@@ -42,13 +41,6 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
             Lagrangean2DSegmentationParameters* pSegmentationParams = (Lagrangean2DSegmentationParameters*)pSegParameters;
             Curve2D* resultSegmentationCurve = (Curve2D*)resultSegment;
             lagrangeanSemiImplicit2DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
-        }
-        case CURVE_3D_EXPLCIT:
-        {
-            Image_Data inputImageData = *(Image_Data*)pInputImageData;
-            Lagrangean3DSegmentationParameters* pSegmentationParams = (Lagrangean3DSegmentationParameters*)pSegParameters;
-            Curve3D* resultSegmentationCurve = (Curve3D*)resultSegment;
-            lagrangeanExplicit3DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
         }
         default:
             break;
