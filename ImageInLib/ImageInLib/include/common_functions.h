@@ -81,9 +81,7 @@ extern "C" {
 
 	// Common 3D Points - {x,y,z}
 	typedef struct {
-		dataType x;
-		dataType y;
-		dataType z;
+		dataType x, y, z;
 	} Point3D;
 
 	//Structure to handle image spacing
@@ -93,21 +91,13 @@ extern "C" {
 
 	//Matrix for rotation
 	typedef struct {
-		Point3D v1;
-		Point3D v2;
-		Point3D v3;
+		Point3D v1, v2, v3;
 	}OrientationMatrix;
 
 	typedef struct {
 		dataType hx;
 		dataType hy;
 	} FiniteVolumeSize2D;
-
-	typedef struct {
-		dataType hx;
-		dataType hy;
-		dataType hz;
-	} FiniteVolumeSize3D;
 
 	// Image Container and Properties
 	typedef struct {
