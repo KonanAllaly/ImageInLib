@@ -36,7 +36,7 @@ extern "C" {
 //==============================================================================
 // STRUCTs
 
-// Common 2D Points - {x,y}
+	// Common 2D Points - {x,y}
 	typedef struct ptstruct{
 		dataType x;
 		dataType y;
@@ -79,7 +79,7 @@ extern "C" {
 		double length;
 	} LinkedCurve;
 
-// Common 3D Points - {x,y,z}
+	// Common 3D Points - {x,y,z}
 	typedef struct {
 		dataType x, y, z;
 	} Point3D;
@@ -286,16 +286,23 @@ extern "C" {
 	/// <returns>Returns the result of (sqrt(pt.x * pt.x + pt.y * pt.y))</returns>
 	dataType norm(const Point2D pt);
 
-	//==============================================================================
+	/// <summary>
+	/// Compute the euclidian distance between two given 3D points
+	/// </summary>
+	/// <param name="a">first point</param>
+	/// <param name="b">second point</param>
+	/// <returns>distance between points</returns>
 	double getPoint3DDistance(const Point3D a, const Point3D b);
-	//==============================================================================
-	/*
-	* Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height)
-	* distanceMapPtr : pointer contaning the computed distance for each pixel
-	* lenght, width, height : image dimension
-	* The function return the coordinates of the voxel with the higest value
-	*/
-	Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t length, const size_t width, const size_t height);
+
+	/// <summary>
+	/// Find the point/voxel with the largest value in an array/image
+	/// </summary>
+	/// <param name="arrayPtr"></param>
+	/// <param name="length">length of the array</param>
+	/// <param name="width">width if the array</param>
+	/// <param name="height">height of the array</param>
+	/// <returns>return the corresponding 3D point</returns>
+	Point3D getPointWithTheHighestValue(dataType** arrayPtr, const size_t length, const size_t width, const size_t height);
 
 	/// <summary>
 	/// The function returns the signum of the given value parameter represented
@@ -368,20 +375,19 @@ extern "C" {
 	/// <returns></returns>
 	bool updatePoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y);
 	
-//id generator	
+	//id generator	
 	void resetIDGenerator();
 	unsigned long long getNextID();
 
-    //=================================
-	
 	/// <summary>
 	/// Compute the reference intensity
 	/// </summary>
 	/// <param name="pimage">Image data structure</param>
-	/// <param name="point1">First input point or initial circle center</param>
-	/// <param name="point2">Second input point (used to computed the radius of initial circle)</param>
+	/// <param name="point1">Input point or initial circle center</param>
+	/// <param name="radius">Radius of the circle to consider around the first point</>
 	/// <returns>Return the mean pixel value in small circle around the first input point</returns>
-	dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, Point2D point2);
+	dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, double radius);
+
 
 #endif // !COMMON_FUNCTIONS
 

@@ -17,6 +17,8 @@ extern "C" {
 		CURVE_2D_SEMI_IMPLICIT
 	} SegmentationMethod;
 
+	// Structures and functions for 2D Langrangean segmentation
+
 	// Structure that holds the parameters used during 2d Lagrangean segmentation process.
 	typedef struct
 	{
@@ -28,8 +30,9 @@ extern "C" {
 		dataType lambda; //weight between projected gradient field and intensity similarity field
 		dataType eps;	//influence of curvature
 		dataType omega;	//redistribution speed
+		dataType edgeCoef; // edge detector coefficient 
 		dataType intensityCoef; // coeficient for the similar intensity detector
-		dataType refence_intensity; //The reference intensity for G2
+		dataType reference_intensity; //The reference intensity for G2
 		void(*get_velocity)(Image_Data2D*, double, double, double*, double*);//pointer to the function returning the velocity for a given coordinate
 		void(*get_g2)(Image_Data2D*, double, double, double, double, double*);//pointer to the function returning the g2 value for a given coordinate
 		bool open_curve;
@@ -50,6 +53,7 @@ extern "C" {
 
 	void segment2dImage(Image_Data2D inputImageData, dataType* initialSegment, Segmentation_Parameters segParameters, FilterParameters filteringParameters,
 		point2d* centers, const char* outputPathPtr, const SegmentationMethod model);
+
 
 #ifdef __cplusplus
 }
