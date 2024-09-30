@@ -13,7 +13,7 @@ extern "C" {
 		CUBOID = 4,
 		CIRCLE_2D_CURVE = 5,
 		LINE_2D_CURVE = 6,
-		HOLLOW_SPHERE = 7,
+		SPHERE_3D_CURVE = 7,
 		LINE_3D_CURVE = 8
 	} ShapeType;
 
@@ -56,7 +56,7 @@ extern "C" {
 	/// <param name="points_distance">Wanted distance between neighboring points - defines discrete curve points density</param>
 	/// <param name="shape">Wanted shape to be generated</param>
 	/// <returns>Returns true, if the function succeeded, false otherwise</returns>
-	bool generate3DCurve(Curve3D* pcurve, const Point3D* pinitial_points, const size_t initial_points_count, const double points_distance, ShapeType shape);
+	bool generate3DCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance, ShapeType shape);
 
 	/// <summary>
 	/// The function calculating number of points needed for a 3D curve generation
@@ -68,7 +68,7 @@ extern "C" {
 	/// <param name="points_distance">Wanted distance between neighboring points - defines discrete curve points density</param>
 	/// <param name="method"></param>
 	/// <returns>Returns the number of resulting curve points</returns>
-	size_t getNumberOfExpected3DCurvePoints(const Point2D* pinitial_points, const size_t initial_points_count, const double points_distance, ShapeType shape);
+	size_t getNumberOfExpected3DCurvePoints(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance, ShapeType shape);
 
 #ifdef __cplusplus
 }
