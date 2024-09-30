@@ -15,23 +15,20 @@ extern "C" {
     // Function Prototypes
 
     /// <summary>
-    /// The function return the expected number of slices for the sphere generation
+    /// The function calculates the surface of a sphere given by radius.
     /// </summary>
-    /// <param name="pInitialPoints">initial points - expected 2 points, 1st is center, 2nd is point lying on the sphere</param>
-    /// <param name="initialPointsCount">count of initial points - expected count is 2</param>
-    /// <param name="pointsDistance">scalar value representing expceted distance of neighbouring points</param>
-    /// <returns>return the number of latitude divisions</returns>
-    size_t getNumberOfLatitudeDivision(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
+    /// <param name="radius">radius of the sphere</param>
+    /// <returns>returns scalar value corresponding to the surface of the sphere</returns>
+    double getSphereSurfaceArea(const double radius);
 
     /// <summary>
-    /// The function to create a sphere - set of 2 points (coordinate pairs)
+    /// Function returns expected number of points needed for discrete circle secified by give parameters
     /// </summary>
-    /// <param name="pCurve">pointer to resulting set of 3d points - 3d curve</param>
-    /// <param name="pInitialPoints">initial points - expected 2 points, 1st is center, 2nd is point laying on the circle</param>
+    /// <param name="pInitialPoints">initial points - expected 2 points, the first and the last line point</param>
     /// <param name="initialPointsCount">count of initial points - expected count is 2 points</param>
     /// <param name="pointsDistance">scalar value representing expceted distance of neighbouring points (real value can differ, because we want to get equidistant discrete curve )</param>
-    /// <returns>the function returns boolean value depending on result - true for success / false for failure</returns>
-    bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
+    /// <returns>the function returns sclar value representing count of points needed for the straight line</returns>
+    size_t howManyPointsFor3DStraightLineCurve(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
 
     /// <summary>
     /// Function returns expected number of points needed for discrete sphere specified by given parameters
@@ -54,13 +51,14 @@ extern "C" {
     bool generate3DLineCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
 
     /// <summary>
-    /// Function returns expected number of points needed for discrete circle secified by give parameters
+    /// The function to create a sphere - set of 2 points (coordinate pairs)
     /// </summary>
-    /// <param name="pInitialPoints">initial points - expected 2 points, the first and the last line point</param>
+    /// <param name="pCurve">pointer to resulting set of 3d points - 3d curve</param>
+    /// <param name="pInitialPoints">initial points - expected 2 points, 1st is center, 2nd is point laying on the circle</param>
     /// <param name="initialPointsCount">count of initial points - expected count is 2 points</param>
     /// <param name="pointsDistance">scalar value representing expceted distance of neighbouring points (real value can differ, because we want to get equidistant discrete curve )</param>
-    /// <returns>the function returns sclar value representing count of points needed for the straight line</returns>
-    size_t howManyPointsFor3DLineCurve(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
+    /// <returns>the function returns boolean value depending on result - true for success / false for failure</returns>
+    bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance);
 
 #endif // !GENERATE3DCURVES_H
 

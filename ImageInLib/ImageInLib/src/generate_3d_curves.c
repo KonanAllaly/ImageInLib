@@ -4,12 +4,23 @@
 #include "generate_2d_curves.h"
 #include "generate_3d_curves.h"
 
-size_t getNumberOfLatitudeDivision(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance) {
+double getSphereSurfaceArea(const double radius)
+{
+    if (radius < 0)
+    {
+        return 0;
+    }
+    return 4 * M_PI * radius * radius;
+}
+
+size_t howManyPointsFor3DStraightLineCurve(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
+{
     if (initialPointsCount != 2)
     {
         return 0;
     }
-    return (size_t)((abs(pInitialPoints[1].z - pInitialPoints[0].z) + 0.5) / pointsDistance);
+    const double curveLength = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
+    return (size_t)((curveLength / pointsDistance) + 1.5);
 }
 
 size_t howManyPointsForSphereCurve(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
@@ -18,25 +29,16 @@ size_t howManyPointsForSphereCurve(const Point3D* pInitialPoints, const size_t i
     {
         return 0;
     }
-
-    size_t numberOfPoints = 0;
-
-    //Compute the number of latitude division
-    size_t countLatitudeDivision = getNumberOfLatitudeDivision(pInitialPoints, initialPointsCount, pointsDistance);
-
     double radius = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
+    double sphereSurface = getSphereSurfaceArea(radius);
+    double singlePointSurface = pointsDistance * pointsDistance;
+    return (size_t)((sphereSurface / singlePointSurface) + 0.5);
+}
 
-    //Compute the number of points per circle for each latitude
-    double theta, radius_circle;
-    for (size_t i = 0; i < countLatitudeDivision; i++)
-    {
-        theta = M_PI * i / countLatitudeDivision - M_PI / 2;
-        radius_circle = radius * cos(theta);
-        const double perimeter = getCirclePerimeter(radius_circle);
-        numberOfPoints += (size_t)((perimeter / pointsDistance) + 0.5);
-    }
-
-    return numberOfPoints;
+bool generate3DLineCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
+{
+    //TODO
+    return true;
 }
 
 bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
@@ -102,27 +104,21 @@ bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const s
     }
     */
 
-    return true;
-}
-
-bool generate3DLineCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
-{
-	//TODO
-	return true;
-}
-
-size_t howManyPointsFor3DLineCurve(const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
-{
-    //TODO
-    return 0;
-
-    /*
-    if (initialPointsCount != 2)
-    {
-        return 0;
+    Point3D center = pInitialPoints[0];
+    double radius = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
+    double phi, theta;
+    size_t numberOfPoints = howManyPointsForSphereCurve(pInitialPoints, initialPointsCount, pointsDistance);
+    //printf("%d points are expected\n", numberOfPoints);
+    double step = M_PI / (double)numberOfPoints;
+    size_t countPoints = 0;
+    for (phi = 0.0; phi < 2 * M_PI; phi += step) {
+        for (theta = 0.0; theta < M_PI; theta += step) {
+            dataType x = center.x + radius * cos(phi) * sin(theta);
+            dataType y = center.y + radius * sin(phi) * sin(theta);
+            dataType z = center.z + radius * cos(theta);
+            countPoints++;
+        }
     }
-
-    const double length = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
-    return (size_t)((length / pointsDistance) + 1.5);
-    */
+    //printf("%d points are expected\n", numberOfPoints);
+    return true;
 }
