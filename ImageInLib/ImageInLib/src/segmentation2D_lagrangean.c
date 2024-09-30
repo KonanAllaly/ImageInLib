@@ -78,14 +78,9 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
         edge_detector[i] = edgeDetector(abs_val_grad[i], pSegmentationParams->edgeCoef);
     }
 
-    unsigned char saveEdge[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
-    manageFile(edge_detector, 0, inputImage2D.width, inputImage2D.height, saveEdge, STORE_2D_RAW_DATA, BINARY_DATA, (Storage_Flags) { false, false });
-
     Point2D centroid = getCurveCentroid(pSegmentationParams->pinitial_condition);
     size_t centroid_i = (size_t)(centroid.y + 0.5);
     size_t centroid_j = (size_t)(centroid.x + 0.5);
-    //The reference intensity is now computed in the main and incorporated to the segmentation parameters
-    //dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
 
     if (!pSegmentationParams->open_curve)
     {
@@ -94,9 +89,6 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
             similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->refence_intensity, pSegmentationParams->intensityCoef);
         }
     }
-
-    unsigned char saveG2[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/similarIntensityDetect.raw";
-    manageFile(similar_intensity_detector, 0, inputImage2D.width, inputImage2D.height, saveG2, STORE_2D_RAW_DATA, BINARY_DATA, (Storage_Flags) { false, false });
 
     Image_Data2D edgeDetector = { inputImage2D.height, inputImage2D.width, edge_detector };
 
@@ -284,8 +276,6 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     Point2D centroid = getCurveCentroid(pSegmentationParams->pinitial_condition);
     size_t centroid_i = (size_t)(centroid.y + 0.5);
     size_t centroid_j = (size_t)(centroid.x + 0.5);
-    //The reference intensity is now computed in the main and incorporated to the segmentation parameters
-    //dataType ref_intensity = inputImage2D.imageDataPtr[x_new(centroid_j, centroid_i, inputImage2D.width)];
 
     resetIDGenerator();
     //let us consider single curve without topological changes
