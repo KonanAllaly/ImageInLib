@@ -168,7 +168,7 @@ bool generateSphere(dataType ** dataArray3D, Point3D center, size_t length, size
 	double step = M_PI / 1000.0;
 	for (phi = 0.0; phi < 2 * M_PI; phi += step) {
 		for (theta = 0.0; theta < M_PI; theta += step) {
-			i = (size_t)(center.x + r * cos(phi)*sin(theta));// + 0.5
+			i = (size_t)(center.x + r * cos(phi)*sin(theta));
 			j = (size_t)(center.y + r * sin(phi)*sin(theta));
 			k = (size_t)(center.z + r * cos(theta));
 
@@ -178,10 +178,6 @@ bool generateSphere(dataType ** dataArray3D, Point3D center, size_t length, size
 			dataArray3D[k][s] = fillValue;
 		}
 	}
-
-	// Store generated object to file
-	//Storage_Flags flags = { true, true };
-	//store3dDataVtkD(dataArray3D, length, width, height, outputPathPtr, (2.5 / (length)), flags);
 
 	return true;
 }
