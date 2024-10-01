@@ -48,77 +48,23 @@ bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const s
         return false;
     }
 
-    //const size_t spherePointsCount = howManyPointsForSphereCurve(pInitialPoints, initialPointsCount, pointsDistance);
-    //CurvePoint2D* pcircle_points = malloc(sizeof(CurvePoint2D) * circlePointsCount);
-    //pcurve->pPoints = pcircle_points;
-    //pcurve->numPoints = circlePointsCount;
-    //const double radius = getPoint2DDistance(pinitial_points[0], pinitial_points[1]);
-
-    //double anlgleStep = 2 * M_PI / (double)circlePointsCount;
-    //Point2D center = pinitial_points[0];
-
-    //for (size_t i = 0; i < circlePointsCount; i++)
-    //{
-    //    double phi = anlgleStep * (double)i;
-    //    pcurve->pPoints[i].x = (dataType)(center.x + radius * cos(phi));
-    //    pcurve->pPoints[i].y = (dataType)(center.y + radius * sin(phi));
-    //    pcurve->pPoints[i].isEndPoint = false;
-    //}
-
-    /*
-    //Compute the number of latitude division
-    size_t countLatitudeDivision = getNumberOfLatitudeDivision(pInitialPoints, initialPointsCount, pointsDistance);
-    //Compute number of longitude division
-    size_t countLongitudeDivision = 10;
-
-    double x, y, z, r_circle;
-    double radius = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
-    Point3D center = pInitialPoints[0];
-
-    for (size_t i = 0; i < countLatitudeDivision; i++)
-    {
-        double theta = M_PI * i / countLatitudeDivision - M_PI / 2;
-        //theta varies from - M_PI / 2 to M_PI / 2 (from South Pole to North Pole)
-
-        z = radius * sin(theta);
-
-        //Compute the radius of the circle at this latitude
-        r_circle = radius * cos(theta);
-
-        //Loop over longitude divisions
-        for (size_t j = 0; j < countLongitudeDivision; j++)
-        {
-            double phi = 2 * M_PI * j / countLongitudeDivision;
-            // phi varies from 0 to 2 * M_PI (full circle)
-
-            x = r_circle * cos(phi);
-            y = r_circle * sin(phi);
-
-            size_t indexPoint = j + countLongitudeDivision * i;
-
-            pCurve->pPoints[indexPoint].x = (dataType)(center.x + x);
-            pCurve->pPoints[indexPoint].y = (dataType)(center.y + y);
-            pCurve->pPoints[indexPoint].z = (dataType)(center.z + z);
-            pCurve->pPoints[indexPoint].isEndPoint = false;
-        }
-    }
-    */
-
-    Point3D center = pInitialPoints[0];
-    double radius = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
-    double phi, theta;
     size_t numberOfPoints = howManyPointsForSphereCurve(pInitialPoints, initialPointsCount, pointsDistance);
-    //printf("%d points are expected\n", numberOfPoints);
-    double step = M_PI / (double)numberOfPoints;
-    size_t countPoints = 0;
-    for (phi = 0.0; phi < 2 * M_PI; phi += step) {
-        for (theta = 0.0; theta < M_PI; theta += step) {
-            dataType x = center.x + radius * cos(phi) * sin(theta);
-            dataType y = center.y + radius * sin(phi) * sin(theta);
-            dataType z = center.z + radius * cos(theta);
-            countPoints++;
-        }
+    CurvePoint3D* pcircle_points = malloc(sizeof(CurvePoint3D) * numberOfPoints);
+    pCurve->pPoints = pcircle_points;
+    pCurve->numPoints = numberOfPoints;
+    const double radius = getPoint3DDistance(pInitialPoints[0], pInitialPoints[1]);
+
+    Point3D center = pInitialPoints[0];
+    
+    double phi = M_PI * (3 - sqrt(5)); //golden angle
+    for (size_t i = 0; i < numberOfPoints; i++) {
+        dataType z = 1 - ((double)i / (double)(numberOfPoints - 1)) * 2;
+        double altitude = sqrt(1 - z * z);
+        double theta = phi * (double)i;
+        pCurve->pPoints[i].x = (dataType)(center.x + radius * altitude * cos(theta));
+        pCurve->pPoints[i].y = (dataType)(center.y + radius * altitude * sin(theta));
+        pCurve->pPoints[i].z = (dataType)(center.z + radius * z);
+        pCurve->pPoints[i].isEndPoint = false;
     }
-    //printf("%d points are expected\n", numberOfPoints);
     return true;
 }
