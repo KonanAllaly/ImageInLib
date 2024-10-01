@@ -815,3 +815,18 @@ Point3D get3dCurveCentroid(const Curve3D* pcurve)
 
 	return (Point3D) { x / pcurve->numPoints, y / pcurve->numPoints, z / pcurve->numPoints };
 }
+
+bool copyCurve3DPointsToArray(const Curve3D* pCurve, dataType** pArray)
+{
+	if (pCurve == NULL || pArray == NULL) {
+		return false;
+	}
+
+	for (int i = 0; i < pCurve->numPoints; i++) {
+		pArray[i][0] = pCurve->pPoints[i].x;
+		pArray[i][1] = pCurve->pPoints[i].y;
+		pArray[i][2] = pCurve->pPoints[i].z;
+	}
+
+	return true;
+}

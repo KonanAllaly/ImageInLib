@@ -447,6 +447,14 @@ extern "C" {
 	/// <returns>calculted centroid</returns>
 	Point3D get3dCurveCentroid(const Curve3D* pcurve);
 
+	/// <summary>
+	/// The points of pCurve are copied to pArray. The function expects same length of the particular objects (curve and array)
+	/// </summary>
+	/// <param name="pCurve">Pointer to the curve to be copied</param>
+	/// <param name="array">Alocated array of expected size length (same as the curve) * 3</param>
+	/// <returns></returns>
+	bool copyCurve3DPointsToArray(const Curve3D* pCurve, dataType** pArray);
+
 
 #endif // !COMMON_FUNCTIONS
 
