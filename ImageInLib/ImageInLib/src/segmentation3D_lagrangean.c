@@ -58,8 +58,6 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
         lambda = pSegmentationParams->lambda;
     }
 
-    //get gradient and gradient absolute value
-    size_t xd = 0;
     for (size_t k = 0; k < inputImage3D.height; k++)
     {
         for (size_t i = 0; i < inputImage3D.length; i++)
@@ -67,7 +65,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
             for (size_t j = 0; j < inputImage3D.width; j++)
             {
                 getGradient3D(inputImage3D.imageDataPtr, inputImage3D.length, inputImage3D.width, inputImage3D.height, i, j, k, finite_volume, &current_grad);
-                xd = x_new(i, j, inputImage3D.length);
+                size_t xd = x_new(i, j, inputImage3D.length);
 
                 //Gradient components
                 pgrad_x[k][xd] = current_grad.x;
@@ -160,7 +158,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
                     current_k = inputImage3D.height - 1;
                 }
 
-                xd = x_new(current_i, current_j, inputImage3D.length);
+                size_t xd = x_new(current_i, current_j, inputImage3D.length);
 
                 rx_c = oldSegmentation.pPoints[i].x;
                 ry_c = oldSegmentation.pPoints[i].y;
