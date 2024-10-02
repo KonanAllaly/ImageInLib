@@ -14,19 +14,22 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 
     CurvePoint3D* pOldCurve = (CurvePoint3D*)malloc(sizeof(CurvePoint3D) * pResultSegmentation->numPoints);
     Curve3D oldSegmentation = { pOldCurve, pResultSegmentation->numPoints };
+    
+    const size_t sizeHeight = sizeof(dataType*) * inputImage3D.height;
     const size_t sliceDimension = inputImage3D.length * inputImage3D.width;
+    const size_t sliceSize = sliceDimension * sizeof(dataType);
 
-    dataType** pgrad_x = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height);       // velocity component x
-    dataType** pgrad_y = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height);       // velocity component y
-    dataType** pgrad_z = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height);       // velocity component z
-    dataType** abs_val_grad = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height);  // absolute value of gradient
-    dataType** edge_detector = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height); // edge detector
+    dataType** pgrad_x = (dataType**)malloc(sizeHeight);       // velocity component x
+    dataType** pgrad_y = (dataType**)malloc(sizeHeight);       // velocity component y
+    dataType** pgrad_z = (dataType**)malloc(sizeHeight);       // velocity component z
+    dataType** abs_val_grad = (dataType**)malloc(sizeHeight);  // absolute value of gradient
+    dataType** edge_detector = (dataType**)malloc(sizeHeight); // edge detector
     for (size_t k = 0; k < inputImage3D.height; k++) {
-        pgrad_x[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
-        pgrad_y[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
-        pgrad_z[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
-        abs_val_grad[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
-        edge_detector[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
+        pgrad_x[k] = (dataType*)malloc(sliceSize);
+        pgrad_y[k] = (dataType*)malloc(sliceSize);
+        pgrad_z[k] = (dataType*)malloc(sliceSize);
+        abs_val_grad[k] = (dataType*)malloc(sliceSize);
+        edge_detector[k] = (dataType*)malloc(sliceSize);
         if (pgrad_x[k] == NULL || pgrad_y[k] == NULL || pgrad_z[k] == NULL || 
             abs_val_grad[k] == NULL || edge_detector[k] == NULL)
             return false;
@@ -38,9 +41,9 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
     dataType** similar_intensity_detector = NULL;
     if (!pSegmentationParams->open_curve)
     {
-        similar_intensity_detector = (dataType**)malloc(sizeof(dataType*) * inputImage3D.height); // similar intensity detector
+        similar_intensity_detector = (dataType**)malloc(sizeHeight); // similar intensity detector
         for (size_t k = 0; k < inputImage3D.height; k++) {
-            similar_intensity_detector[k] = (dataType*)malloc(sizeof(dataType) * sliceDimension);
+            similar_intensity_detector[k] = (dataType*)malloc(sliceSize);
         }
     }
 
