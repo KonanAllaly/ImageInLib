@@ -421,8 +421,8 @@ extern "C" {
 	/// Calculates gradient in 3D point given by central difference on input data
 	/// </summary>
 	/// <param name="pbase_data">base (e.g. image) data</param>
-	/// <param name="length">base data length</param>
 	/// <param name="width">base data width</param>
+	/// <param name="length">base data length</param>
 	/// <param name="height">base data height</param>
 	/// <param name="ind_x">x coordinate of the finite volume to calculate the gradient component</param>
 	/// <param name="ind_y">y coordinate of the finite volume to calculate the gradient component</param>
@@ -430,7 +430,7 @@ extern "C" {
 	/// <param name="fVolume">size of finite volume</param>
 	/// <param name="grad">output - calculated gradient</param>
 	/// <returns>True, if it was possible to estimate gradient</returns>
-	bool getGradient3D(dataType ** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D * grad);
+	bool getGradient3D(dataType ** pbase_data, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D * grad);
 
 	/// <summary>
 	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 
