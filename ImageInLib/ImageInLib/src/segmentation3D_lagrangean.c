@@ -67,11 +67,6 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
                 getGradient3D(inputImage3D.imageDataPtr, inputImage3D.width, inputImage3D.length, inputImage3D.height, j, i, k, finite_volume, &current_grad);
                 size_t xd = x_new(j, i, inputImage3D.width);
 
-                //Gradient components
-                pgrad_x[k][xd] = current_grad.x;
-                pgrad_y[k][xd] = current_grad.y;
-                pgrad_z[k][xd] = current_grad.z;
-
                 //Absolute gradient
                 abs_val_grad[k][xd] = norm3D(current_grad);
 
@@ -88,7 +83,21 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
     //unsigned char _path_grad[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/gradient.raw";
     //manageFile(abs_val_grad, inputImage3D.length, inputImage3D.width, inputImage3D.height, _path_grad , STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
 
-    Image_Data edgeDetector = { inputImage3D.height, inputImage3D.length, inputImage3D.width, edge_detector };
+    //get the velocity field
+    for (size_t k = 0; k < inputImage3D.height; k++)
+    {
+        for (size_t i = 0; i < inputImage3D.length; i++)
+        {
+            for (size_t j = 0; j < inputImage3D.width; j++)
+            {
+                getGradient3D(edge_detector, inputImage3D.width, inputImage3D.length, inputImage3D.height, j, i, k, finite_volume, &current_grad);
+                size_t xd = x_new(j, i, inputImage3D.width);
+                pgrad_x[k][xd] = current_grad.x;
+                pgrad_y[k][xd] = current_grad.y;
+                pgrad_z[k][xd] = current_grad.z;
+            }
+        }
+    }
 
     size_t current_i = 0;
     size_t current_j = 0;
@@ -117,6 +126,11 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
     dataType rx_c, ry_c, rz_c;
     dataType nx, ny, nz, dot, norm, tx, ty, tz;
     dataType h_g, h_c;
+    dataType curv_x, curv_y, curv_z, mean_dist;
+
+    dataType tau = pSegmentationParams->time_step_size;
+    dataType mu = pSegmentationParams->mu;
+    dataType eps = pSegmentationParams->eps;
 
     if (!pSegmentationParams->open_curve) 
     {
@@ -192,48 +206,38 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
                     rz_g = oldSegmentation.pPoints[i + 1].z;
                 }
 
+                h_c = (dataType)sqrt(pow(rx_c - rx_l, 2) + pow(ry_c - ry_l, 2) + pow(rz_c - rz_l, 2));
+                h_g = (dataType)sqrt(pow(rx_g - rx_c, 2) + pow(ry_g - ry_c, 2) + pow(rz_g - ry_c, 2));
+
                 norm = (dataType)sqrt(pow(rx_g - rx_l, 2) + pow(ry_g - ry_l, 2) + pow(rz_g - rz_l, 2));
                 tx = (rx_g - rx_l) / norm;
                 ty = (ry_g - ry_l) / norm;
                 tz = (rz_g - rz_l) / norm;
 
-                ////First choice of othogonal vector
-                //nx = ty * tz;
-                //ny = -2 * ty * tz;
-                //nz = tx * ty;
+                nx = ty * tz;
+                ny = -2 * tx * tz;
+                nz = tx * ty;
 
-                // Second choice of orthogonal vector
-                nx = ty;
-                ny = -tx;
-                nz = 0.0;
+                dot = pgrad_x[current_k][xd] * nx + pgrad_y[current_k][xd] * ny + pgrad_z[current_k][xd] * nz;
 
-                //projection of velocity field in direction of normal vector
-                dot = -pgrad_x[current_k][xd] * nx - pgrad_y[current_k][xd] * ny - pgrad_z[current_k][xd] * nz;
+                mean_dist = 2.0 / (h_g + h_c);
+                curv_x = mean_dist * ((rx_g - rx_c) / h_g - ((rx_c - rx_l) / h_c));
+                curv_y = mean_dist * ((ry_g - ry_c) / h_g - ((ry_c - ry_l) / h_c));
+                curv_z = mean_dist * ((rz_g - rz_c) / h_g - ((rz_c - rz_l) / h_c));
 
-                h_c = (dataType)sqrt(pow(rx_c - rx_l, 2) + pow(ry_c - ry_l, 2) + pow(rz_c - rz_l, 2));
-                h_g = (dataType)sqrt(pow(rx_g - rx_c, 2) + pow(ry_g - ry_c, 2) + pow(rz_g - ry_c, 2));
+                vx = mu * ((1 - lambda) * similar_intensity_detector[current_k][xd]
+                    - lambda * dot) + eps * curv_x;
 
-                //mu * normal vector * projection + eps * normal * curvature
-                vx = pSegmentationParams->mu * (lambda * dot * nx +
-                    ((dataType)1.0 - lambda) * similar_intensity_detector[current_k][xd] * nx) +
-                    pSegmentationParams->eps * (dataType)(2.0 / (h_g + h_c)) * ((rx_g - rx_c) / h_g - ((rx_c - rx_l) / h_c));
-                vy = pSegmentationParams->mu * (lambda * dot * ny +
-                    ((dataType)1.0 - lambda) * similar_intensity_detector[current_k][xd] * ny) +
-                    pSegmentationParams->eps * (dataType)(2.0 / (h_g + h_c)) * ((ry_g - ry_c) / h_g - ((ry_c - ry_l) / h_c));
-                vz = pSegmentationParams->mu * (lambda * dot * nz +
-                    ((dataType)1.0 - lambda) * similar_intensity_detector[current_k][xd] * nz) +
-                    pSegmentationParams->eps * (dataType)(2.0 / (h_g + h_c)) * ((rz_g - rz_c) / h_g - ((rz_c - rz_l) / h_c));
+                vy = mu * ((1 - lambda) * similar_intensity_detector[current_k][xd]
+                    - lambda * dot) + eps * curv_y;
 
-                //it is simple motion in vector field
+                vz = mu * ((1 - lambda) * similar_intensity_detector[current_k][xd]
+                    - lambda * dot) + eps * curv_z;
 
-                pResultSegmentation->pPoints[i].x = oldSegmentation.pPoints[i].x +
-                    pSegmentationParams->time_step_size * vx;
+                pResultSegmentation->pPoints[i].x = oldSegmentation.pPoints[i].x + tau * vx * nx;
+                pResultSegmentation->pPoints[i].y = oldSegmentation.pPoints[i].y + tau * vy * ny;
+                pResultSegmentation->pPoints[i].z = oldSegmentation.pPoints[i].z + tau * vz * nz;
 
-                pResultSegmentation->pPoints[i].y = oldSegmentation.pPoints[i].y +
-                    pSegmentationParams->time_step_size * vy;
-
-                pResultSegmentation->pPoints[i].z = oldSegmentation.pPoints[i].z +
-                    pSegmentationParams->time_step_size * vz;
             }
 
         }
