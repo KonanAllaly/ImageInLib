@@ -830,3 +830,87 @@ bool copyCurve3DPointsToArray(const Curve3D* pCurve, dataType** pArray)
 
 	return true;
 }
+
+dataType getReferenceIntensity3D(Image_Data pimage, Point3D point, double radius) {
+	if (pimage.imageDataPtr == NULL)
+		return 0;
+
+	dataType meanIntensity = 0.0;
+	size_t countPixel = 0;
+
+	size_t height = pimage.height, width = pimage.width, length = pimage.length;
+
+	//Find bounding box the around the starting point (point1) based on the radius
+	size_t x_min, x_max, y_min, y_max, z_min, z_max;
+
+	double ind_x_min = point.x - (radius + 0.5);
+	if (ind_x_min <= 0) {
+		x_min = 0;
+	}
+	else {
+		x_min = (size_t)ind_x_min;
+	}
+
+	double ind_y_min = point.y - (radius + 0.5);
+	if (ind_y_min <= 0) {
+		y_min = 0;
+	}
+	else {
+		y_min = (size_t)ind_y_min;
+	}	
+
+	double ind_z_min = point.z - (radius + 0.5);
+	if (ind_z_min <= 0) {
+		z_min = 0;
+	}
+	else {
+		z_min = (size_t)ind_z_min;
+	}
+
+	double ind_x_max = point.x + (radius + 0.5);
+	if (ind_x_max >= width) {
+		x_max = width - 1;
+	}
+	else {
+		x_max = (size_t)ind_x_max;
+	}
+
+	double ind_y_max = point.y + (radius + 0.5);
+	if (ind_y_max >= length) {
+		y_max = length - 1;
+	}
+	else {
+		y_max = (size_t)ind_y_max;
+	}
+
+	double ind_z_max = point.z + (radius + 0.5);
+	if (ind_z_max >= height) {
+		z_max = height - 1;
+	}
+	else {
+		z_max = (size_t)ind_z_max;
+	}
+
+	//Find the mean intensity around the starting point considering it bounding box
+	for (size_t k = z_min; k <= z_max; k++) {
+		for (size_t i = y_min; i <= y_max; i++) {
+			for (size_t j = x_min; j <= x_max; j++) {
+				Point3D currentPoint = { j, i, k };
+				double distancePoints = getPoint3DDistance(point, currentPoint);
+				if (distancePoints <= radius) {
+					countPixel++;
+					meanIntensity += pimage.imageDataPtr[k][x_new(j, i, width)];
+				}
+			}
+		}
+	}
+
+	if (countPixel != 0) {
+		meanIntensity = meanIntensity / (dataType)countPixel;
+	}
+	else {
+		meanIntensity = pimage.imageDataPtr[(size_t)point.z][x_new((size_t)point.x, (size_t)point.y, width)];
+	}
+
+	return meanIntensity;
+}

@@ -455,6 +455,15 @@ extern "C" {
 	/// <returns></returns>
 	bool copyCurve3DPointsToArray(const Curve3D* pCurve, dataType** pArray);
 
+	/// <summary>
+	/// Compute the reference intensity
+	/// </summary>
+	/// <param name="pimage">Image data structure</param>
+	/// <param name="point1">Input point or initial circle center</param>
+	/// <param name="radius">Radius of the sphere to consider around the first point</>
+	/// <returns>Return the mean pixel value in small circle around the first input point</returns>
+	dataType getReferenceIntensity3D(Image_Data pimage, Point3D point, double radius);
+
 
 #endif // !COMMON_FUNCTIONS
 
