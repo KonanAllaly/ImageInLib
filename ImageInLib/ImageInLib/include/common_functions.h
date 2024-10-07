@@ -464,6 +464,28 @@ extern "C" {
 	/// <returns>Return the mean pixel value in small circle around the first input point</returns>
 	dataType getReferenceIntensity3D(Image_Data pimage, Point3D point, double radius);
 
+	// LinkedCurve3D
+	typedef struct LinkedPoint3D
+	{
+		struct LinkedPoint3D* next;
+		struct LinkedPoint3D* previous;
+		double x;
+		double y;
+		double z;
+		double distance_to_next;
+		double distance_to_next_x;
+		double distance_to_next_y;
+		double distance_to_next_z;
+		unsigned long long id;
+	} LinkedPoint3D;
+
+	typedef struct LinkedCurve3D
+	{
+		size_t number_of_points;
+		LinkedPoint3D* first_point;
+		double length;
+	} LinkedCurve3D;
+
 
 #endif // !COMMON_FUNCTIONS
 
