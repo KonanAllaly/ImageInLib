@@ -389,11 +389,9 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
 
 bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
 {
-    if (plinked_curve == NULL ||
-        pscheme_data == NULL ||
-        pparams == NULL ||
-        pimage->imageDataPtr == NULL ||
-        pedge->imageDataPtr == NULL) {
+    if (plinked_curve == NULL || pscheme_data == NULL || pparams == NULL ||
+        pimage->imageDataPtr == NULL || pedge->imageDataPtr == NULL) 
+    {
         return false;
     }
 
@@ -474,8 +472,8 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
 //the mean curvature of three adjacent elements is calculated - 4 points
 void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData* pscheme_data)
 {
-    if (plinked_curve == NULL ||
-        pscheme_data == NULL) {
+    if (plinked_curve == NULL || pscheme_data == NULL) 
+    {
         return;
     }
 
@@ -490,6 +488,8 @@ void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData* pscheme_data
     double x_i_minus_2, x_i_minus_1, x_i, x_i_plus_1;
     double y_i_minus_2, y_i_minus_1, y_i, y_i_plus_1;
     double z_i_minus_2, z_i_minus_1, z_i, z_i_plus_1;
+
+    //TODO : use 3D formulation, the current is 2D
 
     for (size_t i = 1; i <= curve_length; i++)
     {
@@ -522,6 +522,11 @@ void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData* pscheme_data
             phi = 1.;
         else if (phi < -1)
             phi = -1.;
+
+        //pscheme_data[i].curvature = 0.5 * signum(
+        //    (x_i_minus_1 - x_i_minus_2) * (y_i_plus_1 - y_i) -
+        //    (x_i_plus_1 - x_i) * (y_i_minus_1 - y_i_minus_2)
+        //) * acos(phi) / h_i;
 
         pscheme_data[i].curvature = 0.5 * signum(
             (y_i_minus_1 - y_i_minus_2) * (z_i_plus_1 - z_i) - (z_i_minus_1 - z_i_minus_2) * (y_i_plus_1 - y_i) + 
@@ -599,9 +604,10 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
     pscheme_data[number_of_points + 1].beta_ps_expl = pscheme_data[1].beta_ps_expl;
 }
 
-void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData* pscheme_data,
-    const double omega)
+void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData* pscheme_data, const double omega)
 {
+    //TODO : adapt to 3D formulation.
+
     int i;
     double mean = 0;
     const size_t number_of_points = plinked_curve->number_of_points;
