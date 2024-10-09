@@ -75,6 +75,13 @@ extern "C" {
     /// <returns>true if the solver succeeds, otherwise false</returns>
     bool thomas(SchemeData* pscheme_data, const size_t number_of_points);
 
+    /// <summary>
+    ///Uses Thomas algorithm for solving a tri-diagonal system of egautions given by coefficients in pscheme_data
+    /// </summary>
+    /// <param name="pscheme_data">pointer to coefficients  of 3 diagonal system of equations</param>
+    /// <param name="number_of_points">dimension of system of equations</param>
+    /// <returns>true if the solver succeeds, otherwise false</returns>
+    bool calculate_by_thomas(SchemeData* pscheme_data, const size_t number_of_points);
 
 #endif // !SOLVERS
 
