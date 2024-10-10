@@ -91,3 +91,36 @@ bool thomas(SchemeData* pscheme_data, const size_t number_of_points)
 
 	return true;
 }
+
+bool calculate_by_thomas(SchemeData* pscheme_data, const size_t number_of_points)
+{
+	if (pscheme_data == NULL)
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < number_of_points + 2; i++)
+	{
+		pscheme_data[i].bb = pscheme_data[i].a; // this was a misnomer
+	}
+
+	for (size_t i = 0; i < number_of_points + 2; i++)
+	{
+		pscheme_data[i].thomas_a = pscheme_data[i].b;
+		pscheme_data[i].thomas_b = pscheme_data[i].bb;
+		pscheme_data[i].thomas_c = pscheme_data[i].c;
+		pscheme_data[i].thomas_ps = pscheme_data[i].ps;
+	}
+	thomas(pscheme_data, number_of_points);
+
+	for (size_t i = 0; i < number_of_points + 2; i++)
+	{
+		pscheme_data[i].sol = pscheme_data[i].thomas_x;
+	}
+
+	pscheme_data[0].sol = pscheme_data[number_of_points].sol;
+	pscheme_data[number_of_points + 1].sol = pscheme_data[1].sol;
+
+	return true;
+}
+
