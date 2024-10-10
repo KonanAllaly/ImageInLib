@@ -57,6 +57,37 @@ extern "C" {
     /// <returns>true if the solver succeeds, otherwise false</returns>
     bool calculate_by_thomas(SchemeData* pscheme_data, const size_t number_of_points);
 
+
+
+    typedef struct SchemeData3D
+    {
+        double k1;
+        double k2;
+
+        //double alfa;
+        //double beta;
+        //double beta_ps_expl;
+        //double ps;
+        //double a;
+        //double b;
+        //double c;
+        //double sol;
+        //double f;
+        //double m;
+
+        ////helper attributes - solvers
+        ////sherman
+        //double bb;
+
+        ////thomas
+        //double thomas_a;
+        //double thomas_ps;
+        //double thomas_b;
+        //double thomas_c;
+        //double thomas_x;
+
+    } SchemeData3D;
+
 #endif // !SOLVERS
 
 #ifdef __cplusplus
