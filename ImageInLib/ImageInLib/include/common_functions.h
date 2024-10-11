@@ -285,7 +285,7 @@ extern "C" {
 	/// </summary>
 	/// <param name="pcurve">pointer to given curve</param>
 	/// <returns>true, if the curve given by pcurve is oriented positively (clock-wise) and false, otherwise (if the curve is unitialized as well)</returns>
-	bool isCurveOrientedPositively(void* pcurve, const pDimension pDim);
+	bool isCurveOrientedPositively(const Curve2D* pcurve);
 
 	/// <summary>
 	/// Returns approximation of curve center of gravity

@@ -344,28 +344,35 @@ bool isCurveClosed(const Curve2D* pcurve)
 	}
 }
 
-bool isCurveOrientedPositively(void* pcurve, pDimension pDim)
+bool isCurveOrientedPositively(const Curve2D* pcurve)
 {
 	if (pcurve == NULL) {
 		return false;
 	}
 
-	//for (size_t i = 0; i < pcurve->numPoints; i++)
-	//{
-	//	if (i + 1 == pcurve->numPoints)
-	//	{
-	//		x_i_plus = pcurve->pPoints[0].x;
-	//		y_i_plus = pcurve->pPoints[0].y;
-	//	}
-	//	else
-	//	{
-	//		x_i_plus = pcurve->pPoints[i+1].x;
-	//		y_i_plus = pcurve->pPoints[i + 1].y;
-	//	}
-	//	signed_area += (pcurve->pPoints[i].x * y_i_plus - x_i_plus * pcurve->pPoints[i].y);
-	//}
-	//signed_area *= 0.5;
-	//return signum(signed_area) > 0.0;
+	double signed_area = 0;
+	double x_i_plus = -1;
+	double y_i_plus = -1;
+
+	for (size_t i = 0; i < pcurve->numPoints; i++)
+	{
+		if (i + 1 == pcurve->numPoints)
+		{
+			x_i_plus = pcurve->pPoints[0].x;
+			y_i_plus = pcurve->pPoints[0].y;
+		}
+		else
+		{
+			x_i_plus = pcurve->pPoints[i + 1].x;
+			y_i_plus = pcurve->pPoints[i + 1].y;
+		}
+
+		signed_area += (pcurve->pPoints[i].x * y_i_plus - x_i_plus * pcurve->pPoints[i].y);
+	}
+
+	signed_area *= 0.5;
+
+	return signum(signed_area) > 0.0;
 
 }
 
