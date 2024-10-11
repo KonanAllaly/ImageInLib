@@ -344,35 +344,29 @@ bool isCurveClosed(const Curve2D* pcurve)
 	}
 }
 
-bool isCurveOrientedPositively(const Curve2D* pcurve)
+bool isCurveOrientedPositively(void* pcurve, pDimension pDim)
 {
 	if (pcurve == NULL) {
 		return false;
 	}
 
-	double signed_area = 0;
-	double x_i_plus = -1;
-	double y_i_plus = -1;
+	//for (size_t i = 0; i < pcurve->numPoints; i++)
+	//{
+	//	if (i + 1 == pcurve->numPoints)
+	//	{
+	//		x_i_plus = pcurve->pPoints[0].x;
+	//		y_i_plus = pcurve->pPoints[0].y;
+	//	}
+	//	else
+	//	{
+	//		x_i_plus = pcurve->pPoints[i+1].x;
+	//		y_i_plus = pcurve->pPoints[i + 1].y;
+	//	}
+	//	signed_area += (pcurve->pPoints[i].x * y_i_plus - x_i_plus * pcurve->pPoints[i].y);
+	//}
+	//signed_area *= 0.5;
+	//return signum(signed_area) > 0.0;
 
-	for (size_t i = 0; i < pcurve->numPoints; i++)
-	{
-		if (i + 1 == pcurve->numPoints)
-		{
-			x_i_plus = pcurve->pPoints[0].x;
-			y_i_plus = pcurve->pPoints[0].y;
-		}
-		else
-		{
-			x_i_plus = pcurve->pPoints[i+1].x;
-			y_i_plus = pcurve->pPoints[i + 1].y;
-		}
-
-		signed_area += (pcurve->pPoints[i].x * y_i_plus - x_i_plus * pcurve->pPoints[i].y);
-	}
-
-	signed_area *= 0.5;
-
-	return signum(signed_area) > 0.0;
 }
 
 Point2D getCurveCentroid(const Curve2D* pcurve)
@@ -916,4 +910,65 @@ dataType getReferenceIntensity3D(Image_Data pimage, Point3D point, double radius
 	}
 
 	return meanIntensity;
+}
+
+double updateDistance3dToNext(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point)
+{
+	if (linked_curve == NULL || linked_point == NULL || linked_point->next == NULL)
+	{
+		return -1;
+	}
+
+	const double old_distance = linked_point->distance_to_next;
+
+	double hx = fabs(linked_point->x - linked_point->next->x);
+	double hy = fabs(linked_point->y - linked_point->next->y);
+	double hz = fabs(linked_point->z - linked_point->next->z);
+
+	linked_point->distance_to_next = sqrt(hx * hx + hy * hy + hz * hz);
+	linked_point->distance_to_next_x = hx;
+	linked_point->distance_to_next_y = hy;
+	linked_point->distance_to_next_z = hz;
+
+	double diff = linked_point->distance_to_next - old_distance;
+
+	linked_curve->length = max(linked_curve->length + diff, 0);
+
+	return linked_point->distance_to_next;
+}
+
+bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double x, const double y, const double z)
+{
+	if (linked_point == NULL)
+	{
+		return false;
+	}
+
+	if (linked_point->x == x && linked_point->y == y && linked_point->z == z) {
+		return true;
+	}
+
+	linked_point->x = x;
+	linked_point->y = y;
+	linked_point->z = z;
+
+	if (linked_point->next != NULL)
+	{
+		updateDistance3dToNext(linked_curve, linked_point);
+	}
+
+	if (linked_point->previous != NULL)
+	{
+		updateDistance3dToNext(linked_curve, linked_point->previous);
+	}
+
+	return true;
+}
+
+LinkedCurve3D create3dLinkedCurve()
+{
+	LinkedCurve3D linkedCurve;
+	linkedCurve.number_of_points = 0;
+	linkedCurve.length = 0;
+	return linkedCurve;
 }
