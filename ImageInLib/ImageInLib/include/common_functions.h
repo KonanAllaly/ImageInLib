@@ -285,7 +285,7 @@ extern "C" {
 	/// </summary>
 	/// <param name="pcurve">pointer to given curve</param>
 	/// <returns>true, if the curve given by pcurve is oriented positively (clock-wise) and false, otherwise (if the curve is unitialized as well)</returns>
-	bool isCurveOrientedPositively(const Curve2D* pcurve);
+	bool isCurveOrientedPositively(void* pcurve, const pDimension pDim);
 
 	/// <summary>
 	/// Returns approximation of curve center of gravity
@@ -477,6 +477,10 @@ extern "C" {
 		double distance_to_next_y;
 		double distance_to_next_z;
 		unsigned long long id;
+		//extend the 3D points structure with the normal velocity vector
+		double nx; 
+		double ny;
+		double nz;
 	} LinkedPoint3D;
 
 	typedef struct LinkedCurve3D
@@ -485,6 +489,18 @@ extern "C" {
 		LinkedPoint3D* first_point;
 		double length;
 	} LinkedCurve3D;
+
+	double updateDistance3dToNext(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point);
+
+	bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double x, const double y, const double z);
+
+	typedef enum
+	{
+		TWO_D = 1,
+		THREE_D
+	} pDimension;
+
+	LinkedCurve3D create3dLinkedCurve();
 
 
 #endif // !COMMON_FUNCTIONS
