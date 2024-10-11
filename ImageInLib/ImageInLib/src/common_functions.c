@@ -484,7 +484,7 @@ LinkedPoint* createLinkedPoint(const double point_x, const double point_y)
 	return linked_point;
 }
 
-bool initializeLinkedCurve(Curve2D * pcurve, LinkedCurve * plinked_curve, const bool reverse, const bool close_curve)
+bool initializeLinkedCurve(Curve2D* pcurve, LinkedCurve* plinked_curve, const bool reverse, const bool close_curve)
 {
 	if (pcurve == NULL || plinked_curve == NULL)
 	{
@@ -501,7 +501,7 @@ bool initializeLinkedCurve(Curve2D * pcurve, LinkedCurve * plinked_curve, const 
 	}
 
 	size_t i = from;
-	LinkedPoint * pcurrent_point = createLinkedPoint(pcurve->pPoints[from].x, pcurve->pPoints[from].y);
+	LinkedPoint* pcurrent_point = createLinkedPoint(pcurve->pPoints[from].x, pcurve->pPoints[from].y);
 	plinked_curve->first_point = pcurrent_point;
 	plinked_curve->number_of_points = 1;
 
@@ -512,12 +512,17 @@ bool initializeLinkedCurve(Curve2D * pcurve, LinkedCurve * plinked_curve, const 
 		pcurrent_point = pushAfterPoint(plinked_curve, pcurrent_point, pcurve->pPoints[i].x, pcurve->pPoints[i].y);
 	}
 
-	pcurrent_point->next = plinked_curve->first_point;
-	plinked_curve->first_point->previous = pcurrent_point;
+	if (close_curve)
+	{
+		pcurrent_point->next = plinked_curve->first_point;
+		plinked_curve->first_point->previous = pcurrent_point;
+	}
+
 	updateDistanceToNext(plinked_curve, pcurrent_point);
 
 	return true;
 }
+
 
 LinkedPoint* pushAfterPoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double point_x, const double point_y)
 {
@@ -526,16 +531,10 @@ LinkedPoint* pushAfterPoint(LinkedCurve* linked_curve, LinkedPoint* linked_point
 	if (linked_point->next != NULL)
 	{
 		new_linked_point->next = linked_point->next;
-		(linked_point->next)->previous = new_linked_point;
-	}
-	else if (linked_curve->first_point->previous == NULL)
-	{
-		linked_curve->first_point->previous = new_linked_point;
-		new_linked_point->next = linked_curve->first_point;
 	}
 
 	linked_point->next = new_linked_point;
-	new_linked_point->previous = linked_point;
+	(linked_point->next)->previous = linked_point;
 
 	linked_curve->number_of_points++;
 
@@ -635,9 +634,13 @@ bool updatePoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const dou
 	linked_point->x = x;
 	linked_point->y = y;
 
-	if (linked_point->previous != NULL)
+	if (linked_point->next != NULL)
 	{
 		updateDistanceToNext(linked_curve, linked_point);
+	}
+
+	if (linked_point->previous != NULL)
+	{
 		updateDistanceToNext(linked_curve, linked_point->previous);
 	}
 

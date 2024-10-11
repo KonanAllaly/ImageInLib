@@ -6,14 +6,14 @@
 #include "solvers.h"
 
 //==================== Function Definition =====================
-bool evolveBySingleStep(Image_Data2D * pimage,Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams);
+bool evolveBySingleStep(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams);
 
 void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data);
 
-void normal_velocity(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
+void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
     void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
-    const double ref_intensity, const double g2_coef, const double eps, const double lambda);
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda, const double mu);
 
 void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data, const double omega);
 
@@ -31,7 +31,7 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     CurvePoint2D* pOldCurve = (CurvePoint2D*)malloc(sizeof(CurvePoint2D) * pResultSegmentation->numPoints);
     Curve2D oldSegmentation = { pOldCurve, pResultSegmentation->numPoints };
 
-    const size_t sizeHeight = sizeof(dataType *) * inputImage2D.height;
+    const size_t sizeHeight = sizeof(dataType*) * inputImage2D.height;
 
     const size_t dataDimension = inputImage2D.width * inputImage2D.height;
     const size_t dataSize = dataDimension * sizeof(dataType);
@@ -53,7 +53,7 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     FiniteVolumeSize2D finite_volume_sz = { 1.0, 1.0 };
 
     dataType lambda = 1.0;
-    
+
     if (!pSegmentationParams->open_curve) {
         lambda = pSegmentationParams->lambda;
     }
@@ -86,7 +86,7 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
     {
         for (size_t i = 0; i < dataDimension; i++)
         {
-            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->refence_intensity, pSegmentationParams->intensityCoef);
+            similar_intensity_detector[i] = similarIntensityDetector(inputImage2D.imageDataPtr[i], pSegmentationParams->reference_intensity, pSegmentationParams->intensityCoef);
         }
     }
 
@@ -120,14 +120,14 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
         iterPt = 1;
         maxIterPt = oldSegmentation.numPoints - 1;
     }
- 
+
     //_l - lower, _g - greater, _c - current
     dataType vx, vy;
     dataType rx_l, rx_g, ry_l, ry_g, rx_c, ry_c;
     dataType nx, ny, dot, norm, tx, ty;
     dataType h_g, h_c;
 
-    for(size_t t = 0; t < pSegmentationParams->num_time_steps; t++)
+    for (size_t t = 0; t < pSegmentationParams->num_time_steps; t++)
     {
         for (size_t i = 0; i < (oldSegmentation.numPoints); i++)
         {
@@ -145,13 +145,15 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
             //let us keep points inside the image
             if (current_i < 0) {
                 current_i = 0;
-            } else if (current_i >= inputImage2D.height) {
+            }
+            else if (current_i >= inputImage2D.height) {
                 current_i = inputImage2D.height - 1;
             }
 
             if (current_j < 0) {
                 current_j = 0;
-            } else if (current_j >= inputImage2D.width) {
+            }
+            else if (current_j >= inputImage2D.width) {
                 current_j = inputImage2D.width - 1;
             }
 
@@ -187,19 +189,19 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
             ny = -tx;
 
             dot = pgrad_x[xd] * nx + pgrad_y[xd] * ny;
-            
+
             //basic velocity - gradients of edge detector
             vx = -pgrad_x[xd];
             vy = -pgrad_y[xd];
 
             //projection of velocity field in direction of normal vector
-            dot = vx* nx + vy * ny;
+            dot = vx * nx + vy * ny;
 
-            h_c = (dataType)sqrt(pow(rx_c - rx_l,2) + pow(ry_c - ry_l,2));
+            h_c = (dataType)sqrt(pow(rx_c - rx_l, 2) + pow(ry_c - ry_l, 2));
             h_g = (dataType)sqrt(pow(rx_g - rx_c, 2) + pow(ry_g - ry_c, 2));
 
             //mu * normal vector * projection + eps * normal * curvature
-            vx = pSegmentationParams->mu * (lambda * dot * nx + 
+            vx = pSegmentationParams->mu * (lambda * dot * nx +
                 ((dataType)1.0 - lambda) * similar_intensity_detector[xd] * nx) +
                 pSegmentationParams->eps * (dataType)(2.0 / (h_g + h_c)) * ((rx_g - rx_c) / h_g - ((rx_c - rx_l) / h_c));
             vy = pSegmentationParams->mu * dot * ny + (lambda * dot * ny +
@@ -235,7 +237,7 @@ bool lagrangeanExplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagr
 bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const Lagrangean2DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve2D* pResultSegmentation)
 {
-    if (pSegmentationParams == NULL || pSegmentationParams->open_curve || pResultSegmentation == NULL) {
+    if (pSegmentationParams == NULL || pResultSegmentation == NULL) {
         return false;
     }
 
@@ -268,7 +270,7 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
     //get edge detector
     for (size_t i = 0; i < dataDimension; i++)
     {
-        ptmp[i] = edgeDetector(ptmp[i], pSegmentationParams->edgeCoef);
+        ptmp[i] = edgeDetector(ptmp[i], pSegmentationParams->edgeCoef);// *255.0;
     }
 
     Image_Data2D edge = { inputImage2D.height, inputImage2D.width, ptmp };
@@ -279,62 +281,56 @@ bool lagrangeanSemiImplicit2DCurveSegmentation(Image_Data2D inputImage2D, const 
 
     resetIDGenerator();
     //let us consider single curve without topological changes
- 
+
     bool isOrientedPositively = true; //does not metter for open curves
 
     if (!pSegmentationParams->open_curve)
     {
         isOrientedPositively = isCurveOrientedPositively(pSegmentationParams->pinitial_condition);
     }
-    
+
     LinkedCurve linked_curve = createLinkedCurve();
     initializeLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
-    
-    if (!pSegmentationParams->open_curve)
+
+    //it is still necessary to think which part of these data will be in the revised list
+    size_t length_of_data = linked_curve.number_of_points + 2;
+    SchemeData* pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
+
+    for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
     {
-        //it is still necessary to think which part of these data will be in the revised list
-        size_t length_of_data = linked_curve.number_of_points + 2;
-        SchemeData* pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
-
-        for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
+        if (length_of_data < linked_curve.number_of_points + 2)
         {
-            if (length_of_data < linked_curve.number_of_points + 2)
-            {
-                free(pscheme_data);
-                length_of_data = linked_curve.number_of_points + 2;
-                pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
-            }
-            //evolve curve
-            evolveBySingleStep(&inputImage2D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
+            free(pscheme_data);
+            length_of_data = linked_curve.number_of_points + 2;
+            pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         }
-
-        free(pscheme_data);
-        free(ptmp);
-
-        LinkedPoint* pt = linked_curve.first_point;
-
-        for (size_t i = 0; i < linked_curve.number_of_points; i++)
-        {
-            pResultSegmentation->pPoints[i].x = (dataType)pt->x;
-            pResultSegmentation->pPoints[i].y = (dataType)pt->y;
-            pt = pt->next;
-        }
-
-        releaseLinkedCurve(&linked_curve);
-
-        return true;
-
+        //evolve curve
+        evolveBySingleStep(&inputImage2D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
     }
 
-    return false;
+    free(pscheme_data);
+    free(ptmp);
+
+    LinkedPoint* pt = linked_curve.first_point;
+
+    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    {
+        pResultSegmentation->pPoints[i].x = (dataType)pt->x;
+        pResultSegmentation->pPoints[i].y = (dataType)pt->y;
+        pt = pt->next;
+    }
+
+    releaseLinkedCurve(&linked_curve);
+
+    return true;
 }
 
-bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams)
+bool evolveBySingleStep(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data, const Lagrangean2DSegmentationParameters* pparams)
 {
     if (plinked_curve == NULL ||
         pscheme_data == NULL ||
         pparams == NULL ||
-        pimage->imageDataPtr == NULL || 
+        pimage->imageDataPtr == NULL ||
         pedge->imageDataPtr == NULL) {
         return false;
     }
@@ -345,7 +341,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
     const double dt = pparams->time_step_size;
 
     calculateCurvature(plinked_curve, pscheme_data);
-    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda);
+    normal_velocity(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->reference_intensity, pparams->intensityCoef, eps, lambda, pparams->mu);
     tang_velocity(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients(plinked_curve, pscheme_data, eps, dt))
@@ -355,30 +351,59 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
 
     ////////////////////    X component ///////////////////////////////////////////////////////////
     LinkedPoint* current_point = plinked_curve->first_point;
+    LinkedPoint* previous_point = NULL;
+    LinkedPoint* next_point = NULL;
 
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        pscheme_data[i].ps = pscheme_data[i].m * current_point->x +
-            0.5 * (pscheme_data[i].beta_ps_expl * (current_point->next->y - current_point->previous->y)) +
-            0.25 * (fmin(-pscheme_data[i].alfa, 0.0) * (current_point->previous->x - current_point->next->x) +
-                fmin(pscheme_data[i].alfa, 0.0) * (current_point->next->x - current_point->previous->x));
+        previous_point = current_point->previous;
+        next_point = current_point->next;
 
-        current_point = current_point->next;
+        if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
+        {
+            pscheme_data[i].ps = /*pscheme_data[i].m **/ current_point->x;
+        }
+        else
+        {
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x +
+                0.5 * (pscheme_data[i].beta_ps_expl * (next_point->y - previous_point->y)) +
+                0.25 * (fmin(-pscheme_data[i].alfa, 0.0) * (previous_point->x - next_point->x) +
+                    fmin(pscheme_data[i].alfa, 0.0) * (next_point->x - previous_point->x));
+        }
+
+        current_point = next_point;
     }
 
-    sherman_morris(pscheme_data, plinked_curve->number_of_points);
+    if (pparams->open_curve)
+    {
+        calculate_by_thomas(pscheme_data, plinked_curve->number_of_points);
+    }
+    else
+    {
+        sherman_morris(pscheme_data, plinked_curve->number_of_points);
+    }
 
     ///////////////////    Y component   ///////////////////////////////////////////////////////////
 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        pscheme_data[i].ps = pscheme_data[i].m * current_point->y -
-            0.5 * (pscheme_data[i].beta_ps_expl * (current_point->next->x - current_point->previous->x)) +
-            0.25 * (fmin(-pscheme_data[i].alfa, 0.0) * (current_point->previous->y - current_point->next->y) +
-                fmin(pscheme_data[i].alfa, 0.0) * (current_point->next->y - current_point->previous->y));
+        previous_point = current_point->previous;
+        next_point = current_point->next;
 
-        current_point = current_point->next;
+        if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
+        {
+            pscheme_data[i].ps = /*pscheme_data[i].m * */ current_point->y;
+        }
+        else
+        {
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y -
+                0.5 * (pscheme_data[i].beta_ps_expl * (next_point->x - previous_point->x)) +
+                0.25 * (fmin(-pscheme_data[i].alfa, 0.0) * (previous_point->y - next_point->y) +
+                    fmin(pscheme_data[i].alfa, 0.0) * (next_point->y - previous_point->y));
+        }
+
+        current_point = next_point;
     }
 
     current_point = plinked_curve->first_point;
@@ -388,7 +413,14 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
         current_point = current_point->next;
     }
 
-    sherman_morris(pscheme_data, plinked_curve->number_of_points);
+    if (pparams->open_curve)
+    {
+        calculate_by_thomas(pscheme_data, plinked_curve->number_of_points);
+    }
+    else
+    {
+        sherman_morris(pscheme_data, plinked_curve->number_of_points);
+    }
 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
@@ -404,7 +436,7 @@ bool evolveBySingleStep(Image_Data2D * pimage, Image_Data2D* pedge, LinkedCurve*
 void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     void(*pget_velocity)(Image_Data2D*, double, double, double*, double*),
     void(*pget_g2)(Image_Data2D*, double, double, double, double, double*),
-    const double ref_intensity, const double g2_coef, const double eps, const double lambda)
+    const double ref_intensity, const double g2_coef, const double eps, const double lambda, const double mu)
 {
     if (plinked_curve == NULL ||
         pscheme_data == NULL ||
@@ -427,35 +459,56 @@ void normal_velocity(Image_Data2D* pimage, Image_Data2D* pedge, LinkedCurve* pli
     double h_i = -1;
     double h_i_plus = -1;
 
+    bool is_closed_curve = plinked_curve->first_point->previous != NULL;
+
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        h_i = current_point->previous->distance_to_next;
-        h_i_plus = current_point->distance_to_next;
+        if (is_closed_curve || (i > 1 && i < plinked_curve->number_of_points))
+        {
+            h_i = current_point->previous->distance_to_next;
+            h_i_plus = current_point->distance_to_next;
 
-        (*pget_velocity)(pedge, current_point->x, current_point->y, &m_pdvx_ij, &m_pdvy_ij);
+            (*pget_velocity)(pedge, current_point->x, current_point->y, &m_pdvx_ij, &m_pdvy_ij);
 
-        (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, g2_coef, &m_pdg2_ij);
+            pscheme_data[i].f = (-1.0) * m_pdvx_ij * (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i) -
+                (-1.0) * m_pdvy_ij * (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
 
-        pscheme_data[i].f = m_pdvx_ij * (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i) -
-            m_pdvy_ij * (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
-
-        pscheme_data[i].f = (1.0 - lambda) * m_pdg2_ij + lambda * pscheme_data[i].f;
-
+            if (is_closed_curve) {
+                (*pget_g2)(pimage, current_point->x, current_point->y, ref_intensity, g2_coef, &m_pdg2_ij);
+                pscheme_data[i].f = (1.0 - lambda) * m_pdg2_ij + lambda * pscheme_data[i].f;
+            }
+        }
+        else
+        {
+            pscheme_data[i].f = 0;
+        }
         current_point = current_point->next;
     }
 
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        pscheme_data[i].beta_ps_expl = pscheme_data[i].f; //beta on the right for expl.cast//lam2 == 0
-        pscheme_data[i].beta = pscheme_data[i].curvature * eps - pscheme_data[i].beta_ps_expl;//total beta
+        if (is_closed_curve || (i > 1 && i < plinked_curve->number_of_points))
+        {
+            pscheme_data[i].beta_ps_expl = mu * pscheme_data[i].f; //beta on the right for expl.cast//lam2 == 0
+            pscheme_data[i].beta = pscheme_data[i].curvature * eps - pscheme_data[i].beta_ps_expl;//total beta
+        }
+        else
+        {
+            pscheme_data[i].beta_ps_expl = 0;
+            pscheme_data[i].beta = 0;
+        }
     }
 
-    pscheme_data[0].f = pscheme_data[number_of_points].f;
-    pscheme_data[number_of_points + 1].f = pscheme_data[1].f;
-    pscheme_data[0].beta = pscheme_data[number_of_points].beta;
-    pscheme_data[number_of_points + 1].beta = pscheme_data[1].beta;
-    pscheme_data[0].beta_ps_expl = pscheme_data[number_of_points].beta_ps_expl;
-    pscheme_data[number_of_points + 1].beta_ps_expl = pscheme_data[1].beta_ps_expl;
+    if (is_closed_curve)
+    {
+        pscheme_data[0].f = pscheme_data[number_of_points].f;
+        pscheme_data[number_of_points + 1].f = pscheme_data[1].f;
+        pscheme_data[0].beta = pscheme_data[number_of_points].beta;
+        pscheme_data[number_of_points + 1].beta = pscheme_data[1].beta;
+        pscheme_data[0].beta_ps_expl = pscheme_data[number_of_points].beta_ps_expl;
+        pscheme_data[number_of_points + 1].beta_ps_expl = pscheme_data[1].beta_ps_expl;
+    }
+
 }
 
 // alpha
@@ -470,18 +523,35 @@ void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     const double avg_length = curve_length / number_of_points;
     double h_i = -1;
 
+    bool is_curve_closed = plinked_curve->first_point->previous != NULL;
+
     for (i = 1; i <= number_of_points; i++)
     {
-        h_i = current_point->previous->distance_to_next;
+        if (is_curve_closed || i > 1)
+        {
+            h_i = current_point->previous->distance_to_next;
+        }
+        else
+        {
+            h_i = current_point->distance_to_next;
+        }
 
         mean += pscheme_data[i].beta * pscheme_data[i].curvature * h_i;
 
         current_point = current_point->next;
     }
-    mean /= curve_length;
+
+    if (is_curve_closed)
+    {
+        mean /= curve_length;
+    }
+    else
+    {
+        mean /= (curve_length - 1);
+    }
 
     // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
-    pscheme_data[1].alfa = 0.0;	
+    pscheme_data[1].alfa = 0.0;
 
     double alpha_sum = 0;
 
@@ -490,16 +560,32 @@ void tang_velocity(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     {
         h_i = current_point->previous->distance_to_next;
 
-        pscheme_data[i].alfa = pscheme_data[i - 1].alfa +
-            pscheme_data[i].beta * pscheme_data[i].curvature * h_i -
-            mean * h_i + omega * (avg_length - h_i);
+        if (current_point->next == NULL)
+        {
+            pscheme_data[i].alfa = 0;//should be done automatically
+        }
+        else
+        {
+            pscheme_data[i].alfa = pscheme_data[i - 1].alfa +
+                pscheme_data[i].beta * pscheme_data[i].curvature * h_i -
+                mean * h_i + omega * (avg_length - h_i);
+        }
 
         alpha_sum += pscheme_data[i].alfa;
 
         current_point = current_point->next;
     }
-    pscheme_data[0].alfa = pscheme_data[number_of_points].alfa;
-    pscheme_data[number_of_points + 1].alfa = pscheme_data[1].alfa;
+
+    if (is_curve_closed)
+    {
+        pscheme_data[0].alfa = pscheme_data[number_of_points].alfa;
+        pscheme_data[number_of_points + 1].alfa = pscheme_data[1].alfa;
+    }
+    else
+    {
+        //pscheme_data[0].alfa = pscheme_data[1].alfa;
+        //pscheme_data[number_of_points + 1].alfa = pscheme_data[number_of_points].alfa;
+    }
 }
 
 //coeffs
@@ -514,21 +600,45 @@ bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
     double h_i = -1;
     double h_i_plus = -1;
     LinkedPoint* current_point = plinked_curve->first_point;
+    LinkedPoint* previous_point;
+
+    bool is_curve_closed = plinked_curve->first_point->previous != NULL;
 
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        h_i = current_point->previous->distance_to_next;
-        h_i_plus = current_point->distance_to_next;
+        if (is_curve_closed || (i > 1 && i < plinked_curve->number_of_points))
+        {
+            previous_point = current_point->previous;
 
-        pscheme_data[i].b = -0.5 * fmax(-pscheme_data[i].alfa, 0.0) - 1.0 / h_i * eps;//lower diagonal
-        pscheme_data[i].c = -0.5 * fmax(pscheme_data[i].alfa, 0.0) - 1.0 / h_i_plus * eps;//upper diagonal
+            h_i = previous_point->distance_to_next;
 
-        pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
-        pscheme_data[i].a = pscheme_data[i].m - (pscheme_data[i].b + pscheme_data[i].c);//stiffness matrix
+            if (is_curve_closed || i < plinked_curve->number_of_points)
+            {
+                h_i_plus = current_point->distance_to_next;
+            }
+            else
+            {
+                h_i_plus = h_i;
+            }
 
-        if (fabs(pscheme_data[i].b) + fabs(pscheme_data[i].c) > fabs(pscheme_data[i].a) || pscheme_data[i].a < 0) {
-            //the matrix is not positive dominant
-            return false;
+            pscheme_data[i].b = -0.5 * fmax(-pscheme_data[i].alfa, 0.0) - 1.0 / h_i * eps;//lower diagonal
+            pscheme_data[i].c = -0.5 * fmax(pscheme_data[i].alfa, 0.0) - 1.0 / h_i_plus * eps;//upper diagonal
+
+            pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
+            pscheme_data[i].a = pscheme_data[i].m - (pscheme_data[i].b + pscheme_data[i].c);//stiffness matrix
+
+            if (fabs(pscheme_data[i].b) + fabs(pscheme_data[i].c) > fabs(pscheme_data[i].a) || pscheme_data[i].a < 0) {
+                //the matrix is not positive dominant
+                return false;
+            }
+        }
+        else
+        {
+            previous_point = current_point;
+            pscheme_data[i].b = 0;
+            pscheme_data[i].c = 0;
+            pscheme_data[i].a = 1.0;
+            pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
         }
 
         current_point = current_point->next;
@@ -545,9 +655,12 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
         return;
     }
 
+    bool is_curve_closed = plinked_curve->first_point->previous != NULL;
     const size_t curve_length = plinked_curve->number_of_points;
     double phi;
     LinkedPoint* current_point = plinked_curve->first_point;
+    LinkedPoint* previous = NULL;
+    LinkedPoint* previous_previous = NULL;
 
     double h_i_minus = -1;
     double h_i_plus = -1;
@@ -556,41 +669,66 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
     double x_i_minus_2, x_i_minus_1, x_i, x_i_plus_1;
     double y_i_minus_2, y_i_minus_1, y_i, y_i_plus_1;
 
+
+
     for (size_t i = 1; i <= curve_length; i++)
     {
-        h_i_minus = current_point->previous->previous->distance_to_next;
-        h_i_plus = current_point->distance_to_next;
-        h_i = current_point->previous->distance_to_next;
+        if (!is_curve_closed && (i <= 2 || i >= curve_length - 1))
+        {
+            pscheme_data[i].curvature = 0;
+        }
+        else
+        {
+            previous = current_point->previous;
+            previous_previous = previous;
 
-        x_i_minus_2 = current_point->previous->previous->x;
-        x_i_minus_1 = current_point->previous->x;
-        x_i = current_point->x;
-        x_i_plus_1 = current_point->next->x;
+            h_i_minus = previous_previous->distance_to_next;
+            h_i_plus = current_point->distance_to_next;
+            h_i = previous->distance_to_next;
 
-        y_i_minus_2 = current_point->previous->previous->y;
-        y_i_minus_1 = current_point->previous->y;
-        y_i = current_point->y;
-        y_i_plus_1 = current_point->next->y;
+            x_i_minus_2 = previous_previous->x;
+            x_i_minus_1 = previous->x;
+            x_i = current_point->x;
+            x_i_plus_1 = current_point->next->x;
 
-        phi = (
-            (x_i_minus_1 - x_i_minus_2) * (x_i_plus_1 - x_i) +
-            (y_i_minus_1 - y_i_minus_2) * (y_i_plus_1 - y_i)
-            ) / (h_i_plus * h_i_minus);
+            y_i_minus_2 = previous_previous->y;
+            y_i_minus_1 = previous->y;
+            y_i = current_point->y;
+            y_i_plus_1 = current_point->next->y;
 
-        if (phi > 1)
-            phi = 1.;
-        else if (phi < -1)
-            phi = -1.;
+            phi = (
+                (x_i_minus_1 - x_i_minus_2) * (x_i_plus_1 - x_i) +
+                (y_i_minus_1 - y_i_minus_2) * (y_i_plus_1 - y_i)
+                ) / (h_i_plus * h_i_minus);
 
-        pscheme_data[i].curvature = 0.5 * signum(
-            (x_i_minus_1 - x_i_minus_2) * (y_i_plus_1 - y_i) -
-            (x_i_plus_1 - x_i) * (y_i_minus_1 - y_i_minus_2)
-        ) * acos(phi) / h_i;
+            if (phi > 1)
+                phi = 1.;
+            else if (phi < -1)
+                phi = -1.;
+
+            pscheme_data[i].curvature = 0.5 * signum(
+                (x_i_minus_1 - x_i_minus_2) * (y_i_plus_1 - y_i) -
+                (x_i_plus_1 - x_i) * (y_i_minus_1 - y_i_minus_2)
+            ) * acos(phi) / h_i;
+
+        }
 
         current_point = current_point->next;
     }
 
-    pscheme_data[0].curvature = pscheme_data[curve_length].curvature;
-    pscheme_data[curve_length + 1].curvature = pscheme_data[curve_length + 1].curvature;
+    if (is_curve_closed)
+    {
+        pscheme_data[0].curvature = pscheme_data[curve_length].curvature;
+        pscheme_data[curve_length + 1].curvature = pscheme_data[1].curvature;
+    }
+    else
+    {
+
+        pscheme_data[2].curvature = pscheme_data[3].curvature;
+        pscheme_data[curve_length - 1].curvature = pscheme_data[curve_length - 2].curvature;
+
+        pscheme_data[1].curvature = pscheme_data[2].curvature;
+        pscheme_data[curve_length].curvature = pscheme_data[curve_length - 1].curvature;
+    }
 }
 
