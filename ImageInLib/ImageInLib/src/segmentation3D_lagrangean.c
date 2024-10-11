@@ -7,7 +7,7 @@
 
 bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
-void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data);
+//void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data);
 
 void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
     void(*pget_velocity)(Image_Data*, double, double, double, double*, double*, double*),
@@ -400,8 +400,83 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     const double omega = pparams->omega;
     const double dt = pparams->time_step_size;
 
-    calculateCurvature3D(plinked_curve, pscheme_data);
-    normal_velocity3D(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda);
+    double h_i_minus, h_i_plus, h_i;
+    const size_t curve_length = plinked_curve->number_of_points;
+    const size_t vector_lenght = curve_length + 2;
+
+    double** kn = (double**)malloc(sizeof(double*) * vector_lenght);
+    double** k1 = (double**)malloc(sizeof(double*) * vector_lenght);
+    double** k2 = (double**)malloc(sizeof(double*) * vector_lenght);
+    for (size_t i = 0; i < vector_lenght; i++) {
+        kn[i] = (double*)malloc(sizeof(double) * 3);
+        k1[i] = (double*)malloc(sizeof(double) * 3);
+        k2[i] = (double*)malloc(sizeof(double) * 3);
+        if (kn[i] == NULL || k1[i] == NULL || k2[i] == NULL)
+        {
+            return false;
+        }
+    }
+    if (kn == NULL || k1 == NULL || k2 == NULL)
+    {
+        return false;
+    }
+
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    double m;
+
+
+
+    for (size_t i = 1; i < vector_lenght; i++)
+    {
+        h_i = current_point->previous->distance_to_next;
+        h_i_plus = current_point->distance_to_next;
+
+        //tx = (current_point->next->x - current_point->previous->x) / (h_i_plus + h_i);
+        //ty = (current_point->next->y - current_point->previous->y) / (h_i_plus + h_i);
+        //tz = (current_point->next->z - current_point->previous->z) / (h_i_plus + h_i);
+
+        //(*pget_velocity)(pedge, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+
+        //dot = tx * vx + ty * vy + tz * vz;
+
+        //nvx = -vx - dot * vx;
+        //nvy = -vy - dot * vy;
+        //nvz = -vz - dot * vz;
+
+        //Point3D pnorm = { nvx, nvy, nvz };
+        //norm = norm3D(pnorm);
+
+        //n1_x = nvx / norm;
+        //n1_y = nvy / norm;
+        //n1_z = nvz / norm;
+
+        //n2_x = n1_y * tz - n1_z * ty;
+        //n2_y = n1_z * tx - n1_x * tz;
+        //n2_z = n1_x * ty - n1_y * tx;
+
+        //curv_x = (2.0 / (h_i_plus + h_i) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i));
+        //curv_y = (2.0 / (h_i_plus + h_i) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i));
+        //curv_z = (2.0 / (h_i_plus + h_i) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i));
+
+        current_point = current_point->next;
+    }
+
+    //Compute curvature vector
+    for (size_t i = 1; i <= curve_length; i++) {
+        h_i_plus = current_point->distance_to_next;
+        h_i = current_point->previous->distance_to_next;
+        m = 2.0 / (h_i_plus + h_i);
+        kn[i][0] = m * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
+        kn[i][1] = m * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
+        kn[i][2] = m * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
+    }
+
+    //k1 and k2
+    for (size_t i = 1; i <= curve_length; i++)
+    {
+        //
+    }
+
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
@@ -466,9 +541,19 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     //    current_point = current_point->next;
     //}
 
+    for (size_t i = 0; i < vector_lenght; i++) {
+        free(kn[i]);
+        free(k1[i]);
+        free(k2[1]);
+    }
+    free(kn);
+    free(k1);
+    free(k2);
+
     return true;
 }
 
+/*
 //the mean curvature of three adjacent elements is calculated - 4 points
 void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data)
 {
@@ -541,6 +626,7 @@ void calculateCurvature3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_da
     //pscheme_data[curve_length + 1].curvature = pscheme_data[curve_length + 1].curvature;
 
 }
+*/
 
 //beta preparation
 void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
@@ -563,7 +649,6 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
     double tx, ty, tz;
     double vx, vy, vz;
     double nvx, nvy, nvz;
-    double grad_x, grad_y, grad_z;
     double dot, norm;
     double n1_x, n1_y, n1_z;
     double n2_x, n2_y, n2_z;
