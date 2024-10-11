@@ -124,3 +124,60 @@ bool calculate_by_thomas(SchemeData* pscheme_data, const size_t number_of_points
 	return true;
 }
 
+bool thomas3D(SchemeData3D* pscheme_data, const size_t number_of_points)
+{
+	if (pscheme_data == NULL)
+	{
+		return false;
+	}
+
+	double m = 0;
+
+	//forward elimination
+
+	for (size_t i = 2; i < number_of_points + 1; i++)
+	{
+		m = pscheme_data[i].thomas_a / pscheme_data[i - 1].thomas_b;
+		pscheme_data[i].thomas_b -= m * pscheme_data[i - 1].c;
+		pscheme_data[i].thomas_ps -= m * pscheme_data[i - 1].thomas_ps;
+	}
+
+	//backward substitution
+
+	pscheme_data[number_of_points].thomas_x = pscheme_data[number_of_points].thomas_ps / pscheme_data[number_of_points].thomas_b;
+
+	for (size_t i = number_of_points - 1; i >= 1; i--)
+	{
+		pscheme_data[i].thomas_x = (pscheme_data[i].thomas_ps - pscheme_data[i].thomas_c * pscheme_data[i + 1].thomas_x) / pscheme_data[i].thomas_b;
+	}
+
+	return true;
+}
+
+bool calculate_by_thomas3D(SchemeData3D* pscheme_data, const size_t number_of_points)
+{
+	if (pscheme_data == NULL)
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < number_of_points + 2; i++)
+	{
+		pscheme_data[i].thomas_a = pscheme_data[i].a;
+		pscheme_data[i].thomas_b = pscheme_data[i].b;
+		pscheme_data[i].thomas_c = pscheme_data[i].c;
+		pscheme_data[i].thomas_ps = pscheme_data[i].ps;
+	}
+	thomas3D(pscheme_data, number_of_points);
+
+	for (size_t i = 0; i < number_of_points + 2; i++)
+	{
+		pscheme_data[i].sol = pscheme_data[i].thomas_x;
+	}
+
+	pscheme_data[0].sol = pscheme_data[number_of_points].sol;
+	pscheme_data[number_of_points + 1].sol = pscheme_data[1].sol;
+
+	return true;
+}
+
