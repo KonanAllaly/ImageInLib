@@ -510,6 +510,8 @@ extern "C" {
 
 	bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve);
 
+	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus

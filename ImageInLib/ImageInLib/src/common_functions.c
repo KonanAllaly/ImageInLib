@@ -1092,3 +1092,29 @@ bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, cons
 
 	return true;
 }
+
+void release3dLinkedCurve(LinkedCurve3D* linked_curve)
+{
+	if (linked_curve == NULL)
+	{
+		return;
+	}
+
+	LinkedPoint3D* current_point = linked_curve->first_point;
+	if (current_point != NULL &&
+		current_point->previous != NULL)
+	{
+		(current_point->previous)->next = NULL;
+	}
+
+	LinkedPoint3D* next_point = NULL;
+
+	while (current_point != NULL) {
+		next_point = current_point->next;
+		free(current_point);
+		current_point = NULL;
+		linked_curve->number_of_points--;
+
+		current_point = next_point;
+	}
+}
