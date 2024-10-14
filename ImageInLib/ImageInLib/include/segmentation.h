@@ -53,9 +53,9 @@ extern "C" {
 		dataType omega;	//redistribution speed
 		dataType edge_detector_coef; //edge detector coefficient
 		dataType intensityCoef; // coeficient for the similar intensity detector
-		dataType refence_intensity; //The reference intensity for G2
-		void(*get_velocity)(Image_Data*, double, double, double*, double*);//pointer to the function returning the velocity for a given coordinate
-		void(*get_g2)(Image_Data*, double, double, double, double, double*);//pointer to the function returning the g2 value for a given coordinate
+		dataType reference_intensity; //The reference intensity for G2
+		void(*get_velocity)(Image_Data*, double, double, double, double*, double*, double*);//pointer to the function returning the velocity for a given coordinate
+		void(*get_g2)(Image_Data*, double, double, double, double, double, double*);//pointer to the function returning the g2 value for a given coordinate
 		bool open_curve;
 	} Lagrangean3DSegmentationParameters;
 
