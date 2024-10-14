@@ -27,6 +27,7 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
             FilterParameters* explicitLheParameters = (FilterParameters*)(pfilterParameters);
             generalizedSubsurfSegmentation(inputImageData, pSegmentationParams->pInitialCondition, *pSegmentationParams, *explicitLheParameters, 
                 pSegmentationParams->pCenters, pSegmentationParams->no_of_centers, outputPathPtr);
+            break;
         }
         case CURVE_2D_EXPLCIT:
         {
@@ -34,6 +35,7 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
             Lagrangean2DSegmentationParameters* pSegmentationParams = (Lagrangean2DSegmentationParameters*)pSegParameters;
             Curve2D* resultSegmentationCurve = (Curve2D*)resultSegment;
             lagrangeanExplicit2DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
+            break;
         }
         case CURVE_2D_SEMI_IMPLICIT:
         {
@@ -41,6 +43,7 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
             Lagrangean2DSegmentationParameters* pSegmentationParams = (Lagrangean2DSegmentationParameters*)pSegParameters;
             Curve2D* resultSegmentationCurve = (Curve2D*)resultSegment;
             lagrangeanSemiImplicit2DCurveSegmentation(inputImageData, pSegmentationParams, outputPathPtr, resultSegmentationCurve);
+            break;
         }
         default:
             break;
