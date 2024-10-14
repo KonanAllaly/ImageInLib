@@ -1020,3 +1020,75 @@ bool is3dCurveOrientedPositively(const Curve3D* pcurve)
 	return signum(signed_area) > 0.0;
 
 }
+
+LinkedPoint3D* create3dLinkedPoint(const double point_x, const double point_y, const double point_z)
+{
+	LinkedPoint3D* linked_point = (LinkedPoint3D*)malloc(sizeof(LinkedPoint3D));
+	linked_point->x = point_x;
+	linked_point->y = point_y;
+	linked_point->z = point_z;
+	linked_point->next = NULL;
+	linked_point->previous = NULL;
+	linked_point->distance_to_next = 0;
+	linked_point->id = getNextID();
+	return linked_point;
+}
+
+LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z)
+{
+	LinkedPoint3D* new_linked_point = create3dLinkedPoint(point_x, point_y, point_z);
+
+	if (linked_point->next != NULL)
+	{
+		new_linked_point->next = linked_point->next;
+	}
+
+	linked_point->next = new_linked_point;
+	(linked_point->next)->previous = linked_point;
+
+	linked_curve->number_of_points++;
+
+	updateDistance3dToNext(linked_curve, linked_point);
+	updateDistance3dToNext(linked_curve, new_linked_point);
+
+	return new_linked_point;
+}
+
+bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve)
+{
+	if (pcurve == NULL || plinked_curve == NULL)
+	{
+		return false;
+	}
+
+	size_t from = 0, to = pcurve->numPoints - 1;
+	size_t increment = 1;
+	if (reverse)
+	{
+		from = pcurve->numPoints;
+		to = 0;
+		size_t increment = -1;
+	}
+
+	size_t i = from;
+	LinkedPoint3D* pcurrent_point = create3dLinkedPoint(pcurve->pPoints[from].x, pcurve->pPoints[from].y, pcurve->pPoints[from].z);
+	plinked_curve->first_point = pcurrent_point;
+	plinked_curve->number_of_points = 1;
+
+	while (i != to)
+	{
+		i += increment;
+
+		pcurrent_point = pushAfter3dPoint(plinked_curve, pcurrent_point, pcurve->pPoints[i].x, pcurve->pPoints[i].y, pcurve->pPoints[i].z);
+	}
+
+	if (close_curve)
+	{
+		pcurrent_point->next = plinked_curve->first_point;
+		plinked_curve->first_point->previous = pcurrent_point;
+	}
+
+	updateDistance3dToNext(plinked_curve, pcurrent_point);
+
+	return true;
+}

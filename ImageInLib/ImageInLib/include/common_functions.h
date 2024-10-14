@@ -504,6 +504,11 @@ extern "C" {
 
 	bool is3dCurveOrientedPositively(const Curve3D* pcurve);
 
+	LinkedPoint3D* create3dLinkedPoint(const double point_x, const double point_y, const double point_z);
+
+	LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z);
+
+	bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve);
 
 #endif // !COMMON_FUNCTIONS
 
