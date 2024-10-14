@@ -96,9 +96,6 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
             }
         }
     }
-    
-    //unsigned char _path_grad[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
-    //manageFile(edge_detector, inputImage3D.length, inputImage3D.width, inputImage3D.height, _path_grad , STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
 
     //get the velocity field
     for (size_t k = 0; k < inputImage3D.height; k++)
@@ -290,7 +287,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation)
 {
-    if (pSegmentationParams == NULL || pSegmentationParams->open_curve || pResultSegmentation == NULL) {
+    if (pSegmentationParams == NULL || pResultSegmentation == NULL) {
         return false;
     }
 
@@ -346,43 +343,76 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     LinkedCurve3D linked_curve = create3dLinkedCurve();
     initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
 
-    if (!pSegmentationParams->open_curve)
+    //it is still necessary to think which part of these data will be in the revised list
+    size_t length_of_data = linked_curve.number_of_points + 2;
+    SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
+
+    for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
     {
-        //it is still necessary to think which part of these data will be in the revised list
-        size_t length_of_data = linked_curve.number_of_points + 2;
-        SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
-
-        for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
+        if (length_of_data < linked_curve.number_of_points + 2)
         {
-            if (length_of_data < linked_curve.number_of_points + 2)
-            {
-                free(pscheme_data);
-                length_of_data = linked_curve.number_of_points + 2;
-                pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
-            }
-            //evolve curve
-            evolveBySingleStep3D(&inputImage3D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
+            free(pscheme_data);
+            length_of_data = linked_curve.number_of_points + 2;
+            pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         }
-
-        free(pscheme_data);
-        for (size_t k = 0; k < inputImage3D.height; k++) {
-            free(edge_detector[k]);
-        }
-        free(edge_detector);
-
-        LinkedPoint3D* pt = linked_curve.first_point;
-        for (size_t i = 0; i < linked_curve.number_of_points; i++)
-        {
-            pResultSegmentation->pPoints[i].x = (dataType)pt->x;
-            pResultSegmentation->pPoints[i].y = (dataType)pt->y;
-            pResultSegmentation->pPoints[i].z = (dataType)pt->z;
-            pt = pt->next;
-        }
-        release3dLinkedCurve(&linked_curve);
-
-        return true;
-
+        //evolve curve
+        evolveBySingleStep3D(&inputImage3D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
     }
+
+    free(pscheme_data);
+    for (size_t k = 0; k < inputImage3D.height; k++) {
+        free(edge_detector[k]);
+    }
+    free(edge_detector);
+
+    LinkedPoint3D* pt = linked_curve.first_point;
+
+    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    {
+        pResultSegmentation->pPoints[i].x = (dataType)pt->x;
+        pResultSegmentation->pPoints[i].y = (dataType)pt->y;
+        pResultSegmentation->pPoints[i].z = (dataType)pt->z;
+        pt = pt->next;
+    }
+
+    release3dLinkedCurve(&linked_curve);
+
+    //releaseLinkedCurve(&linked_curve);
+    //LinkedCurve3D linked_curve = create3dLinkedCurve();
+    //initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
+    //if (!pSegmentationParams->open_curve)
+    //{
+    //    //it is still necessary to think which part of these data will be in the revised list
+    //    size_t length_of_data = linked_curve.number_of_points + 2;
+    //    SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
+    //    for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
+    //    {
+    //        if (length_of_data < linked_curve.number_of_points + 2)
+    //        {
+    //            free(pscheme_data);
+    //            length_of_data = linked_curve.number_of_points + 2;
+    //            pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
+    //        }
+    //        //evolve curve
+    //        evolveBySingleStep3D(&inputImage3D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
+    //    }
+
+    //    free(pscheme_data);
+    //    for (size_t k = 0; k < inputImage3D.height; k++) {
+    //        free(edge_detector[k]);
+    //    }
+    //    free(edge_detector);
+    //    LinkedPoint3D* pt = linked_curve.first_point;
+    //    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    //    {
+    //        pResultSegmentation->pPoints[i].x = (dataType)pt->x;
+    //        pResultSegmentation->pPoints[i].y = (dataType)pt->y;
+    //        pResultSegmentation->pPoints[i].z = (dataType)pt->z;
+    //        pt = pt->next;
+    //    }
+    //    release3dLinkedCurve(&linked_curve);
+    //    return true;
+    //}
 
     return false;
 }
@@ -412,7 +442,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     LinkedPoint3D* current_point = plinked_curve->first_point;
     LinkedPoint3D* next_point = NULL;
 
-    double h_i, h_i_plus;
+    double h_i = -1, h_i_plus = -1;
 
     //////////////////////    X component ///////////////////////////////////////////////////////////
     
@@ -543,7 +573,7 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
     LinkedPoint3D* current_point = plinked_curve->first_point;
 
-    double h_i, h_i_plus; // distance between two neighboring points
+    double h_i = -1, h_i_plus = -1; // distance between two neighboring points
     double vx, vy, vz; // external velocity field components 
     double tx, ty, tz; //tangential vector components
     double som_dist, dot, norm_nv; 
@@ -584,14 +614,14 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
         n2_y = n1_z * tx - n1_x * tz;
         n2_z = n1_x * ty - n1_y * tx;
 
-        curv_x = (2.0 / (som_dist)) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
-        curv_y = (2.0 / (som_dist)) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
-        curv_z = (2.0 / (som_dist)) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
+        curv_x = (2.0 / som_dist) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
+        curv_y = (2.0 / som_dist) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
+        curv_z = (2.0 / som_dist) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
 
         pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
         pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
         pscheme_data[i].u = eps * pscheme_data[i].k1 + mu * norm_nv;
-        pscheme_data[i].u = eps * pscheme_data[i].k2;
+        pscheme_data[i].v = eps * pscheme_data[i].k2;
 
         current_point->nx = nvx;
         current_point->ny = nvy;
@@ -653,7 +683,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
     }
 
     // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
-    pscheme_data[0].alfa = 0.0;
+    pscheme_data[1].alfa = 0.0;
 
     double alpha_sum = 0;
 
