@@ -91,14 +91,14 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 
                 //Similar intensity detector
                 if (!pSegmentationParams->open_curve) {
-                    similar_intensity_detector[k][xd] = similarIntensityDetector(inputImage3D.imageDataPtr[k][xd], pSegmentationParams->refence_intensity, pSegmentationParams->intensityCoef);
+                    similar_intensity_detector[k][xd] = similarIntensityDetector(inputImage3D.imageDataPtr[k][xd], pSegmentationParams->reference_intensity, pSegmentationParams->intensityCoef);
                 }
             }
         }
     }
     
-    unsigned char _path_grad[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
-    manageFile(edge_detector, inputImage3D.length, inputImage3D.width, inputImage3D.height, _path_grad , STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
+    //unsigned char _path_grad[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/edge_detector.raw";
+    //manageFile(edge_detector, inputImage3D.length, inputImage3D.width, inputImage3D.height, _path_grad , STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
 
     //get the velocity field
     for (size_t k = 0; k < inputImage3D.height; k++)
@@ -336,15 +336,15 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     resetIDGenerator();
     //let us consider single curve without topological changes
 
-    bool isOrientedPositively = true; //does not metter for open curves
+    bool isOrientedPositively = true; //does not matter for open curves
 
     if (!pSegmentationParams->open_curve)
     {
-        isOrientedPositively = isCurveOrientedPositively(pSegmentationParams->pinitial_condition);
+        isOrientedPositively = is3dCurveOrientedPositively(pSegmentationParams->pinitial_condition);
     }
 
-    LinkedCurve linked_curve = createLinkedCurve();
-    initializeLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
+    LinkedCurve3D linked_curve = create3dLinkedCurve();
+    initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
 
     if (!pSegmentationParams->open_curve)
     {
@@ -370,15 +370,15 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         }
         free(edge_detector);
 
-        //LinkedPoint* pt = linked_curve.first_point;
-        //for (size_t i = 0; i < linked_curve.number_of_points; i++)
-        //{
-        //    pResultSegmentation->pPoints[i].x = (dataType)pt->x;
-        //    pResultSegmentation->pPoints[i].y = (dataType)pt->y;
-        //    pResultSegmentation->pPoints[i].z = 1.0;//(dataType)pt->z;
-        //    pt = pt->next;
-        //}
-        //releaseLinkedCurve(&linked_curve);
+        LinkedPoint3D* pt = linked_curve.first_point;
+        for (size_t i = 0; i < linked_curve.number_of_points; i++)
+        {
+            pResultSegmentation->pPoints[i].x = (dataType)pt->x;
+            pResultSegmentation->pPoints[i].y = (dataType)pt->y;
+            pResultSegmentation->pPoints[i].z = (dataType)pt->z;
+            pt = pt->next;
+        }
+        release3dLinkedCurve(&linked_curve);
 
         return true;
 
@@ -389,11 +389,9 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
 
 bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
 {
-    if (plinked_curve == NULL ||
-        pscheme_data == NULL ||
-        pparams == NULL ||
-        pimage->imageDataPtr == NULL ||
-        pedge->imageDataPtr == NULL) {
+    if (plinked_curve == NULL || pscheme_data == NULL || pparams == NULL ||
+        pimage->imageDataPtr == NULL || pedge->imageDataPtr == NULL) 
+    {
         return false;
     }
 
@@ -403,7 +401,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     const double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
-    normal_velocity3D(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->refence_intensity, pparams->intensityCoef, eps, lambda, mu);
+    normal_velocity3D(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->reference_intensity, pparams->intensityCoef, eps, lambda, mu);
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
@@ -441,6 +439,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     }
     else
     {
+        //TODO : write the sheman_morris function for the new scheme data structure
         //sherman_morris(pscheme_data, plinked_curve->number_of_points);
     }
 
@@ -467,7 +466,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, current_point->z);
+        update3dPoint(plinked_curve, current_point, pscheme_data[i].sol, current_point->y, current_point->z);
         current_point = current_point->next;
     }
 
@@ -477,14 +476,8 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     }
     else
     {
+        //TODO : write the sheman_morris function for the new scheme data structure
         //sherman_morris(pscheme_data, plinked_curve->number_of_points);
-    }
-
-    current_point = plinked_curve->first_point;
-    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
-    {
-        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, current_point->z);
-        current_point = current_point->next;
     }
 
     /////////////////////    Z component   ///////////////////////////////////////////////////////////
@@ -509,7 +502,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, current_point->z);
+        update3dPoint(plinked_curve, current_point, current_point->x, pscheme_data[i].sol, current_point->z);
         current_point = current_point->next;
     }
 
@@ -519,13 +512,14 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     }
     else
     {
+        //TODO : write the sheman_morris function for the new scheme data structure
         //sherman_morris(pscheme_data, plinked_curve->number_of_points);
     }
 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, current_point->z);
+        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, pscheme_data[i].sol);
         current_point = current_point->next;
     }
 
