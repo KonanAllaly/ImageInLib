@@ -979,3 +979,44 @@ LinkedCurve3D create3dLinkedCurve()
 	linkedCurve.length = 0;
 	return linkedCurve;
 }
+
+bool is3dCurveOrientedPositively(const Curve3D* pcurve)
+{
+	if (pcurve == NULL) {
+		return false;
+	}
+
+	double signed_area = 0;
+	double x_i_plus = -1;
+	double y_i_plus = -1;
+	double z_i_plus = -1;
+	double x_i = -1, y_i = -1, z_i = -1;
+
+	for (size_t i = 0; i < pcurve->numPoints; i++)
+	{
+		x_i = pcurve->pPoints[i].x;
+		y_i = pcurve->pPoints[i].y;
+		z_i = pcurve->pPoints[i].z;
+
+		if (i + 1 == pcurve->numPoints)
+		{
+			x_i_plus = pcurve->pPoints[0].x;
+			y_i_plus = pcurve->pPoints[0].y;
+			z_i_plus = pcurve->pPoints[0].z;
+		}
+		else
+		{
+			x_i_plus = pcurve->pPoints[i + 1].x;
+			y_i_plus = pcurve->pPoints[i + 1].y;
+			z_i_plus = pcurve->pPoints[i + 1].z;
+		}
+
+		Point3D cross_product = {y_i * z_i_plus - z_i * y_i_plus , z_i * x_i_plus - x_i * z_i_plus, x_i * y_i_plus - y_i * x_i_plus };
+		signed_area += norm3D(cross_product);
+	}
+
+	signed_area *= 0.5;
+
+	return signum(signed_area) > 0.0;
+
+}
