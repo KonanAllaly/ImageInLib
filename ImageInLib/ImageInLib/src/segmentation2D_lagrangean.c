@@ -621,8 +621,8 @@ bool semiCoefficients(LinkedCurve* plinked_curve, SchemeData* pscheme_data,
                 h_i_plus = h_i;
             }
 
-            pscheme_data[i].b = -0.5 * fmax(-pscheme_data[i].alfa, 0.0) - 1.0 / h_i * eps;//lower diagonal
-            pscheme_data[i].c = -0.5 * fmax(pscheme_data[i].alfa, 0.0) - 1.0 / h_i_plus * eps;//upper diagonal
+            pscheme_data[i].b = -0.5 * fmax(-pscheme_data[i].alfa, 0.0) - eps / h_i;//lower diagonal
+            pscheme_data[i].c = -0.5 * fmax(pscheme_data[i].alfa, 0.0) - eps / h_i_plus;//upper diagonal
 
             pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
             pscheme_data[i].a = pscheme_data[i].m - (pscheme_data[i].b + pscheme_data[i].c);//stiffness matrix
