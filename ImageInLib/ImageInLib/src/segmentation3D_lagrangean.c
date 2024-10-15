@@ -440,16 +440,11 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     }
 
     LinkedPoint3D* current_point = plinked_curve->first_point;
-    LinkedPoint3D* next_point = NULL;
-
-    double h_i = -1, h_i_plus = -1;
 
     //////////////////////    X component ///////////////////////////////////////////////////////////
     
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        h_i = current_point->distance_to_next;
-        h_i_plus = current_point->next->distance_to_next;
 
         if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
         {
@@ -457,10 +452,9 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nx * 0.5 * (h_i + h_i_plus);
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nx * 0.5 * dt * pscheme_data[i].m;
         }
-
-        current_point = next_point;
+        current_point = current_point->next;
     }
 
     if (pparams->open_curve)
@@ -478,8 +472,6 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        h_i = current_point->distance_to_next;
-        h_i_plus = current_point->next->distance_to_next;
 
         if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
         {
@@ -487,10 +479,9 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->ny * 0.5 * (h_i + h_i_plus);
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->ny * 0.5 * dt * pscheme_data[i].m;
         }
-
-        current_point = next_point;
+        current_point = current_point->next;
     }
 
     current_point = plinked_curve->first_point;
@@ -502,7 +493,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
 
     if (pparams->open_curve)
     {
-        calculate_by_thomas(pscheme_data, plinked_curve->number_of_points);
+        calculate_by_thomas3D(pscheme_data, plinked_curve->number_of_points);
     }
     else
     {
@@ -515,8 +506,6 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        h_i = current_point->distance_to_next;
-        h_i_plus = current_point->next->distance_to_next;
 
         if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
         {
@@ -524,9 +513,9 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nz * 0.5 * (h_i + h_i_plus);
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nz * 0.5 * dt * pscheme_data[i].m;
         }
-        current_point = next_point;
+        current_point = current_point->next;
     }
 
     current_point = plinked_curve->first_point;
@@ -538,7 +527,7 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
 
     if (pparams->open_curve)
     {
-        calculate_by_thomas(pscheme_data, plinked_curve->number_of_points);
+        calculate_by_thomas3D(pscheme_data, plinked_curve->number_of_points);
     }
     else
     {
@@ -571,12 +560,10 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
     const size_t number_of_points = plinked_curve->number_of_points;
 
-    LinkedPoint3D* current_point = plinked_curve->first_point;
-
     double h_i = -1, h_i_plus = -1; // distance between two neighboring points
-    double vx, vy, vz; // external velocity field components 
+    double vx = 0, vy = 0, vz = 0; // external velocity field components 
     double tx, ty, tz; //tangential vector components
-    double som_dist, dot, norm_nv; 
+    double som_dist = 0, dot = 1, norm_nv = 1; 
     double nvx, nvy, nvz;    //normal velocity vector components
     double n1_x, n1_y, n1_z; //normal plan vector components
     double n2_x, n2_y, n2_z; //normal plan vector components
@@ -584,49 +571,64 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
     bool is_closed_curve = plinked_curve->first_point->previous != NULL;
 
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        h_i = current_point->previous->distance_to_next;
-        h_i_plus = current_point->distance_to_next;
-        som_dist = h_i_plus + h_i;
+        if (is_closed_curve || (i > 1 && i < plinked_curve->number_of_points)) 
+        {
+            h_i = current_point->previous->distance_to_next;
+            h_i_plus = current_point->distance_to_next;
+            som_dist = h_i_plus + h_i;
 
-        //get the external velocity field
-        (*pget_velocity)(pedge, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //get the external velocity field
+            (*pget_velocity)(pedge, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
 
-        tx = (current_point->next->x - current_point->previous->x) / som_dist;
-        ty = (current_point->next->y - current_point->previous->y) / som_dist;
-        tz = (current_point->next->z - current_point->previous->z) / som_dist;
+            tx = (current_point->next->x - current_point->previous->x) / som_dist;
+            ty = (current_point->next->y - current_point->previous->y) / som_dist;
+            tz = (current_point->next->z - current_point->previous->z) / som_dist;
 
-        dot = tx * vx + ty * vy + tz * vz;
+            dot = tx * vx + ty * vy + tz * vz;
 
-        nvx = vx - dot * tx;
-        nvy = vy - dot * ty;
-        nvz = vz - dot * tz;
+            nvx = vx - dot * tx;
+            nvy = vy - dot * ty;
+            nvz = vz - dot * tz;
 
-        Point3D pnorm = { nvx, nvy, nvz };
-        norm_nv = norm3D(pnorm);
+            Point3D pnorm = { nvx, nvy, nvz };
+            norm_nv = norm3D(pnorm);
 
-        n1_x = nvx / norm_nv;
-        n1_y = nvy / norm_nv;
-        n1_z = nvz / norm_nv;
+            n1_x = nvx / norm_nv;
+            n1_y = nvy / norm_nv;
+            n1_z = nvz / norm_nv;
 
-        n2_x = n1_y * tz - n1_z * ty;
-        n2_y = n1_z * tx - n1_x * tz;
-        n2_z = n1_x * ty - n1_y * tx;
+            n2_x = n1_y * tz - n1_z * ty;
+            n2_y = n1_z * tx - n1_x * tz;
+            n2_z = n1_x * ty - n1_y * tx;
 
-        curv_x = (2.0 / som_dist) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
-        curv_y = (2.0 / som_dist) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
-        curv_z = (2.0 / som_dist) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
+            curv_x = (2.0 / som_dist) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
+            curv_y = (2.0 / som_dist) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
+            curv_z = (2.0 / som_dist) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
 
-        pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
-        pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
-        pscheme_data[i].u = eps * pscheme_data[i].k1 + mu * norm_nv;
-        pscheme_data[i].v = eps * pscheme_data[i].k2;
+            pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
+            pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
+            pscheme_data[i].u = eps * pscheme_data[i].k1 + mu * norm_nv;
+            pscheme_data[i].v = eps * pscheme_data[i].k2;
 
-        current_point->nx = nvx;
-        current_point->ny = nvy;
-        current_point->nz = nvz;
+            current_point->nx = nvx;
+            current_point->ny = nvy;
+            current_point->nz = nvz;
+        }
+        else
+        {
+            pscheme_data[i].k1 = 0.0;
+            pscheme_data[i].k2 = 0.0;
+            pscheme_data[i].u = 0.0;
+            pscheme_data[i].v = 0.0;
 
+            current_point->nx = 0.0;
+            current_point->ny = 0.0;
+            current_point->nz = 0.0;
+        }
         current_point = current_point->next;
     }
 
@@ -647,17 +649,16 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega)
 {
     
-    int i;
-    double mean = 0;
+    double mean = 0.0;
     const size_t number_of_points = plinked_curve->number_of_points;
     const double curve_length = plinked_curve->length;
-    LinkedPoint* current_point = plinked_curve->first_point;
-    const double avg_length = curve_length / number_of_points;
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    const double avg_length = curve_length / (double)number_of_points;
     double h_i = -1;
 
     bool is_curve_closed = plinked_curve->first_point->previous != NULL;
 
-    for (i = 1; i <= number_of_points; i++)
+    for (size_t i = 1; i <= number_of_points; i++)
     {
         if (is_curve_closed || i > 1)
         {
@@ -685,10 +686,10 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
     // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
     pscheme_data[1].alfa = 0.0;
 
-    double alpha_sum = 0;
+    //double alpha_sum = 0;
 
     current_point = plinked_curve->first_point->next;
-    for (i = 2; i <= number_of_points; i++)
+    for (size_t i = 2; i <= number_of_points; i++)
     {
         h_i = current_point->previous->distance_to_next;
 
@@ -703,7 +704,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
                 - h_i * mean + omega * (avg_length - h_i);
         }
 
-        alpha_sum += pscheme_data[i].alfa;
+        //alpha_sum += pscheme_data[i].alfa;
 
         current_point = current_point->next;
     }
@@ -725,22 +726,37 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
 
     double h_i = -1;
     double h_i_plus = -1;
-    LinkedPoint* current_point = plinked_curve->first_point;
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    LinkedPoint3D* previous_point;
+
+    bool is_curve_closed = plinked_curve->first_point->previous != NULL;
 
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
-        h_i = current_point->previous->distance_to_next;
-        h_i_plus = current_point->distance_to_next;
+        if (is_curve_closed || (i > 1 && i < plinked_curve->number_of_points))
+        {
+            h_i = current_point->previous->distance_to_next;
+            h_i_plus = current_point->distance_to_next;
 
-        pscheme_data[i].a = - (eps / h_i) + 0.5 * pscheme_data[i].alfa;      //lower diagonal
-        pscheme_data[i].c = - (eps / h_i_plus) + 0.5 * pscheme_data[i].alfa; //upper diagonal
-        pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
-        pscheme_data[i].b = pscheme_data[i].m - (pscheme_data[i].a + pscheme_data[i].c);//stiffness matrix
+            pscheme_data[i].a = -(eps / h_i) + 0.5 * pscheme_data[i].alfa;      //lower diagonal
+            pscheme_data[i].c = -(eps / h_i_plus) + 0.5 * pscheme_data[i].alfa; //upper diagonal
+            pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
+            pscheme_data[i].b = pscheme_data[i].m - (pscheme_data[i].a + pscheme_data[i].c);//stiffness matrix
 
-        if (fabs(pscheme_data[i].a) + fabs(pscheme_data[i].c) > fabs(pscheme_data[i].b) || pscheme_data[i].b < 0) {
-            //the matrix is not positive dominant
-            return false;
+            if (fabs(pscheme_data[i].a) + fabs(pscheme_data[i].c) > fabs(pscheme_data[i].b) || pscheme_data[i].b < 0) {
+                //the matrix is not positive dominant
+                return false;
+            }
         }
+        else
+        {
+            previous_point = current_point;
+            pscheme_data[i].a = 0.0;
+            pscheme_data[i].c = 0;
+            pscheme_data[i].b = 1.0;
+            pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
+        }
+
 
         current_point = current_point->next;
     }
