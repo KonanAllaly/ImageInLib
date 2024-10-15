@@ -735,8 +735,17 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
     {
         if (is_curve_closed || (i > 1 && i < plinked_curve->number_of_points))
         {
-            h_i = current_point->previous->distance_to_next;
-            h_i_plus = current_point->distance_to_next;
+            previous_point = current_point->previous;
+            h_i = previous_point->distance_to_next;
+
+            if (is_curve_closed || i < plinked_curve->number_of_points)
+            {
+                h_i_plus = current_point->distance_to_next;
+            }
+            else
+            {
+                h_i_plus = h_i;
+            }
 
             pscheme_data[i].a = -(eps / h_i) + 0.5 * pscheme_data[i].alfa;      //lower diagonal
             pscheme_data[i].c = -(eps / h_i_plus) + 0.5 * pscheme_data[i].alfa; //upper diagonal
@@ -756,8 +765,6 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
             pscheme_data[i].b = 1.0;
             pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
         }
-
-
         current_point = current_point->next;
     }
 
