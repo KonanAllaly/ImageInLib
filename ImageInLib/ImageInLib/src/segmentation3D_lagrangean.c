@@ -377,43 +377,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
 
     release3dLinkedCurve(&linked_curve);
 
-    //releaseLinkedCurve(&linked_curve);
-    //LinkedCurve3D linked_curve = create3dLinkedCurve();
-    //initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
-    //if (!pSegmentationParams->open_curve)
-    //{
-    //    //it is still necessary to think which part of these data will be in the revised list
-    //    size_t length_of_data = linked_curve.number_of_points + 2;
-    //    SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
-    //    for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
-    //    {
-    //        if (length_of_data < linked_curve.number_of_points + 2)
-    //        {
-    //            free(pscheme_data);
-    //            length_of_data = linked_curve.number_of_points + 2;
-    //            pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
-    //        }
-    //        //evolve curve
-    //        evolveBySingleStep3D(&inputImage3D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
-    //    }
-
-    //    free(pscheme_data);
-    //    for (size_t k = 0; k < inputImage3D.height; k++) {
-    //        free(edge_detector[k]);
-    //    }
-    //    free(edge_detector);
-    //    LinkedPoint3D* pt = linked_curve.first_point;
-    //    for (size_t i = 0; i < linked_curve.number_of_points; i++)
-    //    {
-    //        pResultSegmentation->pPoints[i].x = (dataType)pt->x;
-    //        pResultSegmentation->pPoints[i].y = (dataType)pt->y;
-    //        pResultSegmentation->pPoints[i].z = (dataType)pt->z;
-    //        pt = pt->next;
-    //    }
-    //    release3dLinkedCurve(&linked_curve);
-    //    return true;
-    //}
-
     return false;
 }
 
