@@ -343,7 +343,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     LinkedCurve3D linked_curve = create3dLinkedCurve();
     initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
 
-    //it is still necessary to think which part of these data will be in the revised list
     size_t length_of_data = linked_curve.number_of_points + 2;
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
 
@@ -525,12 +524,12 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
     double h_i = -1, h_i_plus = -1; // distance between two neighboring points
     double vx = 0, vy = 0, vz = 0; // external velocity field components 
-    double tx, ty, tz; //tangential vector components
+    double tx = 0, ty = 0, tz = 0; //tangential vector components
     double som_dist = 0, dot = 1, norm_nv = 1; 
-    double nvx, nvy, nvz;    //normal velocity vector components
-    double n1_x, n1_y, n1_z; //normal plan vector components
-    double n2_x, n2_y, n2_z; //normal plan vector components
-    double curv_x, curv_y, curv_z; //discrete curvature vector components
+    double nvx = 0, nvy = 0, nvz = 0;    //normal velocity vector components
+    double n1_x = 0, n1_y = 0, n1_z = 0 ; //normal plan vector components
+    double n2_x = 0, n2_y = 0, n2_z = 0; //normal plan vector components
+    double curv_x = 0, curv_y = 0, curv_z = 0; //discrete curvature vector components
 
     bool is_closed_curve = plinked_curve->first_point->previous != NULL;
 
@@ -568,9 +567,9 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
             n2_y = n1_z * tx - n1_x * tz;
             n2_z = n1_x * ty - n1_y * tx;
 
-            curv_x = (2.0 / som_dist) * ((current_point->next->x - current_point->x) / h_i_plus - (current_point->x - current_point->previous->x) / h_i);
-            curv_y = (2.0 / som_dist) * ((current_point->next->y - current_point->y) / h_i_plus - (current_point->y - current_point->previous->y) / h_i);
-            curv_z = (2.0 / som_dist) * ((current_point->next->z - current_point->z) / h_i_plus - (current_point->z - current_point->previous->z) / h_i);
+            curv_x = (2.0 / som_dist) * (((current_point->next->x - current_point->x) / h_i_plus) - ((current_point->x - current_point->previous->x) / h_i));
+            curv_y = (2.0 / som_dist) * (((current_point->next->y - current_point->y) / h_i_plus) - ((current_point->y - current_point->previous->y) / h_i));
+            curv_z = (2.0 / som_dist) * (((current_point->next->z - current_point->z) / h_i_plus) - ((current_point->z - current_point->previous->z) / h_i));
 
             pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
             pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
@@ -711,11 +710,11 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
             }
 
             pscheme_data[i].a = -(eps / h_i) + 0.5 * pscheme_data[i].alfa;      //lower diagonal
-            pscheme_data[i].c = -(eps / h_i_plus) + 0.5 * pscheme_data[i].alfa; //upper diagonal
+            pscheme_data[i].c = -(eps / h_i_plus) - 0.5 * pscheme_data[i].alfa; //upper diagonal
             pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
             pscheme_data[i].b = pscheme_data[i].m - (pscheme_data[i].a + pscheme_data[i].c);//stiffness matrix
 
-            if (fabs(pscheme_data[i].a) + fabs(pscheme_data[i].c) > fabs(pscheme_data[i].b) || pscheme_data[i].b < 0) {
+            if ((fabs(pscheme_data[i].a) + fabs(pscheme_data[i].c)) > fabs(pscheme_data[i].b) || pscheme_data[i].b < 0) {
                 //the matrix is not positive dominant
                 return false;
             }
