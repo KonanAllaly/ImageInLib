@@ -304,3 +304,10 @@ bool load2dArrayRAW(dataType* imageDataPtr, const size_t length, const size_t wi
 	fclose(file);
 	return true;
 }
+
+//==================================
+
+bool loadListof3dPoints()
+{
+	return true;
+}
