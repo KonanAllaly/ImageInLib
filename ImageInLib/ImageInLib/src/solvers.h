@@ -102,6 +102,14 @@ extern "C" {
     /// <returns>true if the solver succeeds, otherwise false</returns>
     bool calculate_by_thomas3D(SchemeData3D* pscheme_data, const size_t number_of_points);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="pscheme_data"></param>
+    /// <param name="number_of_points"></param>
+    /// <returns></returns>
+    bool sherman_morris3D(SchemeData3D* pscheme_data, const size_t number_of_points);
+
 #endif // !SOLVERS
 
 #ifdef __cplusplus
