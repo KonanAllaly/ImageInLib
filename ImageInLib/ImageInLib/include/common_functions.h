@@ -478,9 +478,9 @@ extern "C" {
 		double distance_to_next_z;
 		unsigned long long id;
 		//extend the 3D points structure with the normal velocity vector
-		double nx; 
-		double ny;
-		double nz;
+		double nvx; 
+		double nvy;
+		double nvz;
 	} LinkedPoint3D;
 
 	typedef struct LinkedCurve3D
