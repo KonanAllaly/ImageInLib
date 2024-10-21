@@ -960,13 +960,15 @@ bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, con
 	linked_point->z = z;
 
 	if (linked_point->next != NULL)
-	{
+	{	
 		updateDistance3dToNext(linked_curve, linked_point);
+		//linked_point->distance_to_next = updateDistance3dToNext(linked_curve, linked_point);
 	}
 
 	if (linked_point->previous != NULL)
 	{
 		updateDistance3dToNext(linked_curve, linked_point->previous);
+		//linked_point->previous->distance_to_next = updateDistance3dToNext(linked_curve, linked_point->previous);
 	}
 
 	return true;
