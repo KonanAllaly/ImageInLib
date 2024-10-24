@@ -564,9 +564,10 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
             ////get the external velocity field
             //(*pget_velocity)(pedge, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
-            vx = 1.0;
-            vy = 0.0;
-            vz = 0.0;
+            (*pget_velocity)(pimage, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //vx = 1.0;
+            //vy = 0.0;
+            //vz = 0.0;
 
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
             ty = (current_point->next->y - current_point->previous->y) / som_dist;
