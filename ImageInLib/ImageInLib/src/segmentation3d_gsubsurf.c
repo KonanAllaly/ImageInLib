@@ -185,8 +185,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 
 		//Compute the L2 norm of the difference between the current and previous solutions
 		difference_btw_current_and_previous_sol = l2normD(prevSol_extPtr, gauss_seidelPtr, length_ext, width_ext, height_ext, h);
-		printf("mass is %e\n", difference_btw_current_and_previous_sol);
-		//printf("segTolerance is %e\n", segParameters.segTolerance);
+		//printf("mass is %e\n", difference_btw_current_and_previous_sol);
 		//printf("CPU time: %e secs\n", secondCpuTime - firstCpuTime);
 
 		copyDataToAnotherArray(gauss_seidelPtr, prevSol_extPtr, height_ext, length_ext, width_ext);
@@ -199,8 +198,9 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", i);
 			strcat_s(name, sizeof(name), name_ending);
 			manageFile(imageData.segmentationFuntionPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+			printf("mass is %e\n", difference_btw_current_and_previous_sol);
 			printf("Step is %zd\n", segParameters.numberOfTimeStep);
-			printf("Error = %lf\n", difference_btw_current_and_previous_sol);
+			//printf("Error = %lf\n", difference_btw_current_and_previous_sol);
 		}
 		
 		i++;
@@ -682,7 +682,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 		}
 
 	} while (mean_square_residue > segParameters.gauss_seidelTolerance && z < segParameters.maxNoGSIteration);
-	printf("number of iteration is %zd\n", z);
+	//printf("number of iteration is %zd\n", z);
 
 	/*if ((segParameters.maxNoOfTimeSteps % 10) == 0) {
 		printf("Step is %zd\n", segParameters.numberOfTimeStep);
