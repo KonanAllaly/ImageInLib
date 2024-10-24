@@ -1460,8 +1460,6 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
-
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
 	dataType** gradientVectorZ = new dataType * [height];
@@ -1507,33 +1505,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 
 		}
 	}
-
-	//string saving_name = path_name + "edge_detector.raw";
-	//store3dRawData<dataType>(maskThreshold, length, width, height, saving_name.c_str());
 	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
-
-	//saving_name = path_name + "distance_map.raw";
-	//store3dRawData<dataType>(distance, length, width, height, saving_name.c_str());
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-
-			//keep point with distance lower than 15
-			if (distance[k][i] < 3.0 || distance[k][i] > 15.0) {
-				distance[k][i] = 0.0;
-			}
-			//normalization
-			distance[k][i] = distance[k][i] / 15.0;
-			
-			//inversion
-			distance[k][i] = 1.0 / (1.0 + distance[k][i]);
-
-		}
-	}
-	
-	//saving_name = path_name + "modified_distance.raw";
-	//store3dRawData<dataType>(distance, length, width, height, saving_name.c_str());
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -1559,12 +1532,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		}
 	}
 
-	//Normalization just initial potential
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			potential[k][i] = potential[k][i] / maxImage;
-		}
-	}
+	////Normalization just initial potential
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		potential[k][i] = potential[k][i] / maxImage;
+	//	}
+	//}
 	
 	//saving_name = path_name + "potential.raw";
 	//store3dRawData<dataType>(potential, length, width, height, saving_name.c_str());
@@ -1579,7 +1552,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 			//dataType norm_of_gradient = ux * ux + uy * uy + uz * uz;
 			//dataType edge_value = 1.0; //(dataType)(0.5 * (2 - (1.0 / (1.0 + edge_coef * norm_of_gradient))));
 			
-			dataType weight_dist = distance[k][i];
+			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			
 			//potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
 			//	+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
@@ -1589,7 +1562,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 
 			//potential[k][i] = parameters.epsilon + potential[k][i];
 			//potential[k][i] = parameters.epsilon + weight_dist;
-			potential[k][i] = parameters.epsilon + potential[k][i] * weight_dist;
+
+			potential[k][i] = parameters.epsilon + weight_dist * potential[k][i] / maxImage;
 
 		}
 	}
@@ -2166,8 +2140,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 }
 */
 
-/*
-bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters) {
+
+bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
 	size_t i, j, k, xd;
 	size_t length = ctImageData.length, width = ctImageData.width, height = ctImageData.height;
@@ -2185,7 +2159,7 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 	double radius = 3.0;
 
 	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point3.csv";
+	string saving_name, saving_csv = outputPath + "full_path_p2.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2201,12 +2175,13 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 	//======== First step ===========//
 	compute3DPotential(ctImageData, potential, seedsPath[0], radius, parameters);
 
-	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
+	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
+	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 	
-	saving_name = outputPath + "action3_1.raw";
-	store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
+	//saving_name = outputPath + "action3_1.raw";
+	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
 
-	shortestPath3D(action_field, resultedPath, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
 	fprintf(file, "x,y,z\n");
 	for (i = 0; i < path_points.size(); i++) {
@@ -2227,8 +2202,8 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 	//======== Second step ===========//
 	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[1]);
 	
-	saving_name = outputPath + "action3_2.raw";
-	store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
+	//saving_name = outputPath + "action3_2.raw";
+	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
 
 	dataType min_action = BIG_VALUE, value_temp = 0.0;
 	for (k = 0; k < height; k++) {
@@ -2254,7 +2229,7 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 	
 	seedsPath[0] = seedPoints[1];
 	seedsPath[1] = temporary_point;
-	shortestPath3D(action_field, resultedPath, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 
 	//copy points to file
 	for (i = 0; i < path_points.size(); i++) {
@@ -2271,10 +2246,10 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 	
 	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 	
-	saving_name = outputPath + "action3_3.raw";
-	store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
+	//saving_name = outputPath + "action3_3.raw";
+	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
 	
-	shortestPath3D(action_field, resultedPath, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
 	for (i = 0; i < path_points.size(); i++) {
 		path_points[i] = getRealCoordFromImageCoord3D(path_points[i], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -2298,7 +2273,7 @@ bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* 
 
 	return true;
 }
-*/
+
 
 /*
 bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Potential_Parameters parameters) {

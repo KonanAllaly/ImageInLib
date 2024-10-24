@@ -304,9 +304,7 @@ using namespace std;
 	/// <param name="parameters">parameters for potential function computation</param>
 	/// <param name="stop_criterium">stopping criterium</param>
 	/// <returns></returns>
-	//bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
-	//bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seed, Potential_Parameters parameters);
-	//bool findPathTwoSteps(Image_Data ctImageData, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters);
+	bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
