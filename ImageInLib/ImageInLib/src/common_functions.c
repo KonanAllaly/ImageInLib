@@ -500,3 +500,95 @@ void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dat
 		}
 	}
 }
+//==============================================================================
+
+/*
+bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, size_t ind_x, size_t ind_y, size_t ind_z)
+{
+	
+	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 ||
+		fVolume.sx == 0 || fVolume.sy == 0 || fVolume.sz == 0) 
+	{
+		return false;
+	}
+	
+
+	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 )
+	{
+		return false;
+	}
+
+	/*
+	size_t x = ind_x, y = ind_y, z = ind_z;
+	if (x >= width)
+	{
+		x = width - 1;
+	}
+
+	if (y >= length)
+	{
+		y = length - 1;
+	}
+
+	if (z >= height)
+	{
+		z = height - 1;
+	}
+
+	dataType dx = 0.0, dy = 0.0, dz = 0.0;
+	dataType hx_c = 2 * fVolume.sx;
+	dataType hy_c = 2 * fVolume.sy;
+	dataType hz_c = 2 * fVolume.sz;
+
+	if (x == 0)
+	{
+		dx = (imageDataPtr[z][x_new(x + 1, y, width)] - imageDataPtr[z][x_new(x, y, width)]) / fVolume.sx;
+	}
+	else if (x == width - 1)
+	{
+		dx = (imageDataPtr[z][x_new(x, y, width)] - imageDataPtr[z][x_new(x - 1, y, width)]) / fVolume.sx;
+	}
+	else
+	{
+		dx = (imageDataPtr[z][x_new(x + 1, y, width)] - imageDataPtr[z][x_new(x - 1, y, width)]) / hx_c;
+	}
+
+	if (y == 0)
+	{
+		dy = (imageDataPtr[z][x_new(x, y + 1, width)] - imageDataPtr[z][x_new(x, y, width)]) / fVolume.sy;
+	}
+	else if (y == length - 1)
+	{
+		dy = (imageDataPtr[z][x_new(x, y, width)] - imageDataPtr[z][x_new(x, y - 1, width)]) / fVolume.sy;
+	}
+	else
+	{
+		dy = (imageDataPtr[z][x_new(x, y + 1, width)] - imageDataPtr[z][x_new(x, y - 1, width)]) / hy_c;
+	}
+
+	size_t xd = x_new(x, y, width);
+	if (z == 0)
+	{
+		dz = (imageDataPtr[z + 1][xd] - imageDataPtr[z][xd]) / fVolume.sz;
+	}
+	else if (z == height - 1)
+	{
+		dz = (imageDataPtr[z][xd] - imageDataPtr[z - 1][xd]) / fVolume.sz;
+	}
+	else
+	{
+		dz = (imageDataPtr[z + 1][xd] - imageDataPtr[z - 1][xd]) / hz_c;
+	}
+
+	grad->x = dx;
+	grad->y = dy;
+	grad->z = dz;
+	
+
+	return true;
+}
+*/
+
+void getGradient3D(dataType** imageDataPtr) {
+	//TODO
+}
