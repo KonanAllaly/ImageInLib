@@ -220,10 +220,16 @@ extern "C" {
 	/// <returns></returns>
 	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
 
+	//bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, VoxelSpacing fVolume, Point3D* grad);
+	//bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, size_t ind_x, size_t ind_y, size_t ind_z);
+
+	void getGradient3D(dataType** imageDataPtr);
+
 	//================================================================================
 	//void computeHistogram(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t bins);
 	//================================================================================
 	//void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height);
+	//===============
 
 #endif // !COMMON_FUNCTIONS
 
