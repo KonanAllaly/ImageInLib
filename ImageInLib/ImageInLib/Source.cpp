@@ -54,7 +54,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient3_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient2_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -67,6 +67,85 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+
+	//========================= Generate velocity field =========================
+
+	dataType** imageDataPtr = new dataType * [Height];
+	dataType** pathImageData = new dataType * [Height];
+	dataType** gradientVectorX = new dataType * [Height];
+	dataType** gradientVectorY = new dataType * [Height];
+	dataType** gradientVectorZ = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageDataPtr[k] = new dataType[dim2D]{ 0 };
+		pathImageData[k] = new dataType[dim2D]{ 0 };
+		gradientVectorX[k] = new dataType[dim2D]{ 0 };
+		gradientVectorY[k] = new dataType[dim2D]{ 0 };
+		gradientVectorZ[k] = new dataType[dim2D]{ 0 };
+	}
+
+	Image_Data CT = {
+		Height,
+		Length,
+		Width,
+		imageDataPtr,
+		ctOrigin,
+		ctSpacing,
+		orientation
+	};
+
+	loading_path = inputPath + "raw/filtered/filteredGMC_p2.raw";
+	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, Height, loading_path.c_str(), false);
+
+	FILE* path_file;
+	loading_path = inputPath + "csv/Path/path_ordered_p2.csv";
+	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	dataType x = 0, y = 0, z = 0;
+	//size_t in, jn, kn;
+	vector<Point3D> path_points;
+
+	while (feof(path_file) == 0) {
+		fscanf_s(path_file, "%f", &x);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &y);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &z);
+		fscanf_s(path_file, "\n");
+		Point3D current_point = { x, y, z };
+		current_point = getImageCoordFromRealCoord3D(current_point, CT.origin, CT.spacing, CT.orientation);
+		path_points.push_back(current_point);
+	}
+	fclose(path_file);
+
+	BoundingBox3D box;
+	double radius = 25;
+
+	for (size_t n = 0; n < path_points.size(); n++) {
+		box = findBoundingBox3D(path_points[n], Length, Width, Height, radius, 0);
+		for (k = box.k_min; k <= box.k_max; k++) {
+			for (i = box.i_min; i <= box.i_max; i++) {
+				for (j = box.j_min; j <= box.j_max; j++) {
+					xd = x_new(i, j, Length);
+					pathImageData[k][xd] = imageDataPtr[k][xd];
+				}
+			}
+		}
+	}
+
+	compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
+	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
+
+	storing_path = outputPath + "pathImage.raw";
+	store3dRawData<dataType>(pathImageData, Length, Width, Height, storing_path.c_str());
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageDataPtr[k];
+		delete[] pathImageData[k];
+	}
+	delete[] imageDataPtr;
+	delete[] pathImageData;
 
 	//========================= Test translation ================================
 
@@ -494,7 +573,7 @@ int main() {
 
 	//======================== Automatic quantitative analysis ==================
 
-	
+	/*
 	// Load PET
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
@@ -729,7 +808,7 @@ int main() {
 	delete[] shape_aorta_ct;
 
 	free(petContainer);
-	
+	*/
 
 	//======================== Collect PET values ===============================
 	
