@@ -72,15 +72,11 @@ int main() {
 
 	dataType** imageDataPtr = new dataType * [Height];
 	dataType** pathImageData = new dataType * [Height];
-	dataType** gradientVectorX = new dataType * [Height];
-	dataType** gradientVectorY = new dataType * [Height];
-	dataType** gradientVectorZ = new dataType * [Height];
+	dataType** edgeDetector = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageDataPtr[k] = new dataType[dim2D]{ 0 };
 		pathImageData[k] = new dataType[dim2D]{ 0 };
-		gradientVectorX[k] = new dataType[dim2D]{ 0 };
-		gradientVectorY[k] = new dataType[dim2D]{ 0 };
-		gradientVectorZ[k] = new dataType[dim2D]{ 0 };
+		edgeDetector[k] = new dataType[dim2D]{ 0 };
 	}
 
 	Image_Data CT = {
@@ -134,18 +130,34 @@ int main() {
 		}
 	}
 
-	compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
+	//compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
 	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
+	Point3D grad;
+	dataType norm_grad = 0.0, K = 1000.0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				//getGradient3D(imageDataPtr, Width, Length, Height, j, i, k, ctSpacing, &grad);
+				getGradient3D(pathImageData, Width, Length, Height, j, i, k, ctSpacing, &grad);
+				norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y + grad.z * grad.z);
+				edgeDetector[k][x_new(j, i, Width)] = gradientFunction(norm_grad, K);
+			}
+		}
+	}
 
-	storing_path = outputPath + "pathImage.raw";
-	store3dRawData<dataType>(pathImageData, Length, Width, Height, storing_path.c_str());
+	thresholding3dFunctionN(edgeDetector, Length, Width, Height, 0.15, 0.15, 0.0, 1.0);
+
+	storing_path = outputPath + "threshold_edge_detector_pathImage.raw";
+	store3dRawData<dataType>(edgeDetector, Length, Width, Height, storing_path.c_str());
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageDataPtr[k];
 		delete[] pathImageData[k];
+		delete[] edgeDetector[k];
 	}
 	delete[] imageDataPtr;
 	delete[] pathImageData;
+	delete[] edgeDetector;
 
 	//========================= Test translation ================================
 
