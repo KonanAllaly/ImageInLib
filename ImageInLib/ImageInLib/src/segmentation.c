@@ -14,6 +14,7 @@ void segmentImage(Image_Data inputImageData, dataType** initialSegment, Segmenta
 		break;
 	case GSUBSURF_MODEL:
 		generalizedSubsurfSegmentation(inputImageData, initialSegment, segParameters, explicit_lhe_Parameters, centers, no_of_centers, outputPathPtr);
+		break;
 	default:
 		break;
 	}
