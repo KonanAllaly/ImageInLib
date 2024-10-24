@@ -127,52 +127,17 @@ bool computePotential(dataType* imageDataPtr, dataType* potentialFuncPtr, const 
 		ux = gradientVectorX[i];
 		uy = gradientVectorY[i];
 		norm_of_gradient_square = ux * ux + uy * uy;
-		//edgeDetector[i] = gradientFunction(norm_of_gradient_square, 1.0);
-		//edgeDetector[i] = 0.001 + sqrt(norm_of_gradient_square);
 		edgeDetector[i] = 0.01 + sqrt(norm_of_gradient_square);
 	}
-
-	////Computation of potential function
-	//for (i = 0; i < dim2D; i++) {
-	//	potentialFuncPtr[i] = abs(seedVal - imageDataPtr[i]);
-	//}
-
-	////find the max potential
-	//dataType max_potential = -1 * INFINITY;
-	//for (i = 0; i < dim2D; i++) {
-	//	if (potentialFuncPtr[i] > max_potential) {
-	//		max_potential = potentialFuncPtr[i];
-	//	}
-	//}
-
-	//dataType* distanceMap = new dataType[dim2D]{ 0 };
-	//string loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/slice/distanceMap.raw";
-	//load2dArrayRAW<dataType>(distanceMap, height, width, loading_path.c_str(), false);
-	//for (i = 0; i < dim2D; i++) {
-	//	if (distanceMap[i] <= 3.0 || distanceMap[i] >= 15.0) {
-	//		distanceMap[i] = 0.0;
-	//	}
-	//	//normalization
-	//	distanceMap[i] = distanceMap[i] / 15.0;
-	//	//inversion
-	//	distanceMap[i] = 1.0 / (1.0 + coef_dist * distanceMap[i]);
-	//}
 	
 	//Normalization
 	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		//edgeValue = 0.5 * (2 - (1.0 / edgeDetector[i]));
-		//coef = 1;
-		//weight = potentialFuncPtr[i] / max_potential;
-		//potentialFuncPtr[i] = (dataType)(epsilon + weight * edgeValue);
-		//potentialFuncPtr[i] = 0.01 + abs(seedVal - imageDataPtr[i]);
 		potentialFuncPtr[i] = edgeDetector[i];
 	}
 
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
-	
-	//delete[] distanceMap;
 
 	return true;
 }
@@ -184,6 +149,7 @@ void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
 }
 
 void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos) {
+	
 	//we use type int for indexes because we do operations like pos--
 	int length_array = in_Process.size();
 	int current = pos;
@@ -255,6 +221,7 @@ void deleteRootHeap2D(vector<pointFastMarching2D>& in_Process) {
 }
 
 void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point) {
+	
 	//we use type int for indexes because we do operations like pos--
 	in_Process.push_back(point);
 	int l = in_Process.size();
@@ -278,9 +245,6 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 
 	//Compute the potential function
 	computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
-	//for (i = 0; i < dim2D; i++) {
-	//	potentialPtr[i] = 1.0;
-	//}
 
 	//STEP 1
 	//In labelAray we have : 1 ---> already processed, 2 ---> in process and 3 ---> not processed
@@ -505,28 +469,6 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 
 	////Compute the potential function
 	computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
-
-	////////potential 1 : P(x) = epsilon + |P(x0) - P(x)|
-	////size_t i2 = (size_t)seedPoints[1].x;
-	////size_t j2 = (size_t)seedPoints[1].y;
-	//dataType epsilon = 0.01, value = 0.0;
-	////dataType seedValue = (imageDataPtr[currentIndx] + imageDataPtr[x_new(i2, j2, height)]) / 2;
-	//dataType* gradientVectorX = new dataType[dim2D]{ 0 };
-	//dataType* gradientVectorY = new dataType[dim2D]{ 0 };
-	//computeImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
-	//dataType norm_of_gradient = 0.0, ux = 0.0, uy = 0.0;
-	//for (k = 0; k < dim2D; k++) {
-	//	ux = gradientVectorX[k];
-	//	uy = gradientVectorY[k];
-	//	value = sqrt(ux * ux + uy * uy) + epsilon;
-	//	potentialPtr[k] = 1.0 / (value * value);
-	//	//gradientVectorX[i] = gradientVectorX[i] / norm_of_gradient;
-	//	//gradientVectorY[i] = gradientVectorY[i] / norm_of_gradient;
-	//}
-	////for (k = 0; k < dim2D; k++) {
-	////	value = epsilon + pow(abs(seedValue - imageDataPtr[k]), 2);
-	////	potentialPtr[k] = 1.0 / (value * value);
-	////}
 
 	//STEP 1
 	//In labelAray we have : 1 ---> already processed, 2 ---> in process and 3 ---> not processed
@@ -766,10 +708,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	//resultedPath[currentIndex] = 1.0;
 
 	dataType iNew = seedPoints[1].x, jNew = seedPoints[1].y;
-
-	//dataType* radiusArray = new dataType[dim2D]{ 0 };
-	//outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/radius.raw";
-	//load2dArrayRAW<dataType>(radiusArray, height, width, outputPath.c_str(), false);
 	
 	dataType radius = 0.0, offset = 2.0;
 	BoundingBox2D box = { 0, 0, 0, 0 };
@@ -788,20 +726,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 		i = (size_t)round(iNew); 
 		j = (size_t)round(jNew);
 		currentIndex = x_new(i, j, height);
-		//resultedPath[currentIndex] = 1.0;
-
-		//Point2D seed = { i, j };
-		////radius = radiusArray[currentIndex];
-		//box = findBoundingBox2D(seed, height, width, radius, offset);
-		//for (n = box.i_min; n <= box.i_max; n++) {
-		//	for (m = box.j_min; m <= box.j_max; m++) {
-		//		Point2D current = { i, j };
-		//		double dp12 = getPoint2DDistance(seed, current);
-		//		if (dp12 < radius) {
-		//			resultedPath[x_new(n, m, height)] = 1.0;
-		//		}
-		//	}
-		//}
 
 		count_iter++;
 	}
