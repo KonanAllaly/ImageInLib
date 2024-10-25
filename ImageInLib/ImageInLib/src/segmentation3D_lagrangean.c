@@ -5,12 +5,11 @@
 #include "segmentation2D_lagrangean.h"
 #include "solvers.h"
 
-bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
+bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
-void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
+void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
     void(*pget_velocity)(Image_Data*, double, double, double, double*, double*, double*),
-    void(*pget_g2)(Image_Data*, double, double, double, double, double, double*),
-    const double ref_intensity, const double g2_coef, const double eps, const double lambda, const double mu);
+    const double eps, const double mu);
 
 void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega);
 
@@ -298,7 +297,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     const dataType hx = 1.0, hy = 1.0, hz = 1.0;           //spatial discretization step
     const dataType hx_c = 1.0, hy_c = 1.0, hz_c = 1.0;    //h for central differences
     Point3D current_grad;
-    FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 2.5 };
 
     const size_t dataDimension = inputImage3D.length * inputImage3D.width;
     const size_t sliceSize = dataDimension * sizeof(dataType);
@@ -314,21 +313,20 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     if (edge_detector == NULL)
         return false;
 
-    //get edge detector
-    for (size_t k = 0; k < inputImage3D.height; k++)
-    {
-        for (size_t i = 0; i < inputImage3D.length; i++)
-        {
-            for (size_t j = 0; j < inputImage3D.width; j++)
-            {
-                getGradient3D(inputImage3D.imageDataPtr, inputImage3D.width, inputImage3D.length, inputImage3D.height, j, i, k, finite_volume, &current_grad);
-                size_t xd = x_new(j, i, inputImage3D.width);
-                dataType norm_of_grad = norm3D(current_grad);
-                edge_detector[k][xd] = edgeDetector(norm_of_grad, pSegmentationParams->edge_detector_coef);
-            }
-        }
-    }
-    Image_Data edge = { inputImage3D.height, inputImage3D.length, inputImage3D.width, edge_detector };
+    //for (size_t k = 0; k < inputImage3D.height; k++)
+    //{
+    //    for (size_t i = 0; i < inputImage3D.length; i++)
+    //    {
+    //        for (size_t j = 0; j < inputImage3D.width; j++)
+    //        {
+    //            getGradient3D(inputImage3D.imageDataPtr, inputImage3D.width, inputImage3D.length, inputImage3D.height, j, i, k, finite_volume, &current_grad);
+    //            size_t xd = x_new(j, i, inputImage3D.width);
+    //            edge_detector[k][xd] = norm3D(current_grad);
+    //        }
+    //    }
+    //}
+    //const char save_gardient[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/magnitude_gradient_full_image.raw";
+    //manageFile(edge_detector, inputImage3D.length, inputImage3D.width, inputImage3D.height, save_gardient, STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
 
     resetIDGenerator();
     //let us consider single curve without topological changes
@@ -355,7 +353,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
             pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         }
         //evolve curve
-        evolveBySingleStep3D(&inputImage3D, &edge, &linked_curve, pscheme_data, pSegmentationParams);
+        evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
     }
 
     free(pscheme_data);
@@ -379,21 +377,20 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     return false;
 }
 
-bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
+bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
 {
     if (plinked_curve == NULL || pscheme_data == NULL || pparams == NULL ||
-        pimage->imageDataPtr == NULL || pedge->imageDataPtr == NULL) 
+        pDistanceMap->imageDataPtr == NULL)
     {
         return false;
     }
 
-    const double lambda = pparams->lambda;
     const double eps = pparams->eps;
     const double omega = pparams->omega;
     const double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
-    normal_velocity3D(pimage, pedge, plinked_curve, pscheme_data, pparams->get_velocity, pparams->get_g2, pparams->reference_intensity, pparams->intensityCoef, eps, lambda, mu);
+    normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, pparams->get_velocity, eps, mu);
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
@@ -527,14 +524,12 @@ bool evolveBySingleStep3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* 
 }
 
 //beta preparation
-void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
+void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
     void(*pget_velocity)(Image_Data*, double, double, double, double*, double*, double*),
-    void(*pget_g2)(Image_Data*, double, double, double, double, double, double*),
-    const double ref_intensity, const double g2_coef, const double eps, const double lambda, const double mu)
+    const double eps, const double mu)
 {
     
-    if (plinked_curve == NULL || pscheme_data == NULL || pget_velocity == NULL ||
-        pget_g2 == NULL || pimage == NULL || pedge == NULL)
+    if (plinked_curve == NULL || pscheme_data == NULL || pget_velocity == NULL)
     {
         return;
     }
@@ -562,9 +557,8 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
             h_i_plus = current_point->distance_to_next;
             som_dist = h_i_plus + h_i;
 
-            ////get the external velocity field
-            //(*pget_velocity)(pedge, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
-            (*pget_velocity)(pimage, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //get the external velocity field
+            (*pget_velocity)(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
             //vx = 1.0;
             //vy = 0.0;
             //vz = 0.0;
@@ -581,13 +575,6 @@ void normal_velocity3D(Image_Data* pimage, Image_Data* pedge, LinkedCurve3D* pli
 
             Point3D pnorm = { nvx, nvy, nvz };
             norm_nv = norm3D(pnorm);
-
-            //if (norm_nv == 0) {
-            //    norm_nv = 1.0;
-            //}
-            //n1_x = nvx / norm_nv;
-            //n1_y = nvy / norm_nv;
-            //n1_z = nvz / norm_nv;
 
             if (norm_nv != 0.0) {
                 n1_x = nvx / norm_nv;
