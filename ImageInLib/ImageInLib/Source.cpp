@@ -70,6 +70,7 @@ int main() {
 
 	//========================= Generate velocity field =========================
 
+	/*
 	dataType** imageDataPtr = new dataType * [Height];
 	dataType** pathImageData = new dataType * [Height];
 	dataType** edgeDetector = new dataType * [Height];
@@ -158,6 +159,7 @@ int main() {
 	delete[] imageDataPtr;
 	delete[] pathImageData;
 	delete[] edgeDetector;
+	*/
 
 	//========================= Test translation ================================
 
