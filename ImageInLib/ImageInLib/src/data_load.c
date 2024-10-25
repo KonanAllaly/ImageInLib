@@ -316,12 +316,12 @@ bool loadListof3dPoints(Curve3D* pCurve, const char* filePath)
 		return false;
 	}
 
-	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_to_next.csv";
-	FILE* file_save;
-	if (fopen_s(&file_save, distance_to_next, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	//const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_to_next.csv";
+	//FILE* file_save;
+	//if (fopen_s(&file_save, distance_to_next, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
 
 	Point3D current_point, previous_point;
 	double dist = 0;
@@ -343,13 +343,13 @@ bool loadListof3dPoints(Curve3D* pCurve, const char* filePath)
 		else {
 			dist = getPoint3DDistance(current_point, previous_point);
 		}
-		fprintf(file_save, "%f", dist);
-		fprintf(file_save, "\n");
+		//fprintf(file_save, "%f", dist);
+		//fprintf(file_save, "\n");
 		previous_point = current_point;
 
 	}
 	fclose(file);
-	fclose(file_save);
+	//fclose(file_save);
 
 	return true;
 }
