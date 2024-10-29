@@ -32,7 +32,9 @@ extern "C" {
 
 	//==================================
 
-	bool loadListof3dPoints(Curve3D* pCurve, const char* filePath);
+	bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath);
+
+	bool changeToRealworldCord(Image_Data image, Curve3D* pCurve);
 
 #ifdef __cplusplus
 }
