@@ -368,9 +368,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 
 bool changeToRealworldCord(Image_Data image, Curve3D* pCurve)
 {
-	dataType x = 0, y = 0, z = 0;
 	for (size_t i = 0; i < pCurve->numPoints; i++) {
-
 		Point3D current_point = { pCurve->pPoints[i].x , pCurve->pPoints[i].y , pCurve->pPoints[i].z };
 		current_point = getRealCoordFromImageCoord3D(current_point, image.origin, image.spacing, image.orientation);
 		pCurve->pPoints[i].x = current_point.x;
