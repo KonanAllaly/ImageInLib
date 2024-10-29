@@ -532,7 +532,8 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
+    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    //const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
