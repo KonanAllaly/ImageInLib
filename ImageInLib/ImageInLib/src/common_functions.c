@@ -1120,3 +1120,58 @@ void release3dLinkedCurve(LinkedCurve3D* linked_curve)
 		current_point = next_point;
 	}
 }
+
+BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius) {
+	
+	size_t x_min, x_max, y_min, y_max, z_min, z_max;
+
+	double ind_x_min = point.x - (radius + 0.5);
+	if (ind_x_min <= 0) {
+		x_min = 0;
+	}
+	else {
+		x_min = (size_t)ind_x_min;
+	}
+
+	double ind_y_min = point.y - (radius + 0.5);
+	if (ind_y_min <= 0) {
+		y_min = 0;
+	}
+	else {
+		y_min = (size_t)ind_y_min;
+	}
+
+	double ind_z_min = point.z - (radius + 0.5);
+	if (ind_z_min <= 0) {
+		z_min = 0;
+	}
+	else {
+		z_min = (size_t)ind_z_min;
+	}
+
+	double ind_x_max = point.x + (radius + 0.5);
+	if (ind_x_max >= imageDataPtr.width) {
+		x_max = imageDataPtr.width - 1;
+	}
+	else {
+		x_max = (size_t)ind_x_max;
+	}
+
+	double ind_y_max = point.y + (radius + 0.5);
+	if (ind_y_max >= imageDataPtr.length) {
+		y_max = imageDataPtr.length - 1;
+	}
+	else {
+		y_max = (size_t)ind_y_max;
+	}
+
+	double ind_z_max = point.z + (radius + 0.5);
+	if (ind_z_max >= imageDataPtr.height) {
+		z_max = imageDataPtr.height - 1;
+	}
+	else {
+		z_max = (size_t)ind_z_max;
+	}
+
+	return (BoundingBox) { x_min, x_max, y_min, y_max, z_min, z_max };
+}

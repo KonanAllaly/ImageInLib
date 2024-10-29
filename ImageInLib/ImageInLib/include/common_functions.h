@@ -168,6 +168,12 @@ extern "C" {
 		dataType min_data, max_data, mean_data, sd_data;
 	} Statistics;
 
+	typedef struct {
+		size_t i_min, i_max;
+		size_t j_min, j_max;
+		size_t k_min, k_max;
+	} BoundingBox;
+
 	//==============================================================================
 	// Shapes Container
 	typedef struct {
@@ -511,6 +517,8 @@ extern "C" {
 	bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve);
 
 	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
+
+	BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius);
 
 #endif // !COMMON_FUNCTIONS
 
