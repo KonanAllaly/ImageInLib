@@ -7,8 +7,9 @@
 
 bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
+void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, const double z, double* vx, double* vy, double* vz);
+
 void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
-    void(*pget_velocity)(Image_Data*, double, double, double, double*, double*, double*),
     const double eps, const double mu);
 
 void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega);
@@ -297,7 +298,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     const dataType hx = 1.0, hy = 1.0, hz = 1.0;           //spatial discretization step
     const dataType hx_c = 1.0, hy_c = 1.0, hz_c = 1.0;    //h for central differences
     Point3D current_grad;
-    FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 2.5 };
+    FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
 
     const size_t dataDimension = inputImage3D.length * inputImage3D.width;
     const size_t sliceSize = dataDimension * sizeof(dataType);
@@ -390,7 +391,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     const double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
-    normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, pparams->get_velocity, eps, mu);
+    normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, eps, mu);
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
@@ -523,13 +524,28 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     return true;
 }
 
-//beta preparation
+void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, const double z, double* vx, double* vy, double* vz)
+{
+    //get the gradient components/coordinates
+    const size_t x_dis = (size_t)x;
+    const size_t y_dis = (size_t)y;
+    const size_t z_dis = (size_t)z;
+    size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
+    Point3D current_grad;
+    const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
+
+    getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
+
+    *vx = current_grad.x;
+    *vy = current_grad.y;
+    *vz = current_grad.z;
+}
+
 void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
-    void(*pget_velocity)(Image_Data*, double, double, double, double*, double*, double*),
     const double eps, const double mu)
 {
     
-    if (plinked_curve == NULL || pscheme_data == NULL || pget_velocity == NULL)
+    if (plinked_curve == NULL || pscheme_data == NULL)
     {
         return;
     }
@@ -558,7 +574,7 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             som_dist = h_i_plus + h_i;
 
             //get the external velocity field
-            (*pget_velocity)(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
             //vx = 1.0;
             //vy = 0.0;
             //vz = 0.0;
