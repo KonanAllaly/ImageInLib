@@ -70,6 +70,7 @@ int main() {
 
 	//========================= Interpolated the aorta ==========================
 
+	/*
 	dataType** imageDataPtr = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageDataPtr[k] = new dataType[dim2D]{ 0 };
@@ -120,31 +121,34 @@ int main() {
 		delete[] interpolImageDataPtr[k];
 	}
 	delete[] interpolImageDataPtr;
+	*/
 
 	//========================= Generate velocity field =========================
 
 	/*
-	dataType** imageDataPtr = new dataType * [Height];
-	dataType** pathImageData = new dataType * [Height];
-	dataType** edgeDetector = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
+	const size_t height = 866;
+	dataType** imageDataPtr = new dataType * [height];
+	dataType** pathImageData = new dataType * [height];
+	dataType** edgeDetector = new dataType * [height];
+	for (k = 0; k < height; k++) {
 		imageDataPtr[k] = new dataType[dim2D]{ 0 };
 		pathImageData[k] = new dataType[dim2D]{ 0 };
 		edgeDetector[k] = new dataType[dim2D]{ 0 };
 	}
 
+	VoxelSpacing intSpacing = {ctSpacing.sx, ctSpacing.sy, ctSpacing.sx};
 	Image_Data CT = {
-		Height,
+		height,
 		Length,
 		Width,
 		imageDataPtr,
 		ctOrigin,
-		ctSpacing,
+		intSpacing,
 		orientation
 	};
 
-	loading_path = inputPath + "raw/filtered/filteredGMC_p2.raw";
-	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, Height, loading_path.c_str(), false);
+	loading_path = inputPath + "raw/interpolated/filtered_p2.raw";
+	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, height, loading_path.c_str(), false);
 
 	FILE* path_file;
 	loading_path = inputPath + "csv/Path/path_ordered_p2.csv";
@@ -153,7 +157,6 @@ int main() {
 		return false;
 	}
 	dataType x = 0, y = 0, z = 0;
-	//size_t in, jn, kn;
 	vector<Point3D> path_points;
 
 	while (feof(path_file) == 0) {
@@ -173,7 +176,7 @@ int main() {
 	double radius = 25;
 
 	for (size_t n = 0; n < path_points.size(); n++) {
-		box = findBoundingBox3D(path_points[n], Length, Width, Height, radius, 0);
+		box = findBoundingBox3D(path_points[n], Length, Width, height, radius, 0.0);
 		for (k = box.k_min; k <= box.k_max; k++) {
 			for (i = box.i_min; i <= box.i_max; i++) {
 				for (j = box.j_min; j <= box.j_max; j++) {
@@ -184,25 +187,24 @@ int main() {
 		}
 	}
 
-	//compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
-	Point3D grad;
-	dataType norm_grad = 0.0, K = 1000.0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				//getGradient3D(imageDataPtr, Width, Length, Height, j, i, k, ctSpacing, &grad);
-				getGradient3D(pathImageData, Width, Length, Height, j, i, k, ctSpacing, &grad);
-				norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y + grad.z * grad.z);
-				edgeDetector[k][x_new(j, i, Width)] = gradientFunction(norm_grad, K);
-			}
-		}
-	}
+	////compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
+	////fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
+	//Point3D grad;
+	//dataType norm_grad = 0.0, K = 1000.0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			//getGradient3D(imageDataPtr, Width, Length, Height, j, i, k, ctSpacing, &grad);
+	//			getGradient3D(pathImageData, Width, Length, Height, j, i, k, ctSpacing, &grad);
+	//			norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y + grad.z * grad.z);
+	//			edgeDetector[k][x_new(j, i, Width)] = gradientFunction(norm_grad, K);
+	//		}
+	//	}
+	//}
 
-	thresholding3dFunctionN(edgeDetector, Length, Width, Height, 0.15, 0.15, 0.0, 1.0);
-
-	storing_path = outputPath + "threshold_edge_detector_pathImage.raw";
-	store3dRawData<dataType>(edgeDetector, Length, Width, Height, storing_path.c_str());
+	//thresholding3dFunctionN(edgeDetector, Length, Width, Height, 0.15, 0.15, 0.0, 1.0);
+	storing_path = outputPath + "pathImage_p2.raw";
+	store3dRawData<dataType>(pathImageData, Length, Width, height, storing_path.c_str());
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageDataPtr[k];
