@@ -68,6 +68,59 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
 
+	//========================= Interpolated the aorta ==========================
+
+	dataType** imageDataPtr = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageDataPtr[k] = new dataType[dim2D]{ 0 };
+	}
+
+	Image_Data original_aorta = {
+		Height,
+		Length,
+		Width,
+		imageDataPtr,
+		ctOrigin,
+		ctSpacing,
+		orientation
+	};
+
+	loading_path = inputPath + "raw/aorta/aorta_p2.raw";
+	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, Height, loading_path.c_str(), false);
+
+	const size_t height = 866;
+
+	dataType** interpolImageDataPtr = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		interpolImageDataPtr[k] = new dataType[dim2D]{ 0 };
+	}
+
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data interpolated_aorta = {
+		height,
+		Length,
+		Width,
+		interpolImageDataPtr,
+		ctOrigin,
+		intSpacing,
+		orientation
+	};
+
+	imageInterpolation3D(original_aorta, interpolated_aorta, NEAREST_NEIGHBOR);
+
+	storing_path = inputPath + "raw/interpolated/aorta_p2.raw";
+	store3dRawData<dataType>(interpolImageDataPtr, Length, Width, height, storing_path.c_str());
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageDataPtr[k];
+	}
+	delete[] imageDataPtr;
+
+	for (k = 0; k < height; k++) {
+		delete[] interpolImageDataPtr[k];
+	}
+	delete[] interpolImageDataPtr;
+
 	//========================= Generate velocity field =========================
 
 	/*
