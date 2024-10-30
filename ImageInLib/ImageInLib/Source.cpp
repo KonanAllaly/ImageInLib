@@ -54,7 +54,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient2_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -1987,9 +1987,9 @@ int main() {
 	//======================== Path finding Multiple seeds =======================================
 	
 	
-	const size_t height = 866; // P2
+	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
-	//const size_t height = 1351; // P6
+	const size_t height = 1351; // P6
 
 	dataType** potential = new dataType * [height];
 	dataType** action_field = new dataType * [height];
@@ -2004,7 +2004,7 @@ int main() {
 	if (potential == NULL || action_field == NULL || pathPtr == NULL || imageData == NULL)
 		return false;
 	
-	loading_path = inputPath + "raw/interpolated/filtered_p2.raw";
+	loading_path = inputPath + "raw/interpolated/filtered_p6.raw";
 	//loading_path = inputPath + "raw/interpolated/patient2/Im_mean_r5.raw";
 	//loading_path = inputPath + "raw/interpolated/patient4/Im_mean_r3.raw";
 	//loading_path = inputPath + "raw/interpolated/patient6/Im_mean_r3.raw";
@@ -2043,16 +2043,27 @@ int main() {
 
 	Image_Data CT = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
 
-	Point3D seed1 = { 263, 260, 316 };
-	Point3D seed2 = { 264, 255, 344 };//28
-	Point3D seed3 = { 263, 269, 399 };//55
-	Point3D seed4 = { 291, 306, 487 };//88
-	Point3D seed5 = { 296, 316, 567 };//24
-	Point3D seed6 = { 282, 287, 591 };//22
-	Point3D seed7 = { 259, 260, 569 };//31
-	Point3D seed8 = { 257, 252, 538 };
+	////Patient2
+	//Point3D seed1 = { 263, 260, 316 };
+	//Point3D seed2 = { 264, 255, 344 };
+	//Point3D seed3 = { 263, 269, 399 };
+	//Point3D seed4 = { 291, 306, 487 };
+	//Point3D seed5 = { 296, 316, 567 };
+	//Point3D seed6 = { 282, 287, 591 };
+	//Point3D seed7 = { 259, 260, 569 };
+	//Point3D seed8 = { 257, 252, 538 };
 
-	compute3DPotential(CT, potential, seed3, radius, parameters);
+	//Patient6
+	Point3D seed1 = { 267, 243, 733 };
+	Point3D seed2 = { 266, 249, 768 };
+	Point3D seed3 = { 262, 259, 809 };
+	Point3D seed4 = { 270, 282, 849 };
+	Point3D seed5 = { 266, 302, 932 };
+	Point3D seed6 = { 276, 245, 1029 };
+	Point3D seed7 = { 245, 217, 990 };
+	Point3D seed8 = { 247, 224, 959 };
+
+	compute3DPotential(CT, potential, seed1, radius, parameters);
 
 	Point3D* path1 = new Point3D[2];
 	Point3D* path2 = new Point3D[2];
@@ -2070,7 +2081,13 @@ int main() {
 	path6[0] = seed6; path6[1] = seed7;
 	path7[0] = seed7; path7[1] = seed8;
 	
-	vector<Point3D> path_points1, path_points2, path_points3, path_points4, path_points5, path_points6, path_points7;
+	vector<Point3D> path_points1;
+	vector<Point3D> path_points2;
+	vector<Point3D> path_points3;
+	vector<Point3D> path_points4;
+	vector<Point3D> path_points5;
+	vector<Point3D> path_points6;
+	vector<Point3D> path_points7;
 
 	//Segment 1
 	partialFrontPropagation(action_field, potential, Length, Width, height, path1);
@@ -2100,14 +2117,14 @@ int main() {
 	partialFrontPropagation(action_field, potential, Length, Width, height, path7);
 	shortestPath3D(action_field, Length, Width, height, intSpacing, path7, path_points7);
 
-	string saving_real = outputPath + "path_point_real_coord_p2.csv";
+	string saving_real = outputPath + "path_point_real_coord_p6.csv";
 	FILE* file_real;
 	if (fopen_s(&file_real, saving_real.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 
-	string saving_img = outputPath + "path_point_img_coord_p2.csv";
+	string saving_img = outputPath + "path_point_img_coord_p6.csv";
 	FILE* file_img;
 	if (fopen_s(&file_img, saving_img.c_str(), "w") != 0) {
 		printf("Enable to open");
