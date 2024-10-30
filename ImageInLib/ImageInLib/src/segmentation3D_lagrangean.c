@@ -1,8 +1,10 @@
-#include "common_functions.h"
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include "common_functions.h"
 #include "file.h"
 #include "segmentation2D_lagrangean.h"
+#include "segmentation3D_lagrangean.h"
 #include "solvers.h"
 
 bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
@@ -91,7 +93,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 
                 //Similar intensity detector
                 if (!pSegmentationParams->open_curve) {
-                    similar_intensity_detector[k][xd] = similarIntensityDetector(inputImage3D.imageDataPtr[k][xd], pSegmentationParams->reference_intensity, pSegmentationParams->intensityCoef);
+                    similar_intensity_detector[k][xd] = similarIntensityDetector(inputImage3D.imageDataPtr[k][xd], pSegmentationParams->reference_intensity, pSegmentationParams->intensity_coef);
                 }
             }
         }
@@ -345,6 +347,26 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     size_t length_of_data = linked_curve.number_of_points + 2;
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
 
+    unsigned char curve_path[350];
+    unsigned char ending[100];
+
+    LinkedPoint3D* _pt = linked_curve.first_point;
+    size_t start_ind = 0;
+    strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+    sprintf_s(ending, sizeof(ending), "_curve_step_%03zd.csv", start_ind);
+    strcat_s(curve_path, sizeof(curve_path), ending);
+    FILE* file_curve;
+    if (fopen_s(&file_curve, curve_path, "w") != 0) {
+        printf("Enable to open");
+        return false;
+    }
+    for (size_t n = 0; n < linked_curve.number_of_points; n++) {
+        fprintf(file_curve, "%f,%f,%f\n", _pt->x, _pt->y, _pt->z);
+        _pt = _pt->next;
+    }
+    fclose(file_curve);
+
+
     for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
     {
         if (length_of_data < linked_curve.number_of_points + 2)
@@ -355,6 +377,28 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         }
         //evolve curve
         evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
+
+        //Save the curve after some time step
+        if (it % pSegmentationParams->n_save == 0) {
+
+            LinkedPoint3D* pt_save = linked_curve.first_point;
+
+            strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+            sprintf_s(ending, sizeof(ending), "_curve_step_%03zd.csv", it);
+            strcat_s(curve_path, sizeof(curve_path), ending);
+            FILE* file_current_curve;
+            if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            for (size_t n = 0; n < linked_curve.number_of_points; n++) {
+                fprintf(file_current_curve, "%f,%f,%f\n", pt_save->x, pt_save->y, pt_save->z);
+                pt_save = pt_save->next;
+            }
+            fclose(file_current_curve);
+
+        }
+
     }
 
     free(pscheme_data);
@@ -532,8 +576,8 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
-    //const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
+    //const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 

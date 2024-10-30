@@ -47,13 +47,14 @@ extern "C" {
 		Curve3D* pinitial_condition;	// Initial curve
 		size_t num_points;// Number of initial segmentation curve points
 		dataType time_step_size;	//discrete time step size
-		dataType mu;	//influence of edge detector gradient field
+		dataType mu; //influence of edge detector gradient field
 		dataType lambda; //weight between projected gradient field and intensity similarity field
-		dataType eps;	//influence of curvature
+		dataType eps; //influence of curvature
 		dataType omega;	//redistribution speed
 		dataType edge_detector_coef; //edge detector coefficient
-		dataType intensityCoef; // coeficient for the similar intensity detector
+		dataType intensity_coef; // coeficient for the similar intensity detector
 		dataType reference_intensity; //The reference intensity for G2
+		size_t n_save;
 		bool open_curve;
 	} Lagrangean3DSegmentationParameters;
 
