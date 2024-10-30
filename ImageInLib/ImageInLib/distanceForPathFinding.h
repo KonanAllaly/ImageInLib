@@ -31,8 +31,8 @@ using namespace std;
 	}pointFastMarching3D;
 
 	typedef struct {
-		dataType K, epsilon;
-		dataType c_min, c_max, c_mean, c_sd, c_ct, c_pet;
+		dataType K, eps, h;
+		double radius;
 	} Potential_Parameters;
 
 	// 2D functions

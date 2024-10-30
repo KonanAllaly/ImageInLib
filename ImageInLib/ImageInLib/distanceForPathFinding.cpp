@@ -1487,7 +1487,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 			//potential[k][i] = parameters.epsilon + potential[k][i];
 			//potential[k][i] = parameters.epsilon + weight_dist;
 
-			potential[k][i] = parameters.epsilon + weight_dist * potential[k][i] / maxImage;
+			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 
 		}
 	}
