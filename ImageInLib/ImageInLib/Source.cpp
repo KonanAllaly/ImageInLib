@@ -464,18 +464,34 @@ int main() {
 	*/
 
 	//======================== Load path .csv ===================================
-
+	
 	/*
+	size_t height = 866;
+	dataType** imageDataPtr = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		imageDataPtr[k] = new dataType[dim2D]{ 0 };
+	}
+
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data CT = {
+		Length,
+		Width,
+		height,
+		imageDataPtr,
+		ctOrigin,
+		intSpacing,
+		orientation
+	};
+	
 	FILE* path_file;
-	loading_path = inputPath + "Path/path_ordered_p2.csv";
+	loading_path = inputPath + "csv/Path/path_ordered_p2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-	dataType x = 0, y = 0, z = 0;
-	//size_t in, jn, kn;
-	vector<Point3D> path_points;
+	dataType x = 0.0, y = 0.0, z = 0.0;
 
+	size_t count_point = 0;
 	while (feof(path_file) == 0) {
 		fscanf_s(path_file, "%f", &x);
 		fscanf_s(path_file, ",");
@@ -483,17 +499,42 @@ int main() {
 		fscanf_s(path_file, ",");
 		fscanf_s(path_file, "%f", &z);
 		fscanf_s(path_file, "\n");
-		Point3D current_point = { x, y, z };
-		path_points.push_back(current_point);
-		//current_point = getImageCoordFromRealCoord3D(current_point, CT.origin, CT.spacing, CT.orientation);
-		//in = (size_t)x; 
-		//jn = (size_t)y; 
-		//kn = (size_t)z;
+		if (count_point % 1 == 0) {
+			Point3D current_point = { x, y, z };
+			Point3D point_box = getImageCoordFromRealCoord3D(current_point, ctOrigin, intSpacing, orientation);
+			BoundingBox3D box = findBoundingBox3D(point_box, Length, Width, height, 25.0, 0.0);
+			for (k = box.k_min; k <= box.k_max; k++) {
+				for (i = box.i_min; i <= box.i_max; i++) {
+					for (j = box.j_min; j <= box.j_max; j++) {
+						Point3D point_sphere = { i, j, k };
+						point_sphere = getRealCoordFromImageCoord3D(point_sphere, ctOrigin, intSpacing, orientation);
+						double pDistance = getPoint3DDistance(current_point, point_sphere);
+						if (pDistance <= 24.0) {
+							imageDataPtr[k][x_new(i, j, Length)] = 1.0;
+						}
+					}
+				}
+			}
+		}
+		count_point++;
 	}
 	fclose(path_file);
 
-	//storing_path = outputPath + "path_image.raw";
-	//store3dRawData<dataType>(interpolated, Length, Width, height, storing_path.c_str());
+	storing_path = outputPath + "path_shape.raw";
+	store3dRawData<dataType>(imageDataPtr, Length, Width, height, storing_path.c_str());
+
+	//Point3D point_before = { 6.378235, 71.263824, -647.862732};
+	//std::cout << "Input point P = {" << point_before.x << ", " << point_before.y << ", " << point_before.z << ")" << std::endl;
+	//point_before = getImageCoordFromRealCoord3D(point_before, ctOrigin, intSpacing, orientation);
+	//std::cout << "Image Coord P = {" << point_before.x << ", " << point_before.y << ", " << point_before.z << ")" << std::endl;
+	//Point3D point_after = getRealCoordFromImageCoord3D(point_before, ctOrigin, intSpacing, orientation);
+	//std::cout << "Input point P = {" << point_after.x << ", " << point_after.y << ", " << point_after.z << ")" << std::endl;
+
+
+	for (k = 0; k < height; k++) {
+		delete[] imageDataPtr[k];
+	}
+	delete[] imageDataPtr;
 	*/
 
 	//======================== find Liver Approximative centroid ==============================
