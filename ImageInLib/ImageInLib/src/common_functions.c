@@ -390,78 +390,68 @@ BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t
 //==============================================================================
 BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset) {
 
-	BoundingBox3D box = { 0, 0, 0, 0, 0, 0 };
+	if (point.x < 0 || point.y < 0 || point.z < 0) {
+		printf("The coodinates of current point should be in image coordinates");
+		return (BoundingBox3D) { 0, 0, 0, 0, 0, 0 };
+	}
+
+	size_t x_min = 0, x_max = 0, y_min = 0, y_max = 0, z_min = 0, z_max = 0;
 
 	//find i_min
-	double ind_x = (double)point.x - (radius + offset);
-	if (ind_x < 0) {
-		box.i_min = 0;
+	double ind_min_x = (double)point.x - (radius + 0.5);
+	if (ind_min_x < 0) {
+		x_min = 0;
 	}
 	else {
-		if (ind_x > length - 1) {
-			box.i_min = length - 1;
-		}
-		else {
-			box.i_min = (size_t)ind_x;
-		}
+		x_min = (size_t)ind_min_x;
 	}
 
 	//find i_max
-	ind_x = (double)point.x + (radius + offset);
-	if (ind_x >= length - 1) {
-		box.i_max = length - 1;
+	double ind_max_x = (double)point.x + (radius + 0.5);
+	if (ind_max_x >= length - 1) {
+		x_max = length - 1;
 	}
 	else {
-		box.i_max = (size_t)ind_x;
+		x_max = (size_t)ind_max_x;
 	}
 
 	//find j_min
-	double ind_y = (double)point.y - (radius + offset);
-	if (ind_y < 0) {
-		box.j_min = 0;
+	double ind_min_y = (double)point.y - (radius + 0.5);
+	if (ind_min_y < 0) {
+		y_min = 0;
 	}
 	else {
-		if (ind_y > width - 1) {
-			box.j_min = width - 1;
-		}
-		else {
-			box.j_min = (size_t)ind_y;
-		}
+		y_min = (size_t)ind_min_y;
 	}
 
 	//find j_max
-	ind_y = (double)point.y + (radius + offset);
-	if (ind_y >= width - 1) {
-		box.j_max = width - 1;
+	double ind_max_y = (double)point.y + (radius + 0.5);
+	if (ind_max_y >= width - 1) {
+		y_max = width - 1;
 	}
 	else {
-		box.j_max = (size_t)ind_y;
+		y_max = (size_t)ind_max_y;
 	}
 
 	//find k_min
-	double ind_z = (double)point.z - (radius + offset);
-	if (ind_z < 0) {
-		box.k_min = 0;
+	double ind_min_z = (double)point.z - (radius + 0.5);
+	if (ind_min_z < 0) {
+		z_min = 0;
 	}
 	else {
-		if (ind_z > height - 1) {
-			box.k_min = height - 1;
-		}
-		else {
-			box.k_min = (size_t)ind_z;
-		}
+		z_min = (size_t)ind_min_z;
 	}
 
 	//find k_max
-	ind_z = (double)point.z + (radius + offset);
-	if (ind_z >= height - 1) {
-		box.k_max = height - 1;
+	double ind_max_z = (double)point.z + (radius + 0.5);
+	if (ind_max_z >= height - 1) {
+		z_max = height - 1;
 	}
 	else {
-		box.k_max = (size_t)ind_z;
+		z_max = (size_t)ind_max_z;
 	}
 
-	return box;
+	return (BoundingBox3D) {x_min, x_max, y_min, y_max, z_min, z_max};
 }
 //==============================================================================
 void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h) {
