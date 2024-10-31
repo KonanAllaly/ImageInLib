@@ -177,3 +177,45 @@ bool generateSphere(dataType ** dataArray3D, Point3D center, size_t length, size
 
 	return true;
 }
+
+bool generate3DSpiralTube(Image_Data image, Point3D center, double radius, double length, const size_t turns, const size_t segment_per_turn)
+{
+	if(image.imageDataPtr == NULL)
+	{
+		return false;
+	}
+	
+	size_t total_segment = turns * segment_per_turn;
+	dataType step;
+	double phi;
+	dataType x, y, z;
+	BoundingBox box;
+
+	for (size_t n = 0; n < total_segment; n++) 
+	{
+		step = (dataType)n / (dataType)total_segment;
+		phi = step * turns * 2 * M_PI;
+		x = center.x + radius * cos(phi);
+		y = center.y + radius * sin(phi);
+		z = center.z + step * length;
+		
+		Point3D current_center = { x, y, z };
+		double radius_tube = 3.0;
+		box = findPointBoundingBox(image, current_center, radius_tube);
+		for (size_t k = box.k_min; k <= box.k_max; k++) 
+		{
+			for (size_t i = box.i_min; i <= box.i_max; i++)
+			{
+				for (size_t j = box.j_min; j <= box.j_max; j++)
+				{
+					Point3D current_point = { i, j, k };
+					double dist = getPoint3DDistance(current_center, current_point);
+					if (dist <= radius_tube) {
+						image.imageDataPtr[k][x_new(i, j, image.length)] = 1.0;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
