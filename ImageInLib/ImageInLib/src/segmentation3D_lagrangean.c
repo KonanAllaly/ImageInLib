@@ -300,7 +300,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     const dataType hx = 1.0, hy = 1.0, hz = 1.0;           //spatial discretization step
     const dataType hx_c = 1.0, hy_c = 1.0, hz_c = 1.0;    //h for central differences
     Point3D current_grad;
-    FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
+    //FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
 
     const size_t dataDimension = inputImage3D.length * inputImage3D.width;
     const size_t sliceSize = dataDimension * sizeof(dataType);
@@ -577,7 +577,8 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
     //const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
-    const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
+    //const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };//P2, P3
+    const FiniteVolumeSize3D finite_volume = { 0.976562, 0.976562, 0.976562 };//P6, P4
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
