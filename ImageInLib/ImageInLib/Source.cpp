@@ -42,6 +42,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -67,6 +68,11 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	*/
+
+	//========================= Path finding in Spiral ==========================
+
+	const size_t 
 
 	//========================= Interpolated the aorta ==========================
 
@@ -1997,7 +2003,7 @@ int main() {
 
 	//======================== Path finding Multiple seeds =======================================
 	
-	
+	/**
 	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
 	//const size_t height = 1351; // P6
@@ -2228,7 +2234,7 @@ int main() {
 	delete[] action_field;
 	delete[] pathPtr;
 	delete[] imageData;
-	
+	*/
 	
 	//======================== 2D Hough transform on Slice ===========================
 	
@@ -3123,7 +3129,7 @@ int main() {
 	
 	//======================== Free Memory ======================================
 
-	free(ctContainer);
+	//free(ctContainer);
 	
 	return EXIT_SUCCESS;
 }
