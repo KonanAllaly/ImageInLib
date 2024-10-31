@@ -72,7 +72,70 @@ int main() {
 
 	//========================= Path finding in Spiral ==========================
 
-	const size_t 
+	const size_t height = 100, length = 100, width = 100;
+	dataType** imageData = new dataType * [height];
+	dataType** actionMap = new dataType * [height];
+	dataType** potential = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		imageData[k] = new dataType[length * width]{ 0 };
+		actionMap[k] = new dataType[length * width]{ 0 };
+		potential[k] = new dataType[length * width]{ 0 };
+	}
+
+	loading_path = inputPath + "circular_spiral.raw";
+	load3dArrayRAW<dataType>(imageData, length, width, height, loading_path.c_str(), false);
+
+	//Compute potential
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length * width; i++) {
+			if (imageData[k][i] == 1.0) {
+				potential[k][i] = 0.001;
+			}
+			else {
+				potential[k][i] = 1.0;
+			}
+		}
+	}
+
+	Point3D* seedPoints = new Point3D[2];
+	Point3D pt1 = { 71, 53, 96 };
+	Point3D pt2 = { 69, 62, 55 };
+
+	seedPoints[0] = pt1;
+	seedPoints[1] = pt2;
+
+	fastMarching3D_N(actionMap, potential, length, width, height, pt1);
+	//partialFrontPropagation(actionMap, potential, length, width, height, seedPoints);
+
+	vector<Point3D> path_points;
+	VoxelSpacing spacing = { 1.0, 1.0, 1.0 };
+	shortestPath3D(actionMap, length, width, height, spacing, seedPoints, path_points);
+
+	string path_save = outputPath + "path_spiral.csv";
+	FILE* pFile;
+	if (fopen_s(&pFile, path_save.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	int n = 0;
+
+	fprintf(pFile, "%f,%f,%f\n", pt1.x, pt1.y, pt1.z);
+	fprintf(pFile, "%f,%f,%f\n", pt2.x, pt2.y, pt2.z);
+
+	for (n = path_points.size() - 1; n > -1; n--) {
+		fprintf(pFile, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	fclose(pFile);
+
+	delete[] seedPoints;
+	for (k = 0; k < height; k++) {
+		delete[] imageData[k];
+		delete[] actionMap[k];
+		delete[] potential[k];
+	}
+	delete[] imageData;
+	delete[] actionMap;
+	delete[] potential;
 
 	//========================= Interpolated the aorta ==========================
 
