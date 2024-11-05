@@ -297,40 +297,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         return false;
     }
 
-    const dataType hx = 1.0, hy = 1.0, hz = 1.0;           //spatial discretization step
-    const dataType hx_c = 1.0, hy_c = 1.0, hz_c = 1.0;    //h for central differences
-    Point3D current_grad;
-    //FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };
-
-    const size_t dataDimension = inputImage3D.length * inputImage3D.width;
-    const size_t sliceSize = dataDimension * sizeof(dataType);
-    const size_t sizeHeight = sizeof(dataType*) * inputImage3D.height;
-    
-    dataType** edge_detector = (dataType**)malloc(sizeHeight);
-    for (size_t k = 0; k < inputImage3D.height; k++) 
-    {
-        edge_detector[k] = (dataType*)malloc(sliceSize);
-        if (edge_detector[k] == NULL)
-            return false;
-    }
-    if (edge_detector == NULL)
-        return false;
-
-    //for (size_t k = 0; k < inputImage3D.height; k++)
-    //{
-    //    for (size_t i = 0; i < inputImage3D.length; i++)
-    //    {
-    //        for (size_t j = 0; j < inputImage3D.width; j++)
-    //        {
-    //            getGradient3D(inputImage3D.imageDataPtr, inputImage3D.width, inputImage3D.length, inputImage3D.height, j, i, k, finite_volume, &current_grad);
-    //            size_t xd = x_new(j, i, inputImage3D.width);
-    //            edge_detector[k][xd] = norm3D(current_grad);
-    //        }
-    //    }
-    //}
-    //const char save_gardient[] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/magnitude_gradient_full_image.raw";
-    //manageFile(edge_detector, inputImage3D.length, inputImage3D.width, inputImage3D.height, save_gardient, STORE_DATA_RAW, BINARY_DATA, (Storage_Flags){ false, false });
-
     resetIDGenerator();
     //let us consider single curve without topological changes
 
@@ -347,7 +313,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     size_t length_of_data = linked_curve.number_of_points + 2;
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
 
-    unsigned char curve_path[350];
+    unsigned char curve_path[500];
     unsigned char ending[100];
 
     LinkedPoint3D* _pt = linked_curve.first_point;
@@ -365,8 +331,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         _pt = _pt->next;
     }
     fclose(file_curve);
-
-
+    
     for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
     {
         if (length_of_data < linked_curve.number_of_points + 2)
@@ -402,10 +367,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     }
 
     free(pscheme_data);
-    for (size_t k = 0; k < inputImage3D.height; k++) {
-        free(edge_detector[k]);
-    }
-    free(edge_detector);
 
     LinkedPoint3D* pt = linked_curve.first_point;
 
@@ -576,9 +537,9 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    //const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
     //const FiniteVolumeSize3D finite_volume = { 1.171875, 1.171875, 1.171875 };//P2, P3
-    const FiniteVolumeSize3D finite_volume = { 0.976562, 0.976562, 0.976562 };//P6, P4
+    //const FiniteVolumeSize3D finite_volume = { 0.976562, 0.976562, 0.976562 };//P6, P4
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
