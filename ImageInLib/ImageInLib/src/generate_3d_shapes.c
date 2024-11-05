@@ -200,7 +200,7 @@ bool generate3DSpiralTube(Image_Data image, Point3D center, double radius, doubl
 		z = center.z + step * length;
 		
 		Point3D current_center = { x, y, z };
-		double radius_tube = 3.0;
+		double radius_tube = 5.0;
 		box = findPointBoundingBox(image, current_center, radius_tube);
 		for (size_t k = box.k_min; k <= box.k_max; k++) 
 		{
