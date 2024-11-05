@@ -1456,44 +1456,15 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		}
 	}
 
-	////Normalization just initial potential
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		potential[k][i] = potential[k][i] / maxImage;
-	//	}
-	//}
-	
-	//saving_name = path_name + "potential.raw";
-	//store3dRawData<dataType>(potential, length, width, height, saving_name.c_str());
-
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			
-			//ux = gradientVectorX[k][i];
-			//uy = gradientVectorY[k][i];
-			//uz = gradientVectorZ[k][i];
-			//dataType norm_of_gradient = ux * ux + uy * uy + uz * uz;
-			//dataType edge_value = 1.0; //(dataType)(0.5 * (2 - (1.0 / (1.0 + edge_coef * norm_of_gradient))));
-			
 			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
-			
-			//potential[k][i] = parameters.epsilon + sqrt(parameters.c_ct * pow(potential[k][i] / maxImage, 2)
-			//	+ parameters.c_mean * pow(meanImagePtr[k][i] / maxMean, 2)) * edge_value * weight_dist;
-			//potential[k][i] = parameters.epsilon + weight_dist; //(meanImagePtr[k][i] / maxMean);
-			//potential[k][i] = parameters.epsilon + (meanImagePtr[k][i] / maxMean) * edge_value * weight_dist;
-			////potential[k][i] = parameters.epsilon + 0.5 * ((potential[k][i] / maxImage) + (meanImagePtr[k][i] / maxMean)) * edge_value * weight_dist;
-
-			//potential[k][i] = parameters.epsilon + potential[k][i];
-			//potential[k][i] = parameters.epsilon + weight_dist;
-
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 
 		}
 	}
-
-	//string saving_name = path_name + "potential7.raw";
-	//store3dRawData<dataType>(potential, length, width, height, saving_name.c_str());
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -2064,7 +2035,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 }
 */
 
-
 bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
 	size_t i, j, k, xd;
@@ -2197,7 +2167,6 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 
 	return true;
 }
-
 
 /*
 bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Potential_Parameters parameters) {
