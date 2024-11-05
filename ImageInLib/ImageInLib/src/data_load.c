@@ -317,51 +317,51 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		return false;
 	}
 
-	//const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/path_in_image_coordinate_p2.csv";
-	//FILE* file_save;
-	//if (fopen_s(&file_save, distance_to_next, "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
+	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_between_path_points.csv";
+	FILE* file_save;
+	if (fopen_s(&file_save, distance_to_next, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
 
-	//Point3D current_point, previous_point;
-	//double dist = 0;
+	Point3D previous_point;
+	double dist = 0;
 	
 	dataType x = 0, y = 0, z = 0;
 
 	for (size_t i = 0; i < pCurve->numPoints; i++) {
 		
-		fscanf_s(file, "%f", &x);
+		//fscanf_s(file, "%f", &x);
+		fscanf_s(file, "%f", &pCurve->pPoints[i].x);
 		fscanf_s(file, ",");
-		fscanf_s(file, "%f", &y);
+		//fscanf_s(file, "%f", &y);
+		fscanf_s(file, "%f", &pCurve->pPoints[i].y);
 		fscanf_s(file, ",");
-		fscanf_s(file, "%f", &z);
+		//fscanf_s(file, "%f", &z);
+		fscanf_s(file, "%f", &pCurve->pPoints[i].z);
 		fscanf_s(file, "\n");
-		Point3D current_point = { x, y, z };
-		current_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
-		pCurve->pPoints[i].x = current_point.x;
-		pCurve->pPoints[i].y = current_point.y;
-		pCurve->pPoints[i].z = current_point.z;
 
-		//fprintf(file_save,"%f,%f,%f", current_point.x, current_point.y, current_point.z);
-		//fprintf(file_save, "\n");
+		////Get image coordinate
+		//Point3D current_point = { x, y, z };
+		//current_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
+		//pCurve->pPoints[i].x = current_point.x;
+		//pCurve->pPoints[i].y = current_point.y;
+		//pCurve->pPoints[i].z = current_point.z;
 
-		//current_point.x = pCurve->pPoints[i].x;
-		//current_point.y = pCurve->pPoints[i].y;
-		//current_point.z = pCurve->pPoints[i].z;
-		//if (i == 0) {
-		//	dist = 0.0;
-		//}
-		//else {
-		//	dist = getPoint3DDistance(current_point, previous_point);
-		//}
-		////fprintf(file_save, "%f", dist);
-		////fprintf(file_save, "\n");
-		//previous_point = current_point;
+		Point3D current_point = { pCurve->pPoints[i].x , pCurve->pPoints[i].y , pCurve->pPoints[i].z };
+		if (i == 0) {
+			dist = 0.0;
+		}
+		else {
+			dist = getPoint3DDistance(current_point, previous_point);
+		}
+		fprintf(file_save, "%f", dist);
+		fprintf(file_save, "\n");
+		previous_point = current_point;
 
 	}
-	//fclose(file);
-	//fclose(file_save);
+	fclose(file);
+	fclose(file_save);
 
 	return true;
 }
