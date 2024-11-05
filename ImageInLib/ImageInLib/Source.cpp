@@ -72,7 +72,7 @@ int main() {
 
 	//========================= Path finding in Spiral ==========================
 
-	const size_t height = 100, length = 100, width = 100;
+	const size_t height = 50, length = 100, width = 100;
 	dataType** imageData = new dataType * [height];
 	dataType** actionMap = new dataType * [height];
 	dataType** potential = new dataType * [height];
@@ -82,7 +82,9 @@ int main() {
 		potential[k] = new dataType[length * width]{ 0 };
 	}
 
-	loading_path = inputPath + "circular_spiral.raw";
+	//loading_path = inputPath + "shape/diagonal_tube.raw";
+	//loading_path = inputPath + "shape/U_shape.raw";
+	loading_path = inputPath + "shape/spiral.raw";
 	load3dArrayRAW<dataType>(imageData, length, width, height, loading_path.c_str(), false);
 
 	//Compute potential
@@ -98,14 +100,15 @@ int main() {
 	}
 
 	Point3D* seedPoints = new Point3D[2];
-	Point3D pt1 = { 71, 53, 96 };
-	Point3D pt2 = { 69, 62, 55 };
+	//Point3D pt1 = { 7, 9, 5 }, pt2 = { 94, 90, 18 }; //tube
+	//Point3D pt1 = { 30, 20, 5 }, pt2 = { 73, 20, 14 }; //u shape
+	Point3D pt1 = { 70, 55, 1 }, pt2 = { 71, 51, 48 }; //spiral
 
 	seedPoints[0] = pt1;
 	seedPoints[1] = pt2;
 
-	fastMarching3D_N(actionMap, potential, length, width, height, pt1);
-	//partialFrontPropagation(actionMap, potential, length, width, height, seedPoints);
+	//fastMarching3D_N(actionMap, potential, length, width, height, pt1);
+	partialFrontPropagation(actionMap, potential, length, width, height, seedPoints);
 
 	vector<Point3D> path_points;
 	VoxelSpacing spacing = { 1.0, 1.0, 1.0 };
@@ -120,11 +123,10 @@ int main() {
 	int n = 0;
 
 	fprintf(pFile, "%f,%f,%f\n", pt1.x, pt1.y, pt1.z);
-	fprintf(pFile, "%f,%f,%f\n", pt2.x, pt2.y, pt2.z);
-
 	for (n = path_points.size() - 1; n > -1; n--) {
 		fprintf(pFile, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
 	}
+	fprintf(pFile, "%f,%f,%f\n", pt2.x, pt2.y, pt2.z);
 	fclose(pFile);
 
 	delete[] seedPoints;
