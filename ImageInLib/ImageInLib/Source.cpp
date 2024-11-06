@@ -72,7 +72,7 @@ int main() {
 
 	//========================= Path finding in Spiral ==========================
 
-	const size_t height = 50, length = 100, width = 100;
+	const size_t height = 100, length = 100, width = 100;
 	dataType** imageData = new dataType * [height];
 	dataType** actionMap = new dataType * [height];
 	dataType** potential = new dataType * [height];
@@ -83,8 +83,8 @@ int main() {
 	}
 
 	//loading_path = inputPath + "shape/diagonal_tube.raw";
-	//loading_path = inputPath + "shape/U_shape.raw";
-	loading_path = inputPath + "shape/spiral.raw";
+	loading_path = inputPath + "shape/u_shape_radius15.raw";
+	//loading_path = inputPath + "shape/spiral_radius15.raw";
 	load3dArrayRAW<dataType>(imageData, length, width, height, loading_path.c_str(), false);
 
 	//Compute potential
@@ -101,8 +101,8 @@ int main() {
 
 	Point3D* seedPoints = new Point3D[2];
 	//Point3D pt1 = { 7, 9, 5 }, pt2 = { 94, 90, 18 }; //tube
-	//Point3D pt1 = { 30, 20, 5 }, pt2 = { 73, 20, 14 }; //u shape
-	Point3D pt1 = { 70, 55, 1 }, pt2 = { 71, 51, 48 }; //spiral
+	Point3D pt1 = { 30, 18, 46 }, pt2 = { 72, 21, 51 }; //u shape
+	//Point3D pt1 = { 81, 54, 7 }, pt2 = { 80, 48, 87 }; //spiral
 
 	seedPoints[0] = pt1;
 	seedPoints[1] = pt2;
@@ -114,7 +114,8 @@ int main() {
 	VoxelSpacing spacing = { 1.0, 1.0, 1.0 };
 	shortestPath3D(actionMap, length, width, height, spacing, seedPoints, path_points);
 
-	string path_save = outputPath + "path_spiral.csv";
+	//string path_save = outputPath + "path_spiral_radius15.csv";
+	string path_save = outputPath + "path_ushape_radius15.csv";
 	FILE* pFile;
 	if (fopen_s(&pFile, path_save.c_str(), "w") != 0) {
 		printf("Enable to open");
