@@ -316,22 +316,62 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     unsigned char curve_path[500];
     unsigned char ending[100];
 
-    LinkedPoint3D* _pt = linked_curve.first_point;
-    size_t start_ind = 0;
+    size_t numberOfPoints = linked_curve.number_of_points;
+    dataType** previous_curve = (dataType**)malloc(sizeof(dataType*) * numberOfPoints);
+    for (size_t i = 0; i < numberOfPoints; i++) {
+        previous_curve[i] = (dataType*)malloc(sizeof(dataType) * 3);
+    }
+
+    //File to save the total curve length
     strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    sprintf_s(ending, sizeof(ending), "_curve_step_%03zd.csv", start_ind);
+    sprintf_s(ending, sizeof(ending), "total_lenght.csv");
     strcat_s(curve_path, sizeof(curve_path), ending);
-    FILE* file_curve;
-    if (fopen_s(&file_curve, curve_path, "w") != 0) {
+    FILE* file_length;
+    if (fopen_s(&file_length, curve_path, "w") != 0) {
         printf("Enable to open");
         return false;
     }
-    for (size_t n = 0; n < linked_curve.number_of_points; n++) {
-        fprintf(file_curve, "%f,%f,%f\n", _pt->x, _pt->y, _pt->z);
-        _pt = _pt->next;
-    }
-    fclose(file_curve);
+    fprintf(file_length, "x,y\n");
+
+    ////Path for curve
+    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+    //sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", start_ind);
+    //strcat_s(curve_path, sizeof(curve_path), ending);
+    //FILE* file_curve;
+    //if (fopen_s(&file_curve, curve_path, "w") != 0) {
+    //    printf("Enable to open");
+    //    return false;
+    //}
+
+    ////Path for distance
+    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+    //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", start_ind);
+    //strcat_s(curve_path, sizeof(curve_path), ending);
     
+    //FILE* file_dist;
+    //if (fopen_s(&file_dist, curve_path, "w") != 0) {
+    //    printf("Enable to open");
+    //    return false;
+    //}
+
+    LinkedPoint3D* iPoint = linked_curve.first_point;
+    size_t start_ind = 0;
+    //fprintf(file_dist, "x,y\n");
+    dataType total_curve_lenght = 0.0;
+    for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
+        //fprintf(file_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+        //fprintf(file_dist, "%d,%f\n", n, iPoint->distance_to_next);
+        total_curve_lenght += iPoint->distance_to_next;
+        iPoint = iPoint->next;
+    }
+    //fclose(file_dist);
+    //fclose(file_curve);
+
+    fprintf(file_length, "%d,%f\n", start_ind, total_curve_lenght);
+    dataType previous_total_length = total_curve_lenght;
+    dataType difference_lenght = 1.0;
+
+    /*
     for (size_t it = 1, res_it = 0; it <= pSegmentationParams->num_time_steps; it++)
     {
         if (length_of_data < linked_curve.number_of_points + 2)
@@ -346,39 +386,165 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         //Save the curve after some time step
         if (it % pSegmentationParams->n_save == 0) {
 
-            LinkedPoint3D* pt_save = linked_curve.first_point;
-
             strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-            sprintf_s(ending, sizeof(ending), "_curve_step_%03zd.csv", it);
+            sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
             strcat_s(curve_path, sizeof(curve_path), ending);
             FILE* file_current_curve;
             if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
                 printf("Enable to open");
                 return false;
             }
-            for (size_t n = 0; n < linked_curve.number_of_points; n++) {
-                fprintf(file_current_curve, "%f,%f,%f\n", pt_save->x, pt_save->y, pt_save->z);
-                pt_save = pt_save->next;
+            
+            strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+            sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", it);
+            strcat_s(curve_path, sizeof(curve_path), ending);
+            FILE* file_distance_curve;
+            if (fopen_s(&file_distance_curve, curve_path, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            fprintf(file_distance_curve, "x,y\n");
+
+            strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+            sprintf_s(ending, sizeof(ending), "motion/_length_motion_%zd.csv", it);
+            strcat_s(curve_path, sizeof(curve_path), ending);
+            FILE* file_motion;
+            if (fopen_s(&file_motion, curve_path, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            fprintf(file_motion, "x,y\n");
+
+            iPoint = linked_curve.first_point;
+            total_curve_lenght = 0.0;
+            for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
+                //This is possible because the number of point doesn't change
+                double motion = sqrt((iPoint->x - previous_curve[n][0]) * (iPoint->x - previous_curve[n][0])
+                                     + (iPoint->y - previous_curve[n][1]) * (iPoint->y - previous_curve[n][1])
+                                     + (iPoint->z - previous_curve[n][2]) * (iPoint->z - previous_curve[n][2]));
+                fprintf(file_current_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+                fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
+                fprintf(file_motion, "%d,%lf\n", n, motion);
+                
+                //Update the previous point
+                previous_curve[n][0] = iPoint->x;
+                previous_curve[n][1] = iPoint->y;
+                previous_curve[n][2] = iPoint->z;
+
+                total_curve_lenght += iPoint->distance_to_next;
+
+                iPoint = iPoint->next;
             }
             fclose(file_current_curve);
+            fclose(file_distance_curve);
+            fclose(file_motion);
+        }  
+        
+        difference_lenght = abs(total_curve_lenght - previous_total_length);
+        fprintf(file_length, "%d,%lf\n", it, total_curve_lenght);
+        previous_total_length = total_curve_lenght;
 
+    }
+    */
+
+    size_t it = 1;
+    do {
+
+        if (length_of_data < linked_curve.number_of_points + 2)
+        {
+            free(pscheme_data);
+            length_of_data = linked_curve.number_of_points + 2;
+            pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         }
+        
+        //evolve curve
+        evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
 
+        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+        //sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
+        //strcat_s(curve_path, sizeof(curve_path), ending);
+        //FILE* file_current_curve;
+        //if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
+        //    printf("Enable to open");
+        //    return false;
+        //}
+
+        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+        //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", it);
+        //strcat_s(curve_path, sizeof(curve_path), ending);
+        //FILE* file_distance_curve;
+        //if (fopen_s(&file_distance_curve, curve_path, "w") != 0) {
+        //    printf("Enable to open");
+        //    return false;
+        //}
+        //fprintf(file_distance_curve, "x,y\n");
+
+        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+        //sprintf_s(ending, sizeof(ending), "motion/_length_motion_%zd.csv", it);
+        //strcat_s(curve_path, sizeof(curve_path), ending);
+        //FILE* file_motion;
+        //if (fopen_s(&file_motion, curve_path, "w") != 0) {
+        //    printf("Enable to open");
+        //    return false;
+        //}
+        //fprintf(file_motion, "x,y\n");
+
+        iPoint = linked_curve.first_point;
+        total_curve_lenght = 0.0;
+        for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
+            
+            ////This is possible because the number of point doesn't change
+            //double motion = sqrt((iPoint->x - previous_curve[n][0]) * (iPoint->x - previous_curve[n][0])
+            //    + (iPoint->y - previous_curve[n][1]) * (iPoint->y - previous_curve[n][1])
+            //    + (iPoint->z - previous_curve[n][2]) * (iPoint->z - previous_curve[n][2]));
+            //fprintf(file_current_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+            //fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
+            //fprintf(file_motion, "%d,%lf\n", n, motion);
+
+            //Update the previous point
+            previous_curve[n][0] = iPoint->x;
+            previous_curve[n][1] = iPoint->y;
+            previous_curve[n][2] = iPoint->z;
+
+            total_curve_lenght += iPoint->distance_to_next;
+
+            iPoint = iPoint->next;
+        }
+        
+        //fclose(file_current_curve);
+        //fclose(file_distance_curve);
+        //fclose(file_motion);
+
+        difference_lenght = fabs(total_curve_lenght - previous_total_length);
+
+        fprintf(file_length, "%d,%lf\n", it, total_curve_lenght);
+        previous_total_length = total_curve_lenght;
+
+        it++;
+
+    } while (difference_lenght > pSegmentationParams->tolerance && it < pSegmentationParams->num_time_steps);
+    
+    fclose(file_length);
+
+    printf("difference between lenght at equilibrium : %f\n", difference_lenght);
+    printf("%d time steps to equilibrium", it);
+
+    //Store the final curve
+    iPoint = linked_curve.first_point;
+    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    {
+        pResultSegmentation->pPoints[i].x = (dataType)iPoint->x;
+        pResultSegmentation->pPoints[i].y = (dataType)iPoint->y;
+        pResultSegmentation->pPoints[i].z = (dataType)iPoint->z;
+        iPoint = iPoint->next;
     }
 
     free(pscheme_data);
-
-    LinkedPoint3D* pt = linked_curve.first_point;
-
-    for (size_t i = 0; i < linked_curve.number_of_points; i++)
-    {
-        pResultSegmentation->pPoints[i].x = (dataType)pt->x;
-        pResultSegmentation->pPoints[i].y = (dataType)pt->y;
-        pResultSegmentation->pPoints[i].z = (dataType)pt->z;
-        pt = pt->next;
-    }
-
     release3dLinkedCurve(&linked_curve);
+    for (size_t i = 0; i < numberOfPoints; i++) {
+        free(previous_curve[i]);
+    }
+    free(previous_curve);
 
     return false;
 }
