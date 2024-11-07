@@ -54,7 +54,8 @@ extern "C" {
 		dataType edge_detector_coef; //edge detector coefficient
 		dataType intensity_coef; // coeficient for the similar intensity detector
 		dataType reference_intensity; //The reference intensity for G2
-		size_t n_save;
+		size_t n_save; //Frequence for saving the current curve
+		dataType tolerance; //Stop the evolution when the total length is not increasing
 		bool open_curve;
 	} Lagrangean3DSegmentationParameters;
 
