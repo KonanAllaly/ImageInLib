@@ -317,7 +317,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		return false;
 	}
 
-	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_between_path_points_tube.csv";
+	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_between_points.csv";
 	FILE* file_save;
 	if (fopen_s(&file_save, distance_to_next, "w") != 0) {
 		printf("Enable to open");
@@ -341,14 +341,16 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		fscanf_s(file, "%f", &pCurve->pPoints[i].z);
 		fscanf_s(file, "\n");
 
-		////Get image coordinate
-		//Point3D current_point = { x, y, z };
-		//current_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
-		//pCurve->pPoints[i].x = current_point.x;
-		//pCurve->pPoints[i].y = current_point.y;
-		//pCurve->pPoints[i].z = current_point.z;
-
+		
 		Point3D current_point = { pCurve->pPoints[i].x , pCurve->pPoints[i].y , pCurve->pPoints[i].z };
+		
+		//Get image coordinate
+		current_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
+		pCurve->pPoints[i].x = current_point.x;
+		pCurve->pPoints[i].y = current_point.y;
+		pCurve->pPoints[i].z = current_point.z;
+
+		//Get distance between consecutive points
 		if (i == 0) {
 			dist = 0.0;
 		}
