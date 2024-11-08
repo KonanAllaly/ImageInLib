@@ -137,7 +137,7 @@ bool thomas3D(SchemeData3D* pscheme_data, const size_t number_of_points)
 
 	//forward elimination
 
-	for (size_t i = 2; i < number_of_points + 1; i++)
+	for (size_t i = 2; i <= number_of_points; i++)
 	{
 		m = pscheme_data[i].thomas_a / pscheme_data[i - 1].thomas_b;
 		pscheme_data[i].thomas_b -= m * pscheme_data[i - 1].c;
