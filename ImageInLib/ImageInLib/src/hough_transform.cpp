@@ -787,3 +787,27 @@ void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size
 	free(statusPixel);
 	free(edgeDetector);
 }
+
+bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters) {
+	
+	if (imageDataPtr.imageDataPtr == NULL)
+	{
+		return false;
+	}
+
+	size_t height = imageDataPtr.height;
+	size_t width = imageDataPtr.width;
+	double radius = 10.0;
+	BoundingBox2D box = { 0, 0, 0, 0 };
+
+	for(size_t i = 0; i < height; i++)
+	{
+		for (size_t j = 0; j < width; j++)
+		{
+			Point2D point_center = { i, j };
+			box = findBoundingBox2D(point_center, height, width, radius, 0.5);
+		}
+	}
+
+	return true;
+}
