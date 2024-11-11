@@ -42,7 +42,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	/*
+	
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -55,7 +55,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient3_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient2_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -68,10 +68,11 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
-	*/
+	
 
 	//========================= Path finding in Spiral ==========================
 
+	/*
 	const size_t height = 100, length = 100, width = 100;
 	dataType** imageData = new dataType * [height];
 	dataType** actionMap = new dataType * [height];
@@ -139,6 +140,7 @@ int main() {
 	delete[] imageData;
 	delete[] actionMap;
 	delete[] potential;
+	*/
 
 	//========================= Interpolated the aorta ==========================
 
@@ -2303,10 +2305,15 @@ int main() {
 	*/
 	
 	//======================== 2D Hough transform on Slice ===========================
+
+	dataType** imageData = new dataType*[Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
 	
-	/*
 	//loading_path = inputPath + "raw/filtered/filteredGMC_p2.raw";
-	//load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
+	loading_path = inputPath + "raw/ct/patient2_ct.raw";
+	load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
 	
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
 	dataType* foundCircle = new dataType[dim2D]{ 0 };
@@ -2319,12 +2326,10 @@ int main() {
 	size_t k_liver = 176; //--->P2
 	for (i = 0; i < dim2D; i++) {
 		imageSlice[i] = imageData[k_liver][i];
-		foundCircle[i] = 0.0;
-		houghSpace[i] = 0.0;
 	}
 
 	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-
+	
 	//storing_path = outputPath + "filtered.raw";
 	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 
@@ -2342,10 +2347,10 @@ int main() {
 	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
 	//Slice filtering
-	//heatImplicit2dScheme(IMAGE, filter_parameters);
+	heatImplicit2dScheme(IMAGE, filter_parameters);
 
-	//storing_path = outputPath + "smoothed.raw";
-	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	storing_path = outputPath + "smoothed.raw";
+	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 	
 	//Point2D seed = { 248, 298 }; //---> P2 : automatic detection
 	//Point2D seed = { 263, 257 }; //---> P2 : abdominal aorta
@@ -2384,10 +2389,15 @@ int main() {
 
 	//fclose(file);
 
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+	}
+	delete[] imageData;
+
 	delete[] imageSlice;
 	delete[] foundCircle;
 	delete[] houghSpace;
-	*/
+	
 
 	//======================== Segment lungs conneted to trachea ===================================================================
 	
