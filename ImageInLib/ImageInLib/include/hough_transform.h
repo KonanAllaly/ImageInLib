@@ -15,6 +15,7 @@ typedef struct {
 	PixelSpacing spacing; //pixels size
 } HoughParameters;
 
+void initialize2dArrayBool(bool* array2D, const size_t length, const size_t width);
 
 /// <summary>
 /// Initialize 2D array with 0.0
@@ -62,3 +63,5 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters, std::string savingPath);
 
 bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters);
+
+bool localCircleDetection(Image_Data2D imageDataPtr, Point2D seed, const HoughParameters hParameters);

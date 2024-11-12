@@ -13,9 +13,14 @@
 #define foreground 1.0
 #define background 0.0
 
+void initialize2dArrayBool(bool* array2D, const size_t length, const size_t width) {
+	for (size_t i = 0; i < length * width; i++) {
+		array2D[i] = false;
+	}
+}
+
 void initialize2dArray(dataType* array2D, const size_t length, const size_t width) {
-	size_t i, dim2D = length * width;
-	for (i = 0; i < dim2D; i++) {
+	for (size_t i = 0; i < length * width; i++) {
 		array2D[i] = 0.0;
 	}
 }
@@ -34,18 +39,6 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 			}
 		}
 	}
-
-	/*
-	//count max
-	int cptMax = 0;
-	for (i = 0; i < length * width; i++) {
-		if (max_value == arrayPtr2D[i]) {
-			cptMax++;
-		}
-	}
-	std::cout << cptMax << " pixels have max ratio" << std::endl;
-	*/
-
 	return max_point;
 }
 
@@ -64,7 +57,8 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 
 	Point2D originImage = { 0.0, 0.0 };
 	OrientationMatrix2D orientation;
-	orientation.v1 = { 1.0, 0.0 }; orientation.v2 = { 0.0, 1.0 };
+	orientation.v1 = { 1.0, 0.0 }; 
+	orientation.v2 = { 0.0, 1.0 };
 	
 	dataType* edgeDetector = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* maskThreshold = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -88,15 +82,8 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	initialize2dArray(maskThreshold, length, width);
 	copyDataToAnother2dArray(edgeDetector, maskThreshold, length, width);
 
-	saving_path = outputPath + "edge_detector.raw";
-	//store2dRawData(edgeDetector, length, width, saving_path.c_str());
-
 	//thresholding of the edge detector
 	thresholding2DFunction(maskThreshold, length, width, params.thres, params.thres);
-
-	////Erosion
-	//erosion2D(maskThreshold, length, width, foreground, background);
-	//dilatation2D(maskThreshold, length, width, foreground, background);
 
 	/*
 	//==================
@@ -136,9 +123,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	}
 	//==================
 	*/
-
-	saving_path = outputPath + "threshold_or.raw";
-	store2dRawData(maskThreshold, length, width, saving_path.c_str());
 
 	initialize2dArray(foundCirclePtr, length, width);
 
@@ -227,9 +211,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 					}
 				}
 
-				////compute ratios
-				//hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
-				//hough_ratio = (dataType)count_vote / radius;
 				hough_ratio = (dataType)count_vote;
 
 				if (count_neighbor == 0) {
@@ -237,16 +218,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 				}
 			}
 		}
-
-		////keep the maximal ratio for each pixel
-		//for (i = box.i_min; i <= box.i_max; i++) {
-		//	for (j = box.j_min; j <= box.j_max; j++) {
-		//		xd = x_new(i, j, length);
-		//		if (houghSpacePtr[xd] > houghSpaceMax[xd]) {
-		//			houghSpaceMax[xd] = houghSpacePtr[xd];
-		//		}
-		//	}
-		//}
 
 		//keep the maximal ratio for each pixel
 		for (i = 0; i < length * width; i++) {
@@ -281,26 +252,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	printf("Found radius = %lf\n", found_radius);
 	printf("Found center : (%f, %f)\n", found_center.x, found_center.y);
 
-	////add the seed
-	//foundCirclePtr[x_new((size_t)seed.x, (size_t)seed.y, length)] = 1.0;
-
-	////draw maximal bounding box
-	//double radius_max_box = params.radius_max + params.epsilon;
-	//box = findBoundingBox2D(seed, length, width, radius_max_box, params.offset);
-	//for (i = box.i_min; i <= box.i_max; i++) {
-	//	for (j = box.j_min; j <= box.j_max; j++) {
-	//		xd = x_new(i, j, length);
-	//		if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-	//			foundCirclePtr[xd] = 1.0;
-	//		}
-	//	}
-	//}
-
-	//Point2D verif_seed = getRealCoordFromImageCoord2D(seed, originImage, params.spacing, orientation);
-	//Point2D verif_found = getRealCoordFromImageCoord2D(found_center, originImage, params.spacing, orientation);
-	//double d_verif = getPoint2DDistance(verif_seed, verif_found);
-	//double rad_verif = 0.5 * found_radius;
-
 	if (found_center.x != 0 && found_center.y != 0) {
 		//add found center
 		foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 2.0;
@@ -314,9 +265,6 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 				current_point.y = (dataType)j;
 				current_point = getRealCoordFromImageCoord2D(current_point, originImage, params.spacing, orientation);
 				dist_point = getPoint2DDistance(draw_point, current_point);
-				//if (dist_point >= (found_radius - params.epsilon) && dist_point <= (found_radius + params.epsilon)) {
-				//	foundCirclePtr[xd] = 1.0;
-				//}
 				
 				//Draw disque
 				if (dist_point <= (found_radius + params.epsilon)) {
@@ -329,21 +277,10 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 	//copy back
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
-	//if (d_verif <= rad_verif) {
-	//	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-	//}
 	max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-
-	saving_path = outputPath + "found_circle.raw";
-	//store2dRawData(foundCirclePtr, length, width, saving_path.c_str());
 
 	//add the seed
 	imageDataPtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 0.0;
-	//saving_path = outputPath + "input_plus_center2.raw";
-	//store2dRawData(imageDataPtr, length, width, saving_path.c_str());
-
-	//saving_path = outputPath + "ratio.raw";
-	//store2dRawData(houghSpaceMax, length, width, saving_path.c_str());
 
 	free(edgeDetector);
 	free(maskThreshold);
@@ -395,10 +332,6 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	
 	nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, length, width);
 	thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
-
-	////Erosion
-	//erosion2D(maskThreshold, length, width, foreground, background);
-	//dilatation2D(maskThreshold, length, width, foreground, background);
 
 	store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
@@ -613,7 +546,6 @@ void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size
 	initialize2dArray(foundCirclePtr, length, width);
 
 	computeImageGradient(imageDataPtr, gradientX, gradientY, length, width, parameters.h);
-	//computeAngleFromGradient(gradientAngle, gradientX, gradientY, length, width);
 
 	//norm of gradient
 	for (i = 0; i < dim2D; i++) {
@@ -623,17 +555,6 @@ void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size
 
 	copyDataToAnother2dArray(edgeDetector, maskThreshold, length, width);
 	thresholding2DFunction(maskThreshold, length, width, parameters.thres, parameters.thres);
-
-	//nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, length, width);
-	//thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
-
-	////Erosion
-	//erosion2D(maskThreshold, length, width, foreground, background);
-	//erosion2D(maskThreshold, length, width, foreground, background);
-	//erosion2D(maskThreshold, length, width, foreground, background);
-	//dilatation2D(maskThreshold, length, width, foreground, background);
-
-	store2dRawData(maskThreshold, length, width, savingPath.c_str());
 
 	for (p = 0; p < length; p++) {
 		for (q = 0; q < width; q++) {
@@ -800,7 +721,6 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 	size_t dim2D = height * width;
 	double radius;
 	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.0;
-	BoundingBox2D box = { 0, 0, 0, 0 };
 	size_t indx = 0, indy = 0, number_of_circle_points;
 
 	double radius_range = hParameters.radius_max - hParameters.radius_min;
@@ -814,85 +734,231 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 	if (accumulation == NULL)
 		return false;
 
-	dataType* status = new dataType[dim2D]{false};
+	//bool* status = new bool[dim2D]{false};
+	//initialize2dArrayBool(status, height, width);
 
 	size_t xd = 0;
 	double coordx = 0.0, coordy = 0.0;
-	for (size_t k = 0; k < number_of_radiuses; k++) 
+	dataType accumulation_ratio = 0.0;
+
+	for(size_t i = 0; i < height; i++)
 	{
-		radius = hParameters.radius_min + k * hParameters.radius_step;
-		perimeter = 2 * M_PI * radius;
-		number_of_circle_points = (size_t)(perimeter / distance_between_points + 0.5);
-		step = 2 * M_PI / (double)number_of_circle_points;
-		
-		//box = findBoundingBox2D(point_center, height, width, radius, offset);
-		for (size_t i = 0; i < height; i++)
+		for (size_t j = 0; j < width; j++) 
 		{
-			for (size_t j = 0; j < width; j++)
-			{
-				Point2D point_center = { i, j };
+			size_t xd = x_new(i, j, height);
+			if (imageDataPtr.imageDataPtr[xd] != 1) {
 				
-				for (size_t np = 0; np < number_of_circle_points; np++) {
-					
-					phi = (double)np * step;
-					
-					coordx = 0.5 + point_center.x + radius * cos(phi);
-					if (coordx < 0) {
-						indx = 0;
-					}
-					else {
-						if (coordx > height - 1) {
-							indx = height - 1;
+				Point2D point_center = { i, j };
+				for (size_t k = 0; k < number_of_radiuses; k++)
+				{
+					radius = hParameters.radius_min + k * hParameters.radius_step;
+					perimeter = 2 * M_PI * radius;
+					number_of_circle_points = (size_t)(perimeter / distance_between_points + 0.5);
+					step = 2 * M_PI / (double)number_of_circle_points;
+
+					for (size_t np = 0; np < number_of_circle_points; np++) 
+					{
+
+						phi = (double)np * step;
+
+						coordx = 0.5 + point_center.x + radius * cos(phi);
+						if (coordx < 0) {
+							indx = 0;
 						}
 						else {
-							indx = (size_t)coordx;
+							if (coordx > height - 1) {
+								indx = height - 1;
+							}
+							else {
+								indx = (size_t)coordx;
+							}
 						}
-					}
 
-					coordy = 0.5 + point_center.y + radius * sin(phi);
-					if (coordy < 0) {
-						indy = 0;
-					}
-					else {
-						if (coordy > width - 1) {
-							indy = width - 1;
+						coordy = 0.5 + point_center.y + radius * sin(phi);
+						if (coordy < 0) {
+							indy = 0;
 						}
 						else {
-							indy = (size_t)coordy;
+							if (coordy > width - 1) {
+								indy = width - 1;
+							}
+							else {
+								indy = (size_t)coordy;
+							}
 						}
+
+						//TODO : the same point can be found multiple time
+						//       it is need to find the condition to skip a point already found
+
+						if (imageDataPtr.imageDataPtr[x_new(indx, indy, height)] == 1.0) {
+							accumulation[k][x_new(i, j, height)] += 1;
+						}
+
 					}
 
-					if (imageDataPtr.imageDataPtr[x_new(indx, indy, height)] == 1.0) {
-						accumulation[k][x_new(i, j, height)] += 1;
-					}
-
+					//accumulation_ratio = accumulation[k][x_new(i, j, height)] / (dataType)number_of_circle_points;
+					//if (accumulation_ratio < 0.5) 
+					//{
+					//	accumulation[k][x_new(i, j, height)] = 0;
+					//}
 				}
+
 			}
 		}
 	}
 
 	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	//std::string storing_path = outputPath + "accumulation.raw";
+	//std::string storing_path = outputPath + "accumulation3.raw";
 	//store2dRawData<dataType>(accumulation[4], height, width, storing_path.c_str());
 
-	//Find the maximal accumulation
-	dataType maxAccum = 0;
-	double radius_max = 0.0;
-	Point2D center_max = { 0.0, 0.0 };
+	////Find the maximal accumulation
+	//dataType maxAccum = 0;
+	//double radius_max = 0.0;
+	//Point2D center_max = { 0.0, 0.0 };
+	//for (size_t k = 0; k < number_of_radiuses; k++) {
+	//	for (size_t i = 0; i < height; i++) {
+	//		for (size_t j = 0; j < width; j++) {
+	//			size_t xd = x_new(i, j, height);
+	//			if (accumulation[k][xd] > maxAccum) {
+	//				maxAccum = accumulation[k][xd];
+	//				center_max.x = i;
+	//				center_max.y = j;
+	//				radius_max = hParameters.radius_min + k * hParameters.radius_step;
+	//			}
+	//		}
+	//	}
+	//}
+	
+	//std::cout << "The maximal accumulation is : " << maxAccum << std::endl;
+	//std::cout << "The point with max vote is : (" << center_max.x << "," << center_max.y << ")" << std::endl;
+	//std::cout << "The radius of found circle is : " << radius_max << std::endl;
+
 	for (size_t k = 0; k < number_of_radiuses; k++) {
-		for (size_t i = 0; i < height; i++) {
-			for (size_t j = 0; j < width; j++) {
-				size_t xd = x_new(i, j, height);
-				if (accumulation[k][xd] > maxAccum) {
-					maxAccum = accumulation[k][xd];
-					center_max.x = i;
-					center_max.y = j;
-					radius_max = hParameters.radius_min + k * hParameters.radius_step;
+		delete[] accumulation[k];
+	}
+	delete[] accumulation;
+
+	return true;
+}
+
+bool localCircleDetection(Image_Data2D imageDataPtr, Point2D seed, const HoughParameters hParameters) {
+
+	if (imageDataPtr.imageDataPtr == NULL)
+	{
+		return false;
+	}
+
+	size_t height = imageDataPtr.height;
+	size_t width = imageDataPtr.width;
+	size_t dim2D = height * width;
+	double radius;
+	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.0;
+	size_t indx = 0, indy = 0, number_of_circle_points;
+
+	double radius_range = hParameters.radius_max - hParameters.radius_min;
+	size_t number_of_radiuses = (size_t)(radius_range / hParameters.radius_step);
+	dataType** accumulation = new dataType * [number_of_radiuses];
+	for (size_t k = 0; k < number_of_radiuses; k++) {
+		accumulation[k] = new dataType[dim2D]{ 0 };
+		if (accumulation[k] == NULL)
+			return false;
+	}
+	if (accumulation == NULL)
+		return false;
+
+	BoundingBox2D box = findBoundingBox2D(seed, height, width, hParameters.radius_max, hParameters.offset);
+
+	size_t xd = 0;
+	double coordx = 0.0, coordy = 0.0;
+	dataType accumulation_ratio = 0.0;
+
+	for (size_t i = box.i_min; i <= box.i_max; i++)
+	{
+		for (size_t j = box.j_min; j <= box.j_max; j++)
+		{
+			size_t xd = x_new(i, j, height);
+			if (imageDataPtr.imageDataPtr[xd] != 1) {
+
+				Point2D point_center = { i, j };
+				for (size_t k = 0; k < number_of_radiuses; k++)
+				{
+					radius = hParameters.radius_min + k * hParameters.radius_step;
+					perimeter = 2 * M_PI * radius;
+					number_of_circle_points = (size_t)(perimeter / distance_between_points + 0.5);
+					step = 2 * M_PI / (double)number_of_circle_points;
+
+					for (size_t np = 0; np < number_of_circle_points; np++)
+					{
+
+						phi = (double)np * step;
+
+						coordx = 0.5 + point_center.x + radius * cos(phi);
+						if (coordx < 0) {
+							indx = 0;
+						}
+						else {
+							if (coordx > height - 1) {
+								indx = height - 1;
+							}
+							else {
+								indx = (size_t)coordx;
+							}
+						}
+
+						coordy = 0.5 + point_center.y + radius * sin(phi);
+						if (coordy < 0) {
+							indy = 0;
+						}
+						else {
+							if (coordy > width - 1) {
+								indy = width - 1;
+							}
+							else {
+								indy = (size_t)coordy;
+							}
+						}
+
+						//TODO : the same point can be found multiple time
+						//       it is need to find the condition to skip a point already found
+
+						if (imageDataPtr.imageDataPtr[x_new(indx, indy, height)] == 1.0) {
+							accumulation[k][x_new(i, j, height)] += 1;
+						}
+					}
+
+					accumulation_ratio = accumulation[k][x_new(i, j, height)] / (dataType)number_of_circle_points;
+					if (accumulation_ratio < 0.80) 
+					{
+						accumulation[k][x_new(i, j, height)] = 0;
+					}
 				}
+
 			}
 		}
 	}
-	
+
+	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	std::string storing_path = outputPath + "accumulation4.raw";
+	store2dRawData<dataType>(accumulation[4], height, width, storing_path.c_str());
+
+	////Find the maximal accumulation
+	//dataType maxAccum = 0;
+	//double radius_max = 0.0;
+	//Point2D center_max = { 0.0, 0.0 };
+	//for (size_t k = 0; k < number_of_radiuses; k++) {
+	//	for (size_t i = 0; i < height; i++) {
+	//		for (size_t j = 0; j < width; j++) {
+	//			size_t xd = x_new(i, j, height);
+	//			if (accumulation[k][xd] > maxAccum) {
+	//				maxAccum = accumulation[k][xd];
+	//				center_max.x = i;
+	//				center_max.y = j;
+	//				radius_max = hParameters.radius_min + k * hParameters.radius_step;
+	//			}
+	//		}
+	//	}
+	//}
+
 	//std::cout << "The maximal accumulation is : " << maxAccum << std::endl;
 	//std::cout << "The point with max vote is : (" << center_max.x << "," << center_max.y << ")" << std::endl;
 	//std::cout << "The radius of found circle is : " << radius_max << std::endl;
