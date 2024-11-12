@@ -4,12 +4,12 @@
 #include <memory.h>
 #include <math.h>
 #include <string>
+#include "common_math.h"
 
 #include"hough_transform.h"
 #include"morphological_change.h"
 #include"../src/imageInterpolation.h"
 
-#define M_PI 3.14159265358979323846
 #define foreground 1.0
 #define background 0.0
 
@@ -797,17 +797,110 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 
 	size_t height = imageDataPtr.height;
 	size_t width = imageDataPtr.width;
-	double radius = 10.0;
+	size_t dim2D = height * width;
+	double radius;
+	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.0;
 	BoundingBox2D box = { 0, 0, 0, 0 };
+	size_t indx = 0, indy = 0, number_of_circle_points;
 
-	for(size_t i = 0; i < height; i++)
+	double radius_range = hParameters.radius_max - hParameters.radius_min;
+	size_t number_of_radiuses = (size_t)(radius_range / hParameters.radius_step);
+	dataType** accumulation = new dataType * [number_of_radiuses];
+	for (size_t k = 0; k < number_of_radiuses; k++) {
+		accumulation[k] = new dataType[dim2D]{ 0 };
+		if (accumulation[k] == NULL)
+			return false;
+	}
+	if (accumulation == NULL)
+		return false;
+
+	dataType* status = new dataType[dim2D]{false};
+
+	size_t xd = 0;
+	double coordx = 0.0, coordy = 0.0;
+	for (size_t k = 0; k < number_of_radiuses; k++) 
 	{
-		for (size_t j = 0; j < width; j++)
+		radius = hParameters.radius_min + k * hParameters.radius_step;
+		perimeter = 2 * M_PI * radius;
+		number_of_circle_points = (size_t)(perimeter / distance_between_points + 0.5);
+		step = 2 * M_PI / (double)number_of_circle_points;
+		
+		//box = findBoundingBox2D(point_center, height, width, radius, offset);
+		for (size_t i = 0; i < height; i++)
 		{
-			Point2D point_center = { i, j };
-			box = findBoundingBox2D(point_center, height, width, radius, 0.5);
+			for (size_t j = 0; j < width; j++)
+			{
+				Point2D point_center = { i, j };
+				
+				for (size_t np = 0; np < number_of_circle_points; np++) {
+					
+					phi = (double)np * step;
+					
+					coordx = 0.5 + point_center.x + radius * cos(phi);
+					if (coordx < 0) {
+						indx = 0;
+					}
+					else {
+						if (coordx > height - 1) {
+							indx = height - 1;
+						}
+						else {
+							indx = (size_t)coordx;
+						}
+					}
+
+					coordy = 0.5 + point_center.y + radius * sin(phi);
+					if (coordy < 0) {
+						indy = 0;
+					}
+					else {
+						if (coordy > width - 1) {
+							indy = width - 1;
+						}
+						else {
+							indy = (size_t)coordy;
+						}
+					}
+
+					if (imageDataPtr.imageDataPtr[x_new(indx, indy, height)] == 1.0) {
+						accumulation[k][x_new(i, j, height)] += 1;
+					}
+
+				}
+			}
 		}
 	}
+
+	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	//std::string storing_path = outputPath + "accumulation.raw";
+	//store2dRawData<dataType>(accumulation[4], height, width, storing_path.c_str());
+
+	//Find the maximal accumulation
+	dataType maxAccum = 0;
+	double radius_max = 0.0;
+	Point2D center_max = { 0.0, 0.0 };
+	for (size_t k = 0; k < number_of_radiuses; k++) {
+		for (size_t i = 0; i < height; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, height);
+				if (accumulation[k][xd] > maxAccum) {
+					maxAccum = accumulation[k][xd];
+					center_max.x = i;
+					center_max.y = j;
+					radius_max = hParameters.radius_min + k * hParameters.radius_step;
+				}
+			}
+		}
+	}
+	
+	//std::cout << "The maximal accumulation is : " << maxAccum << std::endl;
+	//std::cout << "The point with max vote is : (" << center_max.x << "," << center_max.y << ")" << std::endl;
+	//std::cout << "The radius of found circle is : " << radius_max << std::endl;
+
+	for (size_t k = 0; k < number_of_radiuses; k++) {
+		delete[] accumulation[k];
+	}
+	delete[] accumulation;
 
 	return true;
 }

@@ -60,3 +60,5 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo);
 
 void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters, std::string savingPath);
+
+bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters);
