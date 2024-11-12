@@ -2321,33 +2321,49 @@ int main() {
 	//load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
 	
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* foundCircle = new dataType[dim2D]{ 0 };
-	dataType* houghSpace = new dataType[dim2D]{ 0 };
+	bool* statusPixel = new bool[dim2D]{ false };
+
+	//dataType* foundCircle = new dataType[dim2D]{ 0 };
+	//dataType* houghSpace = new dataType[dim2D]{ 0 };
 
 	//size_t k_trachea = 257; //--->P2 : automatic detection
 	//size_t k_abdo_aorta = 146; //--->P2 : abdominal aorta
 	//size_t k_trachea = 261; //--->P2 : automatic detection
 	//size_t k_trachea = 230; //--->P4
-	size_t k_liver = 176; //--->P2
-	for (i = 0; i < dim2D; i++) {
-		imageSlice[i] = imageData[k_liver][i];
-	}
+	//size_t k_liver = 176; //--->P2
+	//for (i = 0; i < dim2D; i++) {
+	//	imageSlice[i] = imageData[k_liver][i];
+	//}
+	
+	loading_path = outputPath + "initial_circle.raw";
+	load2dArrayRAW<dataType>(imageSlice, Length, Width, (const char*)loading_path.c_str(), false);
+
+	////Number of foreground pixels
+	//size_t foregroundPixels = 0;
+	//for (k = 0; k < dim2D; k++) {
+	//	if (imageSlice[k] == 1.0) {
+	//		foregroundPixels++;
+	//		statusPixel[k] = true;
+	//	}
+	//}
+	//std::cout << "There are " << foregroundPixels << " foreground pixels" << std::endl;
 
 	//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
 	//storing_path = outputPath + "filtered.raw";
 	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 
-	PixelSpacing spacing = { 1.171875, 1.171875 };
+	//PixelSpacing spacing = { 1.171875, 1.171875 };
+	PixelSpacing spacing = { 1.0, 1.0 };
 	Image_Data2D IMAGE;
 	IMAGE.imageDataPtr = imageSlice;
 	IMAGE.height = Length; IMAGE.width = Width;
 	
-	HoughParameters parameters = 
+	HoughParameters h_parameters = 
 	{ 
-		7.5, //minimal radius
-		19.0, //maximal radius
+		10.0, //minimal radius
+		14.0, //maximal radius
 		0.5, //epsilon to search points belonging the circle
-		30.0, //offset to find the bounding box
+		3.0, //offset to find the bounding box
 		1000.0, //edge detector coefficient K 
 		1.0, //h, space discretization for gradient computation
 		0.07, //threshold edge detector
@@ -2355,12 +2371,57 @@ int main() {
 		spacing //pixel size
 	};
 
-	double radius = 12.0;
-	double perimeter = 2 * M_PI * radius;
+	circleDetection(IMAGE, h_parameters);
 
-	//storing_path = outputPath + "filtered.raw";
+	//double radius = 12.0, phi = 0.0;
+	//double perimeter = 2 * M_PI * radius;
+	//double distance_between_pixels = 1.0;
+	//size_t number_of_circle_points = (size_t)(perimeter / distance_between_pixels + 0.5);
+	////std::cout << "Maximal number of circle points " << number_of_circle_points << std::endl;
+
+	//double step = 2 * M_PI / (double)number_of_circle_points;
+	//size_t indx = 0, indy = 0;
+	//Point2D center_circle = { 256, 256 };
+
+	//size_t number_of_points_classical = 0;
+	//for (i = 0; i < number_of_circle_points; i++) {
+	//	phi = (double)i * step;
+	//	indx = (size_t)(center_circle.x + radius * cos(phi) + 0.5);
+	//	indy = (size_t)(center_circle.y + radius * sin(phi) + 0.5);
+	//	xd = x_new(indx, indy, Length);
+	//	if (imageSlice[xd] == 1.0 && statusPixel[xd] == true) {
+	//		number_of_points_classical++;
+	//		statusPixel[xd] = false;
+	//	}
+	//}
+	//std::cout << number_of_points_classical << " points have been found by classical approach" << std::endl;
+
+	//storing_path = outputPath + "initial_circle.raw";
 	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-	
+
+	//size_t count_circle_point = 0;
+	//BoundingBox2D box = findBoundingBox2D(center_circle, Length, Width, radius, 3);
+
+	//for (i = box.i_min; i <= box.i_max; i++) {
+	//	for (j = box.j_min; j <= box.j_max; j++) {
+	//		Point2D current_point = { i, j };
+	//		double dist = getPoint2DDistance(center_circle, current_point);
+	//		//if (dist >= (radius - 0.5) && dist <= (radius + 0.5) && imageSlice[x_new(i, j, Length)] == 1.0) {
+	//		//	count_circle_point++;
+	//		//}
+	//		if (dist >= (radius - 0.5) && dist <= (radius + 0.5)) {
+	//			imageSlice[x_new(i, j, Length)] = 1.0;
+	//		}
+	//		//if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+	//		//	imageSlice[x_new(i, j, Length)] = 1.0;
+	//		//}
+	//	}
+	//}
+	////std::cout << count_circle_point << " points have been found by our approach" << std::endl;
+
+	//storing_path = outputPath + "band.raw";
+	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+
 	////filtering parameters
 	//Filter_Parameters filter_parameters;
 	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.3; filter_parameters.eps2 = 1e-6;
@@ -2414,10 +2475,11 @@ int main() {
 	delete[] imageData;
 
 	delete[] imageSlice;
-	delete[] foundCircle;
-	delete[] houghSpace;
-	
+	delete[] statusPixel;
 
+	//delete[] foundCircle;
+	//delete[] houghSpace;
+	
 	//======================== Segment lungs conneted to trachea ===================================================================
 	
 	/*
