@@ -2,6 +2,7 @@
 #include <sstream>  
 #include <vector>
 #include <string.h> 
+#include "common_math.h"
 
 #include<template_functions.h>
 #include "../src/vtk_params.h"
@@ -35,6 +36,7 @@ int main() {
 
 	//===================== Load 3D patient data (.vtk) ================================
 	
+	
 	/*
 	We load the .vtk files containing the original pixels value
 	and informations related the dimensions, the spacings and
@@ -42,7 +44,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	
+	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -68,7 +70,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
-	
+	*/
 
 	//========================= Path finding in Spiral ==========================
 
@@ -2305,6 +2307,9 @@ int main() {
 	*/
 	
 	//======================== 2D Hough transform on Slice ===========================
+	
+	const size_t Height = 406, Length = 512, Width = 512;
+	const size_t dim2D = Length * Width;
 
 	dataType** imageData = new dataType*[Height];
 	for (k = 0; k < Height; k++) {
@@ -2312,8 +2317,8 @@ int main() {
 	}
 	
 	//loading_path = inputPath + "raw/filtered/filteredGMC_p2.raw";
-	loading_path = inputPath + "raw/ct/patient2_ct.raw";
-	load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
+	//loading_path = inputPath + "raw/ct/patient2_ct.raw";
+	//load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
 	
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
 	dataType* foundCircle = new dataType[dim2D]{ 0 };
@@ -2328,39 +2333,54 @@ int main() {
 		imageSlice[i] = imageData[k_liver][i];
 	}
 
-	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-	
+	//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
 	//storing_path = outputPath + "filtered.raw";
 	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 
+	PixelSpacing spacing = { 1.171875, 1.171875 };
 	Image_Data2D IMAGE;
 	IMAGE.imageDataPtr = imageSlice;
 	IMAGE.height = Length; IMAGE.width = Width;
 	
-	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
-	HoughParameters parameters = { 7.5, 19.0, 0.5, 30.0, 1000.0, 1.0, 0.07, 0.5, spacing };
+	HoughParameters parameters = 
+	{ 
+		7.5, //minimal radius
+		19.0, //maximal radius
+		0.5, //epsilon to search points belonging the circle
+		30.0, //offset to find the bounding box
+		1000.0, //edge detector coefficient K 
+		1.0, //h, space discretization for gradient computation
+		0.07, //threshold edge detector
+		0.5, //radius step
+		spacing //pixel size
+	};
+
+	double radius = 12.0;
+	double perimeter = 2 * M_PI * radius;
+
+	//storing_path = outputPath + "filtered.raw";
+	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 	
-	//filtering parameters
-	Filter_Parameters filter_parameters;
-	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.3; filter_parameters.eps2 = 1e-6;
-	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 1000;
-	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
+	////filtering parameters
+	//Filter_Parameters filter_parameters;
+	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.3; filter_parameters.eps2 = 1e-6;
+	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 1000;
+	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
-	//Slice filtering
-	heatImplicit2dScheme(IMAGE, filter_parameters);
+	////Slice filtering
+	//heatImplicit2dScheme(IMAGE, filter_parameters);
 
-	storing_path = outputPath + "smoothed.raw";
-	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	//storing_path = outputPath + "smoothed.raw";
+	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 	
 	//Point2D seed = { 248, 298 }; //---> P2 : automatic detection
 	//Point2D seed = { 263, 257 }; //---> P2 : abdominal aorta
 	//Point2D seed = { 263, 296 }; //---> P2
 	//Point2D seed = { 263, 296 }; //---> P2
 	//Point2D seed = { 262, 269 }; //---> P4
-	Point2D seed = { 257, 244 }; //---> P2, liver
-	Point2D found_point = { 0.0, 0.0 };
-
-	Point2D found1 = { 292,314 }, found2 = { 253,255 }; // p2
+	//Point2D seed = { 257, 244 }; //---> P2, liver
+	//Point2D found_point = { 0.0, 0.0 };
+	//Point2D found1 = { 292,314 }, found2 = { 253,255 }; // p2
 	//imageSlice[x_new(292, 314, Length)] = 0.0;
 	//imageSlice[x_new(253,255, Length)] = 0.0;
 
@@ -2384,9 +2404,8 @@ int main() {
 	//	return false;
 	//}
 	
-	found_point = localHoughTransform(seed, imageSlice, houghSpace, foundCircle, Length, Width, parameters, storing_path.c_str());
-	cout << "found center : (" << found_point.x << "," << found_point.y << ")" << endl;
-
+	//found_point = localHoughTransform(seed, imageSlice, houghSpace, foundCircle, Length, Width, parameters, storing_path.c_str());
+	//cout << "found center : (" << found_point.x << "," << found_point.y << ")" << endl;
 	//fclose(file);
 
 	for (k = 0; k < Height; k++) {
