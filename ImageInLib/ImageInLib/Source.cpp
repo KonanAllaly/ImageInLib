@@ -2317,40 +2317,21 @@ int main() {
 	}
 	
 	//loading_path = inputPath + "raw/filtered/filteredGMC_p2.raw";
-	//loading_path = inputPath + "raw/ct/patient2_ct.raw";
-	//load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
+	loading_path = inputPath + "raw/ct/patient2_ct.raw";
+	load3dArrayRAW(imageData, Length, Width, Height, loading_path.c_str(), false);
 	
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
 	bool* statusPixel = new bool[dim2D]{ false };
 
-	//dataType* foundCircle = new dataType[dim2D]{ 0 };
-	//dataType* houghSpace = new dataType[dim2D]{ 0 };
+	size_t k_liver = 176; //--->P2
+	for (i = 0; i < dim2D; i++) {
+		imageSlice[i] = imageData[k_liver][i];
+	}
 
-	//size_t k_trachea = 257; //--->P2 : automatic detection
-	//size_t k_abdo_aorta = 146; //--->P2 : abdominal aorta
-	//size_t k_trachea = 261; //--->P2 : automatic detection
-	//size_t k_trachea = 230; //--->P4
-	//size_t k_liver = 176; //--->P2
-	//for (i = 0; i < dim2D; i++) {
-	//	imageSlice[i] = imageData[k_liver][i];
-	//}
+	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
 	
-	loading_path = outputPath + "initial_circle.raw";
-	load2dArrayRAW<dataType>(imageSlice, Length, Width, (const char*)loading_path.c_str(), false);
-
-	////Number of foreground pixels
-	//size_t foregroundPixels = 0;
-	//for (k = 0; k < dim2D; k++) {
-	//	if (imageSlice[k] == 1.0) {
-	//		foregroundPixels++;
-	//		statusPixel[k] = true;
-	//	}
-	//}
-	//std::cout << "There are " << foregroundPixels << " foreground pixels" << std::endl;
-
-	//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-	//storing_path = outputPath + "filtered.raw";
-	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	storing_path = outputPath + "rescaled.raw";
+	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 
 	//PixelSpacing spacing = { 1.171875, 1.171875 };
 	PixelSpacing spacing = { 1.0, 1.0 };
@@ -2360,8 +2341,8 @@ int main() {
 	
 	HoughParameters h_parameters = 
 	{ 
-		10.0, //minimal radius
-		14.0, //maximal radius
+		7.5, //minimal radius
+		19.5, //maximal radius
 		0.5, //epsilon to search points belonging the circle
 		3.0, //offset to find the bounding box
 		1000.0, //edge detector coefficient K 
@@ -2371,65 +2352,46 @@ int main() {
 		spacing //pixel size
 	};
 
-	circleDetection(IMAGE, h_parameters);
+	//filtering parameters
+	Filter_Parameters filter_parameters;
+	filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.3; filter_parameters.eps2 = 1e-6;
+	filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 1000;
+	filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
-	//double radius = 12.0, phi = 0.0;
-	//double perimeter = 2 * M_PI * radius;
-	//double distance_between_pixels = 1.0;
-	//size_t number_of_circle_points = (size_t)(perimeter / distance_between_pixels + 0.5);
-	////std::cout << "Maximal number of circle points " << number_of_circle_points << std::endl;
+	//Slice filtering
+	heatImplicit2dScheme(IMAGE, filter_parameters);
 
-	//double step = 2 * M_PI / (double)number_of_circle_points;
-	//size_t indx = 0, indy = 0;
-	//Point2D center_circle = { 256, 256 };
+	storing_path = outputPath + "filtered.raw";
+	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
 
-	//size_t number_of_points_classical = 0;
-	//for (i = 0; i < number_of_circle_points; i++) {
-	//	phi = (double)i * step;
-	//	indx = (size_t)(center_circle.x + radius * cos(phi) + 0.5);
-	//	indy = (size_t)(center_circle.y + radius * sin(phi) + 0.5);
-	//	xd = x_new(indx, indy, Length);
-	//	if (imageSlice[xd] == 1.0 && statusPixel[xd] == true) {
-	//		number_of_points_classical++;
-	//		statusPixel[xd] = false;
-	//	}
-	//}
-	//std::cout << number_of_points_classical << " points have been found by classical approach" << std::endl;
+	dataType* gradientX = new dataType[dim2D]{ 0 };
+	dataType* gradientY = new dataType[dim2D]{ 0 };
+	//dataType* edgeDetector = new dataType[dim2D]{ 0 };
+	dataType* threshold = new dataType[dim2D]{ 0 };
+	computeImageGradient(imageSlice, gradientX, gradientY, Length, Width, 1.0);
+	dataType norm_of_gradient = 0.0, edge_value;
+	for (i = 0; i < dim2D; i++) {
+		norm_of_gradient = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
+		//edgeDetector[i] = gradientFunction(norm_of_gradient, 1000);
+		edge_value = gradientFunction(norm_of_gradient, 1000);
+		if (edge_value <= 0.1) {
+			threshold[i] = 1.0;
+		}
+	}
 
-	//storing_path = outputPath + "initial_circle.raw";
-	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	storing_path = outputPath + "threshold.raw";
+	store2dRawData<dataType>(threshold, Length, Width, storing_path.c_str());
 
-	//size_t count_circle_point = 0;
-	//BoundingBox2D box = findBoundingBox2D(center_circle, Length, Width, radius, 3);
+	Image_Data2D IMAGE_HOUGH
+	{
+		Length,
+		Width,
+		threshold
+	};
 
-	//for (i = box.i_min; i <= box.i_max; i++) {
-	//	for (j = box.j_min; j <= box.j_max; j++) {
-	//		Point2D current_point = { i, j };
-	//		double dist = getPoint2DDistance(center_circle, current_point);
-	//		//if (dist >= (radius - 0.5) && dist <= (radius + 0.5) && imageSlice[x_new(i, j, Length)] == 1.0) {
-	//		//	count_circle_point++;
-	//		//}
-	//		if (dist >= (radius - 0.5) && dist <= (radius + 0.5)) {
-	//			imageSlice[x_new(i, j, Length)] = 1.0;
-	//		}
-	//		//if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-	//		//	imageSlice[x_new(i, j, Length)] = 1.0;
-	//		//}
-	//	}
-	//}
-	////std::cout << count_circle_point << " points have been found by our approach" << std::endl;
-
-	//storing_path = outputPath + "band.raw";
-	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-	////filtering parameters
-	//Filter_Parameters filter_parameters;
-	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.3; filter_parameters.eps2 = 1e-6;
-	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 1000;
-	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-
-	////Slice filtering
-	//heatImplicit2dScheme(IMAGE, filter_parameters);
+	Point2D seed = {263, 264};
+	localCircleDetection(IMAGE_HOUGH, seed, h_parameters);
+	//circleDetection(IMAGE_HOUGH, h_parameters);
 
 	//storing_path = outputPath + "smoothed.raw";
 	//store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
@@ -2476,6 +2438,9 @@ int main() {
 
 	delete[] imageSlice;
 	delete[] statusPixel;
+	delete[] gradientX;
+	delete[] gradientY;
+	delete[] threshold;
 
 	//delete[] foundCircle;
 	//delete[] houghSpace;
