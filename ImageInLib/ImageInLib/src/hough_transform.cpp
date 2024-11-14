@@ -506,7 +506,7 @@ Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houg
 	return found_center;
 }
 
-void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters, std::string savingPath) {
+void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters) {
 	
 	size_t i, j, xd, dim2D = length * width;
 	size_t i_new, j_new, xd_new;
@@ -746,8 +746,8 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 		for (size_t j = 0; j < width; j++) 
 		{
 			size_t xd = x_new(i, j, height);
+			/*
 			if (imageDataPtr.imageDataPtr[xd] != 1) {
-				
 				Point2D point_center = { i, j };
 				for (size_t k = 0; k < number_of_radiuses; k++)
 				{
@@ -802,14 +802,68 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 					//	accumulation[k][x_new(i, j, height)] = 0;
 					//}
 				}
+			}
+			*/
+			Point2D point_center = { i, j };
+			for (size_t k = 0; k < number_of_radiuses; k++)
+			{
+				radius = hParameters.radius_min + k * hParameters.radius_step;
+				perimeter = 2 * M_PI * radius;
+				number_of_circle_points = (size_t)(perimeter / distance_between_points + 0.5);
+				step = 2 * M_PI / (double)number_of_circle_points;
 
+				for (size_t np = 0; np < number_of_circle_points; np++)
+				{
+
+					phi = (double)np * step;
+
+					coordx = 0.5 + point_center.x + radius * cos(phi);
+					if (coordx < 0) {
+						indx = 0;
+					}
+					else {
+						if (coordx > height - 1) {
+							indx = height - 1;
+						}
+						else {
+							indx = (size_t)coordx;
+						}
+					}
+
+					coordy = 0.5 + point_center.y + radius * sin(phi);
+					if (coordy < 0) {
+						indy = 0;
+					}
+					else {
+						if (coordy > width - 1) {
+							indy = width - 1;
+						}
+						else {
+							indy = (size_t)coordy;
+						}
+					}
+
+					//TODO : the same point can be found multiple time
+					//       it is need to find the condition to skip a point already found
+
+					if (imageDataPtr.imageDataPtr[x_new(indx, indy, height)] == 1.0) {
+						accumulation[k][x_new(i, j, height)] += 1;
+					}
+
+				}
+
+				//accumulation_ratio = accumulation[k][x_new(i, j, height)] / (dataType)number_of_circle_points;
+				//if (accumulation_ratio < 0.5) 
+				//{
+				//	accumulation[k][x_new(i, j, height)] = 0;
+				//}
 			}
 		}
 	}
 
-	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	//std::string storing_path = outputPath + "accumulation3.raw";
-	//store2dRawData<dataType>(accumulation[4], height, width, storing_path.c_str());
+	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	std::string storing_path = outputPath + "accumulation.raw";
+	store2dRawData<dataType>(accumulation[1], height, width, storing_path.c_str());
 
 	////Find the maximal accumulation
 	//dataType maxAccum = 0;
