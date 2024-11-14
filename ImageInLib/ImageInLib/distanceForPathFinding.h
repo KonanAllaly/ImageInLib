@@ -308,6 +308,8 @@ using namespace std;
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
+	bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
+
 //#ifdef __cplusplus
 //}
 //#endif
