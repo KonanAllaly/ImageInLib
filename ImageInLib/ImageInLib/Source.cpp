@@ -36,7 +36,6 @@ int main() {
 
 	//===================== Load 3D patient data (.vtk) ================================
 	
-	
 	/*
 	We load the .vtk files containing the original pixels value
 	and informations related the dimensions, the spacings and
@@ -44,7 +43,6 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -57,7 +55,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient2_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -70,240 +68,8 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
-	*/
 
-	//========================= Path finding in Spiral ==========================
-
-	/*
-	const size_t height = 100, length = 100, width = 100;
-	dataType** imageData = new dataType * [height];
-	dataType** actionMap = new dataType * [height];
-	dataType** potential = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		imageData[k] = new dataType[length * width]{ 0 };
-		actionMap[k] = new dataType[length * width]{ 0 };
-		potential[k] = new dataType[length * width]{ 0 };
-	}
-
-	//loading_path = inputPath + "shape/diagonal_tube.raw";
-	loading_path = inputPath + "shape/u_shape_radius15.raw";
-	//loading_path = inputPath + "shape/spiral_radius15.raw";
-	load3dArrayRAW<dataType>(imageData, length, width, height, loading_path.c_str(), false);
-
-	//Compute potential
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length * width; i++) {
-			if (imageData[k][i] == 1.0) {
-				potential[k][i] = 0.001;
-			}
-			else {
-				potential[k][i] = 1.0;
-			}
-		}
-	}
-
-	Point3D* seedPoints = new Point3D[2];
-	//Point3D pt1 = { 7, 9, 5 }, pt2 = { 94, 90, 18 }; //tube
-	Point3D pt1 = { 30, 18, 46 }, pt2 = { 72, 21, 51 }; //u shape
-	//Point3D pt1 = { 81, 54, 7 }, pt2 = { 80, 48, 87 }; //spiral
-
-	seedPoints[0] = pt1;
-	seedPoints[1] = pt2;
-
-	//fastMarching3D_N(actionMap, potential, length, width, height, pt1);
-	partialFrontPropagation(actionMap, potential, length, width, height, seedPoints);
-
-	vector<Point3D> path_points;
-	VoxelSpacing spacing = { 1.0, 1.0, 1.0 };
-	shortestPath3D(actionMap, length, width, height, spacing, seedPoints, path_points);
-
-	//string path_save = outputPath + "path_spiral_radius15.csv";
-	string path_save = outputPath + "path_ushape_radius15.csv";
-	FILE* pFile;
-	if (fopen_s(&pFile, path_save.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	int n = 0;
-
-	fprintf(pFile, "%f,%f,%f\n", pt1.x, pt1.y, pt1.z);
-	for (n = path_points.size() - 1; n > -1; n--) {
-		fprintf(pFile, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	fprintf(pFile, "%f,%f,%f\n", pt2.x, pt2.y, pt2.z);
-	fclose(pFile);
-
-	delete[] seedPoints;
-	for (k = 0; k < height; k++) {
-		delete[] imageData[k];
-		delete[] actionMap[k];
-		delete[] potential[k];
-	}
-	delete[] imageData;
-	delete[] actionMap;
-	delete[] potential;
-	*/
-
-	//========================= Interpolated the aorta ==========================
-
-	/*
-	dataType** imageDataPtr = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageDataPtr[k] = new dataType[dim2D]{ 0 };
-	}
-
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (ctContainer->dataPointer[k][i] != 0) {
-				imageDataPtr[k][i] = 1.0;
-			}
-			else {
-				imageDataPtr[k][i] = 0.0;
-			}
-		}
-	}
-
-	Image_Data original_aorta = {
-		Height,
-		Length,
-		Width,
-		imageDataPtr,
-		ctOrigin,
-		ctSpacing,
-		orientation
-	};
-
-	//loading_path = inputPath + "raw/aorta/aorta_p2.raw";
-	//load3dArrayRAW<dataType>(imageDataPtr, Length, Width, Height, loading_path.c_str(), false);
-
-	const size_t height = 1083;//844;//1351;//866;
-
-	dataType** interpolImageDataPtr = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		interpolImageDataPtr[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data interpolated_aorta = {
-		height,
-		Length,
-		Width,
-		interpolImageDataPtr,
-		ctOrigin,
-		intSpacing,
-		orientation
-	};
-
-	imageInterpolation3D(original_aorta, interpolated_aorta, NEAREST_NEIGHBOR);
-
-	storing_path = inputPath + "raw/interpolated/aorta_p3.raw";
-	store3dRawData<dataType>(interpolImageDataPtr, Length, Width, height, storing_path.c_str());
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageDataPtr[k];
-	}
-	delete[] imageDataPtr;
-
-	for (k = 0; k < height; k++) {
-		delete[] interpolImageDataPtr[k];
-	}
-	delete[] interpolImageDataPtr;
-	*/
-
-	//========================= Generate velocity field =========================
-
-	/*
-	const size_t height = 866;
-	dataType** imageDataPtr = new dataType * [height];
-	dataType** pathImageData = new dataType * [height];
-	dataType** edgeDetector = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		imageDataPtr[k] = new dataType[dim2D]{ 0 };
-		pathImageData[k] = new dataType[dim2D]{ 0 };
-		edgeDetector[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = {ctSpacing.sx, ctSpacing.sy, ctSpacing.sx};
-	Image_Data CT = {
-		height,
-		Length,
-		Width,
-		imageDataPtr,
-		ctOrigin,
-		intSpacing,
-		orientation
-	};
-
-	loading_path = inputPath + "raw/interpolated/filtered_p2.raw";
-	load3dArrayRAW<dataType>(imageDataPtr, Length, Width, height, loading_path.c_str(), false);
-
-	FILE* path_file;
-	loading_path = inputPath + "csv/Path/path_ordered_p2.csv";
-	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	dataType x = 0, y = 0, z = 0;
-	vector<Point3D> path_points;
-
-	while (feof(path_file) == 0) {
-		fscanf_s(path_file, "%f", &x);
-		fscanf_s(path_file, ",");
-		fscanf_s(path_file, "%f", &y);
-		fscanf_s(path_file, ",");
-		fscanf_s(path_file, "%f", &z);
-		fscanf_s(path_file, "\n");
-		Point3D current_point = { x, y, z };
-		current_point = getImageCoordFromRealCoord3D(current_point, CT.origin, CT.spacing, CT.orientation);
-		path_points.push_back(current_point);
-	}
-	fclose(path_file);
-
-	BoundingBox3D box;
-	double radius = 25;
-
-	for (size_t n = 0; n < path_points.size(); n++) {
-		box = findBoundingBox3D(path_points[n], Length, Width, height, radius, 0.0);
-		for (k = box.k_min; k <= box.k_max; k++) {
-			for (i = box.i_min; i <= box.i_max; i++) {
-				for (j = box.j_min; j <= box.j_max; j++) {
-					xd = x_new(i, j, Length);
-					pathImageData[k][xd] = imageDataPtr[k][xd];
-				}
-			}
-		}
-	}
-
-	////compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, Length, Width, Height, ctSpacing);
-	////fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
-	//Point3D grad;
-	//dataType norm_grad = 0.0, K = 1000.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			//getGradient3D(imageDataPtr, Width, Length, Height, j, i, k, ctSpacing, &grad);
-	//			getGradient3D(pathImageData, Width, Length, Height, j, i, k, ctSpacing, &grad);
-	//			norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y + grad.z * grad.z);
-	//			edgeDetector[k][x_new(j, i, Width)] = gradientFunction(norm_grad, K);
-	//		}
-	//	}
-	//}
-
-	//thresholding3dFunctionN(edgeDetector, Length, Width, Height, 0.15, 0.15, 0.0, 1.0);
-	storing_path = outputPath + "pathImage_p2.raw";
-	store3dRawData<dataType>(pathImageData, Length, Width, height, storing_path.c_str());
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageDataPtr[k];
-		delete[] pathImageData[k];
-		delete[] edgeDetector[k];
-	}
-	delete[] imageDataPtr;
-	delete[] pathImageData;
-	delete[] edgeDetector;
-	*/
-
-	//========================= Test translation ================================
+	//========================= Translate as path ================================
 
 	/*
 	Vtk_File_Info* afterTreatment = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -550,224 +316,6 @@ int main() {
 	delete[] imageData;
 	*/
 
-	//======================== Load path .csv ===================================
-	
-	/*
-	size_t height = 866;
-	dataType** imageDataPtr = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		imageDataPtr[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data CT = {
-		Length,
-		Width,
-		height,
-		imageDataPtr,
-		ctOrigin,
-		intSpacing,
-		orientation
-	};
-	
-	FILE* path_file;
-	loading_path = inputPath + "csv/Path/path_ordered_p2.csv";
-	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	dataType x = 0.0, y = 0.0, z = 0.0;
-
-	size_t count_point = 0;
-	while (feof(path_file) == 0) {
-		fscanf_s(path_file, "%f", &x);
-		fscanf_s(path_file, ",");
-		fscanf_s(path_file, "%f", &y);
-		fscanf_s(path_file, ",");
-		fscanf_s(path_file, "%f", &z);
-		fscanf_s(path_file, "\n");
-		if (count_point % 1 == 0) {
-			Point3D current_point = { x, y, z };
-			Point3D point_box = getImageCoordFromRealCoord3D(current_point, ctOrigin, intSpacing, orientation);
-			BoundingBox3D box = findBoundingBox3D(point_box, Length, Width, height, 25.0, 0.0);
-			for (k = box.k_min; k <= box.k_max; k++) {
-				for (i = box.i_min; i <= box.i_max; i++) {
-					for (j = box.j_min; j <= box.j_max; j++) {
-						Point3D point_sphere = { i, j, k };
-						point_sphere = getRealCoordFromImageCoord3D(point_sphere, ctOrigin, intSpacing, orientation);
-						double pDistance = getPoint3DDistance(current_point, point_sphere);
-						if (pDistance <= 24.0) {
-							imageDataPtr[k][x_new(i, j, Length)] = 1.0;
-						}
-					}
-				}
-			}
-		}
-		count_point++;
-	}
-	fclose(path_file);
-
-	storing_path = outputPath + "path_shape.raw";
-	store3dRawData<dataType>(imageDataPtr, Length, Width, height, storing_path.c_str());
-
-	//Point3D point_before = { 6.378235, 71.263824, -647.862732};
-	//std::cout << "Input point P = {" << point_before.x << ", " << point_before.y << ", " << point_before.z << ")" << std::endl;
-	//point_before = getImageCoordFromRealCoord3D(point_before, ctOrigin, intSpacing, orientation);
-	//std::cout << "Image Coord P = {" << point_before.x << ", " << point_before.y << ", " << point_before.z << ")" << std::endl;
-	//Point3D point_after = getRealCoordFromImageCoord3D(point_before, ctOrigin, intSpacing, orientation);
-	//std::cout << "Input point P = {" << point_after.x << ", " << point_after.y << ", " << point_after.z << ")" << std::endl;
-
-
-	for (k = 0; k < height; k++) {
-		delete[] imageDataPtr[k];
-	}
-	delete[] imageDataPtr;
-	*/
-
-	//======================== find Liver Approximative centroid ==============================
-
-	/*
-	thresholding3dFunctionN(imageData, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
-	fastSweepingFunction_3D(maskThreshold, imageData, Length, Width, Height, 1.0, 10000000.0, 0.0);
-	
-	Point3D point_max = { 0, 0, 0 };
-	dataType max_dist = 0.0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				xd = x_new(i, j, Length);
-				if (maskThreshold[k][xd] > max_dist) {
-					max_dist = maskThreshold[k][xd];
-					point_max.x = i; 
-					point_max.y = j;
-					point_max.z = k;
-				}
-			}
-		}
-	}
-
-	point_max = getRealCoordFromImageCoord3D(point_max, ctOrigin, ctSpacing, orientation);
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				xd = x_new(i, j, Length);
-				Point3D current_point = { i, j, k };
-				current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
-				double dist = getPoint3DDistance(point_max, current_point);
-				if (dist <= 10.0) {
-					imageData[k][xd] = 1.0;
-				}
-				else {
-					imageData[k][xd] = 0.0;
-				}
-			}
-		}
-	}
-
-	storing_path = outputPath + "distance_map_p2.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	storing_path = outputPath + "ball_p2.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	*/
-
-	//======================== Refinement by Dilation ===========================
-
-	/*
-	dataType** interpol = new dataType * [height_int];
-	for (k = 0; k < height_int; k++) {
-		interpol[k] = new dataType[dim2D]{ 0 };
-	}
-
-	Image_Data interpolated;
-	interpolated.imageDataPtr = interpol;
-	interpolated.height = height_int; interpolated.length = Length; interpolated.width = Width;
-	interpolated.orientation = orientation; interpolated.origin = ctOrigin;
-	interpolated.spacing.sx = ctSpacing.sx;
-	interpolated.spacing.sy = ctSpacing.sy;
-	interpolated.spacing.sz = ctSpacing.sx;
-	imageInterpolation3D(CT, interpolated, NEAREST_NEIGHBOR);
-
-	//size_t k_min = 143, k_max = 236, kn = 0; //original p2
-	//size_t k_min = 317, k_max = 500, kn = 0; //interpolated p2
-	size_t k_min = 536, k_max = 712, kn = 0; //interpolated p3
-	const size_t height = k_max - k_min + 1;
-	std::cout << "cropped height : " << height << std::endl;
-	dataType** imageCropData = new dataType * [height];
-	dataType** ball_liver = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		imageCropData[k] = new dataType[dim2D]{ 0 };
-		ball_liver[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "liver_p3.raw";
-	load3dArrayRAW<dataType>(imageCropData, Length, Width, height, loading_path.c_str(), false);
-
-	VoxelSpacing ctInt = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[0] };
-	Point3D newOrigin = { 0, 0, k_min };
-	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, ctInt, orientation);
-	std::cout << "New origin : (" << newOrigin.x << "," << newOrigin.y << "," << newOrigin.z << ")" << std::endl;
-	
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-	//dilatation3dHeighteenNeigbours(imageCropData, Length, Width, height, 1.0, 0.0);
-
-	//crop refinement
-	for (kn = 0, k = k_min; kn < height; kn++, k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				xd = x_new(i, j, Length);
-				if (imageCropData[kn][xd] == 1.0 && (interpol[k][xd] < thres_min || interpol[k][xd] > thres_max)) {
-					imageCropData[kn][xd] = 0.0;
-				}
-			}
-		}
-	}
-
-	dataType* centroid = (dataType*)malloc(3 * sizeof(dataType));
-	centroidImage(imageCropData, centroid, height, Length, Width, 0.0);
-	std::cout << "Liver centroid : (" << (size_t)centroid[0] << "," << (size_t)centroid[1] << "," << (size_t)centroid[2] << ")" << std::endl;
-	Point3D centroid_liver = { (size_t)centroid[0], (size_t)centroid[1], (size_t)centroid[2] };
-	centroid_liver = getRealCoordFromImageCoord3D(centroid_liver, newOrigin, ctInt, orientation);
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				xd = x_new(i, j, Length);
-				Point3D current_point = { i, j, k };
-				current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, ctInt, orientation);
-				double dist_point = getPoint3DDistance(centroid_liver, current_point);
-				if (dist_point <= 10) {
-					ball_liver[k][xd] = 1.0;
-				}
-			}
-		}
-	}
-
-	storing_path = outputPath + "refined_p3.raw";
-	store3dRawData<dataType>(imageCropData, Length, Width, height, storing_path.c_str());
-
-	storing_path = outputPath + "ball_p3.raw";
-	store3dRawData<dataType>(ball_liver, Length, Width, height, storing_path.c_str());
-
-	free(centroid);
-	for (k = 0; k < height; k++) {
-		delete[] imageCropData[k];
-		delete[] ball_liver[k];
-	}
-	delete[] imageCropData;
-	delete[] ball_liver;
-
-	for (k = 0; k < height_int; k++) {
-		delete[] interpol[k];
-	}
-	delete[] interpol;
-	*/
-
 	//======================== Automatic quantitative analysis ==================
 
 	/*
@@ -1005,324 +553,6 @@ int main() {
 	delete[] shape_aorta_ct;
 
 	free(petContainer);
-	*/
-
-	//======================== Collect PET values ===============================
-	
-	/*
-	string beforePath = "C:/Users/Konan Allaly/Documents/Tests/input/vasculitis/patient_before_treatment/";
-	string afterPath = "C:/Users/Konan Allaly/Documents/Tests/input/vasculitis/patient_after_treatment/";
-	
-	// Load PET
-	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	petContainer->operation = copyFrom;
-	
-	loading_path = inputPath + "vtk/pet/Patient2_pet.vtk";
-	//loading_path = inputPath + "vtk/pet/Patient3_pet.vtk";
-	readVtkFile(loading_path.c_str(), petContainer);
-
-	int height = petContainer->dimensions[2];
-	int length = petContainer->dimensions[0];
-	int width = petContainer->dimensions[1];
-	int dim2d = length * width;
-	std::cout << "#######################" << std::endl;
-	std::cout << "PET image dim : " << petContainer->dimensions[0] << " x " << petContainer->dimensions[1] << " x " << petContainer->dimensions[2] << "" << std::endl;
-
-	std::cout << "PET origin : (" << petContainer->origin[0] << ", " << petContainer->origin[1] << ", " << petContainer->origin[2] << ")" << std::endl;
-	Point3D petOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
-	VoxelSpacing petSpacing = { petContainer->spacing[0], petContainer->spacing[1], petContainer->spacing[2] };
-	std::cout << "PET spacing : (" << petContainer->spacing[0] << ", " << petContainer->spacing[1] << ", " << petContainer->spacing[2] << ")" << std::endl;
-	std::cout << "#######################" << std::endl;
-
-	Image_Data PET; 
-	PET.imageDataPtr = petContainer->dataPointer;
-	PET.height = height;
-	PET.length = length;
-	PET.width = width;
-	PET.orientation = orientation;
-	PET.origin = petOrigin;
-	PET.spacing = petSpacing;
-
-	//Save uptake ratio
-	//string saving_csv = outputPath + "ratio_before_auto_r20.csv";
-	//string saving_csv = outputPath + "ratio_before_manual.csv";
-	//string saving_csv = outputPath + "ratio_after_auto_r20.csv";
-	string saving_csv = outputPath + "ratio_after_manual.csv";
-
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file, "x,y\n");
-
-	////Load segments
-	//Vtk_File_Info* ballLiver = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//ballLiver->operation = copyFrom;
-	////loading_path = beforePath + "ball_before_auto.vtk";
-	////loading_path = beforePath + "ball_liver_before_m.vtk";
-	////loading_path = afterPath + "ball_after_auto.vtk";
-	////loading_path = afterPath + "ball_liver_after_m.vtk";
-	//readVtkFile(loading_path.c_str(), ballLiver);
-	////std::cout << "Origin ball : (" << ballLiver->origin[0] << ", " << ballLiver->origin[1] << ", " << ballLiver->origin[2] << ")" << std::endl;
-	////std::cout << "dim ball liver : " << ballLiver->dimensions[0] << "x" << ballLiver->dimensions[1] << "x" << ballLiver->dimensions[2] << std::endl;
-
-	//Vtk_File_Info* segment1 = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//segment1->operation = copyFrom;
-	////loading_path = beforePath + "seg1_before.vtk";
-	//loading_path = afterPath + "seg1_after.vtk";
-	//readVtkFile(loading_path.c_str(), segment1);
-	////std::cout << "Origin seg 1 : (" << segment1->origin[0] << ", " << segment1->origin[1] << ", " << segment1->origin[2] << ")" << std::endl;
-	////std::cout << "dim segment 1 : " << segment1->dimensions[0] << "x" << segment1->dimensions[1] << "x" << segment1->dimensions[2] << std::endl;
-
-	//Vtk_File_Info* segment2 = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//segment2->operation = copyFrom;
-	////loading_path = beforePath + "seg2_before.vtk";
-	//loading_path = afterPath + "seg2_after.vtk";
-	//readVtkFile(loading_path.c_str(), segment2);
-	////std::cout << "Origin seg 2 : (" << segment2->origin[0] << ", " << segment2->origin[1] << ", " << segment2->origin[2] << ")" << std::endl;
-	////std::cout << "dim segment 2 : " << segment2->dimensions[0] << "x" << segment2->dimensions[1] << "x" << segment2->dimensions[2] << std::endl;
-
-	//Vtk_File_Info* segment3 = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//segment3->operation = copyFrom;
-	////loading_path = beforePath + "seg3_before.vtk";
-	//loading_path = afterPath + "seg3_after.vtk";
-	//readVtkFile(loading_path.c_str(), segment3);
-	////std::cout << "Origin seg 3 : (" << segment3->origin[0] << ", " << segment3->origin[1] << ", " << segment3->origin[2] << ")" << std::endl;
-	////std::cout << "dim segment 3 : " << segment3->dimensions[0] << "x" << segment3->dimensions[1] << "x" << segment3->dimensions[2] << std::endl;
-
-	//Vtk_File_Info* segment4 = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//segment4->operation = copyFrom;
-	////loading_path = beforePath + "seg4_before.vtk";
-	//loading_path = afterPath + "seg4_after.vtk";
-	//readVtkFile(loading_path.c_str(), segment4);
-	////std::cout << "Origin seg 4 : (" << segment4->origin[0] << ", " << segment4->origin[1] << ", " << segment4->origin[2] << ")" << std::endl;
-	////std::cout << "dim segment 4 : " << segment4->dimensions[0] << "x" << segment4->dimensions[1] << "x" << segment4->dimensions[2] << std::endl;
-
-	//Vtk_File_Info* segment5 = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	//segment5->operation = copyFrom;
-	////loading_path = beforePath + "seg5_before.vtk";
-	//loading_path = afterPath + "seg5_after.vtk";
-	//readVtkFile(loading_path.c_str(), segment5);
-	////std::cout << "Origin seg 5 : (" << segment5->origin[0] << ", " << segment5->origin[1] << ", " << segment5->origin[2] << ")" << std::endl;
-	////std::cout << "dim segment 5 : " << segment5->dimensions[0] << "x" << segment5->dimensions[1] << "x" << segment5->dimensions[2] << std::endl;
-
-	size_t l = 0, w = 0, h = 0;
-
-	////find max uptake in Liver
-	//dataType max_uptake_liver = 0.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			xd = x_new(i, j, Length);
-	//			if (ballLiver->dataPointer[k][xd] != 0.0) {
-	//				Point3D point_ball = { i, j, k };
-	//				point_ball = getRealCoordFromImageCoord3D(point_ball, ctOrigin, ctSpacing, orientation);
-	//				point_ball = getImageCoordFromRealCoord3D(point_ball, petOrigin, petSpacing, orientation);
-	//				l = (size_t)point_ball.x;
-	//				w = (size_t)point_ball.y;
-	//				h = (size_t)point_ball.z;
-	//				dataType value = petContainer->dataPointer[h][x_new(l, w, length)];
-	//				if (value > max_uptake_liver) {
-	//					max_uptake_liver = value;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//std::cout << "Max uptake liver = " << max_uptake_liver << std::endl;
-	//if (max_uptake_liver == 0) {
-	//	max_uptake_liver = 1.0; //avoid division by 0 in next step
-	//}
-
-	////Load path points : for automatic segment
-	//FILE* path_file;
-	////loading_path = beforePath + "path_before.csv";
-	//loading_path = afterPath + "path_after.csv";
-	//if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//vector<Point3D> points_on_path;
-	//Point3D current_point = { 0.0, 0.0, 0.0 };
-	//while (feof(path_file) == 0) {
-	//	fscanf_s(path_file, "%f", &current_point.x);
-	//	fscanf_s(path_file, ",");
-	//	fscanf_s(path_file, "%f", &current_point.y);
-	//	fscanf_s(path_file, ",");
-	//	fscanf_s(path_file, "%f", &current_point.z);
-	//	fscanf_s(path_file, "\n");
-	//	points_on_path.push_back(current_point);
-	//	//std::cout << "Point = (" << current_point.x << "," << current_point.y << "," << current_point.z << ")" << std::endl;
-	//}
-	//fclose(path_file);
-
-	////Profil ratio segment manual experiment
-	//dataType max1 = 0.0, max2 = 0.0, max3 = 0.0, max4 = 0.0, max5 = 0.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			xd = x_new(i, j, Length);
-	//			Point3D point_pet = { i, j, k };
-	//			point_pet = getRealCoordFromImageCoord3D(point_pet, ctOrigin, ctSpacing, orientation);
-	//			point_pet = getImageCoordFromRealCoord3D(point_pet, petOrigin, petSpacing, orientation);
-	//			if (point_pet.x < 0) {
-	//				l = 0;
-	//			}
-	//			else {
-	//				if (point_pet.x > length - 1) {
-	//					l = length - 1;
-	//				}
-	//				else {
-	//					l = (size_t)point_pet.x;
-	//				}
-	//			}
-	//			if (point_pet.y < 0) {
-	//				w = 0;
-	//			}
-	//			else {
-	//				if (point_pet.y > width - 1) {
-	//					w = width - 1;
-	//				}
-	//				else {
-	//					w = (size_t)point_pet.y;
-	//				}
-	//			}
-	//			if (point_pet.z < 0) {
-	//				h = 0;
-	//			}
-	//			else {
-	//				if (point_pet.z > height - 1) {
-	//					h = height - 1;
-	//				}
-	//				else {
-	//					h = (size_t)point_pet.z;
-	//				}
-	//			}
-	//			dataType value = petContainer->dataPointer[h][x_new(l, w, length)];
-	//			
-	//			//find the max in segment 1 if the point lies in segment 1
-	//			if (segment1->dataPointer[k][xd] != 0) {
-	//				if (value > max1) {
-	//					max1 = value;
-	//				}
-	//			}
-	//			//find the max in segment 2 if the point lies in segment 2
-	//			if (segment2->dataPointer[k][xd] != 0) {
-	//				if (value > max2) {
-	//					max2 = value;
-	//				}
-	//			}
-	//			//find the max in segment 3 if the point lies in segment 3
-	//			if (segment3->dataPointer[k][xd] != 0) {
-	//				if (value > max3) {
-	//					max3 = value;
-	//				}
-	//			}
-	//			//find the max in segment 4 if the point lies in segment 4
-	//			if (segment4->dataPointer[k][xd] != 0) {
-	//				if (value > max4) {
-	//					max4 = value;
-	//				}
-	//			}
-	//			//find the max in segment 5 if the point lies in segment 5
-	//			if (segment5->dataPointer[k][xd] != 0) {
-	//				if (value > max5) {
-	//					max5 = value;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
-	//int n = 0;
-	//double radius = 20.0;
-	//Statistics stats = { 0.0, 0.0, 0.0, 0.0 };
-	//size_t count1 = 0, count2 = 0, count3 = 0, count4 = 0, count5 = 0;
-
-	//for (n = 0; n < points_on_path.size(); n++) {
-	//	//std::cout << "Point realworld = (" << points_on_path[n].x << "," << points_on_path[n].y << "," << points_on_path[n].z << ")" << std::endl;
-	//	Point3D point_pet = getImageCoordFromRealCoord3D(points_on_path[n], petOrigin, petSpacing, orientation);
-	//	//std::cout << "Point image PET = (" << point_pet.x << "," << point_pet.y << "," << point_pet.z << ")" << std::endl;
-	//	Point3D point_ct = getImageCoordFromRealCoord3D(points_on_path[n], ctOrigin, ctSpacing, orientation);
-	//	//std::cout << "Point image CT = (" << point_ct.x << "," << point_ct.y << "," << point_ct.z << ")" << std::endl;
-	//	i = (size_t)point_ct.x;
-	//	j = (size_t)point_ct.y;
-	//	k = (size_t)point_ct.z;
-	//	xd = x_new(i, j, Length);
-	//	//std::cout << "Point image CT = (" << i << "," << j << "," << k << ")" << std::endl;
-	//	stats = getPointNeighborhoodStats(PET, point_pet, radius);
-	//	//std::cout << "min = " << stats.min_data << std::endl;
-	//	//std::cout << "mean = " << stats.mean_data << std::endl;
-	//	//std::cout << "max = " << stats.max_data << std::endl;
-	//	//find the max in segment 1 if the point lies in segment 1
-	//	if (segment1->dataPointer[k][xd] != 0) {
-	//		count1++;
-	//		if (stats.max_data > max1) {
-	//			max1 = stats.max_data;
-	//		}
-	//	}
-	//	//find the max in segment 2 if the point lies in segment 2
-	//	if (segment2->dataPointer[k][xd] != 0) {
-	//		count2++;
-	//		if (stats.max_data > max2) {
-	//			max2 = stats.max_data;
-	//		}
-	//	}	
-	//	//find the max in segment 3 if the point lies in segment 3
-	//	if (segment3->dataPointer[k][xd] != 0) {
-	//		count3++;;
-	//		if (stats.max_data > max3) {
-	//			max3 = stats.max_data;
-	//		}
-	//	}
-	//	//find the max in segment 4 if the point lies in segment 4
-	//	if (segment4->dataPointer[k][xd] != 0) {
-	//		count4++;
-	//		if (stats.max_data > max4) {
-	//			max4 = stats.max_data;
-	//		}
-	//	}
-	//	//find the max in segment 5 if the point lies in segment 5
-	//	if (segment5->dataPointer[k][xd] != 0) {
-	//		count5++;
-	//		if (stats.max_data > max5) {
-	//			max5 = stats.max_data;
-	//		}
-	//	}
-	//}
-	
-	//std::cout << count1 << " elements in segment 1" << std::endl;
-	//std::cout << count2 << " elements in segment 2" << std::endl;
-	//std::cout << count3 << " elements in segment 3" << std::endl;
-	//std::cout << count4 << " elements in segment 4" << std::endl;
-	//std::cout << count5 << " elements in segment 5" << std::endl;
-	
-	//std::cout << "max1 = " << max1 << ", max2 = " << max2 << ", max3 = " << max3 << ", max4 = " << max4 << ", max5 = " << max5 << std::endl;
-
-	size_t count = 1;
-	//fprintf(file, "%d,%f\n", count, max1 / max_uptake_liver);
-	//count++;
-	//fprintf(file, "%d,%f\n", count, max2 / max_uptake_liver);
-	//count++;
-	//fprintf(file, "%d,%f\n", count, max3 / max_uptake_liver);
-	//count++;
-	//fprintf(file, "%d,%f\n", count, max4 / max_uptake_liver);
-	//count++;
-	//fprintf(file, "%d,%f\n", count, max5 / max_uptake_liver);
-	fclose(file);
-
-	//free(ballLiver);
-	//free(segment1);
-	//free(segment2);
-	//free(segment3);
-	//free(segment4);
-	//free(segment5);
-	free(petContainer);
-
-	//while (points_on_path.size() > 0) {
-	//	points_on_path.pop_back();
-	//}
 	*/
 
 	//======================== Filtering =======================
@@ -1844,259 +1074,187 @@ int main() {
 	delete[] initialSegment;
 	*/
 
-	//======================== Path finding from one seed in the ascending aorta ====
-	
-	/*
-	//const size_t height = 866; // P2
-	//const size_t height = 1351; // P6
-	//const size_t height = 880; // P6
-	//const size_t height = 844; // P4
-	//const size_t height = 1083; // P3
-	const size_t height = 866; // P2
-
-	dataType** potential = new dataType * [height];
-	dataType** action_field = new dataType * [height];
-	dataType** pathPtr = new dataType * [height];
-	dataType** imageData = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		potential[k] = new dataType[dim2D]{ 0 };
-		action_field[k] = new dataType[dim2D]{ 0 };
-		pathPtr[k] = new dataType[dim2D]{ 0 };
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-	if (potential == NULL || action_field == NULL || pathPtr == NULL || imageData == NULL)
-		return false;
-
-	loading_path = inputPath + "raw/interpolated/patient2/filtered_p2.raw";
-	//loading_path = inputPath + "raw/interpolated/patient2/filtered_p2.raw";
-	//loading_path = inputPath + "raw/interpolated/patient4/filtered_p4.raw";
-	//loading_path = inputPath + "raw/filtered/filteredGMC_p6.raw";
-	load3dArrayRAW<dataType>(imageData, Length, Width, height, loading_path.c_str(), false);
-	
-	//VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	//Image_Data CTinterpolated = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
-
-	////Patient 2
-	//Point3D seed1 = { 260, 257, 312 };
-	//Point3D seed2 = { 295, 317, 565 };
-
-	////Patient 3
-	//Point3D seed1 = { 259, 254, 536 }; //old
-	//Point3D seed2 = { 288, 319, 769 };//old
-
-	////Patient 3 PhD student conference
-	//Point3D seed1 = { 257, 255, 522 };
-	//Point3D seed2 = { 288, 313, 779 };
-	//Point3D seed3 = { 253, 251, 779 };
-
-	//Patient 2 PhD student conference
-	Point3D seed1 = { 260, 257, 306 };//*
-	Point3D seed2 = { 266, 268, 393 };
-	Point3D seed3 = { 288, 304, 480 };
-	Point3D seed4 = { 295, 313, 566 };//*
-	Point3D seed5 = { 279, 282, 586 };
-	Point3D seed6 = { 256, 258, 566 };//*
-	Point3D seed7 = { 253, 254, 539 };
-
-	//Point3D seed1 = { 257, 251, 530 };
-	//Point3D seed1 = { 257, 251, 526 };
-	//Point3D seed1 = { 260, 257, 312 };
-	//Point3D seed2 = { 295, 317, 565 };
-	//Point3D seed2 = { 0, 0, 0 };
-
-	////Patient 6
-	//Point3D seed1 = { 266, 242, 734 };
-	
-	////Test 1
-	//Point3D seed1 = { 263, 244, 717 };
-	//Point3D seed2 = { 283, 283, 993 };
-
-	//Test 2
-	//Point3D seed1 = { 261, 246, 717 };
-	//Point3D seed2 = { 283, 283, 993 };
-
-	////Test 3
-	//Point3D seed1 = { 261, 246, 717 };
-	//Point3D seed2 = { 283, 283, 993 };
-	//Point3D seed3 = { 243, 219, 993 };
-
-	////Patient 4
-	//Point3D seed1 = { 268, 232, 291 };
-	//Point3D seed2 = { 289, 297, 591 };
-	////Point3D seed3 = { 256, 224, 591 };
-
-	//std::cout << "P1 : (" << seed1.x << ", " << seed1.y << ", " << seed1.z << ")" << std::endl;
-	//std::cout << "P2 : (" << seed2.x << ", " << seed2.y << ", " << seed2.z << ")" << std::endl;
-	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, intSpacing, orientation);
-	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, intSpacing, orientation);
-	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, spacingCT, orientation);
-	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, spacingCT, orientation);
-	//std::cout << "P1 updated : (" << seed1.x << ", " << seed1.y << ", " << seed1.z << ")" << std::endl;
-	//std::cout << "P2 updated : (" << seed2.x << ", " << seed2.y << ", " << seed2.z << ")" << std::endl;
-
-	VoxelSpacing imageSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data ctImageData{
-		height,
-		Length,
-		Width,
-		imageData,
-		ctOrigin,
-		imageSpacing,
-		orientation
-	};
-	
-	double radius = 3.0;
-	dataType h = 1.0;
-	Potential_Parameters potential_parameters{
-		0.005, //K
-		0.01,  //epsilon
-		0.0,   //coef min
-		0.0,   // coef max
-		0.0,   // coef mean
-		0.0,   //ceof sd
-		0.0,   //coef ct
-		0.0   //coef pet
-	};
-
-	compute3DPotential(ctImageData, potential, seed1, radius, potential_parameters);
-	
-	vector<Point3D> path_points;
-	Point3D* seedPoints = new Point3D[2];
-	int n = 0;
-
-	string saving_csv = outputPath + "pathFromSevenPoints_p2.csv";
-	FILE* file_real;
-	if (fopen_s(&file_real, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
-	
-	///////////////////// First segment ////////////////////////////
-	seedPoints[0] = seed1;
-	seedPoints[1] = seed2;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	///////////////// Second segment ///////////////////////////
-	seedPoints[0] = seed2;
-	seedPoints[1] = seed3;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	///////////////// Third segment ///////////////////////////
-	seedPoints[0] = seed3;
-	seedPoints[1] = seed4;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	///////////////// Fourth segment ///////////////////////////
-	seedPoints[0] = seed4;
-	seedPoints[1] = seed5;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	///////////////// Fifth segment ///////////////////////////
-	seedPoints[0] = seed5;
-	seedPoints[1] = seed6;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-	
-
-	///////////////// Sixth segment ///////////////////////////
-	seedPoints[0] = seed6;
-	seedPoints[1] = seed7;
-	partialFrontPropagation(action_field, potential, Length, Width, height, seedPoints);
-	shortestPath3D(action_field, Length, Width, height, imageSpacing, seedPoints, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, imageSpacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-	fclose(file_real);
-	delete[] seedPoints;
-
-	for (k = 0; k < height; k++) {
-		delete[] potential[k];
-		delete[] action_field[k];
-		delete[] pathPtr[k];
-		delete[] imageData[k];
-	}
-	delete[] potential;
-	delete[] action_field;
-	delete[] pathPtr;
-	delete[] imageData;
-	*/
-
 	//======================== Path finding Multiple seeds =======================================
 	
-	/**
 	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
-	//const size_t height = 1351; // P6
-	const size_t height = 1083; // P3
+	const size_t height = 1351; // P6
+	//const size_t height = 1083; // P3
 
 	dataType** potential = new dataType * [height];
-	dataType** action_field = new dataType * [height];
-	dataType** pathPtr = new dataType * [height];
+	dataType** actionField = new dataType * [height];
+	dataType** liverData = new dataType * [height];
 	dataType** imageData = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		potential[k] = new dataType[dim2D]{ 0 };
-		action_field[k] = new dataType[dim2D]{ 0 };
-		pathPtr[k] = new dataType[dim2D]{ 0 };
+		actionField[k] = new dataType[dim2D]{ 0 };
+		liverData[k] = new dataType[dim2D]{ 0 };
 		imageData[k] = new dataType[dim2D]{ 0 };
 	}
-	if (potential == NULL || action_field == NULL || pathPtr == NULL || imageData == NULL)
+	if (potential == NULL || actionField == NULL || liverData == NULL)
 		return false;
 	
-	loading_path = inputPath + "raw/interpolated/filtered_p3.raw";
-	//loading_path = inputPath + "raw/interpolated/patient2/Im_mean_r5.raw";
-	//loading_path = inputPath + "raw/interpolated/patient4/Im_mean_r3.raw";
-	//loading_path = inputPath + "raw/interpolated/patient6/Im_mean_r3.raw";
+	//Load segmented liver
+	loading_path = inputPath + "raw/interpolated/filtered_p6.raw";
 	load3dArrayRAW<dataType>(imageData, Length, Width, height, loading_path.c_str(), false);
+
+	//VoxelSpacing intSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[0] };
+	//////Find liver largest slice
+	////size_t number_elements = 0;
+	////size_t largest_slice = 0;
+	////size_t max_number_of_element = 0;
+	////for (k = 0; k < height; k++) {
+	////	number_elements = 0;
+	////	for (i = 0; i < dim2D; i++) {
+	////		if (liverData[k][i] == 1.0) {
+	////			number_elements++;
+	////		}
+	////	}
+	////	if (number_elements > max_number_of_element) {
+	////		max_number_of_element = number_elements;
+	////		largest_slice = k;
+	////	}
+	////}
+	////std::cout << "The largest slice is : " << largest_slice << std::endl;
+
+	//////size_t liver_largest_slice = 448; //patient 2 (interpolated)
+	//////Find corresponding slice in original input
+	////Point3D point_interpolated = { 0, 0, liver_largest_slice };
+	////point_interpolated = getRealCoordFromImageCoord3D(point_interpolated, ctOrigin, intSpacing, orientation);
+	////point_interpolated = getImageCoordFromRealCoord3D(point_interpolated, ctOrigin, ctSpacing, orientation);
+	////std::cout << "The largest slice in original dimension : " << point_interpolated.z << std::endl;
+	//
+	//size_t liver_largest_slice = 210; //patient 2 (original dim)
+	//dataType* imageSlice = new dataType[dim2D]{ 0 };
+	//dataType* thresholdSlice = new dataType[dim2D]{ 0 };
+	//dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
+
+	////// extract liver slice
+	////for (i = 0; i < dim2D; i++) {
+	////	imageSlice[i] = ctContainer->dataPointer[liver_largest_slice][i];
+	////}
+	////storing_path = outputPath + "largest_liver_slice_original.raw";
+	////store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	//////find min and max
+	////dataType maxData = imageSlice[0], minData = imageSlice[0];
+	////for (i = 0; i < dim2D; i++) {
+	////	if (imageSlice[i] > maxData) {
+	////		maxData = imageSlice[i];
+	////	}
+	////	if (imageSlice[i] < minData) {
+	////		minData = imageSlice[i];
+	////	}
+	////}
+	////std::cout << "min Data = " << minData << ", max Data = " << maxData << std::endl;
+	//////Shift values
+	////for (i = 0; i < dim2D; i++) {
+	////	imageSlice[i] -= minData;
+	////}
+	////storing_path = outputPath + "largest_liver_slice_shift.raw";
+	////store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+	////rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+	////storing_path = outputPath + "largest_liver_slice_rescaled.raw";
+	////store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+
+	//loading_path = inputPath + "raw/slice/p2/largest_liver_slice_rescaled.raw";
+	//load2dArrayRAW<dataType>(imageSlice, Length, Width, (const char*)loading_path.c_str(), false);
+
+	////filtering parameters
+	//Filter_Parameters filter_parameters
+	//{
+	//	0.3,//tau
+	//	1.0,//h
+	//	0.0,//sigma
+	//	0.0,//edge detector coef
+	//	1.5,//omega_c
+	//	1e-3,//tolerance
+	//	1e-6,//eps2
+	//	1e-6,//coef
+	//	1,//boundary condition
+	//	4,//time step number
+	//	100//max solver iteration
+	//};	
+
+	//PixelSpacing sliceSpacing = { ctSpacing.sx, ctSpacing.sy };
+	//Point2D sliceOrigin = { 0, 0 };
+	//Image_Data2D IMAGE
+	//{
+	//	Length,
+	//	Width,
+	//	imageSlice,
+	//	sliceOrigin,
+	//	sliceSpacing
+	//};
+
+	////Slice filtering
+	//heatImplicit2dScheme(IMAGE, filter_parameters);
+
+	////storing_path = outputPath + "filtered.raw";
+	////store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
+
+	//HoughParameters h_parameters =
+	//{
+	//	7.5, //minimal radius
+	//	19.5, //maximal radius
+	//	0.5, //epsilon to search points belonging the circle
+	//	3.0, //offset to find the bounding box
+	//	1000.0, //edge detector coefficient K 
+	//	1.0, //h, space discretization for gradient computation
+	//	0.1, //threshold edge detector
+	//	0.5, //radius step
+	//	sliceSpacing //pixel size
+	//};
+
+	////
+	//Point2D grad;
+	//dataType grad_norm = 0.0;
+	//dataType edge_value = 0.0;
+	//for (i = 0; i < Length; i++) {
+	//	for (j = 0; j < Width; j++) {
+	//		getGradient2D(imageSlice, Width, Length, i, j, sliceSpacing, &grad);
+	//		grad_norm = sqrt(grad.x * grad.x + grad.y * grad.y);
+	//		edge_value = gradientFunction(grad_norm, h_parameters.K);
+	//		if (edge_value <= h_parameters.thres) {
+	//			thresholdSlice[x_new(i, j, Length)] = 1.0;
+	//		}
+	//	}
+	//}
+	//
+	////storing_path = outputPath + "threshold.raw";
+	////store2dRawData<dataType>(thresholdSlice, Length, Width, storing_path.c_str());
+
+	//Image_Data2D IMAGE_HOUGH
+	//{
+	//	Length,
+	//	Width,
+	//	thresholdSlice
+	//};
+
+	//////Point2D seed = { 263, 264 };
+	////localCircleDetection(IMAGE_HOUGH, seed, h_parameters);
+	////circleDetection(IMAGE_HOUGH, h_parameters);
+	//houghTransform(imageSlice, foundCirclePtr, Length, Width, h_parameters);
+
+	//storing_path = outputPath + "found_circle.raw";
+	//store2dRawData<dataType>(foundCirclePtr, Length, Width, storing_path.c_str());
+	//
+	//delete[] imageSlice;
+	//delete[] thresholdSlice;
+	//delete[] foundCirclePtr;
+	//
+	////Image_Data INTERPOLATED
+	////{
+	////	height,
+	////	Length,
+	////	Width,
+	////	liverData,
+	////	ctOrigin,
+	////	intSpacing,
+	////	orientation
+	////};
+
+	////storing_path = outputPath + "liver_p3.raw";
+	////store3dRawData<dataType>(liverData, Length, Width, height, storing_path.c_str());
 
 	double radius = 3.0;
 	dataType h = 1.0;
@@ -2128,7 +1286,6 @@ int main() {
 	//seeds[2] = seed3;
 
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-
 	Image_Data CT = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
 
 	////Patient2
@@ -2161,121 +1318,188 @@ int main() {
 	//Point3D seed7 = { 262, 222, 577 };
 	//Point3D seed8 = { 274, 225, 551 };
 
-	//Patient3
-	Point3D seed1 = { 258, 255, 529 };
-	Point3D seed2 = { 261, 263, 596 };
-	Point3D seed3 = { 266, 278, 645 };
-	Point3D seed4 = { 288, 321, 743 };
-	Point3D seed5 = { 278, 282, 802 };
-	Point3D seed6 = { 247, 250, 766 };
-	Point3D seed7 = { 253, 248, 750 };
-	//Point3D seed8 = { 274, 225, 551 };
+	////Patient3
+	//Point3D seed1 = { 258, 255, 529 };
+	//Point3D seed2 = { 261, 263, 596 };
+	//Point3D seed3 = { 266, 278, 645 };
+	//Point3D seed4 = { 288, 321, 743 };
+	//Point3D seed5 = { 278, 282, 802 };
+	//Point3D seed6 = { 247, 250, 766 };
+	//Point3D seed7 = { 253, 248, 750 };
+	////Point3D seed8 = { 274, 225, 551 };
 
+	
+	//Point3D seed1 = { 262, 258, 308 };
+	//Point3D seed2 = { 294, 318, 530 };
+	//Point3D seed3 = { 279, 281, 583 };
+	//Point3D seed4 = { 255, 255, 530 };
+	//Point3D seed1 = { 263, 255, 340 };
+	//Point3D seed2 = { 263, 255, 360 };
+	
+	Point3D seed1 = { 264, 244, 718 };
+	Point3D seed2 = { 281, 291, 977 };
+	Point3D seed3 = { 274, 239, 1024 };
+	Point3D seed4 = { 240, 222, 977 };
 	compute3DPotential(CT, potential, seed1, radius, parameters);
 
-	Point3D* path1 = new Point3D[2];
-	Point3D* path2 = new Point3D[2];
-	Point3D* path3 = new Point3D[2];
-	Point3D* path4 = new Point3D[2];
-	Point3D* path5 = new Point3D[2];
-	Point3D* path6 = new Point3D[2];
-	//Point3D* path7 = new Point3D[2];
+	storing_path = outputPath + "potential_p6.raw";
+	//load3dArrayRAW<dataType>(potential, Length, Width, height, storing_path.c_str(), false);
+	store3dRawData<dataType>(potential, Length, Width, height, storing_path.c_str());
 
-	path1[0] = seed1; path1[1] = seed2;
-	path2[0] = seed2; path2[1] = seed3;
-	path3[0] = seed3; path3[1] = seed4;
-	path4[0] = seed4; path4[1] = seed5;
-	path5[0] = seed5; path5[1] = seed6;
-	path6[0] = seed6; path6[1] = seed7;
-	//path7[0] = seed7; path7[1] = seed8;
+	//Point3D* path1 = new Point3D[2];
+	//Point3D* path2 = new Point3D[2];
+	//Point3D* path3 = new Point3D[2];
+	//Point3D* path4 = new Point3D[2];
+	//Point3D* path5 = new Point3D[2];
+	//Point3D* path6 = new Point3D[2];
+	////Point3D* path7 = new Point3D[2];
+
+	//path1[0] = seed1; path1[1] = seed2;
+	//path2[0] = seed2; path2[1] = seed3;
+	//path3[0] = seed3; path3[1] = seed4;
+	//path4[0] = seed4; path4[1] = seed5;
+	//path5[0] = seed5; path5[1] = seed6;
+	//path6[0] = seed6; path6[1] = seed7;
+	////path7[0] = seed7; path7[1] = seed8;
 	
-	vector<Point3D> path_points1;
-	vector<Point3D> path_points2;
-	vector<Point3D> path_points3;
-	vector<Point3D> path_points4;
-	vector<Point3D> path_points5;
-	vector<Point3D> path_points6;
-	//vector<Point3D> path_points7;
+	//vector<Point3D> path_points1;
+	//vector<Point3D> path_points2;
+	//vector<Point3D> path_points3;
+	//vector<Point3D> path_points4;
+	//vector<Point3D> path_points5;
+	//vector<Point3D> path_points6;
+	////vector<Point3D> path_points7;
 
-	//Segment 1
-	partialFrontPropagation(action_field, potential, Length, Width, height, path1);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path1, path_points1);
+	////Segment 1
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path1);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path1, path_points1);
 
-	//Segment 2
-	partialFrontPropagation(action_field, potential, Length, Width, height, path2);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path2, path_points2);
+	////Segment 2
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path2);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path2, path_points2);
 
-	//Segment 3
-	partialFrontPropagation(action_field, potential, Length, Width, height, path3);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path3, path_points3);
+	////Segment 3
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path3);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path3, path_points3);
 
-	//Segment 4
-	partialFrontPropagation(action_field, potential, Length, Width, height, path4);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path4, path_points4);
+	////Segment 4
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path4);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path4, path_points4);
 
-	//Segment 5
-	partialFrontPropagation(action_field, potential, Length, Width, height, path5);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path5, path_points5);
+	////Segment 5
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path5);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path5, path_points5);
 
-	//Segment 6
-	partialFrontPropagation(action_field, potential, Length, Width, height, path6);
-	shortestPath3D(action_field, Length, Width, height, intSpacing, path6, path_points6);
+	////Segment 6
+	//partialFrontPropagation(action_field, potential, Length, Width, height, path6);
+	//shortestPath3D(action_field, Length, Width, height, intSpacing, path6, path_points6);
 
 	////Segment 7
 	//partialFrontPropagation(action_field, potential, Length, Width, height, path7);
 	//shortestPath3D(action_field, Length, Width, height, intSpacing, path7, path_points7);
 
-	string saving_real = outputPath + "path_point_real_coord_p3.csv";
+	string saving_real = outputPath + "path_points_p6.csv";
 	FILE* file_real;
 	if (fopen_s(&file_real, saving_real.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 
-	string saving_img = outputPath + "path_point_img_coord_p3.csv";
-	FILE* file_img;
-	if (fopen_s(&file_img, saving_img.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	//string saving_img = outputPath + "path_point_img_coord_p3.csv";
+	//FILE* file_img;
+	//if (fopen_s(&file_img, saving_img.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
 
-	int n = 0;
+	Point3D* seedPoints = new Point3D[2];
+	seedPoints[0] = seed1;
+	seedPoints[1] = seed2;
+	//seedPoints[2] = seed3;
+
+	double maxLength = 100.0;
+	//findPathTwoSteps(CT, seedPoints, parameters);
+	//fastMarching3D_N(actionField, potential, Length, Width, height, seed1);
+	partialFrontPropagation(actionField, potential, Length, Width, height, seedPoints);
+	//partialPropagation(actionField, potential, Length, Width, height, seedPoints, maxLength);
+	//std::cout << "Found point : (" << seedPoints[1].x << "," << seedPoints[1].y << "," << seedPoints[1].z << ")" << std::endl;
+
+	//storing_path = outputPath + "action.raw";
+	//store3dRawData<dataType>(actionField, Length, Width, height, storing_path.c_str());
 	
-	for (n = path_points1.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points1[n].x, path_points1[n].y, path_points1[n].z);
-		path_points1[n] = getRealCoordFromImageCoord3D(path_points1[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points1[n].x, path_points1[n].y, path_points1[n].z);
+	//double found_lenght = getPoint3DDistance(seedPoints[0], seedPoints[1]);
+	//std::cout << "Found distance : " << found_lenght << std::endl;
+
+	vector<Point3D> path_points;
+	shortestPath3D(actionField, Length, Width, height, intSpacing, seedPoints, path_points);
+	
+	int n = 0;
+	for (n = path_points.size() - 1; n > -1; n--) {
+		//fprintf(file_img, "%f,%f,%f\n", path_points1[n].x, path_points1[n].y, path_points1[n].z);
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], CT.origin, intSpacing, orientation);
+		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() > 0) {
+		path_points.pop_back();
 	}
 
-	for (n = path_points2.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points2[n].x, path_points2[n].y, path_points2[n].z);
-		path_points2[n] = getRealCoordFromImageCoord3D(path_points2[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points2[n].x, path_points2[n].y, path_points2[n].z);
+	seedPoints[0] = seed2;
+	seedPoints[1] = seed3;
+	partialFrontPropagation(actionField, potential, Length, Width, height, seedPoints);
+	shortestPath3D(actionField, Length, Width, height, intSpacing, seedPoints, path_points);
+
+	for (n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], CT.origin, intSpacing, orientation);
+		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() > 0) {
+		path_points.pop_back();
 	}
 
-	for (n = path_points3.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points3[n].x, path_points3[n].y, path_points3[n].z);
-		path_points3[n] = getRealCoordFromImageCoord3D(path_points3[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points3[n].x, path_points3[n].y, path_points3[n].z);
+	seedPoints[0] = seed3;
+	seedPoints[1] = seed4;
+	partialFrontPropagation(actionField, potential, Length, Width, height, seedPoints);
+	shortestPath3D(actionField, Length, Width, height, intSpacing, seedPoints, path_points);
+
+	for (n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], CT.origin, intSpacing, orientation);
+		fprintf(file_real, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() > 0) {
+		path_points.pop_back();
 	}
 
-	for (n = path_points4.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points4[n].x, path_points4[n].y, path_points4[n].z);
-		path_points4[n] = getRealCoordFromImageCoord3D(path_points4[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points4[n].x, path_points4[n].y, path_points4[n].z);
-	}
+	fclose(file_real);
 
-	for (n = path_points5.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points5[n].x, path_points5[n].y, path_points5[n].z);
-		path_points5[n] = getRealCoordFromImageCoord3D(path_points5[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points5[n].x, path_points5[n].y, path_points5[n].z);
-	}
+	//for (n = path_points2.size() - 1; n > -1; n--) {
+	//	fprintf(file_img, "%f,%f,%f\n", path_points2[n].x, path_points2[n].y, path_points2[n].z);
+	//	path_points2[n] = getRealCoordFromImageCoord3D(path_points2[n], CT.origin, CT.spacing, orientation);
+	//	fprintf(file_real, "%f,%f,%f\n", path_points2[n].x, path_points2[n].y, path_points2[n].z);
+	//}
 
-	for (n = path_points6.size() - 1; n > -1; n--) {
-		fprintf(file_img, "%f,%f,%f\n", path_points6[n].x, path_points6[n].y, path_points6[n].z);
-		path_points6[n] = getRealCoordFromImageCoord3D(path_points6[n], CT.origin, CT.spacing, orientation);
-		fprintf(file_real, "%f,%f,%f\n", path_points6[n].x, path_points6[n].y, path_points6[n].z);
-	}
+	//for (n = path_points3.size() - 1; n > -1; n--) {
+	//	fprintf(file_img, "%f,%f,%f\n", path_points3[n].x, path_points3[n].y, path_points3[n].z);
+	//	path_points3[n] = getRealCoordFromImageCoord3D(path_points3[n], CT.origin, CT.spacing, orientation);
+	//	fprintf(file_real, "%f,%f,%f\n", path_points3[n].x, path_points3[n].y, path_points3[n].z);
+	//}
+
+	//for (n = path_points4.size() - 1; n > -1; n--) {
+	//	fprintf(file_img, "%f,%f,%f\n", path_points4[n].x, path_points4[n].y, path_points4[n].z);
+	//	path_points4[n] = getRealCoordFromImageCoord3D(path_points4[n], CT.origin, CT.spacing, orientation);
+	//	fprintf(file_real, "%f,%f,%f\n", path_points4[n].x, path_points4[n].y, path_points4[n].z);
+	//}
+
+	//for (n = path_points5.size() - 1; n > -1; n--) {
+	//	fprintf(file_img, "%f,%f,%f\n", path_points5[n].x, path_points5[n].y, path_points5[n].z);
+	//	path_points5[n] = getRealCoordFromImageCoord3D(path_points5[n], CT.origin, CT.spacing, orientation);
+	//	fprintf(file_real, "%f,%f,%f\n", path_points5[n].x, path_points5[n].y, path_points5[n].z);
+	//}
+
+	//for (n = path_points6.size() - 1; n > -1; n--) {
+	//	fprintf(file_img, "%f,%f,%f\n", path_points6[n].x, path_points6[n].y, path_points6[n].z);
+	//	path_points6[n] = getRealCoordFromImageCoord3D(path_points6[n], CT.origin, CT.spacing, orientation);
+	//	fprintf(file_real, "%f,%f,%f\n", path_points6[n].x, path_points6[n].y, path_points6[n].z);
+	//}
 
 	//for (n = path_points7.size() - 1; n > -1; n--) {
 	//	fprintf(file_img, "%f,%f,%f\n", path_points7[n].x, path_points7[n].y, path_points7[n].z);
@@ -2283,31 +1507,32 @@ int main() {
 	//	fprintf(file_real, "%f,%f,%f\n", path_points7[n].x, path_points7[n].y, path_points7[n].z);
 	//}
 
-	fclose(file_img);
-	fclose(file_real);
+	//fclose(file_img);
+	//fclose(file_real);
 
-	delete[] path1;
-	delete[] path2;
-	delete[] path3;
-	delete[] path4;
-	delete[] path5;
-	delete[] path6;
+	//delete[] path1;
+	//delete[] path2;
+	//delete[] path3;
+	//delete[] path4;
+	//delete[] path5;
+	//delete[] path6;
 	//delete[] path7;
-
+	
+	delete[] seedPoints;
 	for (k = 0; k < height; k++) {
 		delete[] potential[k];
-		delete[] action_field[k];
-		delete[] pathPtr[k];
+		delete[] actionField[k];
+		delete[] liverData[k];
 		delete[] imageData[k];
 	}
 	delete[] potential;
-	delete[] action_field;
-	delete[] pathPtr;
+	delete[] actionField;
+	delete[] liverData;
 	delete[] imageData;
-	*/
 	
 	//======================== 2D Hough transform on Slice ===========================
 	
+	/*
 	const size_t Height = 406, Length = 512, Width = 512;
 	const size_t dim2D = Length * Width;
 
@@ -2444,7 +1669,8 @@ int main() {
 
 	//delete[] foundCircle;
 	//delete[] houghSpace;
-	
+	*/
+
 	//======================== Segment lungs conneted to trachea ===================================================================
 	
 	/*
@@ -2723,6 +1949,11 @@ int main() {
 	//======================== Detect carina =============================================
 	
 	/*
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
 	loading_path = inputPath + "trachea.raw";
 	load3dArrayRAW<dataType>(imageData, Length, Width, Height, loading_path.c_str(), false);
 	
@@ -2845,134 +2076,6 @@ int main() {
 	fclose(file);
 	delete[] labelArray;
 	delete[] status;
-	*/
-
-	//======================== Detect seed from carina ===================================
-	
-	/*
-	loading_path = inputPath + "trachea.raw";
-	load3dArrayRAW<dataType>(imageData, Length, Width, Height, loading_path.c_str(), false);
-
-	size_t carina_slice = 257; // patient2
-
-	dataType** distanceMap = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		distanceMap[k] = new dataType[dim2D]{ 0 };
-	}
-
-	fastSweepingFunction_3D(distanceMap, imageData, Length, Width, Height, 1.0, 1000000.0, 0.0);
-
-	dataType max_distance = 0.0;
-	Point2D point_max = { 0.0, 0.0 };
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			if (distanceMap[carina_slice][x_new(i, j, Length)] > max_distance) {
-				point_max.x = (dataType)i;
-				point_max.y = (dataType)j;
-			}
-		}
-	}
-
-	std::cout << "seed : (" << point_max.x << "," << point_max.y << ")" << std::endl;
-
-	BoundingBox2D box = findBoundingBox2D(point_max, Length, Width, 8.5, 70);
-
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	for (i = 0; i < dim2D; i++) {
-		imageSlice[i] = maskThreshold[carina_slice][i];
-	}
-
-	//draw bounding box around seed in carina
-	for (i = box.i_min; i <= box.i_max; i++) {
-		for (j = box.j_min; j <= box.j_max; j++) {
-			if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-				imageSlice[x_new(i, j, Length)] = min_data;
-			}
-		}
-	}
-
-	storing_path = outputPath + "slice_of_interest.raw";
-	store2dRawData<dataType>(imageSlice, Length, Width, storing_path.c_str());
-
-	delete[] imageSlice;
-	for (k = 0; k < Height; k++) {
-		delete[] distanceMap[k];
-	}
-	delete[] distanceMap;
-	*/
-	
-	//======================== Slice Cropping ================================================================
-	
-	/*
-	imageMetaData croppedLungs;
-	const size_t offset = 5;
-	croppedLungs =  croppImage3D(ctImageData, offset);
-
-	size_t length = croppedLungs.length, width = croppedLungs.width, height = croppedLungs.height;
-	std::cout << "Cropped lungs image dim : " << length << " x " << width << " x " << height << "" << std::endl;
-	Point3D originLungs = croppedLungs.origin;
-	std::cout << "Cropped Lungs origin : (" << originLungs.x << ", " << originLungs.y << ", " << originLungs.z << ")" << std::endl;
-	VoxelSpacing lungsSpacing = croppedLungs.spacing;
-
-	dataType** cropped_ct = new dataType*[height];
-	dataType** cropped_lungs = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		cropped_ct[k] = new dataType[dim2D]{0};
-		cropped_lungs[k] = new dataType[dim2D]{0};
-		if (cropped_ct[k] == NULL || cropped_lungs[k] == NULL)
-			return false;
-	}
-	if (cropped_ct == NULL || cropped_lungs == NULL)
-		return false;
-
-	//===
-	//Image_Data Cropped;
-	//Cropped.imageDataPtr = croppedCT;
-	//Cropped.height = height; Cropped.length = length; Cropped.width = width;
-	//Cropped.orientation = orientation; Cropped.origin = croppedOrigin; Cropped.spacing = croppedSpacing;
-	//===
-
-	Point3D origin_cropped = getImageCoordFromRealCoord3D(originLungs, ctOrigin, ctSpacing, orientation);
-	size_t i0 = (size_t)origin_cropped.x, j0 = (size_t)origin_cropped.y, k0 = (size_t)origin_cropped.z;
-	
-	Point3D point_test = { 0.0, 0.0, k0 };
-	point_test = getRealCoordFromImageCoord3D(point_test, ctOrigin, ctSpacing, orientation);
-	cout << "Origin cropped image : (" << point_test.x << "," << point_test.y << "," << point_test.z << ")" << endl;
-	
-	size_t i1, j1, k1;
-	for (k = 0, k1 = k0; k < height; k++, k1++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				cropped_ct[k][x_new(i, j, Length)] = imageData[k1][x_new(i, j, Length)];
-				cropped_lungs[k][x_new(i, j, Length)] = lungsData[k1][x_new(i, j, Length)];
-			}
-		}
-	}
-
-	saving_name = outputPath + "cropped_ct_p6.raw";
-	//store3dRawData<dataType>(cropped_ct, Length, Width, height, saving_name.c_str());
-
-	saving_name = outputPath + "cropped_lungs_p6.raw";
-	//store3dRawData<dataType>(cropped_lungs, Length, Width, height, saving_name.c_str());
-
-	Vtk_File_Info* Container = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	Container->dataPointer = cropped_lungs; //cropped_ct;
-	Container->dimensions[0] = Length; Container->dimensions[1] = Width; Container->dimensions[2] = height;
-	Container->origin[0] = point_test.x; Container->origin[1] = point_test.y; Container->origin[2] = point_test.z;
-	Container->spacing[0] = ctSpacing.sx; Container->spacing[1] = ctSpacing.sy; Container->spacing[2] = ctSpacing.sz;
-	Container->operation = copyTo; Container->vDataType = dta_Flt;
-
-	saving_name = outputPath + "cropped_lungs_p6.vtk";
-	vtkDataForm data_form = dta_binary;
-	storeVtkFile(saving_name.c_str(), Container, data_form);
-
-	free(Container);
-	for (k = 0; k < height; k++) {
-		delete[] cropped_ct[k];
-		delete[] cropped_lungs[k];
-	}
-	delete[] cropped_ct;
-	delete[] cropped_lungs;
 	*/
 	
 	//======================== 2D path finding ==================================
@@ -3226,32 +2329,10 @@ int main() {
 	delete[] potential;
 	delete[] path;
 	*/
-
-	//======================== Detection of break points ==============
-	
-	/*
-	//The coordinates of found points are :
-	Point3D f1 = { 263.251465, 258.381989, 313.890533 };
-	Point3D f2 = { 268.761658, 269.798309, 396.832947 };
-	Point3D f3 = { 280.994934, 297.958435, 476.050629 };
-	Point3D f4 = { 294.67923, 310.155334, 554.720276 };
-
-	string saving_csv = outputPath + "break_points.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file, "%f,%f,%f\n", f1.x, f1.y, f1.z);
-	fprintf(file, "%f,%f,%f\n", f2.x, f2.y, f2.z);
-	fprintf(file, "%f,%f,%f\n", f3.x, f3.y, f3.z);
-	fprintf(file, "%f,%f,%f\n", f4.x, f4.y, f4.z);
-	fclose(file);
-	*/
 	
 	//======================== Free Memory ======================================
 
-	//free(ctContainer);
+	free(ctContainer);
 	
 	return EXIT_SUCCESS;
 }
