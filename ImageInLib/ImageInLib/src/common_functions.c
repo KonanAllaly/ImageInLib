@@ -492,17 +492,79 @@ void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dat
 }
 //==============================================================================
 
-bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume, Point3D* grad)
+bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad)
 {
 	
-	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 ||
-		fVolume.sx == 0 || fVolume.sy == 0 || fVolume.sz == 0) 
+	if (imageDataPtr == NULL || width < 2 || length < 2 || fVolume.sx == 0 || fVolume.sy == 0)
 	{
 		return false;
 	}
 	
+	if (imageDataPtr == NULL || width < 2 || length < 2)
+	{
+		return false;
+	}
 
-	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 )
+	size_t x = ind_x, y = ind_y;
+	if (x >= width)
+	{
+		x = width - 1;
+	}
+
+	if (y >= length)
+	{
+		y = length - 1;
+	}
+
+	dataType dx = 0.0, dy = 0.0;
+	dataType hx_c = 2 * fVolume.sx;
+	dataType hy_c = 2 * fVolume.sy;
+
+	if (x == 0)
+	{
+		dx = (imageDataPtr[x_new(x + 1, y, width)] - imageDataPtr[x_new(x, y, width)]) / fVolume.sx;
+	}
+	else if (x == width - 1)
+	{
+		dx = (imageDataPtr[x_new(x, y, width)] - imageDataPtr[x_new(x - 1, y, width)]) / fVolume.sx;
+	}
+	else
+	{
+		dx = (imageDataPtr[x_new(x + 1, y, width)] - imageDataPtr[x_new(x - 1, y, width)]) / hx_c;
+	}
+
+	if (y == 0)
+	{
+		dy = (imageDataPtr[x_new(x, y + 1, width)] - imageDataPtr[x_new(x, y, width)]) / fVolume.sy;
+	}
+	else if (y == length - 1)
+	{
+		dy = (imageDataPtr[x_new(x, y, width)] - imageDataPtr[x_new(x, y - 1, width)]) / fVolume.sy;
+	}
+	else
+	{
+		dy = (imageDataPtr[x_new(x, y + 1, width)] - imageDataPtr[x_new(x, y - 1, width)]) / hy_c;
+	}
+
+	grad->x = dx;
+	grad->y = dy;
+	
+	return true;
+}
+
+//==============================================================================
+
+bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume, Point3D* grad)
+{
+
+	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 ||
+		fVolume.sx == 0 || fVolume.sy == 0 || fVolume.sz == 0)
+	{
+		return false;
+	}
+
+
+	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2)
 	{
 		return false;
 	}
@@ -571,7 +633,8 @@ bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t len
 	grad->x = dx;
 	grad->y = dy;
 	grad->z = dz;
-	
+
 	return true;
 }
+
 
