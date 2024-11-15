@@ -338,17 +338,18 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     //}
     //fprintf(file_length, "x,y\n");
 
-    ////Save the current curve
-    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    //sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", start_ind);
-    //strcat_s(curve_path, sizeof(curve_path), ending);
-    //FILE* file_initial_curve;
-    //if (fopen_s(&file_initial_curve, curve_path, "w") != 0) {
-    //    printf("Enable to open");
-    //    return false;
-    //}
-    //fprintf(file_initial_curve, "x,y,z\n");
 
+    //Save the current curve
+    strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+    sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", start_ind);
+    strcat_s(curve_path, sizeof(curve_path), ending);
+    FILE* file_initial_curve;
+    if (fopen_s(&file_initial_curve, curve_path, "w") != 0) {
+        printf("Enable to open");
+        return false;
+    }
+    fprintf(file_initial_curve, "x,y,z\n");
+    
     ////Path for distance
     //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
     //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", start_ind);
@@ -364,32 +365,32 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     //fprintf(file_dist, "x,y\n");
     
     for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
-        //fprintf(file_initial_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+        fprintf(file_initial_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+        
         //fprintf(file_dist, "%d,%f\n", n, iPoint->distance_to_next);
-
-        previous_curve[n][0] = iPoint->x;
-        previous_curve[n][1] = iPoint->y;
-        previous_curve[n][2] = iPoint->z;
+        //previous_curve[n][0] = iPoint->x;
+        //previous_curve[n][1] = iPoint->y;
+        //previous_curve[n][2] = iPoint->z;
 
         iPoint = iPoint->next;
     }
     //fclose(file_dist);
-    //fclose(file_initial_curve);
+    fclose(file_initial_curve);
 
     //fprintf(file_length, "%d,%f\n", start_ind, total_curve_lenght);
     //dataType previous_total_length = linked_curve.length;
     //dataType difference_lenght = 1.0;
 
-    //Track motion of single point 
-    strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    sprintf_s(ending, sizeof(ending), "single_pt_motion.csv");
-    strcat_s(curve_path, sizeof(curve_path), ending);
-    FILE* file_single_pt;
-    if (fopen_s(&file_single_pt, curve_path, "w") != 0) {
-        printf("Enable to open");
-        return false;
-    }
-    fprintf(file_single_pt, "x,y\n");
+    ////Track motion of single point 
+    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+    //sprintf_s(ending, sizeof(ending), "single_pt_motion.csv");
+    //strcat_s(curve_path, sizeof(curve_path), ending);
+    //FILE* file_single_pt;
+    //if (fopen_s(&file_single_pt, curve_path, "w") != 0) {
+    //    printf("Enable to open");
+    //    return false;
+    //}
+    //fprintf(file_single_pt, "x,y\n");
 
     size_t it = 1;
     double motion = 0.0;
@@ -404,16 +405,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         
         //evolve curve
         evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
-
-        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-        //sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
-        //strcat_s(curve_path, sizeof(curve_path), ending);
-        //FILE* file_current_curve;
-        //if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
-        //    printf("Enable to open");
-        //    return false;
-        //}
-        //fprintf(file_current_curve, "x,y,z\n");
 
         //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
         //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", it);
@@ -435,31 +426,44 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         //}
         //fprintf(file_motion, "x,y\n");
 
-        iPoint = linked_curve.first_point;
-        for (size_t m = 0; m < linked_curve.number_of_points; m++) {
-            
-            //fprintf(file_current_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
-            //fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
-            
-            if(m == 100)
-            {
-                //This is possible because the number of point doesn't change
-                motion = sqrt((iPoint->x - previous_curve[m][0]) * (iPoint->x - previous_curve[m][0])
-                    + (iPoint->y - previous_curve[m][1]) * (iPoint->y - previous_curve[m][1])
-                    + (iPoint->z - previous_curve[m][2]) * (iPoint->z - previous_curve[m][2]));
-                //printf("motion = %lf\n", motion);
-                fprintf(file_single_pt, "%d,%lf\n", it, motion);
-            }
-            
-            //Update the previous point
-            previous_curve[m][0] = iPoint->x;
-            previous_curve[m][1] = iPoint->y;
-            previous_curve[m][2] = iPoint->z;
+        if (it % pSegmentationParams->n_save == 0) {
 
-            iPoint = iPoint->next;
+            strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
+            sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
+            strcat_s(curve_path, sizeof(curve_path), ending);
+            FILE* file_current_curve;
+            if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            fprintf(file_current_curve, "x,y,z\n");
+
+            iPoint = linked_curve.first_point;
+            for (size_t m = 0; m < linked_curve.number_of_points; m++) {
+
+                fprintf(file_current_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+                //fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
+
+                //if(m == 100)
+                //{
+                //    //This is possible because the number of point doesn't change
+                //    motion = sqrt((iPoint->x - previous_curve[m][0]) * (iPoint->x - previous_curve[m][0])
+                //        + (iPoint->y - previous_curve[m][1]) * (iPoint->y - previous_curve[m][1])
+                //        + (iPoint->z - previous_curve[m][2]) * (iPoint->z - previous_curve[m][2]));
+                //    //printf("motion = %lf\n", motion);
+                //    fprintf(file_single_pt, "%d,%lf\n", it, motion);
+                //}
+                //
+                ////Update the previous point
+                //previous_curve[m][0] = iPoint->x;
+                //previous_curve[m][1] = iPoint->y;
+                //previous_curve[m][2] = iPoint->z;
+
+                iPoint = iPoint->next;
+            }
+            fclose(file_current_curve);
         }
-        
-        //fclose(file_current_curve);
+
         //fclose(file_distance_curve);
         //fclose(file_motion);
 
@@ -472,7 +476,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
 
     } while (it < pSegmentationParams->num_time_steps);
     
-    fclose(file_single_pt);
+    //fclose(file_single_pt);
     //fclose(file_length);
 
     //printf("difference between lenght at equilibrium : %f\n", difference_lenght);
