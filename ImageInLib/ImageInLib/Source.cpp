@@ -43,6 +43,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -68,6 +69,117 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	*/
+
+	//========================= Ajust image generated around found path ==========
+
+	const size_t height = 1351;
+	const size_t length = 512, width = 512;
+	const size_t dim2D = length * width;
+
+	dataType** pImageData = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		pImageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//Load pImage
+	loading_path = inputPath + "pImage_p6.raw";
+	load3dArrayRAW<dataType>(pImageData, length, width, height, loading_path.c_str(), false);
+
+	int** labelArray = new int*[height];
+	bool** status = new bool* [height];
+	dataType** pThreshold = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		labelArray[k] = new int[dim2D] { 0 };
+		status[k] = new bool[dim2D] {false};
+		pThreshold[k] = new dataType[dim2D]{ 0 };
+	}
+	if (labelArray == NULL || status == NULL)
+		return false;
+
+	size_t kl = 0;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			pThreshold[k][i] = pImageData[k][i];
+		}
+	}
+
+	dataType thresh = 0.256;
+
+	thresholding3dFunctionN(pThreshold, length, width, height, thresh, thresh, 1.0, 0.0);
+
+	//erosion3D(pThreshold, length, width, height, 1.0, 0.0);
+
+	storing_path = outputPath + "threshold_p6.raw";
+	store3dRawData<dataType>(pThreshold, length, width, height, storing_path.c_str());
+
+	int numberOfRegionCells = countNumberOfRegionsCells(pThreshold, length, width, height, 1.0);
+
+	labelling3D(pThreshold, labelArray, status, length, width, height, 1.0);
+
+	//Counting
+	int* countingArray = new int[numberOfRegionCells] {0};
+	if (countingArray == NULL)
+		return false;
+
+	//Get regions sizes
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (labelArray[k][i] > 0) {
+				countingArray[labelArray[k][i]]++;
+			}
+		}
+	}
+
+	//Number of regions
+	int numberOfRegions = 0;
+	for (i = 0; i < numberOfRegionCells; i++) {
+		if (countingArray[i] > 0) {
+			numberOfRegions++;
+		}
+	}
+	//cout << numberOfRegions << " regions found" << endl;
+
+	//Find the biggest region
+	size_t regionSize = 0;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (countingArray[labelArray[k][i]] > regionSize) {
+				regionSize = countingArray[labelArray[k][i]];
+			}
+		}
+	}
+
+	//Keep and save the biggest region
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (countingArray[labelArray[k][i]] == regionSize) {
+				pThreshold[k][i] = 1.0;
+			}
+			else {
+				pThreshold[k][i] = 0.0;
+			}
+		}
+	}
+
+	storing_path = outputPath + "segmented_aorta_p6.raw";
+	store3dRawData<dataType>(pThreshold, length, width, height, storing_path.c_str());
+
+	delete[] countingArray;
+	for (k = 0; k < height; k++) {
+		delete[] labelArray[k];
+		delete[] status[k];
+		delete[] pThreshold[k];
+	}
+	delete[] labelArray;
+	delete[] status;
+	delete[] pThreshold;
+
+	for (k = 0; k < height; k++) {
+		delete[] pImageData[k];
+	}
+	delete[] pImageData;
+	
 
 	//========================= Translate as path ================================
 
@@ -1076,6 +1188,7 @@ int main() {
 
 	//======================== Path finding Multiple seeds =======================================
 	
+	/*
 	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
 	//const size_t height = 1351; // P6
@@ -1538,7 +1651,8 @@ int main() {
 	delete[] actionField;
 	delete[] liverData;
 	delete[] imageData;
-	
+	*/
+
 	//======================== 2D Hough transform on Slice ===========================
 	
 	/*
@@ -2341,7 +2455,7 @@ int main() {
 	
 	//======================== Free Memory ======================================
 
-	free(ctContainer);
+	//free(ctContainer);
 	
 	return EXIT_SUCCESS;
 }
