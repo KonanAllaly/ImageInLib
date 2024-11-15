@@ -723,7 +723,7 @@ dataType getReferenceIntensity(Image_Data2D pimage, Point2D point1, double radiu
 	return meanIntensity;
 }
 
-bool getGradient3D(dataType** pbase_data, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad)
+bool getGradient3D(dataType** pbase_data, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad)
 {
 	if (pbase_data == NULL || width < 2 || length < 2 || height < 2 ||
 		fVolume.hx == 0 || fVolume.hy == 0 || fVolume.hz == 0) {
@@ -731,14 +731,14 @@ bool getGradient3D(dataType** pbase_data, const size_t width, const size_t lengt
 	}
 
 	size_t x = ind_x, y = ind_y, z = ind_z;
-	if (x >= width)
+	if (x >= length)
 	{
-		x = width - 1;
+		x = length - 1;
 	}
 
-	if (y >= length)
+	if (y >= width)
 	{
-		y = length - 1;
+		y = width - 1;
 	}
 
 	if (z >= height)
@@ -753,31 +753,31 @@ bool getGradient3D(dataType** pbase_data, const size_t width, const size_t lengt
 
 	if (x == 0)
 	{
-		dx = (pbase_data[z][x_new(x + 1, y, width)] - pbase_data[z][x_new(x, y, width)]) / fVolume.hx;
+		dx = (pbase_data[z][x_new(x + 1, y, length)] - pbase_data[z][x_new(x, y, length)]) / fVolume.hx;
 	}
-	else if (x == width - 1)
+	else if (x == length - 1)
 	{
-		dx = (pbase_data[z][x_new(x, y, width)] - pbase_data[z][x_new(x - 1, y, width)]) / fVolume.hx;
+		dx = (pbase_data[z][x_new(x, y, length)] - pbase_data[z][x_new(x - 1, y, length)]) / fVolume.hx;
 	}
 	else
 	{
-		dx = (pbase_data[z][x_new(x + 1, y, width)] - pbase_data[z][x_new(x - 1, y, width)]) / hx_c;
+		dx = (pbase_data[z][x_new(x + 1, y, length)] - pbase_data[z][x_new(x - 1, y, length)]) / hx_c;
 	}
 
 	if (y == 0)
 	{
-		dy = (pbase_data[z][x_new(x, y + 1, width)] - pbase_data[z][x_new(x, y, width)]) / fVolume.hy;
+		dy = (pbase_data[z][x_new(x, y + 1, length)] - pbase_data[z][x_new(x, y, length)]) / fVolume.hy;
 	}
-	else if (y == length - 1)
+	else if (y == width - 1)
 	{
-		dy = (pbase_data[z][x_new(x, y, width)] - pbase_data[z][x_new(x, y - 1, width)]) / fVolume.hy;
+		dy = (pbase_data[z][x_new(x, y, length)] - pbase_data[z][x_new(x, y - 1, length)]) / fVolume.hy;
 	}
 	else
 	{
-		dy = (pbase_data[z][x_new(x, y + 1, width)] - pbase_data[z][x_new(x, y - 1, width)]) / hy_c;
+		dy = (pbase_data[z][x_new(x, y + 1, length)] - pbase_data[z][x_new(x, y - 1, length)]) / hy_c;
 	}
 
-	size_t xd = x_new(x, y, width);
+	size_t xd = x_new(x, y, length);
 	if (z == 0)
 	{
 		dz = (pbase_data[z + 1][xd] - pbase_data[z][xd]) / fVolume.hz;
