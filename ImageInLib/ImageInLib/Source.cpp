@@ -55,7 +55,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient7_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -1078,8 +1078,9 @@ int main() {
 	
 	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
-	const size_t height = 1351; // P6
+	//const size_t height = 1351; // P6
 	//const size_t height = 1083; // P3
+	const size_t height = 932; // P7
 
 	dataType** potential = new dataType * [height];
 	dataType** actionField = new dataType * [height];
@@ -1095,7 +1096,7 @@ int main() {
 		return false;
 	
 	//Load segmented liver
-	loading_path = inputPath + "raw/interpolated/filtered_p6.raw";
+	loading_path = inputPath + "raw/interpolated/filtered_p7.raw";
 	load3dArrayRAW<dataType>(imageData, Length, Width, height, loading_path.c_str(), false);
 
 	//VoxelSpacing intSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[0] };
@@ -1336,13 +1337,21 @@ int main() {
 	//Point3D seed1 = { 263, 255, 340 };
 	//Point3D seed2 = { 263, 255, 360 };
 	
-	Point3D seed1 = { 264, 244, 718 };
-	Point3D seed2 = { 281, 291, 977 };
-	Point3D seed3 = { 274, 239, 1024 };
-	Point3D seed4 = { 240, 222, 977 };
+	////P6
+	//Point3D seed1 = { 264, 244, 718 };
+	//Point3D seed2 = { 281, 291, 977 };
+	//Point3D seed3 = { 274, 239, 1024 };
+	//Point3D seed4 = { 240, 222, 977 };
+
+	//P7
+	Point3D seed1 = { 250, 299, 400 };
+	Point3D seed2 = { 277, 355, 672 };
+	Point3D seed3 = { 276, 320, 740 };
+	Point3D seed4 = { 262, 288, 672 };
+
 	compute3DPotential(CT, potential, seed1, radius, parameters);
 
-	storing_path = outputPath + "potential_p6.raw";
+	storing_path = outputPath + "potential_p7.raw";
 	//load3dArrayRAW<dataType>(potential, Length, Width, height, storing_path.c_str(), false);
 	store3dRawData<dataType>(potential, Length, Width, height, storing_path.c_str());
 
@@ -1398,7 +1407,7 @@ int main() {
 	//partialFrontPropagation(action_field, potential, Length, Width, height, path7);
 	//shortestPath3D(action_field, Length, Width, height, intSpacing, path7, path_points7);
 
-	string saving_real = outputPath + "path_points_p6.csv";
+	string saving_real = outputPath + "path_points_p7.csv";
 	FILE* file_real;
 	if (fopen_s(&file_real, saving_real.c_str(), "w") != 0) {
 		printf("Enable to open");
