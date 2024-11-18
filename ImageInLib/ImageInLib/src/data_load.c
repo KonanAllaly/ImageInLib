@@ -317,7 +317,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		return false;
 	}
 
-	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/image_coord_p6.csv";
+	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Presentation Jasna/image_coord_p2.csv";
 	FILE* file_save;
 	if (fopen_s(&file_save, distance_to_next, "w") != 0) {
 		printf("Enable to open");
@@ -341,7 +341,6 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		fscanf_s(file, "%f", &pCurve->pPoints[i].z);
 		fscanf_s(file, "\n");
 
-		
 		Point3D current_point = { pCurve->pPoints[i].x , pCurve->pPoints[i].y , pCurve->pPoints[i].z };
 		
 		//Get image coordinate
