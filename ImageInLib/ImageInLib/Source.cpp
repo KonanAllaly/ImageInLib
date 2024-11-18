@@ -89,10 +89,10 @@ int main() {
 	load3dArrayRAW<dataType>(pImageData, length, width, height, loading_path.c_str(), false);
 
 	//generate gFunction
-	dataType gK2 = 10.0, refIntensity = 1041.0;
+	dataType gK2 = 1000000.0, refIntensity = 1041.0;
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			gImageData[k][i] = 1.0 / (1.0 + pow(pImageData[k][i] - refIntensity, 2));
+			gImageData[k][i] = 1.0 / (1.0 + gK2 * pow(pImageData[k][i] - refIntensity, 2));
 		}
 	}
 	storing_path = outputPath + "gImage.raw";
