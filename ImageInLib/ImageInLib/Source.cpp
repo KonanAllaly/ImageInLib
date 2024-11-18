@@ -56,7 +56,7 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient7_ct.vtk";
+	loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -83,7 +83,7 @@ int main() {
 	}
 
 	//Load pImage
-	loading_path = inputPath + "pImage_p6.raw";
+	loading_path = inputPath + "raw/interpolated/filtered_p6.raw";
 	load3dArrayRAW<dataType>(pImageData, length, width, height, loading_path.c_str(), false);
 
 	int** labelArray = new int*[height];
@@ -99,20 +99,27 @@ int main() {
 
 	size_t kl = 0;
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			pThreshold[k][i] = pImageData[k][i];
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				if (pImageData[k][xd] > 0.27 || i < 230) {
+					pThreshold[k][xd] = 0.0;
+				}
+				else {
+					pThreshold[k][xd] = pImageData[k][xd];
+				}
+			}
 		}
 	}
 
-	dataType thresh = 0.256;
-
-	thresholding3dFunctionN(pThreshold, length, width, height, thresh, thresh, 1.0, 0.0);
-
+	//dataType thresh = 0.257;
+	//thresholding3dFunctionN(pThreshold, length, width, height, thresh, thresh, 1.0, 0.0);
 	//erosion3D(pThreshold, length, width, height, 1.0, 0.0);
 
-	storing_path = outputPath + "threshold_p6.raw";
+	storing_path = outputPath + "remove_bone.raw";
 	store3dRawData<dataType>(pThreshold, length, width, height, storing_path.c_str());
 
+	/*
 	int numberOfRegionCells = countNumberOfRegionsCells(pThreshold, length, width, height, 1.0);
 
 	labelling3D(pThreshold, labelArray, status, length, width, height, 1.0);
@@ -161,11 +168,12 @@ int main() {
 			}
 		}
 	}
+	*/
 
-	storing_path = outputPath + "segmented_aorta_p6.raw";
-	store3dRawData<dataType>(pThreshold, length, width, height, storing_path.c_str());
+	//storing_path = outputPath + "segmented_aorta_p6N.raw";
+	//store3dRawData<dataType>(pThreshold, length, width, height, storing_path.c_str());
 
-	delete[] countingArray;
+	//delete[] countingArray;
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
 		delete[] status[k];
