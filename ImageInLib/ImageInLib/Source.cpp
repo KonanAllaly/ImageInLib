@@ -56,7 +56,8 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
+	//loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/aorta/Aorta_p6_new.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -70,6 +71,58 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
 	
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	const size_t height = 1351;//866;
+	dataType** interpolate = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		interpolate[k] = new dataType[dim2D]{ 0 };
+	}
+
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			imageData[k][i] = ctContainer->dataPointer[k][i];
+		}
+	}
+
+	Image_Data ct{
+		Height,
+		Length,
+		Width,
+		imageData,
+		ctOrigin,
+		ctSpacing,
+		orientation
+	};
+
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data interpol{
+		height,
+		Length,
+		Width,
+		interpolate,
+		ctOrigin,
+		intSpacing,
+		orientation
+	};
+
+	imageInterpolation3D(ct, interpol, NEAREST_NEIGHBOR);
+
+	storing_path = outputPath + "aorta_p6_new.raw";
+	store3dRawData<dataType>(interpolate, Length, Width, height, storing_path.c_str());
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+	}
+	delete[] imageData;
+
+	for (k = 0; k < height; k++) {
+		delete[] interpolate[k];
+	}
+	delete[] interpolate;
 
 	//========================= Ajust image generated around found path ==========
 
@@ -1201,7 +1254,7 @@ int main() {
 
 	//======================== Path finding Multiple seeds =======================================
 	
-	
+	/*
 	//const size_t height = 866; // P2
 	//const size_t height = 844; // P4
 	const size_t height = 1351; // P6
@@ -1361,7 +1414,7 @@ int main() {
 	delete[] actionField;
 	delete[] liverData;
 	delete[] imageData;
-	
+	*/
 
 	//======================== 2D Hough transform on Slice ===========================
 	
