@@ -56,8 +56,8 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	
-	//loading_path = inputPath + "vtk/ct/Patient6_ct.vtk";
-	loading_path = inputPath + "vtk/aorta/Aorta_p6_new.vtk";
+	loading_path = inputPath + "vtk/ct/Patient3_ct.vtk";
+	//loading_path = inputPath + "vtk/aorta/Aorta_p6_new.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -69,8 +69,11 @@ int main() {
 	std::cout << "CT origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << std::endl;
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
-	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
+
+	VoxelSpacing intSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[0] };
 	
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -123,6 +126,7 @@ int main() {
 		delete[] interpolate[k];
 	}
 	delete[] interpolate;
+	*/
 
 	//========================= Ajust image generated around found path ==========
 
@@ -248,32 +252,58 @@ int main() {
 	*/
 
 	//========================= Translate as path ================================
-
+	
 	/*
-	Vtk_File_Info* afterTreatment = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	afterTreatment->operation = copyFrom;
+	Image_Data beforeTreatment = {
+		ctContainer->dimensions[2],
+		ctContainer->dimensions[0],
+		ctContainer->dimensions[1],
+		ctContainer->dataPointer,
+		beforeOrigin,
+		beforeSpacing,
+		orientation
+	};
+	
+	Vtk_File_Info* afterTreatmentContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
+	afterTreatmentContainer->operation = copyFrom;
 
 	loading_path = inputPath + "vtk/ct/Patient3_ct.vtk";
-	readVtkFile(loading_path.c_str(), afterTreatment);
-	Point3D ctOrigin = { afterTreatment->origin[0], afterTreatment->origin[1], afterTreatment->origin[2] };
-	VoxelSpacing ctSpacing = { afterTreatment->spacing[0], afterTreatment->spacing[1], afterTreatment->spacing[0] };
+	readVtkFile(loading_path.c_str(), afterTreatmentContainer);
+	Point3D afterOrigin = { afterTreatmentContainer->origin[0], afterTreatmentContainer->origin[1], afterTreatmentContainer->origin[2] };
+	VoxelSpacing afterSpacing = { afterTreatmentContainer->spacing[0], afterTreatmentContainer->spacing[1], afterTreatmentContainer->spacing[0] };
 
-	Point3D seedP2 = { 5.169647, 71.255859, -656.131958 };
-	Point3D seedP3 = { 257, 255, 522 };
-	seedP3 = getRealCoordFromImageCoord3D(seedP3, ctOrigin, ctSpacing, orientation);
+	Image_Data afterTreatment = {
+		afterTreatmentContainer->dimensions[2],
+		afterTreatmentContainer->dimensions[0],
+		afterTreatmentContainer->dimensions[1],
+		afterTreatmentContainer->dataPointer,
+		afterOrigin,
+		afterSpacing,
+		orientation
+	};
+
+	//Point3D seedP2 = { 5.169647, 71.255859, -656.131958 };//path_ordered_p2.csv
+	//Point3D seedP3 = { 257, 255, 522 };
+
+	//Point3D seedP2 = { 5.233856, 71.174133, -660.895447 };//first point of path_points_p2.csv, conference Jasna
+	Point3D seedP2 = { 260.466217, 257.001923, 308.569214 };//first point of final_points_p2.csv, conference Jasna
+	//seedP2 = getRealCoordFromImageCoord3D(seedP2, beforeOrigin, beforeSpacing, orientation);
+	Point3D seedP3 = { 257, 255, 522 }; //chosen manually inside patient 3 aorta 
+	//seedP3 = getRealCoordFromImageCoord3D(seedP3, afterOrigin, afterSpacing, orientation); // get correponding point for patient 3
 
 	Point3D translate = { seedP3.x - seedP2.x, seedP3.y - seedP2.y, seedP3.z - seedP2.z };
 
 	//Load path point
 	FILE* path_file;
-	loading_path = inputPath + "inputsForPhDStudentConference/path_ordered_p2.csv";
+	//loading_path = inputPath + "inputsForPhDStudentConference/path_ordered_p2.csv";
+	loading_path = "C:/Users/Konan Allaly/Documents/Presentation Jasna/final_path_p2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 
 	FILE* translated_path;
-	loading_path = inputPath + "inputsForPhDStudentConference/translated.csv";
+	loading_path = "C:/Users/Konan Allaly/Documents/Presentation Jasna/final_translated_p2.csv";
 	if (fopen_s(&translated_path, loading_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -304,7 +334,7 @@ int main() {
 	}
 	fclose(path_file);
 	fclose(translated_path);
-	free(afterTreatment);
+	free(afterTreatmentContainer);
 	*/
 
 	//========================= Test function histogram =========================
@@ -496,7 +526,7 @@ int main() {
 
 	//======================== Automatic quantitative analysis ==================
 
-	/*
+	
 	// Load PET
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
@@ -532,11 +562,11 @@ int main() {
 	Point3D center_liver_real_coord = getRealCoordFromImageCoord3D(center_liver_img_coord, ctOrigin, ctSpacing, orientation);
 	double radius_cetroid_liver = 20;
 	
-	//Draw ball inside the liver
-	dataType** ball = new dataType*[Height];
-	for (k = 0; k < Height; k++) {
-		ball[k] = new dataType[dim2D]{0};
-	}
+	////Draw ball inside the liver
+	//dataType** ball = new dataType*[Height];
+	//for (k = 0; k < Height; k++) {
+	//	ball[k] = new dataType[dim2D]{0};
+	//}
 
 	//for (k = 0; k < Height; k++) {
 	//	for (i = 0; i < Length; i++) {
@@ -554,11 +584,12 @@ int main() {
 	//store3dRawData<dataType>(ball, Length, Width, Height, storing_path.c_str());
 
 	//Get the SUV mean around the liver centroid
+	BoundingBox3D box_liver = findBoundingBox3D(center_liver_img_coord, Length, Width, Height, radius_cetroid_liver, 2 * radius_cetroid_liver);
 	dataType mean_liver = 1.0, sum_val = 0;
 	int count_point = 0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
+	for (k = box_liver.k_min; k <= box_liver.k_max; k++) {
+		for (i = box_liver.i_min; i <= box_liver.i_max; i++) {
+			for (j = box_liver.j_min; j <= box_liver.j_max; j++) {
 				Point3D current_point = { i, j, k };
 				current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
 				double d = getPoint3DDistance(center_liver_real_coord, current_point);
@@ -582,8 +613,11 @@ int main() {
 	
 	// Load the path points
 	FILE* path_file;
-	//loading_path = inputPath + "inputsForPhDStudentConference/path_ordered_p2.csv";
-	loading_path = inputPath + "inputsForPhDStudentConference/translated.csv";
+	////loading_path = inputPath + "inputsForPhDStudentConference/path_ordered_p2.csv";
+	////loading_path = inputPath + "inputsForPhDStudentConference/translated.csv";
+	//loading_path = "C:/Users/Konan Allaly/Documents/Presentation Jasna/path_points_p2.csv";
+	//loading_path = "C:/Users/Konan Allaly/Documents/Presentation Jasna/final_path_p2.csv";
+	loading_path = "C:/Users/Konan Allaly/Documents/Presentation Jasna/final_translated_p2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -598,13 +632,25 @@ int main() {
 		fscanf_s(path_file, ",");
 		fscanf_s(path_file, "%f", &z);
 		fscanf_s(path_file, "\n");
+
+		//Saved without the spacing
+		//TODO: Export the path considering the spacing or save in real world coordinates 
+		//x *= ctSpacing.sx;
+		//y *= ctSpacing.sy;
+		//z *= ctSpacing.sz;
 		Point3D current_point = { x, y, z };
+
+		//update point dimension
+		current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, intSpacing, orientation);
+		
 		path_points.push_back(current_point);
 	}
 	fclose(path_file);
 
 	//File for the ratio max
-	string saving_csv = outputPath + "ratio_max_35_after.csv";
+	double search_radius = 25;
+	//string saving_csv = outputPath + "ratio_max_5_before.csv";
+	string saving_csv = outputPath + "ratio_max_25_after.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -613,7 +659,8 @@ int main() {
 	fprintf(file, "x,y\n");
 
 	//File for the ratio mean
-	saving_csv = outputPath + "ratio_mean_35_after.csv";
+	//saving_csv = outputPath + "ratio_mean_5_before.csv";
+	saving_csv = outputPath + "ratio_mean_25_after.csv";
 	FILE* rmean;
 	if (fopen_s(&rmean, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -625,8 +672,13 @@ int main() {
 	for (k = 0; k < Height; k++) {
 		shape_aorta_ct[k] = new dataType[dim2D]{ 0 };
 	}
-	
-	double search_radius = 35;
+
+	//Aorta Shape pet
+	dataType** shape_aorta_pet = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		shape_aorta_pet[k] = new dataType[dim2d]{ 0 };
+	}
+
 	BoundingBox3D box_path_point;
 	size_t n = 0;
 	dataType maxSuv = 0.0, sumSuv = 0.0, meanSuv = 0.0;
@@ -635,9 +687,12 @@ int main() {
 	
 	//vector<Point3D> points_max_list;
 
+	Point3D point_ct;
+	size_t i_pet, j_pet, k_pet, xd_pet;
 	for (n = 0; n < path_points.size(); n++) {
-		Point3D point_ct = getImageCoordFromRealCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
+		point_ct = getImageCoordFromRealCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
 		box_path_point = findBoundingBox3D(point_ct, Length, Width, Height, search_radius, 2 * ctSpacing.sx);
+		point_ct = getRealCoordFromImageCoord3D(point_ct, ctOrigin, ctSpacing, orientation);
 		maxSuv = 0.0;
 		sumSuv = 0.0;
 		ratio_max_aorta_mean_liver = 0.0;
@@ -648,11 +703,16 @@ int main() {
 				for (j = box_path_point.j_min; j <= box_path_point.j_max; j++) {
 					Point3D current_point = { i, j, k };
 					current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
-					double dist = getPoint3DDistance(current_point, path_points[n]);
+					double dist = getPoint3DDistance(current_point, point_ct);
 					if (dist <= search_radius) {
-						shape_aorta_ct[k][x_new(i, j, Length)] = 1.0;
+						shape_aorta_ct[k][x_new(i, j, Length)] = 1.0; // save an visualize the shape in CT
 						Point3D point_pet = getImageCoordFromRealCoord3D(current_point, petOrigin, petSpacing, orientation);
-						dataType val_pet = petContainer->dataPointer[(size_t)point_pet.z][x_new((size_t)point_pet.x, (size_t)point_pet.y, length)];
+						i_pet = (size_t)point_pet.x;
+						j_pet = (size_t)point_pet.y;
+						k_pet = (size_t)point_pet.z;
+						xd_pet = x_new(i_pet, j_pet, length);
+						dataType val_pet = petContainer->dataPointer[k_pet][xd_pet];
+						shape_aorta_pet[k_pet][xd_pet] = 1.0; // save an visualize the shape in PET
 						sumSuv += val_pet;
 						count_point++;
 						if (maxSuv < val_pet) {
@@ -676,15 +736,16 @@ int main() {
 		fprintf(file, "%d,%f\n", n, ratio_max_aorta_mean_liver);
 		fprintf(rmean, "%d,%f\n", n, ratio_mean_aorta_mean_liver);
 
-		
 		//fprintf(rmean, "%d,%f\n", n, meanSuv);
-
 		//dataType vis = 1.0;
 		//fprintf(visual, "%d,%f\n", n, vis);
 	}
 
-	storing_path = outputPath + "shape_aorta_35_p3.raw";
+	storing_path = outputPath + "shape_aorta_25_ct_p3.raw";
 	store3dRawData<dataType>(shape_aorta_ct, Length, Width, Height, storing_path.c_str());
+
+	storing_path = outputPath + "shape_aorta_25_pet_p3.raw";
+	store3dRawData<dataType>(shape_aorta_pet, length, width, height, storing_path.c_str());
 
 	fclose(file);
 	fclose(rmean);
@@ -711,27 +772,24 @@ int main() {
 	//	}
 	//}
 	//fclose(file_ratio);
-
-	//storing_path = outputPath + "shape_aorta_p2.raw";
-	//store3dRawData<dataType>(shape_aorta_pet, length, width, height, storing_path.c_str());
 	
-	//for (k = 0; k < height; k++) {
-	//	delete[] shape_aorta_pet[k];
-	//}
-	//delete[] shape_aorta_pet;
+	for (k = 0; k < height; k++) {
+		delete[] shape_aorta_pet[k];
+	}
+	delete[] shape_aorta_pet;
 
 	delete[] centroid;
 	for (k = 0; k < Height; k++) {
 		delete[] liverShape[k];
-		delete[] ball[k];
+		//delete[] ball[k];
 		delete[] shape_aorta_ct[k];
 	}
 	delete[] liverShape;
-	delete[] ball;
+	//delete[] ball;
 	delete[] shape_aorta_ct;
 
 	free(petContainer);
-	*/
+	
 
 	//======================== Filtering =======================
 

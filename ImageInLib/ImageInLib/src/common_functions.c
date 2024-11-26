@@ -391,7 +391,7 @@ BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t
 BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset) {
 
 	if (point.x < 0 || point.y < 0 || point.z < 0) {
-		printf("The coodinates of current point should be in image coordinates");
+		printf("The coodinates of current point should be in image coordinates\n");
 		return (BoundingBox3D) { 0, 0, 0, 0, 0, 0 };
 	}
 
