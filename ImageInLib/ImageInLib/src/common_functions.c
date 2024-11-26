@@ -1032,6 +1032,8 @@ LinkedPoint3D* create3dLinkedPoint(const double point_x, const double point_y, c
 	linked_point->next = NULL;
 	linked_point->previous = NULL;
 	linked_point->distance_to_next = 0;
+	//Extention to observe the average distance to the next after evolution
+	linked_point->average_distance_to_next = 0;
 	linked_point->id = getNextID();
 	return linked_point;
 }

@@ -487,6 +487,7 @@ extern "C" {
 		double nvx; 
 		double nvy;
 		double nvz;
+		double average_distance_to_next; //use to observe the average distance after evolution
 	} LinkedPoint3D;
 
 	typedef struct LinkedCurve3D
