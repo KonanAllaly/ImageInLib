@@ -3,16 +3,16 @@
 #include <climits>
 #include <crtdbg.h>
 #include <corecrt_malloc.h>
-#include<cmath>
+#include <cmath>
 #include <omp.h>
-#include<vector>
-#include<tuple>
+#include <vector>
+#include <tuple>
 #include "distanceForPathFinding.h"
-#include<template_functions.h>
-#include"filtering.h"
-#include"../src/heat_equation.h"
-#include"hough_transform.h"
-#include"../src/distance_function.h"
+#include <template_functions.h>
+#include "filtering.h"
+#include "../src/heat_equation.h"
+#include "hough_transform.h"
+#include "../src/distance_function.h"
 
 #define BIG_VALUE INFINITY
 
@@ -55,6 +55,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType W) {
 }
 
 dataType selectX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j) {
+	
 	// this function return the minimum in the upwind principle
 	// x--->j and y--->i
 	dataType i_minus, i_plus;
@@ -77,6 +78,7 @@ dataType selectX(dataType* actionPtr, const size_t height, const size_t width, c
 }
 
 dataType selectY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j) {
+	
 	// this function return the minimum in the upwind principle
 	// x--->j and y--->i
 	dataType j_minus, j_plus;
@@ -247,7 +249,10 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
 
 	//STEP 1
-	//In labelAray we have : 1 ---> already processed, 2 ---> in process and 3 ---> not processed
+	//In labelAray we have : 
+	//1 ---> already processed, 
+	//2 ---> in process and 
+	//3 ---> not processed
 	for (k = 0; k < dim2D; k++) {
 		distancePtr[k] = INFINITY;
 		labelArray[k] = 3;
@@ -675,14 +680,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path2D.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
 	size_t i, j, dim2D = height * width, maxIter = 10000;
 	dataType tau = 0.8, dist_min = 0.0, tol = 1.0;
 
@@ -705,7 +702,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	i = (size_t)seedPoints[1].x; 
 	j = (size_t)seedPoints[1].y;
 	size_t currentIndex = x_new(i, j, height);
-	//resultedPath[currentIndex] = 1.0;
 
 	dataType iNew = seedPoints[1].x, jNew = seedPoints[1].y;
 	
@@ -713,13 +709,11 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	BoundingBox2D box = { 0, 0, 0, 0 };
 	size_t n, m;
 
-	fprintf(file, "x,y\n");
-
 	do{
 
 		iNew = iNew - tau * gradientVectorX[currentIndex];
 		jNew = jNew - tau * gradientVectorY[currentIndex];
-		fprintf(file, "%f,%f\n", iNew, jNew);
+		
 		Point2D current_point = { iNew, jNew };
 		dist_min = getPoint2DDistance(current_point, seedPoints[0]);
 
@@ -731,9 +725,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	}
 	while(dist_min > tol && count_iter < maxIter);
 
-	fclose(file);
-
-	//delete[] radiusArray;
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
 
