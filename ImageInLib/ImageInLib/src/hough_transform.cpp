@@ -84,6 +84,7 @@ Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houg
 
 	//thresholding of the edge detector
 	thresholding2DFunction(maskThreshold, length, width, params.thres, params.thres);
+	manageRAWFile2D<dataType>(maskThreshold, length, width, savingPath.c_str(), STORE_DATA, false);
 
 	/*
 	//==================
