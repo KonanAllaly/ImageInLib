@@ -27,6 +27,7 @@
     <ClCompile Include="src\distanceMaps.c" />
     <ClCompile Include="src\edge_detection_function.c" />
     <ClCompile Include="src\endianity_bl.c" />
+    <ClCompile Include="src\enhancement.c" />
     <ClCompile Include="src\explicit_regularized_pm_equation.c" />
     <ClCompile Include="src\fast_marching.c" />
     <ClCompile Include="src\fast_sweeping_method.c" />
@@ -77,6 +78,7 @@
     <ClInclude Include="include\common_vtk.h" />
     <ClInclude Include="include\cropping.h" />
     <ClInclude Include="include\distanceMaps.h" />
+    <ClInclude Include="include\enhancement.h" />
     <ClInclude Include="include\file.h" />
     <ClInclude Include="include\filtering.h" />
     <ClInclude Include="include\hough_transform.h" />

@@ -338,6 +338,9 @@
     <ClCompile Include="src\cropping.c">
       <Filter>Source Files\Cropping</Filter>
     </ClCompile>
+    <ClCompile Include="src\enhancement.c">
+      <Filter>Source Files\Filtering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -504,6 +507,9 @@
     </ClInclude>
     <ClInclude Include="include\cropping.h">
       <Filter>Header Files\Cropping</Filter>
+    </ClInclude>
+    <ClInclude Include="include\enhancement.h">
+      <Filter>Header Files\Filtering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
