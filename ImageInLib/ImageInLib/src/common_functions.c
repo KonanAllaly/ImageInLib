@@ -491,7 +491,6 @@ void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dat
 	}
 }
 //==============================================================================
-
 bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad)
 {
 	
@@ -551,9 +550,7 @@ bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t leng
 	
 	return true;
 }
-
 //==============================================================================
-
 bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume, Point3D* grad)
 {
 
