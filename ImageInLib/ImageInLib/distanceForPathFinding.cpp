@@ -1365,14 +1365,16 @@ bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, c
 	return true;
 }
 
-bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters) {
+bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D seedPoint, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL || potential == NULL) {
 		return false;
 	}
 		
 	size_t i = 0, k = 0;
-	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+	const size_t height = ctImageData.height;
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
 
 	dataType** gradientVectorX = new dataType * [height];
@@ -1427,7 +1429,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	seedStats = getStats(ctImageData, initial_point, radius);
+	seedStats = getStats(ctImageData, initial_point, parameters.radius);
 	dataType seedValCT = seedStats.mean_data;
 
 	//Computation of potential function
@@ -1566,247 +1568,238 @@ bool shortestPath3D(dataType** distanceFuncPtr, const size_t length, const size_
 	return true;
 }
 
-/*
-bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataType** meanImagePtr, dataType** resultedPath, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium) {
+bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium) {
 
-	if (ctImageData.imageDataPtr == NULL || meanImagePtr == NULL || resultedPath == NULL || seedPoints == NULL)
+	if (ctImageData.imageDataPtr == NULL || seedPoints == NULL)
 		return false;
 
 	size_t k = 0, i = 0, j = 0, x = 0;
-	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+
+	const size_t height = ctImageData.height;
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
+
 	double offset = 5.0;
 	BoundingBox2D box = { 0, 0, 0, 0 };
 
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension, slice_number;
 
-	saving_name = path_name + "path_points_test.csv";
+	saving_name = path_name + "path_points.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 
-	std::cout << "Initial point : (" << seedPoints[0].x << ", " << seedPoints[0].y << " , " << seedPoints[0].z << ")" << std::endl;
-
 	dataType** actionPtr = new dataType * [height];
-	dataType** newActionPtr = new dataType * [height];
-	dataType** maskDistance = new dataType * [height];
+	dataType** maskAction = new dataType * [height];
 	dataType** potentialPtr = new dataType * [height];
-	dataType** centeredPath = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		actionPtr[k] = new dataType[dim2D]{ 0 };
-		newActionPtr[k] = new dataType[dim2D]{ 0 };
-		maskDistance[k] = new dataType[dim2D]{ 0 };
+		maskAction[k] = new dataType[dim2D]{ 0 };
 		potentialPtr[k] = new dataType[dim2D]{ 0 };
-		centeredPath[k] = new dataType[dim2D]{ 0 };
 	}
-	if (actionPtr == NULL || newActionPtr == NULL || maskDistance == NULL || potentialPtr == NULL || centeredPath == NULL)
+	if (actionPtr == NULL || maskAction == NULL || potentialPtr == NULL)
 		return false;
 
-	Point3D* seeds = new Point3D[2]; // dynamic array needed for path finding.
-	seeds[0] = seedPoints[0];
-	Point3D initial_point = seedPoints[0];
-	Point3D temporary_point = { 0.0, 0.0, 0.0 };
-	Point3D current_point = { 0.0, 0.0, 0.0 };
-	Point3D real_world = { 0.0, 0.0, 0.0 };
+	//compute3DPotential(ctImageData, potentialPtr, seedPoints[0], parameters);
+	saving_name = path_name + "potential.raw";
+	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
-	double step = 50.0, dist = 0.0;
-	dataType min_distance = BIG_VALUE, value_temp = 0.0, h = 1.0;
+	const double step = 70.0;
 
 	//================ find next point inside the aorta ============
-	
-	double radius_to_find_mean = 3.0;
-	compute3DPotential(ctImageData, potentialPtr, seedPoints[0], radius_to_find_mean, parameters);
-	
-	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/potential.raw";
-	//load3dArrayRAW<dataType>(potentialPtr, length, width, height, saving_name.c_str(), false);
-	//saving_name = path_name + "potential.raw";
-	//store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
-	//saving_name = "C:/Users/Konan Allaly/Documents/Tests/input/action_field.raw";
-	//load3dArrayRAW<dataType>(actionPtr, length, width, height, saving_name.c_str(), false);
-	
-	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point);
-	
-	//saving_name = path_name + "action_field_initial.raw";
-	//store3dRawData<dataType>(actionPtr, length, width, height, saving_name.c_str());
-	
-	//get real world coordinate of the initial point
-	real_world = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 
-	int count_step = 1;
-	min_distance = BIG_VALUE;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				x = x_new(i, j, length);
-				current_point.x = (dataType)i;
-				current_point.y = (dataType)j;
-				current_point.z = (dataType)k;
-				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-				dist = getPoint3DDistance(real_world, current_point);
-				//dist = getPoint3DDistance(initial_point, current_point);
-				if (dist >= (step - 0.01) && dist <= (step + 0.01)) {
-					if (actionPtr[k][x] < min_distance) {
-						min_distance = actionPtr[k][x];
-						temporary_point.x = (dataType)i;
-						temporary_point.y = (dataType)j;
-						temporary_point.z = (dataType)k;
-						value_temp = actionPtr[k][x];
-					}
-				}
-			}
-		}
-	}
-	count_step++;
-	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
+	Point3D* seeds = new Point3D[2];
+	seeds[0] = seedPoints[0];
+
+	//During the first propagation the mask is empty
+	partialPropagation(actionPtr, potentialPtr, maskAction, length, width, height, seeds, step);
+	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point_img_coord);
+
+	saving_name = path_name + "action_initial.raw";
+	manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
 
 	//vector for path points
 	vector<Point3D> path_points;
 
-	//path between initial point and second point
-	seeds[1] = temporary_point;
-	shortestPath3D(actionPtr, resultedPath, length, width, height, h, seeds, path_points);
+	//path between initial point and second point (found point)
+	shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
 
 	//write path points coordinates to file
-	int i_n = 0, k_n = 0, k_center = 0;
+	int n = 0;
 	Point3D point_file = { 0.0, 0.0, 0.0 };
-	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	for (n = path_points.size() - 1; n > -1; n--) {
+		point_file = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
 	}
 
-	exit(0);
-	
-	//saving_name = path_name + "path.raw";
-	//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
-	
+	////empty the vector contaning path points
+	//while (path_points.size() > 0) {
+	//	path_points.pop_back();
+	//}
+
+	fclose(file);
+
+	/*
+	//Update the mask
+	copyDataToAnotherArray(actionPtr, maskAction, height, length, width);
+
+	//Second segment
+	seeds[0] = seeds[1];
+	//during the second propagation the mask is used to avaoid computation in already computed area
+	partialPropagation(actionPtr, potentialPtr, maskAction, length, width, height, seeds, step);
+
+	saving_name = path_name + "action_second.raw";
+	manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
+
+	//path between initial point and third point (found point)
+	shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+
+	for (n = path_points.size() - 1; n > -1; n--) {
+		point_file = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+	}
+
+	//empty the vector contaning path points
+	while (path_points.size() > 0) {
+		path_points.pop_back();
+	}
+	*/
+
 	//=========== Hough transform parameters ==================
 	
-	//dataType* imageSlice = new dataType[dim2D]{ 0 };
-	//dataType* houghSpace = new dataType[dim2D]{ 0 };
-	//dataType* voteArray = new dataType[dim2D]{ 0 };
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* houghSpace = new dataType[dim2D]{ 0 };
+	dataType* voteArray = new dataType[dim2D]{ 0 };
 
-	////Slice extraction
-	//Point2D seed2D = { 0.0, 0.0 };
-
+	//Slice extraction
+	
 	////filtering parameters
 	//Filter_Parameters filter_parameters;
 	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
 	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
 	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 
-	//Image_Data2D IMAGE;
-	//IMAGE.imageDataPtr = imageSlice;
-	//IMAGE.height = length; IMAGE.width = width;
+	Point2D seed2D = { 0.0, 0.0 };
+	Point2D center2D = { 0.0, 0.0 };
+	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
+	Image_Data2D IMAGE
+	{
+		length,
+		width,
+		imageSlice,
+		center2D,
+		spacing
+	};
 
-	size_t m = 0, n = 0, p = 0;
-
-	//Point2D center2D = { 0.0, 0.0 };
-	//PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
-	//HoughParameters params = { 6.0, 19.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
+	//HoughParameters hParameters = { 6.0, 19.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
 	//dataType max_ratio = 1.0;
 
 	//================ Use circle detection as path finding stopping criterium =====================
 	
+	/*
 	size_t num_slice_processed = 0;
-	//int len = path_points.size();
-	//std::cout << len << " point to be processed" << std::endl;
-	//
-	//Point3D next_point = { 0.0, 0.0, 0.0 };
-	//for (i_n = len - 1; i_n > -1; i_n--) {
-	//	num_slice_processed++;
-	//	extension = to_string(num_slice_processed);
-	//	//slice number
-	//	k_n = (size_t)path_points[i_n].z;
-	//	slice_number = to_string(k_n);
-	//	//Slice extraction
-	//	for (i = 0; i < dim2D; i++) {
-	//		imageSlice[i] = ctImageData.imageDataPtr[k_n][i];
-	//	}
-	//	//Slice rescaling
-	//	rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
-	//	//Slice filtering
-	//	heatImplicit2dScheme(IMAGE, filter_parameters);
-	//	seed2D.x = path_points[i_n].x;
-	//	seed2D.y = path_points[i_n].y;
-	//	if (num_slice_processed < 10) {
-	//		saving_name = path_name + "threshold_000" + extension + ".raw";
-	//	}
-	//	else {
-	//		if (num_slice_processed < 100) {
-	//			saving_name = path_name + "threshold_00" + extension + ".raw";
-	//		}
-	//		else {
-	//			if (num_slice_processed < 1000) {
-	//				saving_name = path_name + "threshold_0" + extension + ".raw";
-	//			}
-	//			else {
-	//				saving_name = path_name + "threshold_" + extension + ".raw";
-	//			}
-	//		}
-	//	}
-	//	center2D = localHoughTransform(seed2D, imageSlice, voteArray, houghSpace, length, width, params, saving_name);
-	//	
-	//	max_ratio = getTheMaxValue(voteArray, length, width);
-	//	if (max_ratio != 0.0) {
-	//		centeredPath[k_n][x_new((size_t)center2D.x, (size_t)center2D.y, length)] = 1.0;
-	//		//k_center = k_n;
-	//		next_point.x = center2D.x;
-	//		next_point.y = center2D.y;
-	//		next_point.z = k_n;
-	//	}
-	//	if (num_slice_processed < 10) {
-	//		saving_name = path_name + "slice_000" + extension + ".raw";
-	//		store2dRawData(imageSlice, length, width, saving_name.c_str());
-	//		saving_name = path_name + "found_circle_000" + extension + ".raw";
-	//		store2dRawData(houghSpace, length, width, saving_name.c_str());
-	//		saving_name = path_name + "ratio_000" + extension + ".raw";
-	//		store2dRawData(voteArray, length, width, saving_name.c_str());
-	//	}
-	//	else {
-	//		if (num_slice_processed < 100) {
-	//			saving_name = path_name + "slice_00" + extension + ".raw";
-	//			store2dRawData(imageSlice, length, width, saving_name.c_str());
-	//			saving_name = path_name + "found_circle_00" + extension + ".raw";
-	//			store2dRawData(houghSpace, length, width, saving_name.c_str());
-	//			saving_name = path_name + "ratio_00" + extension + ".raw";
-	//			store2dRawData(voteArray, length, width, saving_name.c_str());
-	//		}
-	//		else {
-	//			if (num_slice_processed < 1000) {
-	//				saving_name = path_name + "slice_0" + extension + ".raw";
-	//				store2dRawData(imageSlice, length, width, saving_name.c_str());
-	//				saving_name = path_name + "found_circle_0" + extension + ".raw";
-	//				store2dRawData(houghSpace, length, width, saving_name.c_str());
-	//				saving_name = path_name + "ratio_0" + extension + ".raw";
-	//				store2dRawData(voteArray, length, width, saving_name.c_str());
-	//			}
-	//			else {
-	//				saving_name = path_name + "slice_" + extension + ".raw";
-	//				store2dRawData(imageSlice, length, width, saving_name.c_str());
-	//				saving_name = path_name + "found_circle_" + extension + ".raw";
-	//				store2dRawData(houghSpace, length, width, saving_name.c_str());
-	//				saving_name = path_name + "ratio_" + extension + ".raw";
-	//				store2dRawData(voteArray, length, width, saving_name.c_str());
-	//			}
-	//		}
-	//	}
+	int len = path_points.size();
+	std::cout << len << " point to be processed" << std::endl;
+	
+	Point3D next_point = { 0.0, 0.0, 0.0 };
+	size_t m;
+	for (n = len - 1; n > -1; n--) {
+		num_slice_processed++;
+		extension = to_string(num_slice_processed);
+		
+		//slice number
+		m = (size_t)path_points[n].z;
+		slice_number = to_string(m);
+		
+		copyDataToAnother2dArray(ctImageData.imageDataPtr[m], imageSlice, length, width);
+
+		////Slice rescaling
+		//rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
+		////Slice filtering
+		//heatImplicit2dScheme(IMAGE, filter_parameters);
+		
+		seed2D.x = path_points[n].x;
+		seed2D.y = path_points[n].y;
+		
+		if (num_slice_processed < 10) {
+			saving_name = path_name + "path & circle detection/threshold/threshold_000" + extension + ".raw";
+		}
+		else {
+			if (num_slice_processed < 100) {
+				saving_name = path_name + "path & circle detection/threshold/threshold_00" + extension + ".raw";
+			}
+			else {
+				if (num_slice_processed < 1000) {
+					saving_name = path_name + "path & circle detection/threshold/threshold_0" + extension + ".raw";
+				}
+				else {
+					saving_name = path_name + "path & circle detection/threshold/threshold_" + extension + ".raw";
+				}
+			}
+		}
+		center2D = localHoughTransform(seed2D, imageSlice, voteArray, houghSpace, length, width, hParameters, saving_name);
+		
+		max_ratio = getTheMaxValue(voteArray, length, width);
+		if (max_ratio != 0.0) {
+			next_point.x = center2D.x;
+			next_point.y = center2D.y;
+			next_point.z = m;
+		}
+		if (num_slice_processed < 10) {
+			saving_name = path_name + "path & circle detection/slice/slice_000" + extension + ".raw";
+			store2dRawData(imageSlice, length, width, saving_name.c_str());
+			saving_name = path_name + "path & circle detection/circle/found_circle_000" + extension + ".raw";
+			store2dRawData(houghSpace, length, width, saving_name.c_str());
+			saving_name = path_name + "path & circle detection/ratio/ratio_000" + extension + ".raw";
+			store2dRawData(voteArray, length, width, saving_name.c_str());
+		}
+		else {
+			if (num_slice_processed < 100) {
+				saving_name = path_name + "path & circle detection/slice/slice_00" + extension + ".raw";
+				store2dRawData(imageSlice, length, width, saving_name.c_str());
+				saving_name = path_name + "path & circle detection/circle/found_circle_00" + extension + ".raw";
+				store2dRawData(houghSpace, length, width, saving_name.c_str());
+				saving_name = path_name + "path & circle detection/ratio/ratio_00" + extension + ".raw";
+				store2dRawData(voteArray, length, width, saving_name.c_str());
+			}
+			else {
+				if (num_slice_processed < 1000) {
+					saving_name = path_name + "path & circle detection/slice/slice_0" + extension + ".raw";
+					store2dRawData(imageSlice, length, width, saving_name.c_str());
+					saving_name = path_name + "path & circle detection/circle/found_circle_0" + extension + ".raw";
+					store2dRawData(houghSpace, length, width, saving_name.c_str());
+					saving_name = path_name + "path & circle detection/ratio/ratio_0" + extension + ".raw";
+					store2dRawData(voteArray, length, width, saving_name.c_str());
+				}
+				else {
+					saving_name = path_name + "path & circle detection/slice/slice_" + extension + ".raw";
+					store2dRawData(imageSlice, length, width, saving_name.c_str());
+					saving_name = path_name + "path & circle detection/circle/found_circle_" + extension + ".raw";
+					store2dRawData(houghSpace, length, width, saving_name.c_str());
+					saving_name = path_name + "path & circle detection/ratio/ratio_" + extension + ".raw";
+					store2dRawData(voteArray, length, width, saving_name.c_str());
+				}
+			}
+		}
+	}
+	*/
+
+	////empty the list of point before new piece of path
+	//while (path_points.size() != 0) {
+	//	path_points.pop_back();
 	//}
 
-	//empty the list of point before new piece of path
-	while (path_points.size() != 0) {
-		path_points.pop_back();
-	}
-
 	//============================================
-	size_t count_stop = 0, max_steps = 10;
 	
+	//size_t count_stop = 0, max_steps = 10;
 	//max_ratio = 1.0;
+	//size_t stop_k = (size_t)seedPoints[1].z, verif_k = (size_t)seeds[1].z;
 
-	size_t stop_k = (size_t)seedPoints[1].z, verif_k = (size_t)seeds[1].z;
-
+	/*
 	Point3D last_point = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	Point3D verif_point = getRealCoordFromImageCoord3D(seeds[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	double verif_dist = getPoint3DDistance(last_point, verif_point);
@@ -2002,29 +1995,24 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, dataTy
 
 	std::cout << num_slice_processed << " slices were processed\n" << std::endl;
 	fclose(file);
+	*/
 
 	//delete[] imageSlice;
 	//delete[] houghSpace;
 	//delete[] voteArray;
 
+	delete[] seeds;
 	for (k = 0; k < height; k++) {
 		delete[] actionPtr[k];
-		delete[] newActionPtr[k];
-		delete[] maskDistance[k];
+		delete[] maskAction[k];
 		delete[] potentialPtr[k];
-		delete[] centeredPath[k];
 	}
 	delete[] actionPtr;
-	delete[] newActionPtr;
-	delete[] maskDistance;
+	delete[] maskAction;
 	delete[] potentialPtr;
-	delete[] centeredPath;
-
-	delete[] seeds;
 
 	return true;
 }
-*/
 
 bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
@@ -2058,7 +2046,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	vector<Point3D> path_points;
 
 	//======== First step ===========//
-	compute3DPotential(ctImageData, potential, seedsPath[0], radius, parameters);
+	compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
 
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
@@ -2706,9 +2694,9 @@ bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFun
 	return true;
 }
 
-bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength) {
+bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength) {
 
-	if (actionMapPtr == NULL || potentialPtr == NULL) {
+	if (actionMapPtr == NULL || potentialPtr == NULL || maskPtr == NULL) {
 		return false;
 	}
 
@@ -2729,8 +2717,13 @@ bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, const 
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
+			if (maskPtr[k][i] == 0) {
+				labelArray[k][i] = 3;
+			}
+			else {
+				labelArray[k][i] = 1;
+			}
 			actionMapPtr[k][i] = INFINITY;
-			labelArray[k][i] = 3;
 		}
 	}
 

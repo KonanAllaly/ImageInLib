@@ -35,6 +35,12 @@ using namespace std;
 		double radius;
 	} Potential_Parameters;
 
+	typedef struct {
+		dataType tau; // used in the descent gradient
+		size_t max_iteration; // maximal iteration to stop descent gradient
+		double tolerance; //minimal distance to stop
+	} Path_Parameters;
+
 	// 2D functions
 
 	/// <summary>
@@ -278,7 +284,7 @@ using namespace std;
 	/// <param name="radius">radius for averaging</param>
 	/// <param name="parameters">parameters for potential computation</param>
 	/// <returns></returns>
-	bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D seedPoint, double radius, Potential_Parameters parameters);
+	bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D seedPoint, Potential_Parameters parameters);
 
 	/// <summary>
 	/// find the shortest path between two given points
@@ -308,7 +314,9 @@ using namespace std;
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
-	bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
+	bool partialPropagation(dataType** actionMapPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
+
+	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
 //#ifdef __cplusplus
 //}
