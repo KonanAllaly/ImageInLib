@@ -7,11 +7,10 @@
 
 typedef struct {
 	double radius_min, radius_max; // define the range of radius
+	double radius_step; //step for changing the radius 
 	double epsilon, offset;
 	dataType K; // coefficient of the edge detector
-	dataType h; // space discretisation for gradien computation
 	dataType thres; //threshold of the edge detector
-	dataType radius_step; //step for changing the radius 
 	PixelSpacing spacing; //pixels size
 } HoughParameters;
 
