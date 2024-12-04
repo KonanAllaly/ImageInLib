@@ -24,19 +24,16 @@ extern "C" {
 
 	/*
 	* The function compute the histogram of a 3D given image
-	* In histoPtr, each pixel get the label of the group it belongs to
+	* histoPtr contains the frequence of appearence of each bin members
 	* image3DPtr : input image data
-	* histoPtr : mask for the histogram. Each pixel contains the label of its class
 	* xDim, yDim, zDim : image dimensions
 	* binCount : number of bins (to divide the intensity range)
 	*/
-	bool computeHistogram(dataType** image3DPtr, dataType** histoPtr, const size_t xDim, const size_t yDim, const size_t zDim, const size_t binCount);
+	bool computeHistogram(dataType** image3DPtr, size_t* histoPtr, const size_t xDim, const size_t yDim, const size_t zDim, const size_t binCount);
 
 	bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const size_t yDim, const size_t zDim, dataType thres_min, dataType thres_max, dataType backGround, dataType forGround);
 
 	bool thresholdingOTSU(dataType ** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType forground);
-
-	//bool thresholdingOTSUNew(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, const size_t binCount, dataType background, dataType foreground);
 
 	bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground);
 

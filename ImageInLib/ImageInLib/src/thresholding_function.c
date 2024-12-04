@@ -93,7 +93,7 @@ bool thresholding2dFunctionD(dataType * image2DPtr, const size_t xDim, const siz
 	return true;
 }
 
-bool computeHistogram(dataType** image3DPtr, dataType** histoPtr, const size_t xDim, const size_t yDim, const size_t zDim, const size_t binCount) {
+bool computeHistogram(dataType** image3DPtr, size_t* histoPtr, const size_t xDim, const size_t yDim, const size_t zDim, const size_t binCount) {
 	
 	if (image3DPtr == NULL || histoPtr == NULL || binCount == 0)
 		return false;
@@ -123,16 +123,19 @@ bool computeHistogram(dataType** image3DPtr, dataType** histoPtr, const size_t x
 	//Compute the histogram
 	dataType minClass = 0, maxClass = 0;
 
+	size_t nb_element;
 	for (n = 0; n < binCount; n++) {
 		minClass = n * sizeClass;
 		maxClass = (n + 1) * sizeClass;
+		nb_element = 0;
 		for (k = 0; k < zDim; k++) {
 			for (i = 0; i < dim2D; i++) {
 				if (image3DPtr[k][i] >= minClass && image3DPtr[k][i] < maxClass) {
-					histoPtr[k][i] = n;
+					nb_element++;
 				}
 			}
 		}
+		histoPtr[n] = nb_element;
 	}
 	
 	return true;
