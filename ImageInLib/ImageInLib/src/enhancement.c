@@ -150,25 +150,25 @@ size_t histogramPeaks3D(dataType** imageDataPtr, const size_t length, const size
 	dataType step = (maxData - minData) / (dataType)bins;
 
 	computeHistogram(imageDataPtr, histogram, length, width, height, bins);
-	FILE* file_histogram;
-	if (fopen_s(&file_histogram, store_file, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_histogram, "x,y\n");
-	for (size_t n = 0; n < bins; n++) {
-		dataType inf_bin = n * step;
-		fprintf(file_histogram, "%f,%d\n", inf_bin, histogram[n]);
-	}
-	fclose(file_histogram);
+	//FILE* file_histogram;
+	//if (fopen_s(&file_histogram, store_file, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_histogram, "x,y\n");
+	//for (size_t n = 0; n < bins; n++) {
+	//	dataType inf_bin = n * step;
+	//	fprintf(file_histogram, "%f,%d\n", inf_bin, histogram[n]);
+	//}
+	//fclose(file_histogram);
 
-	const char storing_path[] = "C:/Users/Konan Allaly/Documents/Tests/output/histogram/peaks_p2.csv";
-	FILE* file_peaks;
-	if (fopen_s(&file_peaks, storing_path, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_peaks, "x,y\n");
+	//const char storing_path[] = "C:/Users/Konan Allaly/Documents/Tests/output/removed/peaks_modified.csv";
+	//FILE* file_peaks;
+	//if (fopen_s(&file_peaks, storing_path, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_peaks, "x,y\n");
 
 	size_t count_peaks = 0;
 	size_t index_peak = 1;
@@ -180,13 +180,13 @@ size_t histogramPeaks3D(dataType** imageDataPtr, const size_t length, const size
 			printf("Peak %d: %f to %f\n", index_peak, inf_bin, sup_bin);
 
 			//dataType inf_bin = i * step;
-			fprintf(file_peaks, "%f,%d\n", inf_bin, histogram[i]);
+			//fprintf(file_peaks, "%f,%d\n", inf_bin, histogram[i]);
 			count_peaks++;
 			index_peak++;
 		}
 	}
 	//printf("we found : %d peaks\n", count_peaks);
-	fclose(file_peaks);
+	//fclose(file_peaks);
 
 	free(histogram);
 	return count_peaks;
