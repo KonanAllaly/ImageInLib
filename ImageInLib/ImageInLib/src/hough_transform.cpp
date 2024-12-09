@@ -731,7 +731,7 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 	size_t width = imageDataPtr.width;
 	size_t dim2D = height * width;
 	double radius;
-	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.0;
+	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.171875;
 	size_t indx = 0, indy = 0, number_of_circle_points;
 
 	double radius_range = hParameters.radius_max - hParameters.radius_min;
@@ -757,9 +757,11 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 		for (size_t j = 0; j < width; j++) 
 		{
 			size_t xd = x_new(i, j, height);
-			/*
+
+			
 			if (imageDataPtr.imageDataPtr[xd] != 1) {
 				Point2D point_center = { i, j };
+				point_center = getRealCoordFromImageCoord2D(point_center, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
 				for (size_t k = 0; k < number_of_radiuses; k++)
 				{
 					radius = hParameters.radius_min + k * hParameters.radius_step;
@@ -814,7 +816,9 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 					//}
 				}
 			}
-			*/
+			
+
+			/*
 			Point2D point_center = { i, j };
 			for (size_t k = 0; k < number_of_radiuses; k++)
 			{
@@ -869,6 +873,7 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 				//	accumulation[k][x_new(i, j, height)] = 0;
 				//}
 			}
+			*/
 		}
 	}
 
