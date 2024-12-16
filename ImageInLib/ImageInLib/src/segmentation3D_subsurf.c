@@ -128,11 +128,6 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	unsigned char name_ending[100];
 	Storage_Flags flags = {false,false};
 
-	//strcpy_s(name, sizeof name, outputPathPtr);
-	//sprintf_s(name_ending, sizeof(name_ending), "_edgeEast.raw");
-	//strcat_s(name, sizeof(name), name_ending);
-	//store3dDataArrayD(GPtrs.GePtr, length, width, height, name, flags);
-
 	//loop for segmentation time steps
 	i = 1;
 	do
@@ -542,10 +537,7 @@ bool gFunctionForImageToBeSegmented(Image_Data inputImageData, dataType **extend
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	//heatExplicitScheme(presmoothingData, explicit_lhe_Parameters);
 	heatImplicitScheme(presmoothingData, explicit_lhe_Parameters);
-	//geodesicMeanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
-	//meanCurvatureTimeStep(presmoothingData, explicit_lhe_Parameters);
 
 	copyDataToReducedArea(imageToBeSegPtr, extendedCoefPtr, inputImageData.height, inputImageData.length, inputImageData.width);
 

@@ -82,9 +82,10 @@ void heatExplicitScheme(Image_Data toExplicitImage, const Filter_Parameters expl
 
 void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters implicitParameters)
 {
-	size_t k, i, j, z, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
+	size_t k, i, j, z, x, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
 	dataType hhh = implicitParameters.h * implicitParameters.h * implicitParameters.h;
 	dataType coeff = implicitParameters.timeStepSize / hhh;
+	size_t k_ext, j_ext, i_ext, x_ext;
 
 	// Error value used to check iteration
 	// sor - successive over relation value, used in Gauss-Seidel formula
@@ -102,15 +103,31 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 		tempPtr[i] = malloc(sizeof(dataType) * (length_ext) * (width_ext));
 		currentPtr[i] = malloc(sizeof(dataType) * (length_ext) * (width_ext));
 	}
-	// Preparation
-	copyDataToExtendedArea(toImplicitImage.imageDataPtr, tempPtr, height, length, width);
-	copyDataToExtendedArea(toImplicitImage.imageDataPtr, currentPtr, height, length, width);
-	// Perform Reflection of the tempPtr
+
+	//Initialize the arrays to avoid unwanted values
+	initialize3dArrayD(tempPtr, length_ext, width_ext, height_ext, 0.0);
+	initialize3dArrayD(currentPtr, length_ext, width_ext, height_ext, 0.0);
+	
+	//// Preparation
+	////We use the manual copy because the current function doesn't work for non squared images
+	//copyDataToExtendedArea(toImplicitImage.imageDataPtr, tempPtr, height, length, width);
+	//copyDataToExtendedArea(toImplicitImage.imageDataPtr, currentPtr, height, length, width);
+	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+				x = x_new(i, j, length);
+				x_ext = x_new(i_ext, j_ext, length_ext);
+				tempPtr[k_ext][x_ext] = toImplicitImage.imageDataPtr[k][x];
+				currentPtr[k_ext][x_ext] = toImplicitImage.imageDataPtr[k][x];
+			}
+		}
+	}
+	
+	//Perform Reflection of the tempPtr
 	reflection3D(tempPtr, height_ext, length_ext, width_ext);
 	reflection3D(currentPtr, height_ext, length_ext, width_ext);
 	
 	// The Gauss-Seidel Implicit Scheme
-	size_t k_ext, j_ext, i_ext, x_ext, x;
 	for(size_t t = 0; t < implicitParameters.timeStepsNum; t++){
 		z = 0; // Steps counter
 		do
@@ -152,13 +169,14 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 			}
 		} while (error > implicitParameters.tolerance && z < steps);
 
-		printf("The number of iterations is %zd for timeStep %zd\n", z, t);
-		printf("Error is %e for timeStep %zd\n", error, t);
+		//printf("The number of iterations is %zd for timeStep %zd\n", z, t);
+		//printf("Error is %e for timeStep %zd\n", error, t);
 
 		// Copy current to tempPtr before next time step
 		copyDataToAnotherArray(currentPtr, tempPtr, height_ext, length_ext, width_ext);
 	}
-	// Copy back to original after filter
+
+	// Copy back to original after filtering
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
@@ -169,6 +187,7 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 			}
 		}
 	}
+	
 	// Freeing Memory after use
 	for (i = 0; i < height_ext; i++)
 	{
