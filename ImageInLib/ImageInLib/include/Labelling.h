@@ -9,12 +9,12 @@ extern "C" {
 
 	typedef struct {
 		size_t x, y;
-		bool label;
+		int label;
 	}point2dLabelling;
 
 	typedef struct {
-		size_t x, y, z; // 3D point coordinates
-		bool label; // true --> processed, false --> not processed
+		size_t x, y, z;
+		int label;
 	} point3dLabelling;
 
 	//for 2D image using 2D arrays
@@ -36,13 +36,10 @@ extern "C" {
 
 	//=======================
 
-	bool regionGrowing(dataType** imageDataPtr, dataType** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType thres_min, dataType thres_max, Point3D* seedPoint);
-
-	bool regionGrowing3D_N(Image_Data ctImageData, dataType** segmentedImage, double radius, Point3D seedPoint);
-
-	//=======================
-
 	bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object);
+
+	bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed, double radius);
+
 
 #ifdef __cplusplus
 }

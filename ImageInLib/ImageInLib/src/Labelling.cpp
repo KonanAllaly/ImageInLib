@@ -18,11 +18,7 @@ using namespace std;
 //for 2D image using 2D arrays
 bool labelling2D(int** imageDataPtr, int** segmentedImage, bool** statusArray, const size_t length, const size_t width, int object) {
 
-	if (imageDataPtr == NULL)
-		return false;
-	if (segmentedImage == NULL)
-		return false;
-	if (statusArray == NULL)
+	if (imageDataPtr == NULL || segmentedImage == NULL || statusArray == NULL)
 		return false;
 
 	vector<int> iStack, jStack, iTmpStack, jTmpStack;
@@ -435,236 +431,239 @@ int countNumberOfRegionsCells(dataType** binaryImagePtr, const size_t length, co
 
 //===============================================================================================================
 
-bool regionGrowing(dataType** imageDataPtr, dataType** segmentedImage, bool** statusArray, const size_t length, const size_t width, const size_t height, dataType thres_min, dataType thres_max, Point3D * seedPoint) {
-
-	if (imageDataPtr == NULL || segmentedImage == NULL || statusArray == NULL)
+bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed, double radius) {
+	
+	if (imageData.imageDataPtr == NULL || segmentedImage == NULL) {
 		return false;
+	}
 
-	vector<size_t> iStack, jStack, kStack, iTmpStack, jTmpStack, kTmpStack;
-	size_t i, j, k, iNew = 0, jNew = 0, kNew = 0, n = 0, dim2D = length * width;
+	bool** pStatus = new bool* [height];
+	for (size_t s = 0; s < height; s++) 
+	{
+		pStatus[s] = new bool[length * width] {false};
+	}
 
-	i = (size_t)seedPoint->x; j = (size_t)seedPoint->y; k = (size_t)seedPoint->z;
+	vector<point3dLabelling> pSegment, tempSegment;
 
-	//Processed the seed point
-	//top neighbor
-	if (k > 0 && statusArray[k - 1][x_new(i, j, length)] == false) {
-		if (imageDataPtr[k - 1][x_new(i, j, length)] >= thres_min && imageDataPtr[k - 1][x_new(i, j, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k - 1);
-			iStack.push_back(i);
-			jStack.push_back(j);
+	size_t iSeed = (size_t)pSeed.x;
+	size_t jSeed = (size_t)pSeed.y;
+	size_t kSeed = (size_t)pSeed.z;
+	size_t xd = x_new(iSeed, jSeed, length);
+
+	size_t height_minus = height - 1;
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
+
+	size_t nb_point_processed = 0;
+
+	Statistics pStats = getPointNeighborhoodStats(imageData, pSeed, radius);
+
+	dataType thres_min = -900;//pStats.mean_data - pStats.sd_data;//-900
+	dataType thres_max = -500;//pStats.mean_data + pStats.sd_data;//-500
+
+	//West neighbor
+	if (iSeed > 0) {
+		size_t i_minus = iSeed - 1;
+		size_t x = x_new(i_minus, jSeed, length);
+		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		{
+			point3dLabelling pWest = { i_minus, jSeed, kSeed, 1 };
+			pSegment.push_back(pWest);
 		}
 		else {
-			statusArray[k - 1][x_new(i, j, length)] = true;
-			segmentedImage[k - 1][x_new(i, j, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//bottom neighbor
-	if (k < height - 1 && statusArray[k + 1][x_new(i, j, length)] == false) {
-		if (imageDataPtr[k + 1][x_new(i, j, length)] >= thres_min && imageDataPtr[k + 1][x_new(i, j, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k + 1);
-			iStack.push_back(i);
-			jStack.push_back(j);
+	//East neighnor
+	if (iSeed < length_minus) {
+		size_t i_plus = iSeed + 1;
+		size_t x = x_new(i_plus, jSeed, length);
+		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		{
+			point3dLabelling pEast = { i_plus, jSeed, kSeed, 1 };
+			pSegment.push_back(pEast);
 		}
 		else {
-			statusArray[k + 1][x_new(i, j, length)] = true;
-			segmentedImage[k + 1][x_new(i, j, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//left neighbor
-	if (i > 0 && statusArray[k][x_new(i - 1, j, length)] == false) {
-		if (imageDataPtr[k][x_new(i - 1, j, length)] >= thres_min && imageDataPtr[k][x_new(i - 1, j, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k);
-			iStack.push_back(i - 1);
-			jStack.push_back(j);
+	//North
+	if (jSeed > 0) {
+		size_t j_minus = jSeed - 1;
+		size_t x = x_new(iSeed, j_minus, length);
+		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		{
+			point3dLabelling pNorth = { iSeed, j_minus, kSeed, 1 };
+			pSegment.push_back(pNorth);
 		}
 		else {
-			statusArray[k][x_new(i - 1, j, length)] = true;
-			segmentedImage[k][x_new(i - 1, j, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//right neighbor
-	if (i < length - 1 && statusArray[k][x_new(i + 1, j, length)] == false) {
-		if (imageDataPtr[k][x_new(i + 1, j, length)] >= thres_min && imageDataPtr[k][x_new(i + 1, j, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k);
-			iStack.push_back(i + 1);
-			jStack.push_back(j);
+	//South
+	if (jSeed < width_minus) {
+		size_t j_plus = jSeed + 1;
+		size_t x = x_new(iSeed, j_plus, length);
+		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		{
+			point3dLabelling pSouth = { iSeed, j_plus, kSeed, 1 };
+			pSegment.push_back(pSouth);
 		}
 		else {
-			statusArray[k][x_new(i + 1, j, length)] = true;
-			segmentedImage[k][x_new(i + 1, j, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//front neighbor
-	if (j > 0 && statusArray[k][x_new(i, j - 1, length)] == false) {
-		if (imageDataPtr[k][x_new(i, j - 1, length)] >= thres_min && imageDataPtr[k][x_new(i, j - 1, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k);
-			iStack.push_back(i);
-			jStack.push_back(j - 1);
+	//Top
+	if (kSeed > 0) {
+		size_t k_minus = kSeed - 1;
+		size_t x = x_new(iSeed, jSeed, length);
+		if (imageData.imageDataPtr[k_minus][x] >= thres_min && imageData.imageDataPtr[k_minus][x] <= thres_max)
+		{
+			point3dLabelling pTop = { iSeed, jSeed, k_minus, 1 };
+			pSegment.push_back(pTop);
 		}
 		else {
-			statusArray[k][x_new(i, j - 1, length)] = true;
-			segmentedImage[k][x_new(i, j - 1, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//behind neighbor
-	if (j < width - 1 && statusArray[k][x_new(i, j + 1, length)] == false) {
-		if (imageDataPtr[k][x_new(i, j + 1, length)] >= thres_min && imageDataPtr[k][x_new(i, j + 1, length)] <= thres_max) {
-			//the element is in region, then add its coordinates in stacks
-			kStack.push_back(k);
-			iStack.push_back(i);
-			jStack.push_back(j + 1);
+	//Bottom
+	if (kSeed < height_minus) {
+		size_t k_plus = kSeed + 1;
+		size_t x = x_new(iSeed, jSeed, length);
+		if (imageData.imageDataPtr[k_plus][x] >= thres_min && imageData.imageDataPtr[k_plus][x] <= thres_max)
+		{
+			point3dLabelling pBottom = { iSeed, jSeed, k_plus, 1 };
+			pSegment.push_back(pBottom);
 		}
 		else {
-			statusArray[k][x_new(i, j + 1, length)] = true;
-			segmentedImage[k][x_new(i, j + 1, length)] = 0;
+			pStatus[kSeed][x] = true;
 		}
 	}
-	//Update the seed point status
-	statusArray[k][x_new(i, j, length)] = true;
-	//set  the seed point's label
-	segmentedImage[k][x_new(i, j, length)] = imageDataPtr[k][x_new(i, j, length)];
 
-	//Processed the other points
-	while (iStack.size() > 0 && jStack.size() > 0 && kStack.size() > 0) {
-		//One is enought because they have same size
+	pStatus[kSeed][xd] = true;
+	segmentedImage[kSeed][xd] = 1.0;
+	nb_point_processed++;
 
-		//We work with the last element in the initial stacks
-		kNew = kStack.size() - 1;
-		iNew = iStack.size() - 1;
-		jNew = jStack.size() - 1;
+	if (pSegment.size() == 0) {
+		cout << "Seed wrongly chosen" << endl;
+	}
+	else {
+		while(pSegment.size() > 0 && nb_point_processed < height * width * length)
+		{
+			int l = pSegment.size();
+			iSeed = (size_t)pSegment[l - 1].x;
+			jSeed = (size_t)pSegment[l - 1].y;
+			kSeed = (size_t)pSegment[l - 1].z;
+			xd = x_new(iSeed, jSeed, length);
 
-		//top neighbor
-		if (kStack[kNew] > 0 && statusArray[kStack[kNew] - 1][x_new(iStack[iNew], jStack[jNew], length)] == false) {
-			if (imageDataPtr[kStack[kNew] - 1][x_new(iStack[iNew], jStack[jNew], length)] >= thres_min && imageDataPtr[kStack[kNew] - 1][x_new(iStack[iNew], jStack[jNew], length)] <= thres_max) {
-				//If the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew]);
-				jTmpStack.push_back(jStack[jNew]);
-				kTmpStack.push_back(kStack[kNew] - 1);
+			//West neighbor
+			if (iSeed > 0) {
+				size_t i_minus = iSeed - 1;
+				size_t xdSeed = x_new(i_minus, jSeed, length);
+				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pWest = { i_minus, jSeed, kSeed, 1 };
+					tempSegment.push_back(pWest);
+				}
+				else 
+				{
+					pStatus[kSeed][xdSeed] = true;
+				}
 			}
-			else {
-				//Not in region, update status and go to the next neighbor
-				statusArray[kStack[kNew] - 1][x_new(iStack[iNew], jStack[jNew], length)] = true;
-				segmentedImage[kStack[kNew] - 1][x_new(iStack[iNew], jStack[jNew], length)] = 0;
+			//East neighbor
+			if (iSeed < length_minus) {
+				size_t i_plus = iSeed + 1;
+				size_t xdSeed = x_new(i_plus, jSeed, length);
+				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pEast = { i_plus, jSeed, kSeed, 1 };
+					tempSegment.push_back(pEast);
+				}
+				else
+				{
+					pStatus[kSeed][xdSeed] = true;
+				}
 			}
-		}
-		//down neighbor
-		if (kStack[kNew] < height - 1 && statusArray[kStack[kNew] + 1][x_new(iStack[iNew], jStack[jNew], length)] == false) {
-			if (imageDataPtr[kStack[kNew] + 1][x_new(iStack[iNew], jStack[jNew], length)] >= thres_min && imageDataPtr[kStack[kNew] + 1][x_new(iStack[iNew], jStack[jNew], length)] <= thres_max) {
-				//the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew]);
-				jTmpStack.push_back(jStack[jNew]);
-				kTmpStack.push_back(kStack[kNew] + 1);
+			//North neighbor
+			if (jSeed > 0) {
+				size_t j_minus = jSeed - 1;
+				size_t xdSeed = x_new(iSeed, j_minus, length);
+				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pNorth = { iSeed, j_minus, kSeed, 1 };
+					tempSegment.push_back(pNorth);
+				}
+				else
+				{
+					pStatus[kSeed][xdSeed] = true;
+				}
 			}
-			else {
-				//Not in region, update status and go to the next neighbor
-				statusArray[kStack[kNew] + 1][x_new(iStack[iNew], jStack[jNew], length)] = true;
-				segmentedImage[kStack[kNew] + 1][x_new(iStack[iNew], jStack[jNew], length)] = 0;
+			//South neighbor
+			if (jSeed < width_minus) {
+				size_t j_plus = jSeed + 1;
+				size_t xdSeed = x_new(iSeed, j_plus, length);
+				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pSouth = { iSeed, j_plus, kSeed, 1 };
+					tempSegment.push_back(pSouth);
+				}
+				else
+				{
+					pStatus[kSeed][xdSeed] = true;
+				}
 			}
-		}
-		//right neighbor
-		if (iStack[iNew] > 0 && statusArray[kStack[kNew]][x_new(iStack[iNew] - 1, jStack[jNew], length)] == false) {
-			if (imageDataPtr[kStack[kNew]][x_new(iStack[iNew] - 1, jStack[jNew], length)] >= thres_min && imageDataPtr[kStack[kNew]][x_new(iStack[iNew] - 1, jStack[jNew], length)] <= thres_max) {
-				//the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew] - 1);
-				jTmpStack.push_back(jStack[jNew]);
-				kTmpStack.push_back(kStack[kNew]);
+			//Top neighbor
+			if (kSeed > 0) {
+				size_t k_minus = kSeed - 1;
+				size_t xdSeed = x_new(iSeed, jSeed, length);
+				if (imageData.imageDataPtr[k_minus][xdSeed] >= thres_min && imageData.imageDataPtr[k_minus][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pTop = { iSeed, jSeed, k_minus, 1 };
+					tempSegment.push_back(pTop);
+				}
+				else
+				{
+					pStatus[k_minus][xdSeed] = true;
+				}
 			}
-			else {
-				//Not in region, update status and go to the next neighbor
-				statusArray[kStack[kNew]][x_new(iStack[iNew] - 1, jStack[jNew], length)] = true;
-				segmentedImage[kStack[kNew]][x_new(iStack[iNew] - 1, jStack[jNew], length)] = 0;
+			//Bottom neighbor
+			if (kSeed < height_minus) {
+				size_t k_plus = kSeed + 1;
+				size_t xdSeed = x_new(iSeed, jSeed, length);
+				if (imageData.imageDataPtr[k_plus][xdSeed] >= thres_min && imageData.imageDataPtr[k_plus][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
+				{
+					point3dLabelling pBottom = { iSeed, jSeed, k_plus, 1 };
+					tempSegment.push_back(pBottom);
+				}
+				else
+				{
+					pStatus[k_plus][xdSeed] = true;
+				}
 			}
-		}
-		//left neighbor
-		if (iStack[iNew] < length - 1 && statusArray[kStack[kNew]][x_new(iStack[iNew] + 1, jStack[jNew], length)] == false) {
-			if (imageDataPtr[kStack[kNew]][x_new(iStack[iNew] + 1, jStack[jNew], length)] >= thres_min && imageDataPtr[kStack[kNew]][x_new(iStack[iNew] + 1, jStack[jNew], length)] <= thres_max) {
-				//If the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew] + 1);
-				jTmpStack.push_back(jStack[jNew]);
-				kTmpStack.push_back(kStack[kNew]);
-			}
-			else {
-				//Not in region, update status and go to the next neighbor
-				statusArray[kStack[kNew]][x_new(iStack[iNew] + 1, jStack[jNew], length)] = true;
-				segmentedImage[kStack[kNew]][x_new(iStack[iNew] + 1, jStack[jNew], length)] = 0;
-			}
-		}
-		//front neighbor
-		if (jStack[jNew] > 0 && statusArray[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] - 1, length)] == false) {
-			if (imageDataPtr[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] - 1, length)] >= thres_min && imageDataPtr[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] - 1, length)] <= thres_max) {
-				//If the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew]);
-				jTmpStack.push_back(jStack[jNew] - 1);
-				kTmpStack.push_back(kStack[kNew]);
-			}
-			else {
-				//Not in region, update status and give it label
-				statusArray[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] - 1, length)] = true;
-				segmentedImage[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] - 1, length)] = 0;
-			}
-		}
-		//behind neighbor
-		if (jStack[jNew] < width - 1 && statusArray[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] + 1, length)] == false) {
-			if (imageDataPtr[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] + 1, length)] >= thres_min && imageDataPtr[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] + 1, length)] <= thres_max) {
-				//the element is in the current region, then save its coordinates in temporary stacks
-				iTmpStack.push_back(iStack[iNew]);
-				jTmpStack.push_back(jStack[jNew] + 1);
-				kTmpStack.push_back(kStack[kNew]);
-			}
-			else {
-				//Not in region, update status and go to the next neighbor
-				statusArray[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] + 1, length)] = true;
-				segmentedImage[kStack[kNew]][x_new(iStack[iNew], jStack[jNew] + 1, length)] = 0;
-			}
-		}
 
-		//updating of processed element before removal
-		statusArray[kStack[kNew]][x_new(iStack[iNew], jStack[jNew], length)] = true;
-		segmentedImage[kStack[kNew]][x_new(iStack[iNew], jStack[jNew], length)] = imageDataPtr[kStack[kNew]][x_new(iStack[iNew], jStack[jNew], length)];
+			pStatus[kSeed][xd] = true;
+			segmentedImage[kSeed][xd] = 1.0;
+			nb_point_processed++;
+			pSegment.pop_back();
 
-		//Remove the processed element of the initial stacks
-		kStack.pop_back();
-		iStack.pop_back();
-		jStack.pop_back();
+			//Move the element from the temporary segment to the initial one
+			for (size_t s = 0; s < tempSegment.size(); s++) 
+			{
+				pSegment.push_back(tempSegment[s]);
+			}
 
-		//Add new found neighbors in initial stacks
-		//we can do it once because they have the same size
-		for (n = 0; n < iTmpStack.size(); n++) {
-			//if any neighbors have been found iTmpStack.size() = 0
-			//and nothing will happen
-			iStack.push_back(iTmpStack[n]);
+			//Empty the temporary segment
+			while (tempSegment.size() > 0) 
+			{
+				tempSegment.pop_back();
+			}
 		}
-		for (n = 0; n < jTmpStack.size(); n++) {
-			//if any neighbors have been found jTmpStack.size() = 0
-			//and nothing will happen
-			jStack.push_back(jTmpStack[n]);
-		}
-		for (n = 0; n < kTmpStack.size(); n++) {
-			//if any neighbors have been found jTmpStack.size() = 0
-			//and nothing will happen
-			kStack.push_back(kTmpStack[n]);
-		}
-
-		//empty the temporary stacks
-		//we can do it once because they have the same size
-		while (iTmpStack.size() > 0) {
-			iTmpStack.pop_back();
-		}
-		while (jTmpStack.size() > 0) {
-			jTmpStack.pop_back();
-		}
-		while (kTmpStack.size() > 0) {
-			kTmpStack.pop_back();
-		}
-
-		//End of big while loop
 	}
 
+	for (size_t s = 0; s < height; s++) {
+		delete[] pStatus[s];
+	}
+	delete[] pStatus;
 	return true;
 }
 
