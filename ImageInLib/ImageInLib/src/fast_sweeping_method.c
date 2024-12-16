@@ -12,7 +12,8 @@
 bool fastSweepingFunction_3D(dataType ** distance3DPtr, dataType ** curve3DPtr, const size_t xDim, const size_t yDim, const size_t zDim,
 	const dataType h, const dataType largeValue, const dataType fgroundValue)
 {
-	size_t j, i, k, i_n;//i, j and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
+	//i, j and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
+	int j, i, k, i_n;
 	size_t sweepNumber = 0, sweepDirection;
 	const size_t dim2D = xDim * yDim;
 	dataType ** temp3dPtr = (dataType **)malloc(sizeof(dataType*) * zDim);// temporary array used in the computation of distance
@@ -26,20 +27,16 @@ bool fastSweepingFunction_3D(dataType ** distance3DPtr, dataType ** curve3DPtr, 
 	//checks if the memory was allocated
 	for (i = 0; i < zDim; i++)
 	{
-		if (temp3dPtr[i] == NULL)
+		if (temp3dPtr[i] == NULL || tmpcurve3DPtr[i] == NULL)
 			return false;
 	}
 
 	//checks if the memory was allocated
-	if (temp3dPtr == NULL)
+	if (temp3dPtr == NULL || tmpcurve3DPtr == NULL || distance3DPtr == NULL || curve3DPtr == NULL)
+	{
 		return false;
-
-	if (distance3DPtr == NULL)
-		return false;
-
-	if (curve3DPtr == NULL)
-		return false;
-
+	}
+		
 	//Checks for 2D case
 	if (zDim == 1)
 		return false;
@@ -57,7 +54,8 @@ bool fastSweepingFunction_3D(dataType ** distance3DPtr, dataType ** curve3DPtr, 
 
 				if (curve3DPtr[k][i_n] < threshold + range)
 				{
-					tmpcurve3DPtr[k][i_n] = distance3DPtr[k][i_n] = fgroundValue;
+					tmpcurve3DPtr[k][i_n] = fgroundValue;
+					distance3DPtr[k][i_n] = fgroundValue;
 				}
 				else
 				{
@@ -525,7 +523,7 @@ void fSweeping3D(dataType ** distance3DPtr, dataType ** curve3DPtr, const size_t
 bool fastSweepingFunction_2D(dataType * distance2DPtr, dataType * curve2DPtr, const size_t xDim, const size_t yDim,
 	const dataType h, const dataType largeValue, const dataType fgroundValue)
 {
-	size_t j, i, i_n;//i and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
+	int j, i, i_n;//i and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
 	size_t sweepNumber = 0, sweepDirection;
 	const size_t dim2D = xDim * yDim;
 	dataType * temp2dPtr = (dataType *)malloc(sizeof(dataType) * dim2D); //temporary array used in computation of distance
@@ -645,168 +643,193 @@ dataType compute3dDistance(size_t i_n, size_t k, const size_t xDim, const size_t
 	if (k == 0)
 	{
 		if (i_n == 0)//if at the top left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == (xDim - 1)) //if at the top right coner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == ((yDim - 1) * xDim)) //if at the bottom left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == (dim2D - 1)) //if at the bottom right corner,
-		{// use one sided difference.
+		{
+			// use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n > 0) && (i_n < (xDim - 1)))//if at first row (excluding left and right corner),
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n > ((yDim - 1) * xDim)) && (i_n < (dim2D - 1))) //if at last row
-		{//(excluding left and right corner), use one sided difference.
+		{
+			//(excluding left and right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n != 0) && (i_n != ((yDim - 1) * xDim)) && ((i_n % xDim) == 0))//if at first column
-		{//(excluding top and bottom left corner), use one sided difference.
+		{
+			//(excluding top and bottom left corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n != (xDim - 1)) && (i_n != (dim2D - 1)) && ((i_n % xDim) == (xDim - 1)))//if at last column
-		{//(excluding top and bottom right corner), use one sided difference.
+		{
+			//(excluding top and bottom right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
-		else {//otherwise, use one sided difference.
+		else {
+			//otherwise, use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k][i_n], distance3DPtr[k + 1][i_n]);
 		}
 	}
-
 	else if (k == (zDim - 1))
 	{
 		if (i_n == 0)//if at the top left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if (i_n == (xDim - 1)) //if at the top right coner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if (i_n == ((yDim - 1) * xDim)) //if at the bottom left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if (i_n == (dim2D - 1)) //if at the bottom right corner,
-		{// use one sided difference.
+		{
+			// use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if ((i_n > 0) && (i_n < (xDim - 1)))//if at first row (excluding left and right corner),
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if ((i_n > ((yDim - 1) * xDim)) && (i_n < (dim2D - 1))) //if at last row
-		{//(excluding left and right corner), use one sided difference.
+		{
+			//(excluding left and right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if ((i_n != 0) && (i_n != ((yDim - 1) * xDim)) && ((i_n % xDim) == 0))//if at first column
-		{//(excluding top and bottom left corner), use one sided difference.
+		{
+			//(excluding top and bottom left corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 		else if ((i_n != (xDim - 1)) && (i_n != (dim2D - 1)) && ((i_n % xDim) == (xDim - 1)))//if at last column
-		{//(excluding top and bottom right corner), use one sided difference.
+		{
+			//(excluding top and bottom right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
-		else {//otherwise, use one sided difference.
+		else {
+			//otherwise, use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k][i_n]);
 		}
 	}
-
 	else
 	{
 		if (i_n == 0)//if at the top left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == (xDim - 1)) //if at the top right coner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == ((yDim - 1) * xDim)) //if at the bottom left corner,
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if (i_n == (dim2D - 1)) //if at the bottom right corner,
-		{// use one sided difference.
+		{
+			// use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n > 0) && (i_n < (xDim - 1)))//if at first row (excluding left and right corner),
-		{//use one sided difference.
+		{
+			//use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n > ((yDim - 1) * xDim)) && (i_n < (dim2D - 1))) //if at last row
-		{//(excluding left and right corner), use one sided difference.
+		{
+			//(excluding left and right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n != 0) && (i_n != ((yDim - 1) * xDim)) && ((i_n % xDim) == 0))//if at first column
-		{//(excluding top and bottom left corner), use one sided difference.
+		{
+			//(excluding top and bottom left corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
 		else if ((i_n != (xDim - 1)) && (i_n != (dim2D - 1)) && ((i_n % xDim) == (xDim - 1)))//if at last column
-		{//(excluding top and bottom right corner), use one sided difference.
+		{
+			//(excluding top and bottom right corner), use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
 		}
-		else {//otherwise, use one sided difference.
+		else {
+			//otherwise, use one sided difference.
 			a = min(distance3DPtr[k][i_n - 1], distance3DPtr[k][i_n + 1]);
 			b = min(distance3DPtr[k][i_n - xDim], distance3DPtr[k][i_n + xDim]);
 			c = min(distance3DPtr[k - 1][i_n], distance3DPtr[k + 1][i_n]);
@@ -855,46 +878,55 @@ dataType compute2dDistance(size_t i_n, const size_t xDim, const size_t yDim, dat
 {
 	dataType a, b;
 	if (i_n == 0)//if at the top left corner,
-	{//use one sided difference.
+	{
+		//use one sided difference.
 		a = min(distance2DPtr[i_n], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n], distance2DPtr[i_n + xDim]);
 	}
 	else if (i_n == (xDim - 1)) //if at the top right corner,
-	{//use one sided difference.
+	{
+		//use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n]);
 		b = min(distance2DPtr[i_n], distance2DPtr[i_n + xDim]);
 	}
 	else if (i_n == ((yDim - 1) * xDim)) //if at the bottom left corner,
-	{//use one sided difference.
+	{
+		//use one sided difference.
 		a = min(distance2DPtr[i_n], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n]);
 	}
 	else if (i_n == (dim2D - 1)) //if at the bottom right corner,
-	{// use one sided difference.
+	{
+		// use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n]);
 	}
 	else if ((i_n > 0) && (i_n < (xDim - 1)))//if at first row (excluding left and right corner),
-	{//use one sided difference.
+	{
+		//use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n], distance2DPtr[i_n + xDim]);
 	}
 	else if ((i_n > ((yDim - 1) * xDim)) && (i_n < (dim2D - 1))) //if at last row
-	{//(excluding left and right corner), use one sided difference.
+	{
+		//(excluding left and right corner), use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n]);
 	}
 	else if ((i_n != 0) && (i_n != ((yDim - 1) * xDim)) && ((i_n % xDim) == 0))//if at first column
-	{//(excluding top and bottom left corner), use one sided difference.
+	{
+		//(excluding top and bottom left corner), use one sided difference.
 		a = min(distance2DPtr[i_n], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n + xDim]);
 	}
 	else if ((i_n != (xDim - 1)) && (i_n != (dim2D - 1)) && ((i_n % xDim) == (xDim - 1)))//if at last column
-	{//(excluding top and bottom right corner), use one sided difference.
+	{
+		//(excluding top and bottom right corner), use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n + xDim]);
 	}
-	else {//otherwise, use one sided difference.
+	else {
+		//otherwise, use one sided difference.
 		a = min(distance2DPtr[i_n - 1], distance2DPtr[i_n + 1]);
 		b = min(distance2DPtr[i_n - xDim], distance2DPtr[i_n + xDim]);
 	}
