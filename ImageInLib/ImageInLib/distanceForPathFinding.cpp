@@ -4504,3 +4504,25 @@ void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potential
 	}
 
 }
+
+//=====================================
+bool fastSweeping(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue) {
+	
+	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
+	{
+		return true;
+	}
+	
+	size_t length = ctImageData.length;
+	size_t width = ctImageData.width;
+	size_t height = ctImageData.height;
+
+	const size_t nbSweep = 8;
+
+	//for (size_t l = 0; l < nbSweep; l++) {
+	//
+	//}
+
+	return true;
+
+}
