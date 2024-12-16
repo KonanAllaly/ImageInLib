@@ -126,7 +126,7 @@ void copyDataToExtendedArea(dataType** originalDataPtr, dataType** extendedDataP
 	}
 }
 //==============================================================================
-void copyDataToReducedArea(dataType** originalDataPtr, const dataType** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth)
+void copyDataToReducedArea(dataType** originalDataPtr, dataType** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth)
 {
 	const size_t height_ext = originalHeight + 2;
 	const size_t length_ext = originalLength + 2;
@@ -293,7 +293,9 @@ Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t leng
 				size_t x = x_new(i, j, length);
 				if (distanceMapPtr[k][x] > max_value) {
 					max_value = distanceMapPtr[k][x];
-					result.x = i; result.y = j; result.z = k;
+					result.x = i; 
+					result.y = j; 
+					result.z = k;
 				}
 			}
 		}

@@ -155,7 +155,7 @@ extern "C" {
 	*/
 	void copyDataToExtendedArea(dataType** originalDataPtr, dataType** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth);
 	//==============================================================================
-	void copyDataToReducedArea(dataType** originalDataPtr, const dataType** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth);
+	void copyDataToReducedArea(dataType** originalDataPtr, dataType** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth);
 	//==============================================================================
 	// Copy from one pointer to another pointer
 	void copyDataToAnotherArray(dataType** source, dataType** destination, size_t height, size_t length, size_t width);
