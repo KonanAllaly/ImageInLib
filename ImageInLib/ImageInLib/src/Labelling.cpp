@@ -458,8 +458,8 @@ bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t
 
 	Statistics pStats = getPointNeighborhoodStats(imageData, pSeed, radius);
 
-	dataType thres_min = -900;//pStats.mean_data - pStats.sd_data;//-900
-	dataType thres_max = -500;//pStats.mean_data + pStats.sd_data;//-500
+	dataType thres_min = pStats.mean_data - pStats.sd_data;//-900
+	dataType thres_max = pStats.mean_data + pStats.sd_data;//-500
 
 	//West neighbor
 	if (iSeed > 0) {
