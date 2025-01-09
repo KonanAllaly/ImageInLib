@@ -21,11 +21,7 @@
 #include "hough_transform.h"
 #include "../src/edgedetection.h"
 #include "enhancement.h"
-
-#define thres_min 100//995 // -30 // 995
-#define thres_max 524//1213 // 200// 1213
-#define thres1 -500
-#define thres2 -300
+#include "../src/fast_marching.h"
 
 int main() {
 
@@ -71,44 +67,30 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 
-	//Find the minimum and maximum values to perform shiftting
-	dataType minData = ctContainer->dataPointer[0][0];
-	dataType maxData = ctContainer->dataPointer[0][0];
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length * Width; i++) {
-			if (ctContainer->dataPointer[k][i] > maxData) {
-				maxData = ctContainer->dataPointer[k][i];
-			}
-			if (ctContainer->dataPointer[k][i] < minData) {
-				minData = ctContainer->dataPointer[k][i];
-			}
-		}
-	}
-	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-
-	//string saving_real = outputPath + "Test_info_p2.txt";
-	//FILE* info_test;
-	//if (fopen_s(&info_test, saving_real.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
+	////Find the minimum and maximum values to perform shiftting
+	//dataType minData = ctContainer->dataPointer[0][0];
+	//dataType maxData = ctContainer->dataPointer[0][0];
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < Length * Width; i++) {
+	//		if (ctContainer->dataPointer[k][i] > maxData) {
+	//			maxData = ctContainer->dataPointer[k][i];
+	//		}
+	//		if (ctContainer->dataPointer[k][i] < minData) {
+	//			minData = ctContainer->dataPointer[k][i];
+	//		}
+	//	}
 	//}
-	//fprintf(info_test, "Input : patient 2\n");
-	//fprintf(info_test, "Dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, Height);
-	//fprintf(info_test, "Origin (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
-	//fprintf(info_test, "Spacing (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
+	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
 
 	//========================= Segment the lungs and the heart =================
 
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = outputPath + "segmentation lungs/segment_lungs_p2.raw";
+	loading_path = outputPath + "segmentation lungs/segment_lungs_p7.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	//fprintf(info_test, "The lungs segmentation is used to find lungs bounding box\n");
-	//fprintf(info_test, "In order to have better distance map, isotropic pixel is used\n");
-	//fprintf(info_test, "which means interpolation in z direction to have cubic voxel\n");
 
 	Image_Data inputData
 	{
@@ -121,10 +103,16 @@ int main() {
 		orientation
 	};
 
-	size_t height_int = 866;
+	//size_t height_int = 866;//p2
+	//size_t height_int = 1083;//p3
+	//size_t height_int = 844;//p4, p5
+	//size_t height_int = 1351;//p6
+	size_t height_int = 932;//p7
 	dataType** maskThreshold = new dataType * [height_int];
+	dataType** interpolatedImage = new dataType * [height_int];
 	for (k = 0; k < height_int; k++) {
 		maskThreshold[k] = new dataType[dim2D]{ 0 };
+		interpolatedImage[k] = new dataType[dim2D]{ 0 };
 	}
 
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
@@ -139,11 +127,9 @@ int main() {
 		orientation
 	};
 
-	//imageInterpolation3D(inputData, interpolatedData, NEAREST_NEIGHBOR);
+	imageInterpolation3D(inputData, interpolatedData, NEAREST_NEIGHBOR);
 
-	//fprintf(info_test, "Interpolated image dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, height_int);
-
-	storing_path = outputPath + "interpolated_Lungs_p2.raw";
+	//storing_path = outputPath + "interpolated_lungs_p7.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, height_int, storing_path.c_str(), STORE_DATA, false);
 
 	//Find bounding box
@@ -178,78 +164,151 @@ int main() {
 		}
 	}
 
-	//std::cout << "i min = " << i_min << ", i max = " << i_max << std::endl;
-	//std::cout << "j min = " << j_min << ", j max = " << j_max << std::endl;
-	//std::cout << "k min = " << k_min << ", k max = " << k_max << std::endl;
-	//fprintf(info_test, "Lungs bounding box x_min = %d, x_max = %d\n", i_min, i_max);
-	//fprintf(info_test, "Lungs bounding box y_min = %d, y_max = %d\n", j_min, j_max);
-	//fprintf(info_test, "Lungs bounding box z_min = %d, z_max = %d\n", k_min, k_max);
+	//Adjust the bounding box to have all the voxels
+	if (i_min > 0) {
+		i_min -= 1;
+	}
+	if (j_min > 0) {
+		j_min -= 1;
+	}
+	if (k_min > 0) {
+		k_min -= 1;
+	}
+	if (i_max < Length - 1) {
+		i_max += 1;
+	}
+	if (j_max < Width - 1) {
+		j_max += 1;
+	}
+	if (k_max < height_int - 1) {
+		k_max += 1;
+	}
+
+	std::cout << "i min = " << i_min << ", i max = " << i_max << std::endl;
+	std::cout << "j min = " << j_min << ", j max = " << j_max << std::endl;
+	std::cout << "k min = " << k_min << ", k max = " << k_max << std::endl;
 
 	size_t height = k_max - k_min + 1;
 	size_t length = i_max - i_min + 1;
 	size_t width = j_max - j_min + 1;
 	std::cout << "New dim : " << length << " x " << width << " x " << height << std::endl;
-	//fprintf(info_test, "Cropped image dimension : Length = %d, Width = %d, Height = %d\n", length, width, height);
+
+	Point3D cropped_origin = { i_min, j_min, k_min };
+	cropped_origin = getRealCoordFromImageCoord3D(cropped_origin, ctOrigin, intSpacing, orientation);
+	std::cout << "Cropped image origin : (" << cropped_origin.x << ", " << cropped_origin.y << ", " << cropped_origin.z << ")" << std::endl;
 
 	dataType** maskLungs = new dataType * [height];
 	dataType** ball = new dataType * [height];
 	dataType** distanceMap = new dataType * [height];
+	dataType** imageCropped = new dataType * [height];
+	dataType** segment = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		maskLungs[k] = new dataType[length * width]{ 0 };
 		ball[k] = new dataType[length * width]{ 0 };
 		distanceMap[k] = new dataType[length * width]{ 0 };
+		imageCropped[k] = new dataType[length * width]{ 0 };
+		segment[k] = new dataType[length * width]{ 0 };
 	}
 
 	//Cropping
+	loading_path = inputPath + "raw/interpolated/filtered_p7.raw";
+	manageRAWFile3D<dataType>(interpolatedImage, Length, Width, height_int, loading_path.c_str(), LOAD_DATA, false);
 	size_t k_ext, i_ext, j_ext;
 	for (k = 0, k_ext = k_min; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = i_min; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = j_min; j < width; j++, j_ext++) {
-				if (maskThreshold[k_ext][x_new(i_ext, j_ext, Length)] == 1.0) {
-					maskLungs[k][x_new(i, j, length)] = 0.0; //maskThreshold[k_ext][x_new(i_ext, j_ext, Length)];
-				}
-				else {
-					maskLungs[k][x_new(i, j, length)] = 1.0;
+				imageCropped[k][x_new(i, j, length)] = interpolatedImage[k_ext][x_new(i_ext, j_ext, Length)];
+				//Remove corners
+				if (k >= 1 && k < (height - 1) && i >= 5 & i <= (length - 5) && j >= 5 && j <= (width - 5)) {
+					if (maskThreshold[k_ext][x_new(i_ext, j_ext, Length)] == 1.0) {
+						maskLungs[k][x_new(i, j, length)] = 0.0; //maskThreshold[k_ext][x_new(i_ext, j_ext, Length)];
+					}
+					else {
+						maskLungs[k][x_new(i, j, length)] = 1.0;
+					}
 				}
 			}
 		}
 	}
+
+	//storing_path = outputPath + "cropped_image.raw";
+	//manageRAWFile3D<dataType>(imageCropped, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	
-	storing_path = outputPath + "cropped_Lungs_p2.raw";
+	//storing_path = outputPath + "cropped_lungs_p7.raw";
 	//manageRAWFile3D<dataType>(maskLungs, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
+	rouyTourinFunction_3D(distanceMap, maskLungs, 0.5, length, width, height, 0.4, ctSpacing.sx);
 	//fastSweepingFunction_3D(distanceMap, maskLungs, length, width, height, ctSpacing.sx, 10000000.0, 0.0);
-	rouyTourinFunction_3D(distanceMap, maskLungs, 0.001, length, width, height, 0.5, ctSpacing.sx);
-
-	storing_path = outputPath + "distance_map_RT_p2.raw";
-	manageRAWFile3D<dataType>(distanceMap, length, width, height, storing_path.c_str(), STORE_DATA, false);
-
-	Point3D cropped_origin = { i_min, j_min, k_min };
-	cropped_origin = getRealCoordFromImageCoord3D(cropped_origin, ctOrigin, intSpacing, orientation);
-	//std::cout << "Cropped image origin : (" << cropped_origin.x << ", " << cropped_origin.y << ", " << cropped_origin.z << ")" << std::endl;
-	//fprintf(info_test, "Cropped image origin : (%f, %f, %f)\n", cropped_origin.x, cropped_origin.y, cropped_origin.z);
-	//fclose(info_test);
+	//fastMarching(distanceMap, maskLungs, height, length, width, 0.0);
 
 	Point3D point_max = getPointWithTheHighestValue(distanceMap, length, width, height);
 
-	//Draw ball for visualization
-	double radius = 15;
-	Point3D seed_real_coord = getRealCoordFromImageCoord3D(point_max, cropped_origin, intSpacing, orientation);
+	//storing_path = outputPath + "distance_map_corners.raw";
+	//manageRAWFile3D<dataType>(distanceMap, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	Image_Data croppedImageData
+	{
+		height,
+		length,
+		width,
+		imageCropped,
+		cropped_origin,
+		intSpacing,
+		orientation
+	};
+
+	double radius = 10;
+	regionGrowing(croppedImageData, segment, length, width, height, point_max, radius);
+
+	storing_path = outputPath + "segmentedAreaP7.raw";
+	manageRAWFile3D<dataType>(segment, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	////Draw ball for visualization
+	//Point3D seed_real_coord = getRealCoordFromImageCoord3D(point_max, cropped_origin, intSpacing, orientation);
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length; i++) {
+	//		for (j = 0; j < width; j++) {
+	//			Point3D current_point = { i, j, k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, cropped_origin, intSpacing, orientation);
+	//			double pDistance = getPoint3DDistance(current_point, seed_real_coord);
+	//			if (pDistance <= radius) {
+	//				ball[k][x_new(i, j, length)] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
+	//storing_path = outputPath + "ball_15_RT_corners.raw";
+	//manageRAWFile3D<dataType>(ball, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
 	
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				Point3D current_point = { i, j, k };
-				current_point = getRealCoordFromImageCoord3D(current_point, cropped_origin, intSpacing, orientation);
-				double pDistance = getPoint3DDistance(current_point, seed_real_coord);
-				if (pDistance <= radius) {
-					ball[k][x_new(i, j, length)] = 1.0;
-				}
-			}
-		}
+	//Save data information
+	string store_information = outputPath + "Test_details_p7.txt";
+	FILE* info_test;
+	if (fopen_s(&info_test, store_information.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
 	}
-	storing_path = outputPath + "ball_15_RT_p2.raw";
-	manageRAWFile3D<dataType>(ball, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//Original image
+	fprintf(info_test, "Input : patient 7\n");
+	fprintf(info_test, "Dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, Height);
+	fprintf(info_test, "Origin (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	fprintf(info_test, "Spacing (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
+	//Description
+	fprintf(info_test, "\nThe lungs segmentation is used to find lungs bounding box\n");
+	fprintf(info_test, "In order to have better distance map, isotropic voxel is used\n");
+	fprintf(info_test, "which means interpolation in z direction to have cubic like voxel\n");
+	fprintf(info_test, "We used nearest neigbor interpolation, because the input is binary\n");
+	fprintf(info_test, "\nInterpolated image dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, height_int);
+	//Description croppring
+	fprintf(info_test, "The lungs pixels min and max coordinates are used (+-1, to have all the lungs pixels) to define the lungs bounding box\n");
+	fprintf(info_test, "x_min = %d, x_max = %d\n", i_min, i_max);
+	fprintf(info_test, "y_min = %d, y_max = %d\n", j_min, j_max);
+	fprintf(info_test, "z_min = %d, z_max = %d\n", k_min, k_max);
+	fprintf(info_test, "Cropped image dimension : Length = %d, Width = %d, Height = %d\n", length, width, height);
+	fprintf(info_test, "Cropped image origin : (%f, %f, %f)\n", cropped_origin.x, cropped_origin.y, cropped_origin.z);
+	//Description distance map
+	fprintf(info_test, "The Rouy-Tourin is used to compute the distance map\n");
+	fclose(info_test);
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
@@ -258,17 +317,473 @@ int main() {
 
 	for (k = 0; k < height_int; k++) {
 		delete[] maskThreshold[k];
+		delete[] interpolatedImage[k];
 	}
 	delete[] maskThreshold;
+	delete[] interpolatedImage;
 
 	for (k = 0; k < height; k++) {
 		delete[] maskLungs[k];
 		delete[] ball[k];
 		delete[] distanceMap[k];
+		delete[] imageCropped[k];
+		delete[] segment[k];
 	}
 	delete[] maskLungs;
 	delete[] ball;
 	delete[] distanceMap;
+	delete[] imageCropped;
+	delete[] segment;
+
+	free(ctContainer);
+	*/
+
+	//========================= Lungs centroid ==================================
+	
+	/*
+	dataType** imageData = new dataType * [Height] {0};
+	dataType** maskLungs = new dataType * [Height] {0};
+	dataType** segment = new dataType * [Height] {0};
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+		segment[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = outputPath + "/segmentation lungs/segment_lungs_p3.raw"; // Find lungs centroid
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	Image_Data imageDataStr
+	{
+		Height,
+		Length,
+		Width,
+		imageData,
+		ctOrigin,
+		ctSpacing,
+		orientation
+	};
+
+	loading_path = inputPath + "raw/filtered/filteredGMC_p7.raw";// segment from centroid
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	dataType* centroid_lungs = new dataType[3]{ 0 };
+	centroidImage(maskLungs, centroid_lungs, Height, Length, Width, 0.0);
+
+	Point3D pCentroid = { centroid_lungs[0], centroid_lungs[1] , centroid_lungs[2] };
+	double radius = 10;
+
+	//pCentroid = getRealCoordFromImageCoord3D(pCentroid, ctOrigin, ctSpacing, orientation);
+	////Draw ball for visualization -- original dimension
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			Point3D current_point = { i, j, k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
+	//			double pDistance = getPoint3DDistance(current_point, pCentroid);
+	//			if (pDistance <= radius) {
+	//				ballOriginal[k][x_new(i, j, Length)] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
+
+	regionGrowing(imageDataStr, segment, Length, Width, Height, pCentroid, radius);
+
+	storing_path = outputPath + "segment_from_lungs_centroid_p7.raw";
+	manageRAWFile3D<dataType>(segment, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskLungs[k];
+		delete[] segment[k];
+	}
+	delete[] imageData;
+	delete[] maskLungs;
+	delete[] segment;
+	*/
+	
+	/*
+	//const size_t hauteur = 866; //p2
+	//const size_t hauteur = 1083;//p3
+	const size_t hauteur = 844;//p4, p5
+	//const size_t hauteur = 1351;//p6
+	//const size_t hauteur = 932;//p7
+
+	VoxelSpacing interpolatedSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	
+	dataType** maskLungs = new dataType * [hauteur];
+	dataType** lungsData = new dataType * [hauteur];
+	dataType** segmentHeart = new dataType * [hauteur];
+	dataType** ball = new dataType * [hauteur];
+	for (k = 0; k < hauteur; k++) {
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+		lungsData[k] = new dataType[dim2D]{ 0 };
+		segmentHeart[k] = new dataType[dim2D]{ 0 };
+		ball[k] = new dataType[Length * Width]{ 0 };
+	}
+
+	loading_path = inputPath + "/raw/interpolated/filtered_p4.raw";
+	manageRAWFile3D<dataType>(lungsData, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
+
+	Image_Data imageDataInt
+	{
+		hauteur,
+		Length,
+		Width,
+		lungsData,
+		ctOrigin,
+		interpolatedSpacing,
+		orientation
+	};
+
+	loading_path = outputPath + "/segmentation lungs/interpolated/lungs_interpolated_p4.raw";
+	manageRAWFile3D<dataType>(maskLungs, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
+
+	dataType* centroid_lungs = new dataType[3]{ 0 };
+	centroidImage(maskLungs, centroid_lungs, hauteur, Length, Width, 0.0);
+	Point3D pCentroid = { centroid_lungs[0], centroid_lungs[1] , centroid_lungs[2] };
+	double radius = 10;
+	
+	//regionGrowing(imageDataInt, segmentHeart, Length, Width, hauteur, pCentroid, radius);
+
+	//storing_path = outputPath + "segment_from_lungs_centroid_p2.raw";
+	//manageRAWFile3D<dataType>(segmentHeart, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+
+	////Draw ball for visualization
+	//pCentroid = getRealCoordFromImageCoord3D(pCentroid, ctOrigin, interpolatedSpacing, orientation);
+	//for (k = 0; k < hauteur; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			Point3D current_point = { i, j, k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, interpolatedSpacing, orientation);
+	//			double pDistance = getPoint3DDistance(current_point, pCentroid);
+	//			if (pDistance <= radius) {
+	//				ball[k][x_new(i, j, Length)] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
+	//storing_path = outputPath + "ball_lungs_centroid_p2.raw";
+	//manageRAWFile3D<dataType>(ball, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+
+	//Find lungs bounding box
+	size_t k_min = hauteur, k_max = 0;
+	size_t i_min = Length, i_max = 0;
+	size_t j_min = Width, j_max = 0;
+	for (k = 0; k < hauteur; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				if (maskLungs[k][x_new(i, j, Length)] == 1.0) {
+					if (i_min > i) {
+						i_min = i;
+					}
+					if (j_min > j) {
+						j_min = j;
+					}
+					if (k_min > k) {
+						k_min = k;
+					}
+
+					if (i_max < i) {
+						i_max = i;
+					}
+					if (j_max < j) {
+						j_max = j;
+					}
+					if (k_max < k) {
+						k_max = k;
+					}
+				}
+			}
+		}
+	}
+
+	//Adjust the bounding box to have all the voxels
+	if (i_min > 0) {
+		i_min -= 1;
+	}
+	if (j_min > 0) {
+		j_min -= 1;
+	}
+	if (k_min > 0) {
+		k_min -= 1;
+	}
+	if (i_max < Length - 1) {
+		i_max += 1;
+	}
+	if (j_max < Width - 1) {
+		j_max += 1;
+	}
+	if (k_max < hauteur - 1) {
+		k_max += 1;
+	}
+
+	//cropped dimension
+	const size_t height = k_max - k_min + 1;
+	const size_t length = i_max - i_min + 1;
+	const size_t width = j_max - j_min + 1;
+	std::cout << "New dim : " << length << " x " << width << " x " << height << std::endl;
+
+	Point3D croppedOrigin = { i_min, j_min, k_min };
+	croppedOrigin = getRealCoordFromImageCoord3D(croppedOrigin, ctOrigin, interpolatedSpacing, orientation);
+	std::cout << "Cropped image origin : (" << croppedOrigin.x << ", " << croppedOrigin.y << ", " << croppedOrigin.z << ")" << std::endl;
+
+	dataType** croppedLungs = new dataType * [height];
+	dataType** segmentCrop = new dataType * [height];
+	dataType** distanceMap = new dataType * [height];
+	dataType** maskThreshold = new dataType * [height];
+	dataType** ballMaxDist = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		croppedLungs[k] = new dataType[length * width]{ 0 };
+		segmentCrop[k] = new dataType[length * width]{ 0 };
+		distanceMap[k] = new dataType[length * width]{ 0 };
+		maskThreshold[k] = new dataType[length * width]{ 0 };
+		ballMaxDist[k] = new dataType[length * width]{ 0 };
+	}
+
+	//Find the lungs farest point to its centroid
+	pCentroid = getRealCoordFromImageCoord3D(pCentroid, ctOrigin, interpolatedSpacing, orientation);
+	double farest_distance = 0.0;
+	Point3D farest_point;
+	for (k = 0; k < hauteur; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				if (maskLungs[k][x_new(i, j, Length)] == 1.0) {
+					Point3D current_point = { i, j, k };
+					current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, interpolatedSpacing, orientation);
+					double fDistance = getPoint3DDistance(current_point, pCentroid);
+					if (farest_distance < fDistance) {
+						farest_distance = fDistance;
+						farest_point.x = i;
+						farest_point.y = j;
+						farest_point.z = k;
+					}
+				}
+			}
+		}
+	}
+
+	//Cropping
+	farest_point = getRealCoordFromImageCoord3D(farest_point, ctOrigin, interpolatedSpacing, orientation);
+	std::cout << "farest point : (" << farest_point.x << ", " << farest_point.y << ", " << farest_point.z << ")" << std::endl;
+	size_t k_ext, i_ext, j_ext;
+	for (k = 0, k_ext = k_min; k < height; k++, k_ext++) {
+		for (i = 0, i_ext = i_min; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = j_min; j < width; j++, j_ext++) {
+
+				//Cropping according lungs bounding box
+				//maskThreshold[k][x_new(i, j, length)] = maskLungs[k_ext][x_new(i_ext, j_ext, Length)];
+				
+				////Cropping according lungs bounding box
+				//// and invert foreground and background pixels
+				//if (maskLungs[k_ext][x_new(i_ext, j_ext, Length)] == 1.0) {
+				//	maskThreshold[k][x_new(i, j, length)] = 0.0;
+				//}
+				//else {
+				//	maskThreshold[k][x_new(i, j, length)] = 1.0;
+				//}
+
+				//Cropping according lungs farest point to the centroid
+				Point3D current_point = { i, j, k };
+				current_point = getRealCoordFromImageCoord3D(current_point, croppedOrigin, interpolatedSpacing, orientation);
+				double fDistance = getPoint3DDistance(current_point, pCentroid);
+				if (fDistance <= farest_distance) {
+					croppedLungs[k][x_new(i, j, length)] = lungsData[k_ext][x_new(i_ext, j_ext, Length)];
+					if (maskLungs[k_ext][x_new(i_ext, j_ext, Length)] == 1.0) {
+						maskThreshold[k][x_new(i, j, length)] = 0.0;
+					}
+					else {
+						maskThreshold[k][x_new(i, j, length)] = 1.0;
+					}
+				}
+			}
+		}
+	}
+
+	storing_path = outputPath + "cropped_new_p4.raw";
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	
+	//Save data information
+	string store_information = outputPath + "info_cropping_p4.txt";
+	FILE* info_test;
+	if (fopen_s(&info_test, store_information.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	//Original image
+	fprintf(info_test, "Input : patient 4\n");
+	fprintf(info_test, "Dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, hauteur);
+	fprintf(info_test, "Origin (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	fprintf(info_test, "Spacing (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sx);
+	//Description
+	//fprintf(info_test, "\nThe lungs segmentation is used to find lungs bounding box\n");
+	//fprintf(info_test, "In order to have better distance map, isotropic voxel is used\n");
+	//fprintf(info_test, "which means interpolation in z direction to have cubic like voxel\n");
+	//fprintf(info_test, "We used nearest neigbor interpolation, because the input is binary\n");
+	//fprintf(info_test, "\nInterpolated image dimension : Length = %d, Width = %d, Height = %d\n", Length, Width, height_int);
+	//Description croppring
+	fprintf(info_test, "The lungs pixels min and max coordinates are used (+-1, to have all the lungs pixels) to define the lungs bounding box\n");
+	fprintf(info_test, "x_min = %d, x_max = %d\n", i_min, i_max);
+	fprintf(info_test, "y_min = %d, y_max = %d\n", j_min, j_max);
+	fprintf(info_test, "z_min = %d, z_max = %d\n", k_min, k_max);
+	fprintf(info_test, "Cropped image dimension : Length = %d, Width = %d, Height = %d\n", length, width, height);
+	fprintf(info_test, "Cropped image origin : (%f, %f, %f)\n", croppedOrigin.x, croppedOrigin.y, croppedOrigin.z);
+	//Description distance map
+	//fprintf(info_test, "The Rouy-Tourin is used to compute the distance map\n");
+	fclose(info_test);
+	
+
+	//storing_path = outputPath + "cropped_lungs_p2.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	rouyTourinFunction_3D(distanceMap, maskThreshold, 0.5, length, width, height, 0.4, ctSpacing.sx);
+
+	storing_path = outputPath + "distance_map_cropped_updated_p4.raw";
+	manageRAWFile3D<dataType>(distanceMap, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	Point3D point_max = getPointWithTheHighestValue(distanceMap, length, width, height);
+	Point3D point_max_real_coord = getRealCoordFromImageCoord3D(point_max, croppedOrigin, interpolatedSpacing, orientation);
+
+	//Draw ball for visualization
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				Point3D current_point = { i, j, k };
+				current_point = getRealCoordFromImageCoord3D(current_point, croppedOrigin, interpolatedSpacing, orientation);
+				double pDistance = getPoint3DDistance(current_point, point_max_real_coord);
+				if (pDistance <= radius) {
+					ballMaxDist[k][x_new(i, j, length)] = 1.0;
+				}
+			}
+		}
+	}
+	storing_path = outputPath + "ball_max_distance_updated_p4.raw";
+	manageRAWFile3D<dataType>(ballMaxDist, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	Image_Data imageDataCropU
+	{
+		height,
+		length,
+		width,
+		croppedLungs,
+		croppedOrigin,
+		interpolatedSpacing,
+		orientation
+	};
+	regionGrowing(imageDataCropU, segmentCrop, length, width, height, point_max, radius);
+
+	storing_path = outputPath + "segment_from_max_distance_p4.raw";
+	manageRAWFile3D<dataType>(segmentCrop, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < height; k++) {
+		delete[] croppedLungs[k];
+		delete[] segmentCrop[k];
+		delete[] distanceMap[k];	
+		delete[] maskThreshold[k];
+		delete[] ballMaxDist[k];
+	}
+	delete[] croppedLungs;
+	delete[] segmentCrop;
+	delete[] distanceMap;
+	delete[] maskThreshold;
+	delete[] ballMaxDist;
+	
+	delete[] centroid_lungs;
+	for (k = 0; k < hauteur; k++) {
+		delete[] maskLungs[k];
+		delete[] lungsData[k];
+		delete[] segmentHeart[k];
+		delete[] ball[k];
+	}
+	delete[] maskLungs;
+	delete[] lungsData;
+	delete[] segmentHeart;
+	delete[] ball;
+
+	free(ctContainer);
+	*/
+
+	//========================= Region growing ==================================
+
+	Height = 866;
+
+	dataType** imageData = new dataType * [Height];
+	dataType** segment = new dataType * [Height];
+	dataType** ball = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		segment[k] = new dataType[dim2D]{ 0 };
+		ball[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "/raw/filtered/filteredGMC_p2.raw";
+	loading_path = inputPath + "/raw/interpolated/filtered_p2.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	VoxelSpacing interpolatedSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+
+	Image_Data ctImageData
+	{
+		Height,
+		Length,
+		Width,
+		imageData,
+		ctOrigin,
+		interpolatedSpacing ,
+		orientation
+	};
+
+	Potential_Parameters parameters = {
+		0.005,//K
+		0.01,//eps
+		ctSpacing.sx,//h
+		radius
+	};
+
+	//Point3D point_liver = {180, 275, 200};
+	//Point3D point_aorta = { 262, 257, 147 };
+	Point3D point_aorta = { 260, 257, 308 };
+	double radius = 3.0;
+
+	compute3DPotential(ctImageData, potential, point_aorta, parameters);
+
+	ctImageData.imageDataPtr = potential;
+
+	regionGrowing(ctImageData, segment, Length, Width, Height, point_aorta, radius);
+
+	storing_path = outputPath + "segment_from_aorta_p2.raw";
+	manageRAWFile3D<dataType>(segment, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//Point3D pBall = getRealCoordFromImageCoord3D(point_aorta, ctOrigin, interpolatedSpacing, orientation);
+	//for (k = 0; k < hauteur; k++) {
+	//	for (i = 0; i < Length; i++) {
+	//		for (j = 0; j < Width; j++) {
+	//			Point3D current_point = { i, j, k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, interpolatedSpacing, orientation);
+	//			double pDistance = getPoint3DDistance(current_point, pBall);
+	//			if (pDistance <= radius) {
+	//				ball[k][x_new(i, j, Length)] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
+	//storing_path = outputPath + "ball_seed_p2.raw";
+	//manageRAWFile3D<dataType>(ball, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] segment[k];
+		delete[] ball[k];
+		delete[] potential[k];
+	}
+	delete[] imageData;
+	delete[] segment;
+	delete[] ball;
+	delete[] potential;
 
 	free(ctContainer);
 
