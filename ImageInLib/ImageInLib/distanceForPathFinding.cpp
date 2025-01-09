@@ -1423,7 +1423,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		}
 	}
 	
-	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, 1.0, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, parameters.h, 10000000.0, 0.0);
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
