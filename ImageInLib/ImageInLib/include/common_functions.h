@@ -186,6 +186,8 @@ extern "C" {
 	//==============================================================================
 	dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_t width);
 	//==============================================================================
+	dataType getTheMaxValue3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height);
+	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
 	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);

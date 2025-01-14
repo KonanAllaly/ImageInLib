@@ -313,6 +313,18 @@ dataType getTheMaxValue(dataType* imageDataPtr, const size_t length, const size_
 	return max_value;
 }
 //==============================================================================
+dataType getTheMaxValue3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height) {
+	dataType max_value = 0.0;
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length * width; i++) {
+			if (imageDataPtr[k][i] > max_value) {
+				max_value = imageDataPtr[k][i];
+			}
+		}
+	}
+	return max_value;
+}
+//==============================================================================
 void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew) {
 	
 	size_t i, dim2D = imageLength * imageWidth;
