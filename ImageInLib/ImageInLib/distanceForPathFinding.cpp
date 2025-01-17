@@ -914,7 +914,6 @@ bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX,
 	size_t i = 0, j = 0, k = 0, currentInd = 0;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 
-	//dataType sx = 1.0, sy = 1.0, sz = 1.0;
 	dataType sx = spacing.sx, sy = spacing.sy, sz = spacing.sz;
 
 	for (k = 0; k < height; k++) {
@@ -2049,7 +2048,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	}
 
 	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point_p4.csv";
+	string saving_name, saving_csv = outputPath + "path_point_p1.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2063,30 +2062,31 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	vector<Point3D> path_points;
 
 	//======== First step ===========//
-	compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
+	//compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
 
-	saving_name = outputPath + "potential_p4.raw";
-	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), STORE_DATA, false);
+	saving_name = outputPath + "potential_p1.raw";
+	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 
 	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
-	for (i = 0; i < path_points.size(); i++) {
-		path_points[i] = getRealCoordFromImageCoord3D(path_points[i], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[i].x, path_points[i].y, path_points[i].z);
+	//copy points to file
+	int n = 0;
+	for (n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
 	}
 	while (path_points.size() != 0) {
 		path_points.pop_back();
 	}
 	
-	
 	//================================//
 
 	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	double step = 0.6 * getPoint3DDistance(seed1, seed2), dist = 0.0;
+	double step = 0.75 * getPoint3DDistance(seed1, seed2), dist = 0.0;
 	cout << "Step : " << step << endl;
 
 	////======== Second step ===========//
@@ -2118,10 +2118,9 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	seedsPath[1] = temporary_point;
 	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 
-	//copy points to file
-	for (i = 0; i < path_points.size(); i++) {
-		path_points[i] = getRealCoordFromImageCoord3D(path_points[i], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[i].x, path_points[i].y, path_points[i].z);
+	for (n = path_points.size() - 1; n > - 1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
 	}
 	while (path_points.size() > 0) {
 		path_points.pop_back();
@@ -2131,20 +2130,20 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	seedsPath[0] = temporary_point;
 	seedsPath[1] = seedPoints[2];
 	
-	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
+	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
+	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 	
 	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
-	for (i = 0; i < path_points.size(); i++) {
-		path_points[i] = getRealCoordFromImageCoord3D(path_points[i], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[i].x, path_points[i].y, path_points[i].z);
+	for (n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
 	}
 	while (path_points.size() > 0) {
 		path_points.pop_back();
 	}
 	//=====================================
 	
-
 	fclose(file);
 	delete[] seedsPath;
 	for (k = 0; k < height; k++) {
