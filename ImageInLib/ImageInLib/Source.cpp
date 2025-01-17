@@ -48,7 +48,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -1077,10 +1077,10 @@ int main() {
 		return false;
 	
 	//Load filtered input image
-	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p6.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
-	string test_meta_data = outputPath + "metaDataTest_p1.txt";
+	string test_meta_data = outputPath + "metaDataTest_p6.txt";
 	FILE* test_description;
 	if (fopen_s(&test_description, test_meta_data.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -1088,10 +1088,10 @@ int main() {
 	}
 	fprintf(test_description, "This test is performed on Thursday 16th, January 2025\n");
 	fprintf(test_description, "The objective of the test is to extract paths inside the aorta\n");
-	fprintf(test_description, "The input data is patient number 1\n");
+	fprintf(test_description, "The input data is patient number 6\n");
 	fprintf(test_description, "Due to the sensitivity of the approach to noise\n");
 	fprintf(test_description, "filtering by GMCF is performed on the input image\n");
-	fprintf(test_description, "\nPatient 1: origin = (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	fprintf(test_description, "\nPatient 6: origin = (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
 	fprintf(test_description, "Voxel sizes = (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
 	fprintf(test_description, "Dimension : Length = %d , Width = %d and Height = %d\n", Length, Width, Height);
 	fprintf(test_description, "\nThe path extraction is performed into 2 steps using 3 input points\n");
@@ -1153,10 +1153,10 @@ int main() {
 	
 	//Points in original image coordinates
 	
-	////Patient 6
-	//Point3D seed1 = {250, 300, 255};
-	//Point3D seed2 = {277, 351, 459};
-	//Point3D seed3 = {250, 295, 459};
+	//Patient 6
+	Point3D seed1 = {250, 300, 255};
+	Point3D seed2 = {277, 351, 459};
+	Point3D seed3 = {250, 295, 459};
 
 	////Patient 5
 	//Point3D seed1 = { 268, 241, 476 };
@@ -1164,7 +1164,6 @@ int main() {
 	//Point3D seed3 = { 243, 216, 646 };
 
 	////Patient 4
-	////Point3D seed1 = { 280, 235, 125 };
 	//Point3D seed1 = { 284, 230, 132 };
 	//Point3D seed2 = { 259, 313, 236 };
 	//Point3D seed3 = { 279, 242, 236 };
@@ -1179,10 +1178,10 @@ int main() {
 	//Point3D seed2 = { 290, 315, 363 };
 	//Point3D seed3 = { 249, 253, 363 };
 
-	//Patient 1
-	Point3D seed1 = { 262, 255, 147 };
-	Point3D seed2 = { 298, 315, 264 };
-	Point3D seed3 = { 255, 258, 264 };
+	////Patient 1
+	//Point3D seed1 = { 262, 255, 147 };
+	//Point3D seed2 = { 298, 315, 264 };
+	//Point3D seed3 = { 255, 258, 264 };
 
 	fprintf(test_description, "\nThe points used to extract the current path are set manually\n");
 	fprintf(test_description, "The points are defined in original image then interpolated\n");

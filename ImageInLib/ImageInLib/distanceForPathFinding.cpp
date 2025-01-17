@@ -2048,7 +2048,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	}
 
 	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point_p1.csv";
+	string saving_name, saving_csv = outputPath + "path_point_p6.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2062,10 +2062,10 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	vector<Point3D> path_points;
 
 	//======== First step ===========//
-	//compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
+	compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
 
-	saving_name = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), LOAD_DATA, false);
+	saving_name = outputPath + "potential_p6.raw";
+	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), STORE_DATA, false);
 
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
@@ -2086,7 +2086,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 
 	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	double step = 0.75 * getPoint3DDistance(seed1, seed2), dist = 0.0;
+	double step = 0.6 * getPoint3DDistance(seed1, seed2), dist = 0.0;
 	cout << "Step : " << step << endl;
 
 	////======== Second step ===========//
@@ -4506,6 +4506,7 @@ void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potential
 
 }
 
+/*
 //=====================================
 bool fastSweeping(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue) {
 	
@@ -4583,3 +4584,4 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 
 	return true;
 }
+*/
