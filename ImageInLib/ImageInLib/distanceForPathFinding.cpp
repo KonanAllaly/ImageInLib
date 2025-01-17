@@ -16,6 +16,13 @@
 
 #define BIG_VALUE INFINITY
 
+//dataType min0(dataType x, dataType y) {
+//	if (y - x > 0) 
+//		return pow(x - y, 2);
+//	else 
+//		return 0.0;
+//}
+
 //J.A Sethian, A Fast Marching Level Set method for Monotonically advancing fronts, 1995, page 8 and 10.
 //link to article ---> http://ugweb.cs.ualberta.ca/~vis/courses/CompVis/readings/modelrec/sethian95fastlev.pdf
  
@@ -1400,7 +1407,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		maskThreshold[k] = new dataType[dim2D]{0};
 	}
 	
-	dataType norm_of_gradient = 0.0, edge_coef = 1000.0;
+	dataType norm_of_gradient = 0.0;;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 
 	for (k = 0; k < height; k++) {
@@ -1410,10 +1417,10 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
 			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-			edgeDetector[k][i] = gradientFunction(norm_of_gradient, edge_coef);
+			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
 			
 			//threshold
-			if (edgeDetector[k][i] < 0.15) {
+			if (edgeDetector[k][i] < parameters.thres) {
 				maskThreshold[k][i] = 0.0;
 			}
 			else {
@@ -1423,7 +1430,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		}
 	}
 	
-	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, parameters.h, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+	//rouyTourinFunction_3D(distance, maskThreshold, 0.5, length, width, height, 0.4, ctImageData.spacing.sx);
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -2040,10 +2048,8 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 		mask_action[k] = new dataType[dim2D]{ 0 };
 	}
 
-	double radius = 3.0;
-
 	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point_old_approach.csv";
+	string saving_name, saving_csv = outputPath + "path_point_p4.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2059,11 +2065,11 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	//======== First step ===========//
 	compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
 
+	saving_name = outputPath + "potential_p4.raw";
+	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), STORE_DATA, false);
+
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
-	
-	//saving_name = outputPath + "action3_1.raw";
-	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
 
 	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
@@ -2075,18 +2081,16 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 		path_points.pop_back();
 	}
 	
+	
 	//================================//
 
 	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	double step = 0.75 * getPoint3DDistance(seed1, seed2), dist = 0.0;
+	double step = 0.6 * getPoint3DDistance(seed1, seed2), dist = 0.0;
 	cout << "Step : " << step << endl;
 
 	////======== Second step ===========//
 	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[1]);
-	
-	//saving_name = outputPath + "action3_2.raw";
-	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
 
 	dataType min_action = BIG_VALUE, value_temp = 0.0;
 	for (k = 0; k < height; k++) {
@@ -2129,9 +2133,6 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	
 	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 	
-	//saving_name = outputPath + "action3_3.raw";
-	//store3dRawData<dataType>(action_field, length, width, height, saving_name.c_str());
-	
 	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
 	
 	for (i = 0; i < path_points.size(); i++) {
@@ -2142,6 +2143,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 		path_points.pop_back();
 	}
 	//=====================================
+	
 
 	fclose(file);
 	delete[] seedsPath;
@@ -4525,4 +4527,60 @@ bool fastSweeping(Image_Data ctImageData, dataType** distancePtr, const dataType
 
 	return true;
 
+}
+
+bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau) {
+	
+	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
+		return false;
+
+	size_t height = ctImageData.height;
+	size_t length = ctImageData.length;
+	size_t width = ctImageData.width;
+	size_t i, j, k;
+	size_t i_ext, j_ext, k_ext, x_ext;
+
+	dataType** previousSolution = new dataType * [height + 2];
+	for (k = 0; k < height; k++) {
+		previousSolution[k] = new dataType[(length + 2) * (width + 2)]{ 0 };
+	}
+
+	double mass = 0.0;
+	dataType hx = ctImageData.spacing.sx;
+	dataType hy = ctImageData.spacing.sy;
+	dataType hz = ctImageData.spacing.sz;
+	dataType value = 0.0;
+
+	while (mass > tolerance) {
+
+		for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
+			for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+					x_ext = x_new(i_ext, j_ext, length + 2);
+					value = previousSolution[k_ext][x_ext];
+					distancePtr[k][x_new(i, j, length)] = previousSolution[k_ext][x_ext] + tau - tau * ( (1.0 / hx) * max( min0(previousSolution[k_ext][x_new(i_ext + 1, j_ext, length + 2)], value), min0(0, 0)) +
+						                                                                                 (1.0 / hy) * max( min0(0, 0), min0(0,0) ) +
+																									     (1.0 / hz) * max( min0(0, 0), min0(0, 0))
+						                                                                               );
+				}
+			}
+		}
+
+		//Compute mass
+		for (k = 1; k <= height; k++) {
+			for (size_t i = 1; i <= length; i++) {
+				for (size_t j = 1; j <= width; j++) {
+
+				}
+			}
+		}
+		copyDataToReducedArea(previousSolution, distancePtr, height, length, width);
+	}
+
+	for (size_t k = 0; k < height; k++) {
+		delete[] previousSolution[k];
+	}
+	delete[] previousSolution;
+
+	return true;
 }
