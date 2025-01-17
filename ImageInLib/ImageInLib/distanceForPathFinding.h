@@ -31,7 +31,9 @@ using namespace std;
 	}pointFastMarching3D;
 
 	typedef struct {
-		dataType K, eps, h;
+		dataType K; //edge detection coef
+		dataType thres;//edge detector threshold
+		dataType eps; //path smothing parameter
 		double radius;
 	} Potential_Parameters;
 
