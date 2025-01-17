@@ -48,7 +48,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient4_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -1068,7 +1068,7 @@ int main() {
 
 	//======================== Path extraction from three seeds ===============================
 	
-	/*
+	
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -1077,10 +1077,10 @@ int main() {
 		return false;
 	
 	//Load filtered input image
-	loading_path = inputPath + "raw/filtered/filteredGMC_p4.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
-	string test_meta_data = outputPath + "metaDataTest_16_01_p4.txt";
+	string test_meta_data = outputPath + "metaDataTest_p1.txt";
 	FILE* test_description;
 	if (fopen_s(&test_description, test_meta_data.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -1088,10 +1088,10 @@ int main() {
 	}
 	fprintf(test_description, "This test is performed on Thursday 16th, January 2025\n");
 	fprintf(test_description, "The objective of the test is to extract paths inside the aorta\n");
-	fprintf(test_description, "The input data is patient number 4\n");
+	fprintf(test_description, "The input data is patient number 1\n");
 	fprintf(test_description, "Due to the sensitivity of the approach to noise\n");
 	fprintf(test_description, "filtering by GMCF is performed on the input image\n");
-	fprintf(test_description, "\nPatient 4: origin = (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	fprintf(test_description, "\nPatient 1: origin = (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
 	fprintf(test_description, "Voxel sizes = (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
 	fprintf(test_description, "Dimension : Length = %d , Width = %d and Height = %d\n", Length, Width, Height);
 	fprintf(test_description, "\nThe path extraction is performed into 2 steps using 3 input points\n");
@@ -1163,11 +1163,11 @@ int main() {
 	//Point3D seed2 = { 283, 282, 646 };
 	//Point3D seed3 = { 243, 216, 646 };
 
-	//Patient 4
-	//Point3D seed1 = { 280, 235, 125 };
-	Point3D seed1 = { 284, 230, 132 };
-	Point3D seed2 = { 259, 313, 236 };
-	Point3D seed3 = { 279, 242, 236 };
+	////Patient 4
+	////Point3D seed1 = { 280, 235, 125 };
+	//Point3D seed1 = { 284, 230, 132 };
+	//Point3D seed2 = { 259, 313, 236 };
+	//Point3D seed3 = { 279, 242, 236 };
 
 	////Patient 3
 	//Point3D seed1 = { 267, 232, 111 };
@@ -1179,10 +1179,10 @@ int main() {
 	//Point3D seed2 = { 290, 315, 363 };
 	//Point3D seed3 = { 249, 253, 363 };
 
-	////Patient 1
-	//Point3D seed1 = { 262, 255, 147 };
-	//Point3D seed2 = { 298, 315, 264 };
-	//Point3D seed3 = { 255, 258, 264 };
+	//Patient 1
+	Point3D seed1 = { 262, 255, 147 };
+	Point3D seed2 = { 298, 315, 264 };
+	Point3D seed3 = { 255, 258, 264 };
 
 	fprintf(test_description, "\nThe points used to extract the current path are set manually\n");
 	fprintf(test_description, "The points are defined in original image then interpolated\n");
@@ -1226,7 +1226,7 @@ int main() {
 	delete[] imageInterpolated;
 	
 	free(ctContainer);
-	*/
+	
 
 	//======================== 2D Hough transform on Slice ===========================
 	
