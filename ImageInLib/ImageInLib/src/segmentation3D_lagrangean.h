@@ -7,6 +7,7 @@ extern "C" {
 #include <stddef.h>
 #include "common_functions.h"
 #include "segmentation.h"
+#include "imageInterpolation.h"
 
 	// Structures
 
