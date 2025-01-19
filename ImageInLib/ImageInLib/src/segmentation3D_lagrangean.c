@@ -365,8 +365,10 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     //fprintf(file_dist, "x,y\n");
     
     for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
-        fprintf(file_initial_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
-        
+        Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
+        point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
+        fprintf(file_initial_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
+
         //fprintf(file_dist, "%d,%f\n", n, iPoint->distance_to_next);
         //previous_curve[n][0] = iPoint->x;
         //previous_curve[n][1] = iPoint->y;
@@ -447,8 +449,10 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         iPoint = linked_curve.first_point;
         for (size_t m = 0; m < linked_curve.number_of_points; m++) {
 
+            Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
+            point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
             iPoint->average_distance_to_next += iPoint->distance_to_next;
-            fprintf(file_current_curve, "%f,%f,%f\n", iPoint->x, iPoint->y, iPoint->z);
+            fprintf(file_current_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
 
             //fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
             //if(m == 100)
