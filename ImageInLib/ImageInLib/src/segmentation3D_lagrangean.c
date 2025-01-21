@@ -657,7 +657,7 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
@@ -701,9 +701,6 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
             //get the external velocity field
             getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
-            //vx = 0.0;
-            //vy = 0.0;
-            //vz = 0.0;
 
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
             ty = (current_point->next->y - current_point->previous->y) / som_dist;
@@ -803,19 +800,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
         current_point = current_point->next;
     }
 
-    ////current_point = plinked_curve->first_point;
-    //mean /= curve_length;
-
     mean /= curve_length;
-
-    //if (is_curve_closed)
-    //{
-    //    mean /= curve_length;
-    //}
-    //else
-    //{
-    //    mean /= (curve_length - 1);
-    //}
 
     // the alpha of the first point in the sequence - it will therefore not move in the tangential direction
     pscheme_data[0].alfa = 0.0;
