@@ -48,7 +48,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -1068,7 +1068,7 @@ int main() {
 
 	//======================== Path extraction from three seeds ===============================
 	
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -1225,7 +1225,185 @@ int main() {
 	delete[] imageInterpolated;
 	
 	free(ctContainer);
+	*/
+
+	//======================== Segmentation of the trachea ============================
 	
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** maskThreshold = new dataType * [Height];
+	dataType** difference = new dataType * [Height];
+	dataType** maskLungs = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		maskThreshold[k] = new dataType[dim2D]{ 0 };
+		difference[k] = new dataType[dim2D]{ 0 };
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//copy data
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			//imageData[k][i] = ctContainer->dataPointer[k][i];
+			maskThreshold[k][i] = ctContainer->dataPointer[k][i];
+		}
+	}
+
+	iterativeThreshold(maskThreshold, Length, Width, Height, 0.0, 1.0);
+
+	//storing_path = outputPath + "threshold_p6.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	////Threshold
+	//dataType thres = -500;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		imageData[k][i] = ctContainer->dataPointer[k][i];// -minData;
+	//		if (imageData[k][i] <= -500) {
+	//			maskThreshold[k][i] = 1.0;
+	//		}
+	//	}
+	//}
+	////storing_path = outputPath + "threshold.raw";
+	////manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	dilatation3D(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//dilatation3D(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	//storing_path = outputPath + "threshold.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	////Labeling on difference image
+	//storing_path = outputPath + "difference.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	int** segment = new int* [Height];
+	bool** status = new bool* [Height];
+	for (k = 0; k < Height; k++) {
+		segment[k] = new int[dim2D] {0};
+		status[k] = new bool[dim2D] {false};
+	}
+
+	labelling3D(maskThreshold, segment, status, Length, Width, Height, 1.0);
+
+	int numberOfRegionCells = countNumberOfRegionsCells(maskThreshold, Length, Width, Height, 1.0);
+
+	//Counting
+	int* countingArray = new int[numberOfRegionCells] {0};
+	if (countingArray == NULL)
+		return false;
+
+	//Get regions sizes
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (segment[k][i] > 0) {
+				countingArray[segment[k][i]]++;
+			}
+		}
+	}
+
+	//Number of regions
+	int numberOfRegions = 0;
+	for (i = 0; i < numberOfRegionCells; i++) {
+		if (countingArray[i] > 0) {
+			numberOfRegions++;
+		}
+	}
+	//std::cout << "We have " << numberOfRegions << " regions" << std::endl;
+
+	//Find the largest region
+	size_t max1 = 0;
+	size_t max2 = 0;
+	size_t max3 = 0;
+	size_t max4 = 0;
+	size_t max5 = 0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (countingArray[segment[k][i]] > max1) {
+				max1 = countingArray[segment[k][i]];
+			}
+			if (countingArray[segment[k][i]] < max1 && countingArray[segment[k][i]] > max2){
+				max2 = countingArray[segment[k][i]];
+			}
+			if (countingArray[segment[k][i]] < max2 && countingArray[segment[k][i]] > max3) {
+				max3 = countingArray[segment[k][i]];
+			}
+			if (countingArray[segment[k][i]] < max3 && countingArray[segment[k][i]] > max4) {
+				max4 = countingArray[segment[k][i]];
+			}
+			if (countingArray[segment[k][i]] < max4 && countingArray[segment[k][i]] > max5) {
+				max5 = countingArray[segment[k][i]];
+			}
+		}
+	}
+	//std::cout << "First : " << firstRegionSize << std::endl;
+	//std::cout << "Second : " << secondRegionSize << std::endl;
+	//std::cout << "Third : " << thirdRegionSize << std::endl;
+	//std::cout << "Fourth : " << fourthRegionSize << std::endl;
+
+	//Keep region
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			//if (countingArray[segment[k][i]] == max2 || countingArray[segment[k][i]] == max3) {
+			//	maskThreshold[k][i] = 1.0;
+			//}
+			//else {
+			//	maskThreshold[k][i] = 0.0;
+			//}
+			if (countingArray[segment[k][i]] == max2) {
+				maskThreshold[k][i] = 1.0;
+			}
+			else {
+				maskThreshold[k][i] = 0.0;
+			}
+		}
+	}
+
+	//loading_path = inputPath + "raw/lungs/lungs_p1.raw";
+	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	////Difference
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (maskLungs[k][i] == 1.0) {
+	//			if (maskThreshold[k][i] == 1.0) {
+	//				difference[k][i] = 0.0;
+	//			}
+	//			else {
+	//				difference[k][i] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
+
+	//dilatation3D(difference, Length, Width, Height, 1.0, 0.0);
+	//erosion3D(difference, Length, Width, Height, 1.0, 0.0);
+
+	storing_path = outputPath + "segment_p5.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] segment[k];
+		delete[] status[k];
+	}
+	delete[] segment;
+	delete[] status;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskThreshold[k];
+		delete[] difference[k];
+		delete[] maskLungs[k];
+	}
+	delete[] imageData;
+	delete[] maskThreshold;
+	delete[] difference;
+	delete[] maskLungs;
+
+	free(ctContainer);
+	*/
 
 	//======================== 2D Hough transform on Slice ===========================
 	
@@ -1440,7 +1618,6 @@ int main() {
 
 		if (numberOfRegionsCells != 0) {
 
-
 			int* countingArray = new int[numberOfRegionsCells] {0};
 
 			//Get regions sizes
@@ -1499,6 +1676,101 @@ int main() {
 	delete[] labelArray;
 	delete[] status;
 	*/
+
+	//======================== Test new fast marching ==========================
+
+	dataType** imageData = new dataType * [Height];
+	dataType** actionMap = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		actionMap[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	//loading_path = inputPath + "segment.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	Image_Data imageDataStr
+	{
+		Height,
+		Length,
+		Width,
+		imageData,
+		ctOrigin,
+		ctSpacing,
+		orientation
+	};
+
+	/*
+	dataType tau = 0.4;
+	dataType tolerance = 0.5;
+	rouyTourinDistanceMap(imageDataStr, actionMap, 1.0, tolerance, tau);
+	storing_path = outputPath + "distance_map.raw";
+	manageRAWFile3D<dataType>(actionMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	*/
+
+	////Patient 1
+	Point3D seed1 = { 262, 255, 147 };
+	Point3D seed2 = { 298, 315, 264 };
+	//Point3D seed3 = { 255, 258, 264 };
+
+	Point3D* seedPoints = new Point3D[2];
+	seedPoints[0] = seed1;
+	seedPoints[1] = seed2;
+	//seedPoints[2] = seed3;
+
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1000, //edge detector coefficient
+		0.15, //threshold
+		0.005,//epsilon
+		radius
+	};
+	compute3DPotential(imageDataStr, potential, seed1, parameters);
+
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//fastMarching3D_N(actionMap, potential, Length, Width, Height, seed1);
+	fastMarching3dWithSpacing(imageDataStr, actionMap, potential, seed1, ctSpacing);
+	
+	storing_path = outputPath + "action.raw";
+	manageRAWFile3D<dataType>(actionMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	vector<Point3D> path_points;
+	shortestPath3D(actionMap, Length, Width, Height, ctSpacing, seedPoints, path_points);
+
+	string saving_csv = outputPath + "path_point.csv";
+	FILE* file_path;
+	if (fopen_s(&file_path, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	//copy points to file
+	int n = 0;
+	for (n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
+		fprintf(file_path, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() != 0) {
+		path_points.pop_back();
+	}
+
+	delete[] seedPoints;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] actionMap[k];
+		delete[] potential[k];
+	}
+	delete[] imageData;
+	delete[] actionMap;
+	delete[] potential;
+
+	free(ctContainer);
 	
 	return EXIT_SUCCESS;
 }
