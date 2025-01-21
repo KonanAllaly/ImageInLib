@@ -444,26 +444,28 @@ bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t
 
 	size_t i, k, dim2D = length * width;
 
-	//Find min and max data
-	dataType min_data = 1000000, max_data = -10000000;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (image3DPtr[k][i] < min_data) {
-				min_data = image3DPtr[k][i];
-			}
-			if (image3DPtr[k][i] > max_data) {
-				max_data = image3DPtr[k][i];
-			}
-		}
-	}
+	////Find min and max data
+	//dataType min_data = 1000000, max_data = -10000000;
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (image3DPtr[k][i] < min_data) {
+	//			min_data = image3DPtr[k][i];
+	//		}
+	//		if (image3DPtr[k][i] > max_data) {
+	//			max_data = image3DPtr[k][i];
+	//		}
+	//	}
+	//}
 
-	dataType optimalThresholdValue = 500; //(min_data + max_data) / 2;
+	dataType optimalThresholdValue = -1000;
 
-	int cpt1 = 0, cpt2 = 0;
+	size_t cpt1 = 0, cpt2 = 0;
 	dataType s1 = 0.0, s2 = 0.0, mean1 = 0.0, mean2 = 0.0;
 	do {
-		s1 = 0.0; s1 = 0.0;
-		cpt2 = 0; cpt1 = 0;
+		s1 = 0.0; 
+		s1 = 0.0;
+		cpt2 = 0; 
+		cpt1 = 0;
 		for (k = 0; k < height; k++) {
 			for (i = 0; i < dim2D; i++) {
 				if (image3DPtr[k][i] < optimalThresholdValue) {
@@ -476,8 +478,8 @@ bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t
 				}
 			}
 		}
-		mean1 = s1 / cpt1;
-		mean2 = s2 / cpt2;
+		mean1 = s1 / (dataType)cpt1;
+		mean2 = s2 / (dataType)cpt2;
 		optimalThresholdValue = (mean1 + mean2) / 2;
 	} while (mean1 == mean2);
 
