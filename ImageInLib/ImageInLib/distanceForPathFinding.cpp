@@ -1445,12 +1445,18 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	return true;
 }
 
-/*
+dataType min0(dataType x, dataType y) {
+	if (y - x > 0)
+		return pow(x - y, 2);
+	else
+		return 0;
+}
+
 bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
 		return false;
-
+	
 	size_t height = ctImageData.height;
 	size_t length = ctImageData.length;
 	size_t width = ctImageData.width;
@@ -1465,7 +1471,7 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 	for (k = 0; k < height_ext; k++) {
 		previousSolution[k] = new dataType[length_ext * width_ext]{ 0 };
 	}
-
+	
 	double mass = 10.0;
 	dataType hx = ctImageData.spacing.sx;
 	dataType hy = ctImageData.spacing.sy;
@@ -1494,7 +1500,7 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 						distancePtr[k][x_new(i, j, length)] = value + tau - tau * sqrt((1.0 / pow(hx, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext + 1, j_ext, length_ext)], value))
 							+ (1.0 / pow(hy, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext, j_ext + 1, length_ext)], value))
 							+ (1.0 / pow(hz, 2)) * max(min0(previousSolution[k_ext - 1][x_new(i_ext, j_ext, length_ext)], value), min0(previousSolution[k_ext + 1][x_new(i_ext, j_ext, length_ext)], value)));
-
+						
 						//Compute the mass
 						mass += pow(previousSolution[k_ext][x_new(i_ext, j_ext, length_ext)] - distancePtr[k][x_new(i, j, length)], 2);
 					}
@@ -1503,19 +1509,19 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 		}
 		mass = sqrt(mass);
 
-		if (count_iteration % 10 == 0) {
-			std::cout << "Mass = " << mass << std::endl;
-			std::cout << count_iteration << " iterations" << std::endl;
-		}
+		//if (count_iteration % 10 == 0) {
+		//	std::cout << "Mass = " << mass << std::endl;
+		//	std::cout << count_iteration << " iterations" << std::endl;
+		//}
 
 	}
-	std::cout << count_point_to_processed << " points were processed" << std::endl;
+	//std::cout << count_point_to_processed << " points were processed" << std::endl;
 
 	for (k = 0; k < height_ext; k++) {
 		delete[] previousSolution[k];
 	}
 	delete[] previousSolution;
+	
 
 	return true;
 }
-*/
