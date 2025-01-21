@@ -42,8 +42,6 @@ extern "C" {
 		dataType **temp3dPtr, const size_t dim2D, const dataType h);
 
 	//2D functions
-	dataType min0(dataType x, dataType y);
-
 	bool rouyTourin2D(dataType* imageDataPtr, dataType* distancePtr, const size_t length, const size_t width, dataType tolerance, dataType tau, dataType h);
 
 	bool bruteForceDistanceMap(dataType* imageDataPtr, dataType* distancePtr, const size_t length, const size_t width);

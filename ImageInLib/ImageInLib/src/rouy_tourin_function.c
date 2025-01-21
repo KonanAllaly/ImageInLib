@@ -11,13 +11,6 @@
 #include "distance_function.h"
 #include "common_functions.h"
 
-dataType min0(dataType x, dataType y) {
-	if (y - x > 0) 
-		return pow(x - y, 2);
-	else 
-		return 0;
-}
-
 bool rouyTourinFunction_3D(dataType ** distance3DPtr, dataType ** image3DPtr, dataType tolerance,
 	const size_t xDim, const size_t yDim, const size_t zDim, dataType tau, const dataType h)
 {
@@ -127,9 +120,6 @@ bool rouyTourin2D(dataType* imageDataPtr, dataType* distancePtr, const size_t le
 	for (i = 0; i < length_ext * width_ext; i++){
 		extendedArray[i] = 0.0;
 	}
-	
-	//copyDataTo2dExtendedArea(imageDataPtr, extendedArray, length, width);
-	//reflection2D(extendedArray, length_ext, width_ext);
 
 	while (mass > tolerance && count < max_iter) {
 		
