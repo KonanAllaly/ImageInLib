@@ -373,3 +373,13 @@ using namespace std;
 	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
 
 	void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, dataType radiusInitial, dataType radiusMin, dataType radiusMax, dataType radiusStep);
+
+	//=================================
+
+	dataType min0(dataType x, dataType y);
+
+	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau);
+
+	dataType solve3dQuadraticFastMarching(dataType X, dataType Y, dataType Z, dataType W, VoxelSpacing h);
+
+	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing);
