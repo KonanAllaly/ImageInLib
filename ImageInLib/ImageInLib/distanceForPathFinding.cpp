@@ -1420,22 +1420,22 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 		}
 	}
 	
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 	//rouyTourinFunction_3D(distance, maskThreshold, 0.5, length, width, height, 0.4, ctImageData.spacing.sx);
 
-	Image_Data distanceMapStr
-	{
-		height,
-		length,
-		width,
-		maskThreshold,
-		ctImageData.origin,
-		ctImageData.spacing,
-		ctImageData.orientation
-	};
-	dataType tau = 0.4;
-	dataType tolerance = 0.5;
-	rouyTourinDistanceMap(distanceMapStr, distance, 1.0, tolerance, tau);
+	//Image_Data distanceMapStr
+	//{
+	//	height,
+	//	length,
+	//	width,
+	//	maskThreshold,
+	//	ctImageData.origin,
+	//	ctImageData.spacing,
+	//	ctImageData.orientation
+	//};
+	//dataType tau = 0.4;
+	//dataType tolerance = 0.5;
+	//rouyTourinDistanceMap(distanceMapStr, distance, 1.0, tolerance, tau);
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -4513,22 +4513,148 @@ void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potential
 
 /*
 //=====================================
-bool fastSweeping(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue) {
+bool fastSweepingWithSpacing(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue) {
 	
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
 	{
 		return true;
 	}
+
+	dataType hx = ctImageData.spacing.sx;
+	dataType hy = ctImageData.spacing.sy;
+	dataType hz = ctImageData.spacing.sz;
 	
-	size_t length = ctImageData.length;
-	size_t width = ctImageData.width;
-	size_t height = ctImageData.height;
+	int length = ctImageData.length;
+	int width = ctImageData.width;
+	int height = ctImageData.height;
 
-	const size_t nbSweep = 8;
+	int length_minus = length - 1;
+	int width_minus = width - 1;
+	int height_minus = height - 1;
 
-	//for (size_t l = 0; l < nbSweep; l++) {
-	//
-	//}
+	int i, j, k;
+	const size_t maxSweepNb = 8;
+	size_t sweepNb = 8;
+	size_t sweepDirection;
+	dataType x, y, z;
+	dataType a, b, c;
+
+	while (sweepNb < maxSweepNb) {
+
+		sweepDirection = sweepNb;
+
+		switch (sweepDirection) {
+
+		case 0:
+			for (k = 0; k < height; k++) {
+				for (i = 0; i < length; i++) {
+					for (j = width_minus; j > -1; j--) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+						//sorting
+						//a = min(min(x, y), z);
+						//b = max(min(0, 0), a);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 1:
+			for (k = 0; k < height; k++) {
+				for (i = length_minus; i > -1; i--) {
+					for (j = width_minus; j > -1; j--) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 2:
+			for (k = 0; k < height; k++) {
+				for (i = length_minus; i > -1; i--) {
+					for (j = 0; j < width; j++) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 3:
+			for (k = height_minus; k > -1; k--) {
+				for (i = 0; i < length; i++) {
+					for (j = 0; j < width; j++) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 4:
+			for (k = height_minus; k > -1; k--) {
+				for (i = 0; i < length; i++) {
+					for (j = width - 1; j > -1; j--) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 5:
+			for (k = height_minus; k > -1; k--) {
+				for (i = length_minus; i > -1; i--) {
+					for (j = 0; j < width; j++) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		case 6:
+			for (k = height_minus; k > -1; k--) {
+				for (i = length_minus; i > -1; i--) {
+					for (j = width_minus; j > -1; j--) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+
+			}
+			sweepNb++;
+			break;
+
+		default:
+			for (k = 0; k < height; k++) {
+				for (i = 0; i < length; i++) {
+					for (j = 0; j < width; j++) {
+						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
+						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
+						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
+					}
+				}
+			}
+			sweepNb++;
+			break;
+
+		}
+	}
 
 	return true;
 
@@ -5050,96 +5176,3 @@ bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPt
 
 	return true;
 }
-
-/*
-bool shortestPath3dWithSpacing(dataType** distanceFuncPtr, const size_t length, const size_t width, const size_t height, VoxelSpacing spacing, Point3D* seedPoints, vector<Point3D>& path_points) {
-
-	if (distanceFuncPtr == NULL || seedPoints == NULL)
-		return false;
-
-	size_t i = 0, j = 0, k = 0, xd = 0, dim2D = length * width, max_iter = 1000;
-	dataType tau = 0.8, tol = 1.0;
-
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2D];
-		gradientVectorY[k] = new dataType[dim2D];
-		gradientVectorZ[k] = new dataType[dim2D];
-		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL)
-			return false;
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-
-	//Normalization of the gradient
-	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, spacing);
-
-	dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			ux = gradientVectorX[k][i];
-			uy = gradientVectorY[k][i];
-			uz = gradientVectorZ[k][i];
-			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-			if (norm_of_gradient != 0) {
-				gradientVectorX[k][i] = (dataType)(ux / norm_of_gradient);
-				gradientVectorY[k][i] = (dataType)(uy / norm_of_gradient);
-				gradientVectorZ[k][i] = (dataType)(uz / norm_of_gradient);
-			}
-			else {
-				gradientVectorX[k][i] = 0;
-				gradientVectorY[k][i] = 0;
-				gradientVectorZ[k][i] = 0;
-			}
-		}
-	}
-
-	//Find the closest point till the last point
-	i = (size_t)seedPoints[1].x;
-	j = (size_t)seedPoints[1].y;
-	k = (size_t)seedPoints[1].z;
-	size_t currentIndx = x_new(i, j, length);
-
-	dataType iNew = seedPoints[1].x;
-	dataType jNew = seedPoints[1].y;
-	dataType kNew = seedPoints[1].z;
-	double dist_to_end = 0.0;
-
-	size_t count_iter = 1;
-
-	do {
-
-		currentIndx = x_new(i, j, length);
-
-		iNew = iNew - tau * gradientVectorX[k][currentIndx];
-		jNew = jNew - tau * gradientVectorY[k][currentIndx];
-		kNew = kNew - tau * gradientVectorZ[k][currentIndx];
-
-		Point3D point_current = { iNew, jNew, kNew };
-		path_points.push_back(point_current);
-
-		//compute distance current Point - last point
-		dist_to_end = getPoint3DDistance(point_current, seedPoints[0]);
-
-		i = (size_t)(round(iNew));
-		j = (size_t)(round(jNew));
-		k = (size_t)(round(kNew));
-
-		count_iter++;
-
-	} while (dist_to_end > tol && count_iter < max_iter);
-
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
-
-	return true;
-}
-*/
