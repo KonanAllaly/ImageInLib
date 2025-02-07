@@ -100,20 +100,23 @@ dataType selectY(dataType* actionPtr, const size_t height, const size_t width, c
 	return min(j_minus, j_plus);
 }
 
-bool computePotential(dataType* imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, Point2D * seedPoints)
+bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D * seedPoints)
 {
 	//This function is used to compute the potential function
 	//were epsilon can be used also as parameter
 	//epislon = 0.01 was perfect for our experimentations
 
-	if (imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
+	if (imageDataStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
 		return false;
 
+
+	const size_t height = imageDataStr.height;
+	const size_t width = imageDataStr.width;
 	size_t i, dim2D = height * width;
 	size_t i1 = (size_t)seedPoints[0].x, j1 = (size_t)seedPoints[0].y;
 	size_t i2 = (size_t)seedPoints[1].x, j2 = (size_t)seedPoints[1].y;
 
-	dataType seedVal = (dataType)((imageDataPtr[x_new(i1, j1, height)] + imageDataPtr[x_new(i2, j2, height)]) / 2.0);
+	dataType seedVal = (dataType)((imageDataStr.imageDataPtr[x_new(i1, j1, height)] + imageDataStr.imageDataPtr[x_new(i2, j2, height)]) / 2.0);
 	dataType epsilon = 0.01;
 	dataType K = 0.00005;
 	dataType coef_dist = 1000, coef = 0.0;
@@ -122,7 +125,7 @@ bool computePotential(dataType* imageDataPtr, dataType* potentialFuncPtr, const 
 	dataType* gradientVectorY = new dataType[dim2D]{ 0 };
 	dataType* edgeDetector = new dataType[dim2D]{ 0 };
 
-	computeImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
+	computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
 
 	dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
 	for (i = 0; i < dim2D; i++) {
@@ -246,7 +249,7 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	dataType x = 0.0, y = 0.0, coefSpeed = 0.0;
 
 	//Compute the potential function
-	computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
+	//computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
 
 	//STEP 1
 	//In labelAray we have : 
@@ -473,7 +476,7 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 	size_t currentIndx = x_new(i, j, height);
 
 	////Compute the potential function
-	computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
+	//computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
 
 	//STEP 1
 	//In labelAray we have : 1 ---> already processed, 2 ---> in process and 3 ---> not processed
@@ -675,11 +678,13 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 	delete[] labelArray;
 }
 
-bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, Point2D* seedPoints) {
+bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2D* seedPoints) {
 
-	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
+	if (distanceFuncPtr.imageDataPtr == NULL || resultedPath == NULL || seedPoints == NULL)
 		return false;
 
+	const size_t height = distanceFuncPtr.height;
+	const size_t width = distanceFuncPtr.width;
 	size_t i, j, dim2D = height * width, maxIter = 10000;
 	dataType tau = 0.8, dist_min = 0.0, tol = 1.0;
 
@@ -687,7 +692,7 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	dataType* gradientVectorY = new dataType[dim2D]{0};
 
 	//Normalization of the gradient
-	computeImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
+	computeImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY);
 	
 	dataType norm_of_gradient = 0.0, ux = 0.0, uy = 0.0;
 	for (i = 0; i < dim2D; i++) {
@@ -1376,52 +1381,53 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2D]{0};
-		gradientVectorY[k] = new dataType[dim2D]{0};
-		gradientVectorZ[k] = new dataType[dim2D]{0};
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
+	//dataType** gradientVectorX = new dataType * [height];
+	//dataType** gradientVectorY = new dataType * [height];
+	//dataType** gradientVectorZ = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	gradientVectorX[k] = new dataType[dim2D]{0};
+	//	gradientVectorY[k] = new dataType[dim2D]{0};
+	//	gradientVectorZ[k] = new dataType[dim2D]{0};
+	//}
+	//if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
+	//	return false;
+	
+	//compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 
-	//use distance map in potential
-	dataType** distance = new dataType * [height];
-	dataType** edgeDetector = new dataType * [height];
-	dataType** maskThreshold = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		distance[k] = new dataType[dim2D]{0};
-		edgeDetector[k] = new dataType[dim2D]{0};
-		maskThreshold[k] = new dataType[dim2D]{0};
-	}
+	////use distance map in potential
+	//dataType** distance = new dataType * [height];
+	//dataType** edgeDetector = new dataType * [height];
+	//dataType** maskThreshold = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	distance[k] = new dataType[dim2D]{0};
+	//	edgeDetector[k] = new dataType[dim2D]{0};
+	//	maskThreshold[k] = new dataType[dim2D]{0};
+	//}
 	
 	dataType norm_of_gradient = 0.0;;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			
-			ux = gradientVectorX[k][i];
-			uy = gradientVectorY[k][i];
-			uz = gradientVectorZ[k][i];
-			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-			
-			//threshold
-			if (edgeDetector[k][i] < parameters.thres) {
-				maskThreshold[k][i] = 0.0;
-			}
-			else {
-				maskThreshold[k][i] = 1.0;
-			}
-		}
-	}
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		
+	//		ux = gradientVectorX[k][i];
+	//		uy = gradientVectorY[k][i];
+	//		uz = gradientVectorZ[k][i];
+	//		norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
+	//		edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
+	//		
+	//		//threshold
+	//		if (edgeDetector[k][i] < parameters.thres) {
+	//			maskThreshold[k][i] = 0.0;
+	//		}
+	//		else {
+	//			maskThreshold[k][i] = 1.0;
+	//		}
+	//	}
+	//}
 	
-	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-	//rouyTourinFunction_3D(distance, maskThreshold, 0.5, length, width, height, 0.4, ctImageData.spacing.sx);
+	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+	////rouyTourinFunction_3D(distance, maskThreshold, 0.5, length, width, height, 0.4, ctImageData.spacing.sx);
 
 	//Image_Data distanceMapStr
 	//{
@@ -1465,26 +1471,26 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			
-			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
+			dataType weight_dist = 1.0;// / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 
 		}
 	}
 
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-		delete[] edgeDetector[k];
-		delete[] maskThreshold[k];
-		delete[] distance[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
-	delete[] edgeDetector;
-	delete[] maskThreshold;
-	delete[] distance;
+	//for (k = 0; k < height; k++) {
+	//	delete[] gradientVectorX[k];
+	//	delete[] gradientVectorY[k];
+	//	delete[] gradientVectorZ[k];
+	//	delete[] edgeDetector[k];
+	//	delete[] maskThreshold[k];
+	//	delete[] distance[k];
+	//}
+	//delete[] gradientVectorX;
+	//delete[] gradientVectorY;
+	//delete[] gradientVectorZ;
+	//delete[] edgeDetector;
+	//delete[] maskThreshold;
+	//delete[] distance;
 
 	return true;
 }
@@ -4725,13 +4731,13 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 		}
 		mass = sqrt(mass);
 		
-		if (count_iteration % 10 == 0) {
-			std::cout << "Mass = " << mass << std::endl;
-			std::cout << count_iteration << " iterations" << std::endl;
-		}
+		//if (count_iteration % 10 == 0) {
+		//	std::cout << "Mass = " << mass << std::endl;
+		//	std::cout << count_iteration << " iterations" << std::endl;
+		//}
 
 	}
-	std::cout << count_point_to_processed << " points were processed" << std::endl;
+	//std::cout << count_point_to_processed << " points were processed" << std::endl;
 
 	for (k = 0; k < height_ext; k++) {
 		delete[] previousSolution[k];

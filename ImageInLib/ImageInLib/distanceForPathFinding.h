@@ -143,7 +143,7 @@ using namespace std;
 	/// <param name="width">image width</param>
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
-	bool computePotential(dataType * imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, Point2D* seedPoints);
+	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints);
 
 	/// <summary>
 	/// find the shortest path between two given points
@@ -155,7 +155,7 @@ using namespace std;
 	/// <param name="h">space step</param>
 	/// <param name="seedPoints">initial and final points</param>
 	/// <returns></returns>
-	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, Point2D* seedPoints);
+	bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2D* seedPoints);
 
 	//================================================================
 
