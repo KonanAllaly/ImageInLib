@@ -34,6 +34,8 @@ extern "C" {
 	* Function To Perform Heat Gauss-Seidel Method Implicit Scheme
 	*/
 	void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters implicitParameters);
+
+	void heatExplicitRectangularScheme(Image_Data toExplicitImage, const Filtering_Parameters explicitParameters);
 	//==============================================================================
 	
 	//2D Functions
