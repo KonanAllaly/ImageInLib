@@ -468,34 +468,41 @@ BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t
 	return (BoundingBox3D) {x_min, x_max, y_min, y_max, z_min, z_max};
 }
 //==============================================================================
-void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h) {
+void computeImageGradient(Image_Data2D imageDataStr, dataType* gradientVectorX, dataType* gradientVectorY) {
 	size_t i, j, xd;
+
+	const size_t length = imageDataStr.height;
+	const size_t width = imageDataStr.width;
+	dataType hx = imageDataStr.spacing.sx, hy = imageDataStr.spacing.sy;
 	dataType ux = 0.0, uy = 0.0;
 	for (i = 0; i < length; i++) {
 		for (j = 0; j < width; j++) {
+			
 			xd = x_new(i, j, length);
+			
 			//x direction
 			if (i == 0) {
-				ux = (imageDataPtr[x_new(i + 1, j, length)] - imageDataPtr[x_new(i, j, length)]) / h;
+				ux = (imageDataStr.imageDataPtr[x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[x_new(i, j, length)]) / hx;
 			}
 			else {
 				if (i == length - 1) {
-					ux = (imageDataPtr[x_new(i, j, length)] - imageDataPtr[x_new(i - 1, j, length)]) / h;
+					ux = (imageDataStr.imageDataPtr[x_new(i, j, length)] - imageDataStr.imageDataPtr[x_new(i - 1, j, length)]) / hx;
 				}
 				else {
-					ux = (imageDataPtr[x_new(i + 1, j, length)] - imageDataPtr[x_new(i - 1, j, length)]) / (2 * h);
+					ux = (imageDataStr.imageDataPtr[x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[x_new(i - 1, j, length)]) / (2 * hx);
 				}
 			}
-			//x direction
+			
+			//y direction
 			if (j == 0) {
-				uy = (imageDataPtr[x_new(i, j + 1, length)] - imageDataPtr[x_new(i, j, length)]) / h;
+				uy = (imageDataStr.imageDataPtr[x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[x_new(i, j, length)]) / hy;
 			}
 			else {
 				if (j == width - 1) {
-					uy = (imageDataPtr[x_new(i, j, length)] - imageDataPtr[x_new(i, j - 1, length)]) / h;
+					uy = (imageDataStr.imageDataPtr[x_new(i, j, length)] - imageDataStr.imageDataPtr[x_new(i, j - 1, length)]) / hy;
 				}
 				else {
-					uy = (imageDataPtr[x_new(i, j + 1, length)] - imageDataPtr[x_new(i, j - 1, length)]) / (2 * h);
+					uy = (imageDataStr.imageDataPtr[x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[x_new(i, j - 1, length)]) / (2 * hy);
 				}
 			}
 

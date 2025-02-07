@@ -190,7 +190,7 @@ extern "C" {
 	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
-	void computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t length, const size_t width, dataType h);
+	void computeImageGradient(Image_Data2D imageDataStr, dataType* gradientVectorX, dataType* gradientVectorY);
 	//==============================================================================
 	typedef struct {
 		size_t i_min, i_max, j_min, j_max;
