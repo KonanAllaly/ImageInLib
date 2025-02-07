@@ -20,6 +20,20 @@ extern "C" {
 	} Filter_Parameters;
 	// Parameters used in filtering
 
+	typedef struct
+	{
+		dataType timeStepSize;
+		dataType hx, hy, hz; // voxel size
+		dataType sigma;
+		dataType edge_detector_coefficient;
+		dataType omega_c;
+		dataType tolerance;
+		dataType eps2;
+		dataType coef;
+		size_t timeStepsNum;
+		size_t maxNumberOfSolverIteration;
+	} Filtering_Parameters;
+
 #ifdef __cplusplus
 }
 #endif
