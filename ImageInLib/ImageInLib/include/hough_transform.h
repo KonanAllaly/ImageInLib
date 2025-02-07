@@ -11,7 +11,6 @@ typedef struct {
 	double epsilon, offset;
 	dataType K; // coefficient of the edge detector
 	dataType thres; //threshold of the edge detector
-	PixelSpacing spacing; //pixels size
 } HoughParameters;
 
 void initialize2dArrayBool(bool* array2D, const size_t length, const size_t width);
@@ -55,12 +54,14 @@ Point2D getPointWithMaximalValue2D(dataType* arrayPtr2D, const size_t length, co
 /// <param name="width">image width</param>
 /// <param name="params">Hough transform parameters</param>
 /// <param name="savingPath">saving path</param>
-Point2D localHoughTransform(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath);
+Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* houghSpacePtr, dataType* foundCirclePtr, HoughParameters params);
 
-Point2D localHoughWithCanny(Point2D seed, dataType* imageDataPtr, dataType* houghSpacePtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters params, std::string savingPath, FILE* saveInfo);
+Point2D localHoughWithCanny(Image_Data2D imageDataStr, Point2D seed, dataType* houghSpacePtr, dataType* foundCirclePtr, HoughParameters params);
 
-void houghTransform(dataType* imageDataPtr, dataType* foundCirclePtr, const size_t length, const size_t width, HoughParameters parameters);
+void houghTransform(Image_Data2D imageDataStr, dataType* foundCirclePtr, HoughParameters parameters);
 
 bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters);
 
-bool localCircleDetection(Image_Data2D imageDataPtr, Point2D seed, const HoughParameters hParameters);
+Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, const HoughParameters hParameters);
+
+Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, dataType imageBackground);
