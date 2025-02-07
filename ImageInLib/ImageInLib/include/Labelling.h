@@ -14,6 +14,7 @@ extern "C" {
 
 	typedef struct {
 		size_t x, y, z;
+		//bool isThePointProcessed;
 		int label;
 	} point3dLabelling;
 
@@ -38,8 +39,9 @@ extern "C" {
 
 	bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object);
 
-	bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed, double radius);
+	bool regionGrowing(dataType** maskThreshold, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed);
 
+	bool lungsSegmentation(Image_Data imageData, dataType** segmentedImage, Point3D pSeed, dataType tMin, dataType tMax);
 
 #ifdef __cplusplus
 }

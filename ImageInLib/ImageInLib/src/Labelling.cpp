@@ -12,6 +12,7 @@
 #include "../distanceForPathFinding.h"
 #include "../src/distance_function.h"
 #include "template_functions.h"
+#include "thresholding.h"
 
 using namespace std;
 
@@ -163,6 +164,173 @@ bool labelling2D(int** imageDataPtr, int** segmentedImage, bool** statusArray, c
 				}
 				else {
 					statusArray[i][j] = true;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object) {
+
+	if (imageDataPtr == NULL || labelArray == NULL || statusArray == NULL)
+		return false;
+
+	int label = 1;
+	size_t i, j, k, xd;
+
+	vector< point2dLabelling> initialStack, tempStack;
+
+	//statusArray has false everywhere at the beginning
+	//false---> non-processed and true---> processed
+	//segmentedImage has 0 everywhere at the begining
+	for (i = 0; i < length; i++) {
+		for (j = 0; j < width; j++) {
+
+			xd = x_new(i, j, length);
+
+			if (statusArray[xd] == false) {
+				if (imageDataPtr[xd] == object) {
+
+					//East
+					if (i > 0 && statusArray[x_new(i - 1, j, length)] == false) {
+						if (imageDataPtr[x_new(i - 1, j, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i - 1, j, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i - 1, j, length)] = true;
+						}
+					}
+					//South
+					if (j < width - 1 && statusArray[x_new(i, j + 1, length)] == false) {
+						if (imageDataPtr[x_new(i, j + 1, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i, j + 1, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i, j + 1, length)] = true;
+						}
+					}
+					//West
+					if (i < length - 1 && statusArray[x_new(i + 1, j, length)] == false) {
+						if (imageDataPtr[x_new(i + 1, j, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i + 1, j, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i + 1, j, length)] = true;
+						}
+					}
+					//North
+					if (j > 0 && statusArray[x_new(i, j - 1, length)] == false) {
+						if (imageDataPtr[x_new(i, j - 1, length)] == object) {
+							//object pixel, so added to initial stack
+							point2dLabelling current_point = { i, j - 1, false };
+							initialStack.push_back(current_point);
+						}
+						else {
+							//not object, update its status
+							statusArray[x_new(i, j - 1, length)] = true;
+						}
+					}
+
+					//after checking all neighbors of current element
+					//we set its label, and update its status
+					labelArray[xd] = label;
+					statusArray[xd] = true;
+
+					//Now we check neighbors of elemts in initial stack
+					//we start by the last added element in stacks
+					while (initialStack.size() > 0) {
+
+						//Processed the last element in the initial stack
+						size_t l = initialStack.size() - 1; // len
+						size_t i_s = initialStack[l].x;
+						size_t j_s = initialStack[l].y;
+						size_t xd_s = x_new(i_s, j_s, length);
+
+						//East
+						if (i_s > 0 && statusArray[x_new(i_s - 1, j_s, length)] == false) {
+							if (imageDataPtr[x_new(i_s - 1, j_s, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s - 1, j_s, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								//Not in region, update status and go to the next neighbor
+								statusArray[x_new(i_s - 1, j_s, length)] = true;
+							}
+						}
+
+						//South
+						if (j_s < width - 1 && statusArray[x_new(i_s, j_s + 1, length)] == false) {
+							if (imageDataPtr[x_new(i_s, j_s + 1, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s, j_s + 1, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s, j_s + 1, length)] = true;
+							}
+						}
+
+						//East
+						if (i_s < length - 1 && statusArray[x_new(i_s + 1, j_s, length)] == false) {
+							if (imageDataPtr[x_new(i_s + 1, j_s, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s + 1, j_s, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s + 1, j_s, length)] = true;
+							}
+						}
+
+						//North
+						if (j_s > 0 && statusArray[x_new(i_s, j_s - 1, length)] == false) {
+							if (imageDataPtr[x_new(i_s, j_s - 1, length)] == object) {
+								//object pixel, so added to temporary stack
+								point2dLabelling current_point = { i_s, j_s - 1, false };
+								tempStack.push_back(current_point);
+							}
+							else {
+								statusArray[x_new(i_s, j_s - 1, length)] = true;
+							}
+						}
+
+						//updating of processed element before removal
+						labelArray[xd_s] = label;
+						statusArray[xd_s] = true;
+
+						//Remove the processed element from the initial stack
+						initialStack.pop_back();
+
+						//Add new found neighbors in initial stack
+						if (tempStack.size() != 0) {
+							//if no new element is found tempStack is empty 
+							// and nothing will happend
+							for (k = 0; k < tempStack.size(); k++) {
+								initialStack.push_back(tempStack[k]);
+							}
+						}
+
+						//empty the temporary stack
+						while (tempStack.size() > 0) {
+							tempStack.pop_back();
+						}
+					}
+
+					label++;
+				}
+				else {
+					statusArray[xd] = true;
 				}
 			}
 		}
@@ -431,124 +599,127 @@ int countNumberOfRegionsCells(dataType** binaryImagePtr, const size_t length, co
 
 //===============================================================================================================
 
-bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed, double radius) {
+bool regionGrowing(dataType** maskThreshold, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed) {
 	
-	if (imageData.imageDataPtr == NULL || segmentedImage == NULL) {
+	if (maskThreshold == NULL || segmentedImage == NULL) {
 		return false;
 	}
 
+	size_t dim2D = length * width;
+
+	//array to verify given pixel status, wether processed or not yet processed
 	bool** pStatus = new bool* [height];
 	for (size_t s = 0; s < height; s++) 
 	{
-		pStatus[s] = new bool[length * width] {false};
+		pStatus[s] = new bool[dim2D] {false};
+		if (pStatus[s] == NULL)
+			return false;
 	}
+	if (pStatus == NULL)
+		return false;
 
 	vector<point3dLabelling> pSegment, tempSegment;
-
-	size_t iSeed = (size_t)pSeed.x;
-	size_t jSeed = (size_t)pSeed.y;
-	size_t kSeed = (size_t)pSeed.z;
-	size_t xd = x_new(iSeed, jSeed, length);
 
 	size_t height_minus = height - 1;
 	size_t length_minus = length - 1;
 	size_t width_minus = width - 1;
 
-	size_t nb_point_processed = 0;
-
-	Statistics pStats = getPointNeighborhoodStats(imageData, pSeed, radius);
-
-	dataType thres_min = pStats.mean_data - pStats.sd_data;//-900
-	dataType thres_max = pStats.mean_data + pStats.sd_data;//-500
+	size_t iSeed, jSeed, kSeed;
+	if ((pSeed.x >= 0 && pSeed.x <= length_minus) && (pSeed.y >= 0 && pSeed.y <= width_minus) && (pSeed.z >= 0 && pSeed.z <= height_minus)) {
+		iSeed = (size_t)pSeed.x;
+		jSeed = (size_t)pSeed.y;
+		kSeed = (size_t)pSeed.z;
+	}
+	else {
+		cout << "Seed out of the bounds" << endl;
+		return false;
+	}
 
 	//West neighbor
 	if (iSeed > 0) {
 		size_t i_minus = iSeed - 1;
-		size_t x = x_new(i_minus, jSeed, length);
-		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(i_minus, jSeed, length)] == 1.0)
 		{
 			point3dLabelling pWest = { i_minus, jSeed, kSeed, 1 };
 			pSegment.push_back(pWest);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[kSeed][x_new(i_minus, jSeed, length)] = true;
 		}
 	}
 	//East neighnor
 	if (iSeed < length_minus) {
 		size_t i_plus = iSeed + 1;
-		size_t x = x_new(i_plus, jSeed, length);
-		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(i_plus, jSeed, length)] == 1.0)
 		{
 			point3dLabelling pEast = { i_plus, jSeed, kSeed, 1 };
 			pSegment.push_back(pEast);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[kSeed][x_new(i_plus, jSeed, length)] = true;
 		}
 	}
 	//North
 	if (jSeed > 0) {
 		size_t j_minus = jSeed - 1;
-		size_t x = x_new(iSeed, j_minus, length);
-		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(iSeed, j_minus, length)] == 1.0)
 		{
 			point3dLabelling pNorth = { iSeed, j_minus, kSeed, 1 };
 			pSegment.push_back(pNorth);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[kSeed][x_new(iSeed, j_minus, length)] = true;
 		}
 	}
 	//South
 	if (jSeed < width_minus) {
 		size_t j_plus = jSeed + 1;
-		size_t x = x_new(iSeed, j_plus, length);
-		if (imageData.imageDataPtr[kSeed][x] >= thres_min && imageData.imageDataPtr[kSeed][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(iSeed, j_plus, length)] == 1.0)
 		{
 			point3dLabelling pSouth = { iSeed, j_plus, kSeed, 1 };
 			pSegment.push_back(pSouth);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[kSeed][x_new(iSeed, j_plus, length)] = true;
 		}
 	}
 	//Top
 	if (kSeed > 0) {
 		size_t k_minus = kSeed - 1;
-		size_t x = x_new(iSeed, jSeed, length);
-		if (imageData.imageDataPtr[k_minus][x] >= thres_min && imageData.imageDataPtr[k_minus][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(iSeed, jSeed, length)] == 1.0)
 		{
 			point3dLabelling pTop = { iSeed, jSeed, k_minus, 1 };
 			pSegment.push_back(pTop);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[k_minus][x_new(iSeed, jSeed, length)] = true;
 		}
 	}
 	//Bottom
 	if (kSeed < height_minus) {
 		size_t k_plus = kSeed + 1;
-		size_t x = x_new(iSeed, jSeed, length);
-		if (imageData.imageDataPtr[k_plus][x] >= thres_min && imageData.imageDataPtr[k_plus][x] <= thres_max)
+		if (maskThreshold[kSeed][x_new(iSeed, jSeed, length)] == 1.0)
 		{
 			point3dLabelling pBottom = { iSeed, jSeed, k_plus, 1 };
 			pSegment.push_back(pBottom);
 		}
 		else {
-			pStatus[kSeed][x] = true;
+			pStatus[k_plus][x_new(iSeed, jSeed, length)] = true;
 		}
 	}
 
+	size_t xd = x_new(iSeed, jSeed, length);
 	pStatus[kSeed][xd] = true;
-	segmentedImage[kSeed][xd] = 1.0;
-	nb_point_processed++;
+	if (maskThreshold[kSeed][xd] == 1) {
+		segmentedImage[kSeed][xd] = 1.0;
+	}
 
 	if (pSegment.size() == 0) {
 		cout << "Seed wrongly chosen" << endl;
+		return false;
 	}
 	else {
-		while(pSegment.size() > 0 && nb_point_processed < height * width * length)
+		while(pSegment.size() > 0)
 		{
 			int l = pSegment.size();
 			iSeed = (size_t)pSegment[l - 1].x;
@@ -556,106 +727,118 @@ bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t
 			kSeed = (size_t)pSegment[l - 1].z;
 			xd = x_new(iSeed, jSeed, length);
 
-			//West neighbor
-			if (iSeed > 0) {
-				size_t i_minus = iSeed - 1;
-				size_t xdSeed = x_new(i_minus, jSeed, length);
-				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pWest = { i_minus, jSeed, kSeed, 1 };
-					tempSegment.push_back(pWest);
+			if (pStatus[kSeed][xd] == false) {
+				
+				//West neighbor
+				if (iSeed > 0) {
+					size_t i_minus = iSeed - 1;
+					if (maskThreshold[kSeed][x_new(i_minus, jSeed, length)] == 1.0)
+					{
+						if (pStatus[kSeed][x_new(i_minus, jSeed, length)] == false) {
+							point3dLabelling pWest = { i_minus, jSeed, kSeed, 1 };
+							tempSegment.push_back(pWest);
+						}
+					}
+					else
+					{
+						pStatus[kSeed][x_new(i_minus, jSeed, length)] = true;
+					}
 				}
-				else 
-				{
-					pStatus[kSeed][xdSeed] = true;
+				//East neighbor
+				if (iSeed < length_minus) {
+					size_t i_plus = iSeed + 1;
+					if (maskThreshold[kSeed][x_new(i_plus, jSeed, length)] == 1.0)
+					{
+						if (pStatus[kSeed][x_new(i_plus, jSeed, length)] == false) {
+							point3dLabelling pEast = { i_plus, jSeed, kSeed, 1 };
+							tempSegment.push_back(pEast);
+						}
+					}
+					else
+					{
+						pStatus[kSeed][x_new(i_plus, jSeed, length)] = true;
+					}
 				}
-			}
-			//East neighbor
-			if (iSeed < length_minus) {
-				size_t i_plus = iSeed + 1;
-				size_t xdSeed = x_new(i_plus, jSeed, length);
-				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pEast = { i_plus, jSeed, kSeed, 1 };
-					tempSegment.push_back(pEast);
+				//North neighbor
+				if (jSeed > 0) {
+					size_t j_minus = jSeed - 1;
+					if (maskThreshold[kSeed][x_new(iSeed, j_minus, length)] == 1.0)
+					{
+						if (pStatus[kSeed][x_new(iSeed, j_minus, length)] == false) {
+							point3dLabelling pNorth = { iSeed, j_minus, kSeed, 1 };
+							tempSegment.push_back(pNorth);
+						}
+					}
+					else
+					{
+						pStatus[kSeed][x_new(iSeed, j_minus, length)] = true;
+					}
 				}
-				else
-				{
-					pStatus[kSeed][xdSeed] = true;
+				//South neighbor
+				if (jSeed < width_minus) {
+					size_t j_plus = jSeed + 1;
+					if (maskThreshold[kSeed][x_new(iSeed, j_plus, length)] == 1.0)
+					{
+						if (pStatus[kSeed][x_new(iSeed, j_plus, length)] == false) {
+							point3dLabelling pSouth = { iSeed, j_plus, kSeed, 1 };
+							tempSegment.push_back(pSouth);
+						}
+					}
+					else
+					{
+						pStatus[kSeed][x_new(iSeed, j_plus, length)] = true;
+					}
 				}
-			}
-			//North neighbor
-			if (jSeed > 0) {
-				size_t j_minus = jSeed - 1;
-				size_t xdSeed = x_new(iSeed, j_minus, length);
-				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pNorth = { iSeed, j_minus, kSeed, 1 };
-					tempSegment.push_back(pNorth);
+				//Top neighbor
+				if (kSeed > 0) {
+					size_t k_minus = kSeed - 1;
+					if (maskThreshold[k_minus][x_new(iSeed, jSeed, length)] == 1.0)
+					{
+						if (pStatus[k_minus][x_new(iSeed, jSeed, length)] == false) {
+							point3dLabelling pTop = { iSeed, jSeed, k_minus, 1 };
+							tempSegment.push_back(pTop);
+						}
+					}
+					else
+					{
+						pStatus[k_minus][x_new(iSeed, jSeed, length)] = true;
+					}
 				}
-				else
-				{
-					pStatus[kSeed][xdSeed] = true;
+				//Bottom neighbor
+				if (kSeed < height_minus) {
+					size_t k_plus = kSeed + 1;
+					if (maskThreshold[k_plus][x_new(iSeed, jSeed, length)] == 1.0)
+					{
+						if (pStatus[k_plus][x_new(iSeed, jSeed, length)] == false) {
+							point3dLabelling pBottom = { iSeed, jSeed, k_plus, 1 };
+							tempSegment.push_back(pBottom);
+						}
+					}
+					else
+					{
+						pStatus[k_plus][x_new(iSeed, jSeed, length)] = true;
+					}
 				}
-			}
-			//South neighbor
-			if (jSeed < width_minus) {
-				size_t j_plus = jSeed + 1;
-				size_t xdSeed = x_new(iSeed, j_plus, length);
-				if (imageData.imageDataPtr[kSeed][xdSeed] >= thres_min && imageData.imageDataPtr[kSeed][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pSouth = { iSeed, j_plus, kSeed, 1 };
-					tempSegment.push_back(pSouth);
-				}
-				else
-				{
-					pStatus[kSeed][xdSeed] = true;
-				}
-			}
-			//Top neighbor
-			if (kSeed > 0) {
-				size_t k_minus = kSeed - 1;
-				size_t xdSeed = x_new(iSeed, jSeed, length);
-				if (imageData.imageDataPtr[k_minus][xdSeed] >= thres_min && imageData.imageDataPtr[k_minus][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pTop = { iSeed, jSeed, k_minus, 1 };
-					tempSegment.push_back(pTop);
-				}
-				else
-				{
-					pStatus[k_minus][xdSeed] = true;
-				}
-			}
-			//Bottom neighbor
-			if (kSeed < height_minus) {
-				size_t k_plus = kSeed + 1;
-				size_t xdSeed = x_new(iSeed, jSeed, length);
-				if (imageData.imageDataPtr[k_plus][xdSeed] >= thres_min && imageData.imageDataPtr[k_plus][xdSeed] <= thres_max && pStatus[kSeed][xdSeed] == false)
-				{
-					point3dLabelling pBottom = { iSeed, jSeed, k_plus, 1 };
-					tempSegment.push_back(pBottom);
-				}
-				else
-				{
-					pStatus[k_plus][xdSeed] = true;
-				}
-			}
 
-			pStatus[kSeed][xd] = true;
-			segmentedImage[kSeed][xd] = 1.0;
-			nb_point_processed++;
-			pSegment.pop_back();
+				pStatus[kSeed][xd] = true;
+				segmentedImage[kSeed][xd] = 1.0;
+				pSegment.pop_back();
 
-			//Move the element from the temporary segment to the initial one
-			for (size_t s = 0; s < tempSegment.size(); s++) 
-			{
-				pSegment.push_back(tempSegment[s]);
+				//Move the elements from the temporary segment to the initial segment
+				for (size_t s = 0; s < tempSegment.size(); s++)
+				{
+					pSegment.push_back(tempSegment[s]);
+				}
+
+				//Empty the temporary segment
+				while (tempSegment.size() > 0)
+				{
+					tempSegment.pop_back();
+				}
+
 			}
-
-			//Empty the temporary segment
-			while (tempSegment.size() > 0) 
-			{
-				tempSegment.pop_back();
+			else{
+				pSegment.pop_back();
 			}
 		}
 	}
@@ -664,174 +847,88 @@ bool regionGrowing(Image_Data imageData, dataType** segmentedImage, const size_t
 		delete[] pStatus[s];
 	}
 	delete[] pStatus;
+
 	return true;
 }
 
-//=======================================================
+//===============================================================================================================
 
-bool labeling(dataType* imageDataPtr, int* labelArray, bool* statusArray, const size_t length, const size_t width, dataType object) {
+/*
+bool lungsSegmentation(Image_Data imageData, dataType** segmentedImage, Point3D pSeed, dataType tMin, dataType tMax) {
+	
+	if (imageData.imageDataPtr == NULL || segmentedImage == NULL) {
+		return false;
+	}
 
-	if (imageDataPtr == NULL || labelArray == NULL || statusArray == NULL)
+	const size_t length = imageData.length;
+	const size_t width = imageData.width;
+	const size_t height = imageData.height;
+	size_t dim2D = length * width;
+
+	bool** pStatus = new bool* [height];
+	dataType** maskThreshold = new dataType * [height];
+	for (size_t s = 0; s < height; s++)
+	{
+		pStatus[s] = new bool[dim2D] {false};
+		maskThreshold[s] = new dataType[dim2D]{ 0 };
+		if (pStatus[s] == NULL || maskThreshold[s] == NULL)
+			return false;
+	}
+	if (pStatus == NULL || maskThreshold == NULL)
 		return false;
 
-	int label = 1;
-	size_t i, j, k, xd;
+	copyDataToAnotherArray(imageData.imageDataPtr, maskThreshold, height, length, width);
+	thresholding3dFunctionN(maskThreshold, length, width, height, tMin, tMax, 0.0, 1.0);
+	dilatation3D(maskThreshold, length, width, height, 0.0, 1.0);
 
-	vector< point2dLabelling> initialStack, tempStack;
+	regionGrowing(maskThreshold, segmentedImage, length, width, height, pSeed);
 
-	//statusArray has false everywhere at the beginning
-	//false---> non-processed and true---> processed
-	//segmentedImage has 0 everywhere at the begining
-	for (i = 0; i < length; i++) {
-		for (j = 0; j < width; j++) {
+	//delete largest region
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, length);
+				if (segmentedImage[k][xd] == 1.0) {
+					maskThreshold[k][xd] = 0.0;
 
-			xd = x_new(i, j, length);
-
-			if (statusArray[xd] == false) {
-				if (imageDataPtr[xd] == object) {
-					
-					//East
-					if (i > 0 && statusArray[x_new(i - 1, j, length)] == false) {
-						if (imageDataPtr[x_new(i - 1, j, length)] == object) {
-							//object pixel, so added to initial stack
-							point2dLabelling current_point = { i - 1, j, false };
-							initialStack.push_back(current_point);
-						}
-						else {
-							//not object, update its status
-							statusArray[x_new(i - 1, j, length)] = true;
-						}
-					}
-					//South
-					if (j < width - 1 && statusArray[x_new(i, j + 1, length)] == false) {
-						if (imageDataPtr[x_new(i, j + 1, length)] == object) {
-							//object pixel, so added to initial stack
-							point2dLabelling current_point = { i, j + 1, false };
-							initialStack.push_back(current_point);
-						}
-						else {
-							//not object, update its status
-							statusArray[x_new(i, j + 1, length)] = true;
-						}
-					}
-					//West
-					if (i < length - 1 && statusArray[x_new(i + 1, j, length)] == false) {
-						if (imageDataPtr[x_new(i + 1, j, length)] == object) {
-							//object pixel, so added to initial stack
-							point2dLabelling current_point = { i + 1, j, false };
-							initialStack.push_back(current_point);
-						}
-						else {
-							//not object, update its status
-							statusArray[x_new(i + 1, j, length)] = true;
-						}
-					}
-					//North
-					if (j > 0 && statusArray[x_new(i, j - 1, length)] == false) {
-						if (imageDataPtr[x_new(i, j - 1, length)] == object) {
-							//object pixel, so added to initial stack
-							point2dLabelling current_point = { i, j - 1, false };
-							initialStack.push_back(current_point);
-						}
-						else {
-							//not object, update its status
-							statusArray[x_new(i, j - 1, length)] = true;
-						}
-					}
-					
-					//after checking all neighbors of current element
-					//we set its label, and update its status
-					labelArray[xd] = label;
-					statusArray[xd] = true;
-
-					//Now we check neighbors of elemts in initial stack
-					//we start by the last added element in stacks
-					while (initialStack.size() > 0) {
-						
-						//Processed the last element in the initial stack
-						size_t l = initialStack.size() - 1; // len
-						size_t i_s = initialStack[l].x;
-						size_t j_s = initialStack[l].y;
-						size_t xd_s = x_new(i_s, j_s, length);
-
-						//East
-						if (i_s > 0 && statusArray[x_new(i_s - 1, j_s, length)] == false) {
-							if (imageDataPtr[x_new(i_s - 1, j_s, length)] == object) {
-								//object pixel, so added to temporary stack
-								point2dLabelling current_point = { i_s - 1, j_s, false };
-								tempStack.push_back(current_point);
-							}
-							else {
-								//Not in region, update status and go to the next neighbor
-								statusArray[x_new(i_s - 1, j_s, length)] = true;
-							}
-						}
-
-						//South
-						if (j_s < width - 1 && statusArray[x_new(i_s, j_s + 1, length)] == false) {
-							if (imageDataPtr[x_new(i_s, j_s + 1, length)] == object) {
-								//object pixel, so added to temporary stack
-								point2dLabelling current_point = { i_s, j_s + 1, false };
-								tempStack.push_back(current_point);
-							}
-							else {
-								statusArray[x_new(i_s, j_s + 1, length)] = true;
-							}
-						}
-
-						//East
-						if (i_s < length - 1 && statusArray[x_new(i_s + 1, j_s, length)] == false) {
-							if (imageDataPtr[x_new(i_s + 1, j_s, length)] == object) {
-								//object pixel, so added to temporary stack
-								point2dLabelling current_point = { i_s + 1, j_s, false };
-								tempStack.push_back(current_point);
-							}
-							else {
-								statusArray[x_new(i_s + 1, j_s, length)] = true;
-							}
-						}
-
-						//North
-						if (j_s > 0 && statusArray[x_new(i_s, j_s - 1, length)] == false) {
-							if (imageDataPtr[x_new(i_s, j_s - 1, length)] == object) {
-								//object pixel, so added to temporary stack
-								point2dLabelling current_point = { i_s, j_s - 1, false };
-								tempStack.push_back(current_point);
-							}
-							else {
-								statusArray[x_new(i_s, j_s - 1, length)] = true;
-							}
-						}
-
-						//updating of processed element before removal
-						labelArray[xd_s] = label;
-						statusArray[xd_s] = true;
-
-						//Remove the processed element from the initial stack
-						initialStack.pop_back();
-
-						//Add new found neighbors in initial stack
-						if (tempStack.size() != 0) {
-							//if no new element is found tempStack is empty 
-							// and nothing will happend
-							for (k = 0; k < tempStack.size(); k++) {
-								initialStack.push_back(tempStack[k]);
-							}
-						}
-						
-						//empty the temporary stack
-						while (tempStack.size() > 0) {
-							tempStack.pop_back();
-						}
-					}
-
-					label++;
-				}
-				else {
-					statusArray[xd] = true;
+					//initial the array for next step
+					segmentedImage[k][xd] = 0.0;
 				}
 			}
 		}
 	}
+
+	//find new seed
+	size_t count_forground = 0;
+	Point3D nSeed = { 0, 0, 0 };
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, length);
+				if (maskThreshold[k][xd] == 1.0) {
+					count_forground++;
+					if (count_forground == 1) {
+						nSeed.x = i;
+						nSeed.y = j;
+						nSeed.z = k;
+					}
+				}
+			}
+		}
+	}
+	cout << count_forground << " foreground points have been tested = " << endl;
+	cout << "Exit with k = " << nSeed.z << ", i = " << nSeed.x << ", j = " << nSeed.y << endl;
+
+	regionGrowing(maskThreshold, segmentedImage, length, width, height, nSeed);
+
+	for (size_t s = 0; s < height; s++) {
+		delete[] pStatus[s];
+		delete[] maskThreshold[s];
+	}
+	delete[] pStatus;
+	delete[] maskThreshold;
+
 	return true;
 }
+*/
+
