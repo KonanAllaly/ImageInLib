@@ -300,7 +300,7 @@ using namespace std;
 	/// <param name="seedPoints">seed points</param>
 	/// <param name="path_points">vector to keep all the path points coordinates</param>
 	/// <returns></returns>
-	bool shortestPath3D(dataType** distanceFuncPtr, const size_t length, const size_t width, const size_t height, VoxelSpacing spacing, Point3D* seedPoints, vector<Point3D>& path_points);
+	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, dataType tolerance, vector<Point3D>& path_points);
 
 	/// <summary>
 	/// find a path inside the aorta from given one point
@@ -312,13 +312,15 @@ using namespace std;
 	/// <param name="parameters">parameters for potential function computation</param>
 	/// <param name="stop_criterium">stopping criterium</param>
 	/// <returns></returns>
-	bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
+	//bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
 
 	bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints);
 
 	bool partialPropagation(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
 
-	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
+	bool partialPropagationWithSpacing(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, Point3D* seedPoints, const double maxLength);
+
+	//bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium);
 
 //#ifdef __cplusplus
 //}
