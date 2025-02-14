@@ -49,7 +49,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient2_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	int Height = ctContainer->dimensions[2];
@@ -77,8 +77,6 @@ int main() {
 		}
 	}
 	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-
-	exit(0);
 	
 	/*
 	Vtk_File_Info* aortaContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -858,18 +856,32 @@ int main() {
 	// Copy
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			maskThreshold[k][i] = ctContainer->dataPointer[k][i];// -minData;
+			maskThreshold[k][i] = ctContainer->dataPointer[k][i];
+			////remove blood
+			//if (ctContainer->dataPointer[k][i] >= 30 && ctContainer->dataPointer[k][i] <= 45) {
+			//	maskThreshold[k][i] = minData;
+			//}
+			//remove water
+			if (ctContainer->dataPointer[k][i] == 0) {
+				maskThreshold[k][i] = minData;
+			}
+			//remove fat
+			if (ctContainer->dataPointer[k][i] >= -100 && ctContainer->dataPointer[k][i] <= -60) {
+				maskThreshold[k][i] = minData;
+			}
 		}
 	}
 	
-	dataType thres_min = -30, thres_max = 190;
-	//dataType thres_min = -50, thres_max = 199;
+	//dataType thres_min = -30, thres_max = 190;
+	dataType thres_min = -50, thres_max = 199;
+	
 	thresholding3dFunctionN(maskThreshold, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
 
 	size_t n = 14;
 	for (i = 0; i < n; i++) {
 		erosion3D(maskThreshold, Length, Width, Height, 1.0, 0.0);
 	}
+	
 	//storing_path = outputPath + "threshold_p4.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
@@ -937,7 +949,7 @@ int main() {
 		}
 	}
 
-	storing_path = outputPath + "liver_p7.raw";
+	storing_path = outputPath + "liver_p6.raw";
 	store3dRawData<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str());
 
 	for (k = 0; k < Height; k++) {
@@ -948,7 +960,8 @@ int main() {
 	delete[] maskThreshold;
 	delete[] labelArray;
 	delete[] status;
-	*/
+	free(ctContainer);
+	*
 	
 	//======================== Refinement by generalized subjective surface ======================
 	
@@ -1408,9 +1421,7 @@ int main() {
 	
 	storing_path = outputPath + "lungs_p3.raw";
 	manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	*/
 
-	/*
 	//Find Lungs centroid
 	dataType* centroid_lungs = new dataType[3]{ 0 };
 	centroidImage(maskLungs, centroid_lungs, Height, Length, Width, 0.0);
@@ -1517,7 +1528,6 @@ int main() {
 	delete[] gradientY;
 	delete[] threshold;
 	delete[] foundCirclePtr;
-	*/
 
 	////Draw ball for visualization
 	//for (k = 0; k < Height; k++) {
@@ -1542,7 +1552,6 @@ int main() {
 	//storing_path = outputPath + "slice_trachea_p1.raw";
 	//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 	
-	/*
 	vector<Point3D> path_max_distance;
 	Image_Data ctImageData = {
 		Height,
@@ -1553,10 +1562,10 @@ int main() {
 		ctSpacing,
 		orientation
 	};
-	rouyTourinDistanceMap(ctImageData, difference, 1.0, 0.5, 0.4);
+	//rouyTourinDistanceMap(ctImageData, difference, 1.0, 0.5, 0.4);
 
 	storing_path = outputPath + "distance_map_lungs_p1.raw";
-	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	dataType max_per_slice = 0;
 	Point3D point_max = { 0, 0, 0 };
@@ -1592,9 +1601,7 @@ int main() {
 		fprintf(file_path, "%f,%f,%f\n", path_max_distance[n].x, path_max_distance[n].y, path_max_distance[n].z);
 	}
 	fclose(file_path);
-	*/
 
-	/*
 	//======================= get the lungs without the trachea ==============
 
 	//copy data
@@ -1602,7 +1609,7 @@ int main() {
 		for (i = 0; i < dim2D; i++) {
 			//copy the mask threshsold for next processings
 			maskThreshold[k][i] = maskLungs[k][i];
-			maskTrachea[k][i] = maskLungs[k][i];
+			//maskTrachea[k][i] = maskLungs[k][i];
 			//initialize for next processings
 			maskLungs[k][i] = 0.0;
 		}
@@ -1699,17 +1706,17 @@ int main() {
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//difference[k][i] = maskTrachea[k][i] - maskLungs[k][i];
-			maskThreshold[k][i] = maskTrachea[k][i] - maskLungs[k][i];
+			//maskThreshold[k][i] = maskTrachea[k][i] - maskLungs[k][i];
 		}
 	}
 	
 	storing_path = outputPath + "p3/difference_p3.raw";
-	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//initialize the arrays
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			maskTrachea[k][i] = 0.0;
+			//maskTrachea[k][i] = 0.0;
 			segment[k][i] = 0;
 			status[k][i] = false;
 		}
@@ -1754,22 +1761,20 @@ int main() {
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			if (countingArrayThird[segment[k][i]] == max1) {
-				maskTrachea[k][i] = 1.0;
+				//maskTrachea[k][i] = 1.0;
 			}
 			else {
-				maskTrachea[k][i] = 0.0;
+				//maskTrachea[k][i] = 0.0;
 			}
 		}
 	}
 	
-	dilatation3D(maskTrachea, Length, Width, Height, 1.0, 0.0);
+	//dilatation3D(maskTrachea, Length, Width, Height, 1.0, 0.0);
 
 	storing_path = outputPath + "p3/trachea_p3.raw";
-	manageRAWFile3D<dataType>(maskTrachea, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(maskTrachea, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	delete[] countingArrayThird;
-
-	//=====================================
 
 	for (k = 0; k < Height; k++) {
 		delete[] segment[k];
@@ -1778,22 +1783,20 @@ int main() {
 	delete[] segment;
 	delete[] status;
 
-
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskThreshold[k];
+		delete[] maskLungs[k];
+		delete[] segment[k];
+		delete[] status[k];
+	}
+	delete[] imageData;
+	delete[] maskThreshold;
+	delete[] maskLungs;
+	delete[] segment;
+	delete[] status;
+	free(ctContainer);
 	*/
-
-	//for (k = 0; k < Height; k++) {
-	//	delete[] imageData[k];
-	//	delete[] maskThreshold[k];
-	//	delete[] maskLungs[k];
-	//	delete[] segment[k];
-	//	delete[] status[k];
-	//}
-	//delete[] imageData;
-	//delete[] maskThreshold;
-	//delete[] maskLungs;
-	//delete[] segment;
-	//delete[] status;
-	//free(ctContainer);
 	
 	//======================== 2D Hough transform on Slice ===========================
 	
@@ -1841,9 +1844,7 @@ int main() {
 		spacing,
 		orientation2D
 	};
-	*/
 
-	/*
 	//filtering parameters
 	Filter_Parameters filter_parameters{
 		0.25 * spacing.sx * spacing.sx, //tau
@@ -1940,10 +1941,8 @@ int main() {
 
 		std::cout << "Slice " << k << std::endl;
 	}
-	*/
 
-	/*
-	copyDataToAnother2dArray(ctContainer->dataPointer[k_slice], imageSlice, Length, Width);
+	//copyDataToAnother2dArray(ctContainer->dataPointer[k_slice], imageSlice, Length, Width);
 	
 	//loading_path = inputPath + "raw/slice lungs centroid/slice_p6.raw";
 	//manageRAWFile2D(imageSlice, Length, Width, loading_path.c_str(), LOAD_DATA, false);
@@ -2028,7 +2027,7 @@ int main() {
 	dataType* houghSpacePtr = new dataType[dim2D]{ 0 };
 	dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
 
-	Point2D point_found = localCircleDetection(IMAGE_HOUGH, foundCirclePtr, centroid_seed, h_parameters);
+	//Point2D point_found = localCircleDetection(IMAGE_HOUGH, foundCirclePtr, centroid_seed, h_parameters);
 
 	//Point2D point_found = localHoughTransform(IMAGE_HOUGH, centroid_seed, houghSpacePtr, foundCirclePtr, h_parameters);
 	//Point2D point_found = localHoughWithCanny(IMAGE_HOUGH, centroid_seed, houghSpacePtr, foundCirclePtr, h_parameters);
@@ -2075,9 +2074,7 @@ int main() {
 	//found_point = localHoughTransform(seed, imageSlice, houghSpace, foundCircle, Length, Width, parameters, storing_path.c_str());
 	//cout << "found center : (" << found_point.x << "," << found_point.y << ")" << endl;
 	//fclose(file);
-	*/
 
-	/*
 	delete[] imageSlice;
 	delete[] statusPixel;
 	delete[] gradientX;
@@ -2088,11 +2085,10 @@ int main() {
 		delete[] imageData[k];
 	}
 	delete[] imageData;
-
 	free(ctContainer);
 	*/
 	
-	//======================== Detect carina =============================================
+	//======================== Detect carina from segment =============================
 	
 	/*
 	dataType** imageData = new dataType * [Height];
@@ -2223,224 +2219,9 @@ int main() {
 	delete[] status;
 	*/
 
-	//======================== Test new fast marching ==========================
-	
+	//======================== Detect carina using path extraction ====================
+
 	/*
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	Image_Data imageDataStr
-	{
-		Height,
-		Length,
-		Width,
-		imageData,
-		ctOrigin,
-		ctSpacing,
-		orientation
-	};
-
-	////dataType tau = 0.4;
-	////dataType tolerance = 0.5;
-	////rouyTourinDistanceMap(imageDataStr, actionMap, 1.0, tolerance, tau);
-	////storing_path = outputPath + "distance_map.raw";
-	////manageRAWFile3D<dataType>(actionMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	
-	//Interpolation
-	const size_t height = 406;//(size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	dataType** intImageData = new dataType * [height];
-	dataType** actionMap = new dataType * [height];
-	dataType** potential = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		intImageData[k] = new dataType[dim2D]{ 0 };
-		actionMap[k] = new dataType[dim2D]{ 0 };
-		potential[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sz };
-
-	//////Patient 1
-	//Point3D seed1 = { 262, 255, 147 }; //manual setting
-	//Point3D seed2 = { 298, 315, 264 }; //obtained by Hough Transform using the lungs centroid location
-	////Point3D seed2 = { 298, 315, 264 }; //manual setting
-	////Point3D seed3 = { 255, 258, 264 };
-
-	//In Lungs
-	Point3D seed1 = { 267, 243, 315 };//trachea
-	//Point3D seed2 = { 339, 326, 215 };//left lungs
-	Point3D seed2 = { 232, 335, 215 };//right lungs
-
-	////To real world coordinate
-	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
-	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
-	////seed3 = getRealCoordFromImageCoord3D(seed3, ctOrigin, ctSpacing, orientation);
-
-	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
-	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
-	////seed3 = getImageCoordFromRealCoord3D(seed3, ctOrigin, intSpacing, orientation);
-
-	Point3D* seedPoints = new Point3D[2];
-	seedPoints[0] = seed1;
-	seedPoints[1] = seed2;
-	//seedPoints[2] = seed3;
-
-	Image_Data intImageDataStr
-	{
-		height,
-		Length,
-		Width,
-		imageData,//intImageData,
-		ctOrigin,
-		intSpacing,
-		orientation
-	};
-
-	//imageInterpolation3D(imageDataStr, intImageDataStr, NEAREST_NEIGHBOR);
-	//////imageInterpolation3D(imageDataStr, intImageDataStr, TRILINEAR);
-
-	double radius = 3.0;
-	Potential_Parameters parameters{
-		1000, //edge detector coefficient
-		0.15, //threshold
-		0.005,//epsilon
-		radius
-	};
-	compute3DPotential(intImageDataStr, potential, seed1, parameters);
-
-	storing_path = outputPath + "potential_lungs.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
-
-	fastMarching3dWithSpacing(intImageDataStr, actionMap, potential, seed1, intSpacing);
-	//fastMarching3D_N(actionMap, potential, Length, Width, height, seed1);
-	
-	//storing_path = outputPath + "action.raw";
-	//manageRAWFile3D<dataType>(actionMap, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
-
-	vector<Point3D> path_points;
-	shortestPath3D(actionMap, Length, Width, height, intSpacing, seedPoints, path_points);
-
-	string saving_csv = outputPath + "path_point_lungs2.csv";
-	FILE* file_path;
-	if (fopen_s(&file_path, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
-	//copy points to file
-	int n = 0;
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
-		fprintf(file_path, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() != 0) {
-		path_points.pop_back();
-	}
-
-	delete[] seedPoints;
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-	}
-	delete[] imageData;
-
-	for (k = 0; k < height; k++) {
-		delete[] intImageData[k];
-		delete[] actionMap[k];
-		delete[] potential[k];
-	}
-	delete[] intImageData;
-	delete[] actionMap;
-	delete[] potential;
-
-	free(ctContainer);
-	*/
-
-	//======================== Threshold edge detector for trachea ============
-	
-	/*
-	dataType** imageData = new dataType * [Height];
-	dataType** maskThreshold = new dataType * [Height];
-	dataType** gradientX = new dataType * [Height];
-	dataType** gradientY = new dataType * [Height];
-	dataType** gradientZ = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-		maskThreshold[k] = new dataType[dim2D]{ 0 };
-		gradientX[k] = new dataType[dim2D]{ 0 };
-		gradientY[k] = new dataType[dim2D]{ 0 };
-		gradientZ[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	compute3dImageGradient(imageData, gradientX, gradientY, gradientZ, Length, Width, Height, ctSpacing);
-
-	//Compute edge detector and threshold
-	dataType thres = 0.05;
-	dataType K = 1000;
-	dataType norm_of_gradient = 0.0;
-	dataType edge_value = 0.0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < Length; i++) {
-			for (j = 0; j < Width; j++) {
-				xd = x_new(i, j, Length);
-				norm_of_gradient = sqrt(gradientX[k][xd] * gradientX[k][xd] + gradientY[k][xd] * gradientY[k][xd] + gradientZ[k][xd] * gradientZ[k][xd]);
-				edge_value = gradientFunction(norm_of_gradient, K);
-				if (edge_value <= thres) {
-					maskThreshold[k][xd] = 1.0;
-				}
-			}
-		}
-	}
-	storing_path = outputPath + "threshold_edge_p1.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] maskThreshold[k];
-		delete[] gradientX[k];
-		delete[] gradientY[k];
-		delete[] gradientZ[k];
-	}
-	delete[] imageData;
-	delete[] maskThreshold;
-	delete[] gradientX;
-	delete[] gradientY;
-	delete[] gradientZ;
-	*/
-
-	//========== Find lungs segmentation first point ===============
-	
-	//Point3D first_point = { 0.0, 0.0, 0.0 };
-	//size_t count_point = 0;
-	//int k_n;
-	//for (k_n = height - 1; k_n > -1; k_n--) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			xd = x_new(i, j, Length);
-	//			if (interpolateImageData[k_n][xd] == 1) {
-	//				count_point++;
-	//				if (count_point == 1) {
-	//					first_point.x = i;
-	//					first_point.y = j;
-	//					first_point.z = k_n;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//std::cout << "First point : (" << first_point.x << "," << first_point.y << "," << first_point.z << ")" << std::endl;
-
-	//============ Path planning from point with max distance and lungs segmentation first point ===
-
-	
-	//================
 	dataType** imageData = new dataType * [Height];
 	dataType** maskLungs = new dataType * [Height];
 	dataType** ball_centroid = new dataType * [Height];
@@ -2465,33 +2246,27 @@ int main() {
 		//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	}
 
-	storing_path = outputPath + "p6/mask_lungs.raw";
-	manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//for (size_t it = 1; it <= 5; it++) {
-	//	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//	//storing_path = outputPath + "erosion_" + to_string(it) + ".raw";
-	//	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	//}
-
-	////////Erosion and dilatation to remove all the internal background pixels
-	//dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-	//erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
-
-	//storing_path = outputPath + "lungs_morphology2.raw";
-	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
 	dataType* centroid_lungs = new dataType[3]{0};
 	centroidImage(maskLungs, centroid_lungs, Height, Length, Width, 0.0);
 
 	Point3D pCentroid = { centroid_lungs[0], centroid_lungs[1], centroid_lungs[2] };
-
-	//Draw ball centroid
 	Point3D pCentroidReal = getRealCoordFromImageCoord3D(pCentroid, ctOrigin, ctSpacing, orientation);
+
+	string test_meta_data = outputPath + "metaDataTest_p6.txt";
+	FILE* test_description;
+	if (fopen_s(&test_description, test_meta_data.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(test_description, "This test is performed on Monday 10th, February 2025\n");
+	fprintf(test_description, "The objective is to find points inside the right and left lungs to detect the carina\n");
+	fprintf(test_description, "\nPatient 6: origin = (%f, %f, %f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	fprintf(test_description, "Voxel sizes = (%f, %f, %f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
+	fprintf(test_description, "Dimension : Length = %d , Width = %d and Height = %d\n", Length, Width, Height);
+	fprintf(test_description, "Segmented lungs centroid : (%f,%f,%f)\n", pCentroidReal.x, pCentroidReal.y, pCentroidReal.z);
+	fclose(test_description);
+	
+	//Draw ball centroid
 	for (k = 0; k < Height; k++) {
 		for (i = 0; i < Length; i++) {
 			for (j = 0; j < Width; j++) {
@@ -2509,7 +2284,6 @@ int main() {
 	manageRAWFile3D<dataType>(ball_centroid, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//================== Approx left and right lung =============
-
 	dataType** leftLung = new dataType * [Height];
 	dataType** rightLung = new dataType * [Height];
 	dataType** ball_left = new dataType * [Height];
@@ -2542,10 +2316,7 @@ int main() {
 	storing_path = outputPath + "p6/right.raw";
 	manageRAWFile3D<dataType>(rightLung, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-
-	//===========================================================
-
-	/*
+	
 	dataType** distanceMap = new dataType * [Height];
 	dataType** actionMap = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
@@ -2641,7 +2412,7 @@ int main() {
 	manageRAWFile3D<dataType>(actionMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> path_points;
-	shortestPath3D(actionMap, Length, Width, Height, ctSpacing, seedPoints, path_points);
+	//shortestPath3D(actionMap, Length, Width, Height, ctSpacing, seedPoints, path_points);
 
 	//copy points to file
 	string saving_csv = outputPath + "path_points_L.csv";
@@ -2684,7 +2455,7 @@ int main() {
 	//fastSweepingFunction_3D(distanceMap, intMaskLungs, Length, Width, height, intSpacing.sx, 10000000.0, 0.0);
 	pMaxDist = getPointWithTheHighestValue(distanceMap, Length, Width, Height);
 	seedPoints[1] = pMaxDist;
-	shortestPath3D(actionMap, Length, Width, Height, ctSpacing, seedPoints, path_points);
+	//shortestPath3D(actionMap, Length, Width, Height, ctSpacing, seedPoints, path_points);
 
 	saving_csv = outputPath + "path_points_R.csv";
 	FILE* file_right;
@@ -2714,115 +2485,508 @@ int main() {
 	delete[] actionMap;
 	delete[] potential;
 	delete[] ball_maximum;
-	*/
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
 		delete[] maskLungs[k];
 		delete[] ball_centroid[k];
-		delete[] leftLung[k];
-		delete[] rightLung[k];
-		delete[] ball_left[k];
-		delete[] ball_right[k];
+		//delete[] leftLung[k];
+		//delete[] rightLung[k];
+		//delete[] ball_left[k];
+		//delete[] ball_right[k];
 	}
 	delete[] imageData;
 	delete[] maskLungs;
 	delete[] ball_centroid;
-	delete[] leftLung;
-	delete[] rightLung;
-	delete[] ball_left;
-	delete[] ball_right;
+	//delete[] leftLung;
+	//delete[] rightLung;
+	//delete[] ball_left;
+	//delete[] ball_right;
 
 	free(ctContainer);
+	*/
 	
-	//=============== Compare fast marching implementation =============
-
+	//================= double distance map lungs =====================
+	
 	/*
 	dataType** imageData = new dataType * [Height];
+	dataType** maskLungs = new dataType * [Height];
+	dataType** distanceMap = new dataType * [Height];
+	dataType** action = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	dataType** ball_max = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+		distanceMap[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+		ball_max[k] = new dataType[dim2D]{ 0 };
 	}
 
-	//loading_path = inputPath + "raw/filtered/filteredGMC_p4.raw";
+	//loading_path = inputPath + "Left Right Lungs/p3/left.raw";
+	//loading_path = inputPath + "raw/lungs/-150HU/lungs_p3.raw";
+	//loading_path = inputPath + "raw/lungs/-500HU/lungs_p3.raw";
+	loading_path = inputPath + "raw/lungs/iterative/lungs_p3.raw";
+	manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	
+	//storing_path = outputPath + "update_input.raw";
+	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	dataType tau = 0.4;
+	dataType tolerance = 0.5;
+	Image_Data distanceStr = { Height, Length, Width, maskLungs, ctOrigin, ctSpacing, orientation };
+	rouyTourinDistanceMap(distanceStr, distanceMap, 1.0, tolerance, tau);
+
+	//storing_path = outputPath + "distance.raw";
+	//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Point3D pMaxDistLeft = { 0.0, 0.0, 0.0 };
+	
+	//Find maximum distance
+	dataType max_distance = 0.0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				xd = x_new(i, j, Length);
+				if (distanceMap[k][xd] > max_distance) {
+					max_distance = distanceMap[k][xd];
+					pMaxDistLeft.x = i;
+					pMaxDistLeft.y = j;
+					pMaxDistLeft.z = k;
+				}
+			}
+		}
+	}
+
+	Point3D prMaxDist = getRealCoordFromImageCoord3D(pMaxDistLeft, ctOrigin, ctSpacing, orientation);
+
+	//remove distance point
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				xd = x_new(i, j, Length);
+				Point3D current_point = { i, j, k };
+				//distanceMap[k][xd] = 0.0;
+				current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
+				double pDistance = getPoint3DDistance(current_point, prMaxDist);
+				if (pDistance <= max_distance) {
+					distanceMap[k][xd] = 0.0;
+					ball_max[k][xd] = 1.0;
+					//maskLungs[k][i] = 0.0;
+				}
+			}
+		}
+	}
+	//storing_path = outputPath + "visualize_max.raw";
+	//manageRAWFile3D<dataType>(ball_max, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//storing_path = outputPath + "updated_lungs.raw";
+	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//rouyTourinDistanceMap(distanceStr, distanceMap, 1.0, tolerance, tau);
+	Point3D pMaxDistRight = getPointWithTheHighestValue(distanceMap, Length, Width, Height);
+
+	//storing_path = outputPath + "updated_distance.raw";
+	//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//Point3D pMaxDistRight = getPointWithTheHighestValue(distanceMap, Length, Width, Height);
+	//Point3D first_point = { 263, 260, 294 };//trachea, p1
+	//Point3D first_point = { 251, 243, 434 };//trachea, p2
+	Point3D first_point = { 271, 231, 274 };//trachea, p3
+	//Point3D first_point = { 265, 231, 270 };//Trachea, p4
+	//Point3D first_point = { 241, 205, 704 };//Trachea, p5
+	//Point3D first_point = { 248, 298, 520 };//Trachea, p6
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1000, //edge detector coefficient
+		0.15, //threshold
+		0.005,//epsilon
+		radius
+	};
+	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	//loading_path = inputPath + "raw/filtered/filteredGMC_p3.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
-	Image_Data inputImageData
-	{
-		Height,
-		Length,
-		Width,
-		imageData,
-		ctOrigin,
-		ctSpacing,
-		orientation
-	};
+	////Copy
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		imageData[k][i] = ctContainer->dataPointer[k][i];
+	//	}
+	//}
+	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxData, minData);
 
-	size_t height = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	//compute3DPotential(inputImage, potential, first_point, parameters);
+	//storing_path = outputPath + "potential.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	dataType** potential = new dataType * [height];
-	dataType** actionMap = new dataType * [height];
-	dataType** interpolate = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		potential[k] = new dataType[dim2D]{ 0 };
-		actionMap[k] = new dataType[dim2D]{ 0 };
-		interpolate[k] = new dataType[dim2D]{ 0 };
+	//fastMarching3dWithSpacing(inputImage, action, potential, first_point, ctSpacing);
+	storing_path = outputPath + "action.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	vector<Point3D> path_points;
+
+	string saving_csv = outputPath + "path_left.csv";
+	FILE* file_segment_left;
+	if (fopen_s(&file_segment_left, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
 	}
-
-	//Image_Data IntImageData
-	//{
-	//	height,
-	//	Length,
-	//	Width,
-	//	interpolate,
-	//	ctOrigin,
-	//	intSpacing,
-	//	orientation
-	//};
-
-	//imageInterpolation3D(inputImageData, IntImageData, NEAREST_NEIGHBOR);
-	
-	Point3D first_point = { 265, 231, 270 };//Trachea
-	first_point = getRealCoordFromImageCoord3D(first_point, ctOrigin, ctSpacing, orientation);
-	first_point = getImageCoordFromRealCoord3D(first_point, ctOrigin, intSpacing, orientation);
-
-	Point3D second_point = { 179, 302, 239 };//Left lung
-	second_point = getRealCoordFromImageCoord3D(second_point, ctOrigin, ctSpacing, orientation);
-	second_point = getImageCoordFromRealCoord3D(second_point, ctOrigin, intSpacing, orientation);
-
-	//double radius = 3.0;
-	//Potential_Parameters parameters{
-	//	1000, //edge detector coefficient
-	//	0.15, //threshold
-	//	0.005,//epsilon
-	//	radius
-	//};
-	////compute3DPotential(IntImageData, potential, first_point, parameters);
-	////storing_path = outputPath + "potential2.raw";
-	////manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
-
-	//fastMarching3dWithSpacing(IntImageData, actionMap, potential, first_point, intSpacing);
-	//fastMarching3D_N(actionMap, potential, Length, Width, height, first_point);
-	storing_path = outputPath + "action4.raw";
-	manageRAWFile3D<dataType>(actionMap, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	Point3D* seedPoints = new Point3D[2];
 	seedPoints[0] = first_point;
-	seedPoints[1] = second_point;
+	seedPoints[1] = pMaxDistLeft;
+	std::cout << "Max left : (" << pMaxDistLeft.x << "," << pMaxDistLeft.y << "," << pMaxDistLeft.z << ")" << std::endl;
+	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
+	shortestPath3D(actionMapStr, seedPoints, 0.8, 1.0, path_points);
+	for (int n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
+		fprintf(file_segment_left, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() != 0) {
+		path_points.pop_back();
+	}
+	fclose(file_segment_left);
 
+	saving_csv = outputPath + "path_right.csv";
+	FILE* file_segment_right;
+	if (fopen_s(&file_segment_right, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	seedPoints[1] = pMaxDistRight;
+	std::cout << "Max Right : (" << pMaxDistRight.x << "," << pMaxDistRight.y << "," << pMaxDistRight.z << ")" << std::endl;
+	shortestPath3D(actionMapStr, seedPoints, 0.8, 1.0, path_points);
+	for (int n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
+		fprintf(file_segment_right, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	}
+	while (path_points.size() != 0) {
+		path_points.pop_back();
+	}
+	fclose(file_segment_right);
+
+	delete[] seedPoints;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskLungs[k];
+		delete[] distanceMap[k];
+		delete[] action[k];
+		delete[] potential[k];
+		delete[] ball_max[k];
+	}
+	delete[] imageData;
+	delete[] maskLungs;
+	delete[] distanceMap;
+	delete[] action;
+	delete[] potential;
+	delete[] ball_max;
+	*/
+
+	//==================== Analyze the lung connected to the trachea slice by slice =============
+	
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** maskLungs = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = inputPath + "raw/lungs/-150HU/lungs_p4.raw";
+	//loading_path = inputPath + "raw/lungs/-500HU/lungs_p4.raw";
+	//loading_path = inputPath + "raw/lungs/iterative/lungs_p4.raw";
+	manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//storing_path = outputPath + "loaded_P4.raw";
+	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	for (size_t iter = 0; iter < 1; iter++) {
+		dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+		erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	}
+	//dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	//dilatation3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	//erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	//erosion3D(maskLungs, Length, Width, Height, 1.0, 0.0);
+	//storing_path = outputPath + "updated_P6.raw";
+	//manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	dataType* lungSlice = new dataType[dim2D]{ 0 };
+	int* segment = new int[dim2D]{ 0 };
+	bool* status = new bool[dim2D] { false };
+
+	//string saving_info_regions = outputPath + "Lungs Trachea Labeling/number_of_regions_p6.csv";
+	//FILE* file_regions;
+	//if (fopen_s(&file_regions, saving_info_regions.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_regions, "slice,nbr\n");
+
+	size_t consecutive_grp1 = 0, count_grp = 0;
+	size_t consecutive_grp2 = 0;
+	size_t consecutive_grp3 = 0;
+	size_t previous_slice = 0, current_slice = 0, next_slice = 0;
+	size_t total_slice_1_elt = 0;
+
+	vector<size_t> slice_id;
+
+	for (k = 0; k < Height; k++) {
+
+		//copy
+		copyDataToAnother2dArray(maskLungs[k], lungSlice, Length, Width);
+
+		//get number of forepixel
+		int numberOfForegroundPixels = 0;
+		for (i = 0; i < dim2D; i++) {
+			if (lungSlice[i] == 1.0) {
+				numberOfForegroundPixels++;
+			}
+		}
+
+		//Initialize array
+		for (i = 0; i < dim2D; i++) {
+			segment[i] = 0;
+			status[i] = false;
+		}
+
+		if (numberOfForegroundPixels > 0 && numberOfForegroundPixels < dim2D) {
+			
+			int* countingArray = new int[numberOfForegroundPixels] {0};
+
+			labeling(lungSlice, segment, status, Length, Width, 1.0);
+
+			//Get regions size
+			for (i = 0; i < dim2D; i++) {
+				if (segment[i] > 0) {
+					countingArray[segment[i]]++;
+				}
+			}
+			
+			////Remove too small regions
+			//size_t regionSize = 15;
+			//for (i = 0; i < dim2D; i++) {
+			//	if (countingArray[segment[i]] < regionSize) {
+			//		countingArray[segment[i]] = 0;
+			//	}
+			//}
+
+			//get number of regions
+			size_t numberOfRegions = 0;
+			for (i = 0; i < numberOfForegroundPixels; i++) {
+				if (countingArray[i] > 0) {
+					numberOfRegions++;
+				}
+			}
+			////std::cout << numberOfRegions << " regions for slice " << k << std::endl;
+			//fprintf(file_regions, "%d,%d\n", k, numberOfRegions);
+
+			//Deal with consecutive slices
+			if (numberOfRegions == 1) {
+				
+				slice_id.push_back(k);
+
+				//total_slice_1_elt++;
+				//consecutive_grp1++;
+				//current_slice = k;
+				//if (consecutive_grp1 == 1) {
+				//	count_grp++;
+				//	next_slice = k + 1;
+				//	slice_id.push_back(k);
+				//}
+				//else {
+				//	if (next_slice == current_slice) {
+				//		next_slice = current_slice + 1;
+				//		slice_id.push_back(k);
+				//	}
+				//	else {
+				//		consecutive_grp1 = 0;
+				//		std::cout << "Slices group " << count_grp << " : " << std::endl;
+				//		for (size_t itn = 0; itn < slice_id.size(); itn++) {
+				//			std::cout << slice_id[itn] << ", ";
+				//		}
+				//		std::cout << "" << std::endl;
+				//		while (slice_id.size() > 0) {
+				//			slice_id.pop_back();
+				//		}
+				//		//slice_id.push_back(k);
+				//	}
+				//}
+				
+				//storing_path = outputPath + "one region/slice_" + to_string(k) + ".raw";
+				//manageRAWFile2D<dataType>(lungSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+			}
+			
+			//if (numberOfRegions == 2) {
+			//	storing_path = outputPath + "two regions/slice_" + to_string(k) + ".raw";
+			//	manageRAWFile2D<dataType>(lungSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+			//}
+			//if (numberOfRegions == 3) {
+			//	storing_path = outputPath + "three regions/slice_" + to_string(k) + ".raw";
+			//	manageRAWFile2D<dataType>(lungSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+			//}
+
+			delete[] countingArray;
+		}
+		//else {
+		//	//std::cout << "0 region in slice " << k << std::endl;
+		//	size_t numberOfRegions = 0;
+		//	fprintf(file_regions, "%d,%d\n", k, numberOfRegions);
+		//}
+	}
+	//fclose(file_regions);
+
+	size_t count_grp_elt = 0;
+	count_grp = 1;
+	std::cout << "" << std::endl;
+	for (size_t itn = 0; itn < slice_id.size() ; itn++) {
+
+		if (itn == 0) {
+			previous_slice = slice_id[itn];
+			current_slice = slice_id[itn];
+			next_slice = slice_id[itn + 1];
+			count_grp_elt++;
+		}else{
+			if (itn == slice_id.size() - 1) {
+				previous_slice = slice_id[itn - 1];
+				current_slice = slice_id[itn];
+				next_slice = slice_id[itn];
+				count_grp_elt++;
+			}
+			else {
+				previous_slice = slice_id[itn - 1];
+				current_slice = slice_id[itn];
+				next_slice = slice_id[itn + 1];
+				count_grp_elt++;
+			}
+		}
+
+		if ((current_slice - previous_slice) > 1) { 
+			std::cout << "Group " << count_grp << " has " << count_grp_elt << " elements" << std::endl;
+			count_grp++;
+			count_grp_elt = 0;
+		}
+	}
+	std::cout << "Group " << count_grp << " has " << count_grp_elt << " elements" << std::endl;
+	std::cout << "\nWe found " << count_grp << " consecutive slices" << std::endl;
+	std::cout << "\We found " << slice_id.size() << " slices with 1 segment" << std::endl;
+
+	delete[] lungSlice;
+	delete[] segment;
+	delete[] status;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskLungs[k];
+	}
+	delete[] imageData;
+	delete[] maskLungs;
+	free(ctContainer);
+	*/
+
+	//==================== Path extraction in Lungs ==================
+
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	dataType** action = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//Copy
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			imageData[k][i] = ctContainer->dataPointer[k][i];
+		}
+	}
+	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, minData, maxData);
+
+	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	//Patient 1 : drawback in aorta
+	Point3D first_point = { 261, 258, 147 };
+	Point3D second_point = { 249, 251, 259 };
+
+	////Patient 1
+	//Point3D first_point = { 262, 254, 297 };
+	//Point3D left = { 200, 294, 231 };
+	//Point3D right = { 345, 304, 231 };
+
+	////Patient 2
+	//Point3D first_point = { 257, 251, 397 };
+	//Point3D left = { 192, 281, 331 };
+	//Point3D right = { 338, 288, 331 };
+
+	////Patient 3
+	//Point3D first_point = { 272, 231, 273 };
+	//Point3D left = { 174, 278, 205 };
+	////Point3D right = { 361, 288, 205 };
+	//Point3D right = { 313, 286, 251 };//drawback
+
+	////Patient 4
+	//Point3D first_point = { 265, 231, 271 };
+	//Point3D left = { 177, 295, 211 };
+	//Point3D right = { 299, 336, 211 };
+
+	////Patient 5
+	//Point3D first_point = { 241, 200, 714 };
+	//Point3D left = { 179, 278, 610 };
+	//Point3D right = { 317, 267, 610 };
+
+	////Patient 6
+	//Point3D first_point = { 249, 291, 531 };
+	//Point3D left = { 183, 318, 424 };
+	//Point3D right = { 350, 341, 424 };
+	
+	Point3D* seedPoints = new Point3D[2];
+	seedPoints[0] = first_point;
+
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1000, //edge detector coefficient
+		0.15, //threshold
+		0.005,//epsilon
+		radius
+	};
+	compute3DPotential(inputImageData, potential, first_point, parameters);
+
+	fastMarching3dWithSpacing(inputImageData, action, potential, first_point, ctSpacing);
+
+	Image_Data actionStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
 	vector<Point3D> path_points;
-	shortestPath3D(actionMap, Length, Width, height, intSpacing, seedPoints, path_points);
+
+	//seedPoints[1] = left;
+	seedPoints[1] = second_point;
+	shortestPath3D(actionStr, seedPoints, 0.8, 1.0, path_points);
 
 	//copy points to file
-	string saving_csv = outputPath + "path_points_4.csv";
+	string saving_csv = outputPath + "drawback_aorta.csv";
 	FILE* file_left;
 	if (fopen_s(&file_left, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-	int n = 0;
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
+	for (int n = path_points.size() - 1; n > -1; n--) {
+		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
 		fprintf(file_left, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
 	}
 	fclose(file_left);
@@ -2830,25 +2994,115 @@ int main() {
 		path_points.pop_back();
 	}
 
+	//seedPoints[1] = right;
+	//shortestPath3D(actionStr, seedPoints, 0.8, 1.0, path_points);
+
+	////copy points to file
+	//saving_csv = outputPath + "path_points_right_drawback.csv";
+	//FILE* file_right;
+	//if (fopen_s(&file_right, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//for (int n = path_points.size() - 1; n > -1; n--) {
+	//	path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, ctSpacing, orientation);
+	//	fprintf(file_right, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	//}
+	//fclose(file_right);
+	//while (path_points.size() > 0) {
+	//	path_points.pop_back();
+	//}
+
+	////Save inputs test
+	//string test_meta_data = outputPath + "info_test_carina_p3_drawback.txt";
+	//FILE* test_description;
+	//if (fopen_s(&test_description, test_meta_data.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(test_description, "The test is performed on Thursday 13th February\n");
+	//fprintf(test_description, "The objective is to show that when points are chosen properly in the trachea, the left and rigth lungs, we can detect the carina in robust way using path extraction\n");
+	//fprintf(test_description, "For this prototyping the points are set manually. One in the trachea, one in the left lung and one in the right lung\n");
+	//fprintf(test_description, "The points should be carefully chosen under the carina for optimal results\n");
+	//fprintf(test_description, "The original image is used whithout filtering and interpolation\n");
+	//fprintf(test_description, "\Dimension : (Length = %d, Width = %d, Height = %d)\n", Length, Width, Height);
+	//fprintf(test_description, "Origin : (%.3f, %.3f, %.3f)\n", ctOrigin.x, ctOrigin.y, ctOrigin.z);
+	//fprintf(test_description, "Spacing : (%.3f, %.3f, %.3f)\n", ctSpacing.sx, ctSpacing.sy, ctSpacing.sz);
+	//fprintf(test_description, "\nPoint in trachea : (%.1f, %.1f, %.1f)\n", first_point.x, first_point.y, first_point.z);
+	//fprintf(test_description, "Point in left lung : (%.1f, %.1f, %.1f)\n", left.x, left.y, left.z);
+	//fprintf(test_description, "Point in right lung : (%.1f, %.1f, %.1f)\n", right.x, right.y, right.z);
+	//fclose(test_description);
+
 	delete[] seedPoints;
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
+		delete[] potential[k];
+		delete[] action[k];
 	}
 	delete[] imageData;
-
-	for (k = 0; k < height; k++) {
-		delete[] interpolate[k];
-		delete[] actionMap[k];
-		delete[] potential[k];
-
-	}
-	delete[] interpolate;
-	delete[] actionMap;
 	delete[] potential;
-
+	delete[] action;
 	free(ctContainer);
 	*/
+
+	//==================== Segment Trachea ===========================
+
+	/*
+	dataType** maskLungs = new dataType * [Height];
+	dataType** maskTrachea = new dataType * [Height];
+	dataType** difference = new dataType * [Height];
+	int** segment = new int* [Height];
+	bool** status = new bool* [Height];
+	for (k = 0; k < Height; k++) {
+		maskLungs[k] = new dataType[dim2D]{ 0 };
+		maskTrachea[k] = new dataType[dim2D]{ 0 };
+		difference[k] = new dataType[dim2D]{ 0 };
+		segment[k] = new int[dim2D]{ 0 };
+		status[k] = new bool[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "raw/lungs/iterative/lungs_p4.raw";
+	loading_path = inputPath + "raw/lungs/-150HU/lungs_p5.raw";
+	//loading_path = inputPath + "raw/lungs/-500HU/lungs_p5.raw";
+	manageRAWFile3D<dataType>(maskLungs, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	copyDataToAnotherArray(maskLungs, maskTrachea, Height, Length, Width);
+
+	erosion3D(maskTrachea, Length, Width, Height, 1.0, 0.0);
+	dilatation3D(maskTrachea, Length, Width, Height, 1.0, 0.0);
+
+	//Difference
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			difference[k][i] = maskLungs[k][i] - maskTrachea[k][i];
+		}
+	}
+
+	//dilatation3D(maskTrachea, Length, Width, Height, 1.0, 0.0);
+
+	storing_path = outputPath + "difference.raw";
+	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	storing_path = outputPath + "remain.raw";
+	manageRAWFile3D<dataType>(maskTrachea, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] maskLungs[k];
+		delete[] maskTrachea[k];
+		delete[] difference[k];
+		delete[] segment[k];
+		delete[] status[k];
+	}
+	delete[] maskLungs;
+	delete[] maskTrachea;
+	delete[] difference;
+	delete[] segment;
+	delete[] status;
+	free(ctContainer);
+	*/
+
+	//==================== Test Fast Sweeping with spacing ==========
 	
 	return EXIT_SUCCESS;
 }
