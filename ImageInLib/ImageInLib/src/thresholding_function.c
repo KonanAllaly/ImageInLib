@@ -440,7 +440,7 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t w
 //	return true;
 //}
 
-bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType background, dataType foreground) {
+bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType initial_threshold, dataType background, dataType foreground) {
 
 	size_t i, k, dim2D = length * width;
 
@@ -457,7 +457,7 @@ bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t
 	//	}
 	//}
 
-	dataType optimalThresholdValue = -1000;
+	dataType optimalThresholdValue = initial_threshold;
 
 	size_t cpt1 = 0, cpt2 = 0;
 	dataType s1 = 0.0, s2 = 0.0, mean1 = 0.0, mean2 = 0.0;
