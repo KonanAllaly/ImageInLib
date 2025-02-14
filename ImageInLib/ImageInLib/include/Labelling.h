@@ -41,7 +41,7 @@ extern "C" {
 
 	bool regionGrowing(dataType** maskThreshold, dataType** segmentedImage, const size_t length, const size_t width, const size_t height, Point3D pSeed);
 
-	bool lungsSegmentation(Image_Data imageData, dataType** segmentedImage, Point3D pSeed, dataType tMin, dataType tMax);
+	//bool lungsSegmentation(Image_Data imageData, dataType** segmentedImage, Point3D pSeed, dataType tMin, dataType tMax);
 
 #ifdef __cplusplus
 }
