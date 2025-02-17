@@ -54,7 +54,7 @@ bool generateInitialSegmentationFunction(dataType* imageDataPtr, const size_t he
 {
 	size_t i, j;
 	int dx, dy;
-	dataType norm_of_distance = 0.0, new_value = 0.0;
+	dataType distance_to_center = 0.0, new_value = 0.0;
 
 	if (imageDataPtr == NULL)
 		return false;
@@ -63,9 +63,9 @@ bool generateInitialSegmentationFunction(dataType* imageDataPtr, const size_t he
 		dx = i - center->x;
 		for (j = 0; j < width; j++) {
 			dy = j - center->y;
-			norm_of_distance = sqrt(dx * dx + dy * dy);
-			new_value = (dataType)((1.0 / (norm_of_distance + v)) - (1.0 / (R + v)));
-			if (norm_of_distance > R) {
+			distance_to_center = sqrt(dx * dx + dy * dy);
+			new_value = (dataType)((1.0 / (distance_to_center + v)) - (1.0 / (R + v)));
+			if (distance_to_center > R) {
 				imageDataPtr[x_new(i, j, height)] = 0;
 			}
 			else {
@@ -190,6 +190,11 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 
 	size_t maxIter = seg_parms.maxNoGSIteration;
 
+	//Array for name construction
+	char name[350];
+	char name_ending[100];
+	Storage_Flags flags = { false,false };
+
 	dataType* segmentationPtr = (dataType*)malloc(sizeof(dataType) * dim2D);
 
 	dataType* gaussSeidelPtr = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
@@ -199,6 +204,12 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 		return false;
 
 	heatImplicit2dScheme(imageData, smooth_parms);
+
+	//Save filtered image
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_filtered.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store2dRawData(imageData.imageDataPtr, height, width, name, flags);
 
 	dataType* uNorth = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* uSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -235,14 +246,15 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 			gSouth[currentIndx] = gradientFunction(pow(U.South[currentIndx], 2), coef_edge_detector);
 
 			current = (dataType)(((gEast[currentIndx] + gWest[currentIndx] + gNorth[currentIndx] + gSouth[currentIndx]) / 4.0));
-			gAverage[currentIndx] = current;
+			if (current < 0.5) {
+				gAverage[currentIndx] = 1.0;
+			}
+			else {
+				gAverage[currentIndx] = 0.0;
+			}
+			//gAverage[currentIndx] = current;
 		}
 	}
-
-	//Array for name construction
-	char name[350];
-	char name_ending[100];
-	Storage_Flags flags = { false,false };
 
 	strcpy_s(name, sizeof name, segmentPath);
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
@@ -348,6 +360,20 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 		}
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > tol);
+
+	FILE* file_peak;
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "final_segment.csv");
+	strcat_s(name, sizeof(name), name_ending);
+	if (fopen_s(&file_peak, name, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(file_peak, "x,y\n");
+	for (i = 0; i < dim2D; i++) {
+		fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
+	}
+	fclose(file_peak);
 
 	free(uNorth);
 	free(uSouth);
