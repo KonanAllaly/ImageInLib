@@ -497,8 +497,6 @@ bool generateInitialSegmentationFunctionForMultipleCentres(dataType **inputDataA
 			}
 		}
 	}
-	//storeVtkFile(pathsaveVTK, vtkInfo, dataForm);
-	//free(vtkInfo);
 	return true;
 }
 

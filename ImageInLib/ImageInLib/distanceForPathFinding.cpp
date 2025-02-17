@@ -5580,3 +5580,125 @@ bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPt
 
 	return true;
 }
+
+dataType FastSweepingUpdate(dataType** distancePtr, size_t length, size_t width, size_t height, int indx, int indy, int indz, VoxelSpacing h) {
+
+	dataType x = select3dX(distancePtr, length, width, height, indx, indy, indz);
+	dataType y = select3dY(distancePtr, length, width, height, indx, indy, indz);
+	dataType z = select3dZ(distancePtr, length, width, height, indx, indy, indz);
+	
+	dataType dist = 0.0;
+	dataType dist_new = 0.0;
+
+	dataType a = -max(-x, max(-y, -z));
+	dataType c = max(x, max(y, z));
+	dataType b = (x + y + z) - (a + c);
+
+	dist_new = a + h.sx;
+
+	return dist;
+}
+
+bool fastSweeping3dWithSpacing(Image_Data inputImageData, dataType** distancePtr) {
+	
+	if (inputImageData.imageDataPtr == NULL || distancePtr == NULL)
+		return false;
+
+	const size_t length = inputImageData.length;
+	const size_t width = inputImageData.width;
+	const size_t height = inputImageData.height;
+	VoxelSpacing h = inputImageData.spacing;
+
+	size_t lenght_minus = length - 1;
+	size_t width_minus = width - 1;
+	size_t height_minus = height - 1;
+
+	//initialization
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, length);
+				if (inputImageData.imageDataPtr[k][xd] == 1.0) {
+					distancePtr[k][xd] = BIG_VALUE;
+				}
+				else {
+					distancePtr[k][xd] = BIG_VALUE;
+				}
+			}
+		}
+	}
+
+	//sweep1
+	for (int k = 0; k < height; k++) {
+		for (int i = 0; i < length; i++) {
+			for (int j = 0; j < width; j++) {
+
+			}
+		}
+	}
+
+	//sweep2
+	for (int k = 0; k < height; k++) {
+		for (int i = 0; i < length; i++) {
+			for (int j = width_minus; j >= 0; j--) {
+
+			}
+		}
+	}
+
+	//sweep3
+	for (int k = 0; k < height; k++) {
+		for (int i = lenght_minus; i >= 0; i--) {
+			for (int j = 0; j < width; j++) {
+
+			}
+		}
+	}
+
+	//sweep4
+	for (int k = height_minus; k >= 0; k--) {
+		for (int i = 0; i < length; i++) {
+			for (int j = 0; j < width; j++) {
+
+			}
+		}
+	}
+
+	//sweep5
+	for (int k = 0; k < height; k++) {
+		for (int i = lenght_minus; i >= 0; i--) {
+			for (int j = width_minus; j >= 0; j--) {
+
+			}
+		}
+	}
+
+	//sweep6
+	for (int k = height_minus; k >= 0; k--) {
+		for (int i = lenght_minus; i >= 0; i--) {
+			for (int j = 0; j < width; j++) {
+
+			}
+		}
+	}
+
+	//sweep7
+	for (int k = height_minus; k > 0; k--) {
+		for (int i = 0; i < length; i++) {
+			for (int j = width_minus; j > 0; j--) {
+
+			}
+		}
+	}
+
+	//sweep8
+	for (int k = height_minus; k >= 0; k--) {
+		for (int i = lenght_minus; i >= 0; i--) {
+			for (int j = width_minus; j >= 0; j--) {
+
+			}
+		}
+	}
+
+	return true;
+}

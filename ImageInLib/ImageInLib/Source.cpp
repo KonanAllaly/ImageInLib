@@ -42,6 +42,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	/*
 	OrientationMatrix orientation;
 	orientation.v1 = { 1.0, 0.0, 0.0 }; 
 	orientation.v2 = { 0.0, 1.0, 0.0 }; 
@@ -77,6 +78,7 @@ int main() {
 		}
 	}
 	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	*/
 	
 	/*
 	Vtk_File_Info* aortaContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -3102,7 +3104,94 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Test Fast Sweeping with spacing ==========
+	//==================== GSUBSURF with Peak function ==========
+
+	const size_t Length = 512, Width = 512;
+	size_t dim2D = Length * Width;
+	
+	dataType* imageData = new dataType[dim2D]{ 0 };
+	dataType* initialSegment = new dataType[dim2D]{ 0 };
+
+	loading_path = inputPath + "raw/slice/image2.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
+	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
+
+	dataType v = 1.0;
+	dataType radius = 20;
+	Point2D sSeed = {183, 266};
+	double pDistance = 0.0;
+	dataType value = 0.0;
+
+	//copy points to file
+	string saving_csv = outputPath + "peak_function.csv";
+	FILE* file_peak;
+	if (fopen_s(&file_peak, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(file_peak, "x,y\n");
+	
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			xd = x_new(i, j, Length);
+			Point2D current_point = { i, j };
+			pDistance = getPoint2DDistance(sSeed, current_point);
+			value = 1.0 / (pDistance + v);
+			//if (pDistance <= radius) {
+			//	value = 1.0 / (pDistance + v);// -1.0 / (radius + v);
+			//}
+			//else {
+			//	value = 0;//1.0 / (radius + v);
+			//}
+			fprintf(file_peak, "%d,%f\n", xd, value);
+			initialSegment[xd] = value;
+		}
+	}
+	fclose(file_peak);
+
+	storing_path = outputPath + "initialSegment.raw";
+	manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	//storing_path = outputPath + "loaded.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	const Filter_Parameters smoothing_parameters = {
+		2 * 1.171875 * 1.171875,//tau
+		1.171875,//h
+		0.0,//sigma
+		0,//K--> we use heat implicit
+		1.4,//omega
+		0.001,//tolerance
+		0.001,//eps 2
+		0.001,//coef
+		1,//p
+		1,//time step number
+		100,//max solver iteration
+	};
+
+	Segmentation_Parameters segmentation_parameters = {
+		200,//max iteration number
+		1000,//edge detector coef
+		0.001,//eps 2
+		100,//number of current time step
+		1000,//number of time step
+		10,//saving frequency
+		0.001,//segmentation tolerance
+		1.171875 * 1.171875,//tau
+		1.171875,//h
+		1.4,//omega_c
+		0.01,//tolerance
+		1.0,//convection coef
+		1.0//diffusion coef
+	};
+
+	Image_Data2D inputImageData = {Length, Width, imageData};
+	
+	storing_path = outputPath + "segmentation/2d slice/";
+	subsurf(inputImageData, initialSegment, storing_path.c_str(), smoothing_parameters, segmentation_parameters);
+
+	delete[] imageData;
+	delete[] initialSegment;
 	
 	return EXIT_SUCCESS;
 }
