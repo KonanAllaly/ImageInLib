@@ -240,19 +240,56 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 
 			size_t currentIndx = x_new(i, j, height);
 
-			gEast[currentIndx] = gradientFunction(pow(U.East[currentIndx], 2), coef_edge_detector);
-			gWest[currentIndx] = gradientFunction(pow(U.West[currentIndx], 2), coef_edge_detector);
-			gNorth[currentIndx] = gradientFunction(pow(U.North[currentIndx], 2), coef_edge_detector);
-			gSouth[currentIndx] = gradientFunction(pow(U.South[currentIndx], 2), coef_edge_detector);
+			//gEast[currentIndx] = gradientFunction(pow(U.East[currentIndx], 2), coef_edge_detector);
+			//gWest[currentIndx] = gradientFunction(pow(U.West[currentIndx], 2), coef_edge_detector);
+			//gNorth[currentIndx] = gradientFunction(pow(U.North[currentIndx], 2), coef_edge_detector);
+			//gSouth[currentIndx] = gradientFunction(pow(U.South[currentIndx], 2), coef_edge_detector);
 
-			current = (dataType)(((gEast[currentIndx] + gWest[currentIndx] + gNorth[currentIndx] + gSouth[currentIndx]) / 4.0));
-			if (current < 0.5) {
-				gAverage[currentIndx] = 1.0;
+			dataType edge_value = gradientFunction(U.East[currentIndx], coef_edge_detector);
+			if (edge_value <= 0.15) {
+				gEast[currentIndx] = edge_value;
 			}
 			else {
-				gAverage[currentIndx] = 0.0;
+				gEast[currentIndx] = 1.0;
 			}
-			//gAverage[currentIndx] = current;
+
+			edge_value = gradientFunction(U.West[currentIndx], coef_edge_detector);
+			if (edge_value <= 0.15) {
+				gWest[currentIndx] = edge_value;
+			}
+			else {
+				gWest[currentIndx] = 1.0;
+			}
+
+			edge_value = gradientFunction(U.North[currentIndx], coef_edge_detector);
+			if (edge_value <= 0.15) {
+				gNorth[currentIndx] = edge_value;
+			}
+			else {
+				gNorth[currentIndx] = 1.0;
+			}
+
+			edge_value = gradientFunction(U.South[currentIndx], coef_edge_detector);
+			if (edge_value <= 0.15) {
+				gSouth[currentIndx] = edge_value;
+			}
+			else {
+				gSouth[currentIndx] = 1.0;
+			}
+			
+			//gEast[currentIndx] = gradientFunction(U.East[currentIndx], coef_edge_detector);
+			//gWest[currentIndx] = gradientFunction(U.West[currentIndx], coef_edge_detector);
+			//gNorth[currentIndx] = gradientFunction(U.North[currentIndx], coef_edge_detector);
+			//gSouth[currentIndx] = gradientFunction(U.South[currentIndx], coef_edge_detector);
+
+			//current = (dataType)(((gEast[currentIndx] + gWest[currentIndx] + gNorth[currentIndx] + gSouth[currentIndx]) / 4.0));
+			//if (current < 0.015) {
+			//	gAverage[currentIndx] = current;//1.0;
+			//}
+			//else {
+			//	gAverage[currentIndx] = 0.0;
+			//}
+			////gAverage[currentIndx] = current;
 		}
 	}
 
@@ -260,6 +297,8 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	store2dRawData(gAverage, height, width, name, flags);
+
+	//exit(0);
 
 	dataType* coefNorth = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* coefSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -287,6 +326,7 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 		//compute the coefficents
 		computeNormOfGradientDiamondCells(segmentationPtr, U, height, width, h);
 		epsilonRegularization(U, height, width, eps);
+		
 		for (i = 0; i < height; i++) {
 			for (j = 0; j < width; j++) {
 				size_t currentIndx = x_new(i, j, height);
@@ -340,8 +380,6 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 		//compute L2-norm
 		error_segmentation = l2norm(gaussSeidelPtr, previousSolPtr, height_ext, width_ext, h);
 
-		printf("Step  %zd : residu = %e \n", number_time_step, error_segmentation);
-
 		//Dirichlet Boundary condition
 		set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
 
@@ -357,6 +395,7 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", number_time_step);
 			strcat_s(name, sizeof(name), name_ending);
 			store2dRawData(segmentationPtr, height, width, name, flags);
+			printf("Step  %zd : residu = %e \n", number_time_step, error_segmentation);
 		}
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > tol);
@@ -596,8 +635,6 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 		//compute L2-norm
 		error_segmentation = l2norm(gaussSeidelPtr, previousSolPtr, height_ext, width_ext, h);
 
-		printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
-
 		set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
 
 		copyDataToAnother2dArray(gaussSeidelPtr, previousSolPtr, height_ext, width_ext);
@@ -611,9 +648,24 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", number_time_step);
 			strcat_s(name, sizeof(name), name_ending);
 			store2dRawData(segmentationPtr, height, width, name, flags);
+			printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
 		}
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+
+	FILE* file_peak;
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "final_segment.csv");
+	strcat_s(name, sizeof(name), name_ending);
+	if (fopen_s(&file_peak, name, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(file_peak, "x,y\n");
+	for (i = 0; i < dim2D; i++) {
+		fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
+	}
+	fclose(file_peak);
 
 	free(uNorth);
 	free(uSouth);
