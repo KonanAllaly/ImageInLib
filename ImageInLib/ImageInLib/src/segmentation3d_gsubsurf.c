@@ -122,6 +122,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	imageData.length = length;
 	imageData.width = width;
 	imageData.segmentationFuntionPtr = segmFuntionPtr;
+	imageData.inputImageToBeSegmented = inputImageData.imageDataPtr;
 
 	Coefficient_Pointers CoefPtrs;
 	CoefPtrs.e_Ptr = e_Ptr;
@@ -284,7 +285,8 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
 	size_t width_ext = width + 2;
-	dataType h = segParameters.h, quotient = (dataType)(4.0 * h);
+	dataType h = segParameters.h;
+	dataType quotient = 4.0 * h;
 	dataType ux, uy, uz;
 	dataType u, uN, uS, uE, uW, uNW, uNE, uSE, uSW, Tu, TuN, TuS, TuE, TuW, TuNW, TuNE, TuSE, TuSW, //current and surrounding voxel values
 		Bu, BuN, BuS, BuE, BuW, BuNW, BuNE, BuSE, BuSW;
