@@ -46,14 +46,13 @@ void heatExplicitScheme(Image_Data toExplicitImage, const Filter_Parameters expl
 	copyDataToExtendedArea(toExplicitImage.imageDataPtr, tempPtr, height, length, width);
 	reflection3D(tempPtr, height_ext, length_ext, width_ext);
 
-	size_t x;
-	size_t x_ext;
-	size_t t;
+	size_t x, x_ext, t;
 
 	const dataType coeff = tau / hh;
 
 	// The Explicit Scheme Evaluation
 	for (t = 0; t < explicitParameters.timeStepsNum; t++) {
+		
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 			for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
@@ -90,6 +89,9 @@ void heatExplicitScheme(Image_Data toExplicitImage, const Filter_Parameters expl
 
 void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters implicitParameters)
 {
+	if (toImplicitImage.imageDataPtr == NULL)
+		return;
+
 	size_t k, i, j, z, x, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
 	dataType hh = implicitParameters.h * implicitParameters.h;
 	dataType coeff = implicitParameters.timeStepSize / hh;
@@ -103,9 +105,10 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	size_t height = toImplicitImage.height, length = toImplicitImage.length, width = toImplicitImage.width;
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
-	size_t width_ext = width + 2;// Create temp Image Data holder for Previous time step data
+	size_t width_ext = width + 2;
+	// Create temp Image Data holder for Previous time step data
 	dataType** tempPtr = (dataType**)malloc(sizeof(dataType*) * (height_ext));
-	dataType** currentPtr = (dataType**)malloc(sizeof(dataType*) * (height_ext)); // holds current
+	dataType** currentPtr = (dataType**)malloc(sizeof(dataType*) * (height_ext));
 	for (i = 0; i < height_ext; i++)
 	{
 		tempPtr[i] = malloc(sizeof(dataType) * length_ext * width_ext);
@@ -195,10 +198,7 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				// 2D to 1D representation for i, j
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				x = x_new(i, j, length);
-				toImplicitImage.imageDataPtr[k][x] = currentPtr[k_ext][x_ext];
+				toImplicitImage.imageDataPtr[k][x_new(i, j, length)] = currentPtr[k_ext][x_new(i_ext, j_ext, length_ext)];
 			}
 		}
 	}
@@ -292,6 +292,9 @@ void heatExplicitRectangularScheme(Image_Data toExplicitImage, const Filtering_P
 
 void heat2dExplicitScheme(Image_Data2D imageData, const Filter_Parameters explicitParameters)
 {
+	if (imageData.imageDataPtr == NULL)
+		return;
+
 	size_t i, j, n, i_ext, j_ext;
 	const size_t height = imageData.height, width = imageData.width;
 	const size_t height_ext = height + 2, width_ext = width + 2;
@@ -301,6 +304,9 @@ void heat2dExplicitScheme(Image_Data2D imageData, const Filter_Parameters explic
 	dataType coef_tau = tau / hh;
 
 	dataType* temporaryPtr = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+	if (temporaryPtr == NULL)
+		return;
+
 	initialize2dArrayD(temporaryPtr, height_ext, width_ext, 0.0);
 
 	copyDataTo2dExtendedArea(imageData.imageDataPtr, temporaryPtr, height, width);
