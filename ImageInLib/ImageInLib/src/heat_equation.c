@@ -91,8 +91,8 @@ void heatExplicitScheme(Image_Data toExplicitImage, const Filter_Parameters expl
 void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters implicitParameters)
 {
 	size_t k, i, j, z, x, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
-	dataType hhh = implicitParameters.h * implicitParameters.h * implicitParameters.h;
-	dataType coeff = implicitParameters.timeStepSize / hhh;
+	dataType hh = implicitParameters.h * implicitParameters.h;
+	dataType coeff = implicitParameters.timeStepSize / hh;
 	size_t k_ext, j_ext, i_ext, x_ext;
 
 	// Error value used to check iteration
@@ -108,9 +108,13 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	dataType** currentPtr = (dataType**)malloc(sizeof(dataType*) * (height_ext)); // holds current
 	for (i = 0; i < height_ext; i++)
 	{
-		tempPtr[i] = malloc(sizeof(dataType) * (length_ext) * (width_ext));
-		currentPtr[i] = malloc(sizeof(dataType) * (length_ext) * (width_ext));
+		tempPtr[i] = malloc(sizeof(dataType) * length_ext * width_ext);
+		currentPtr[i] = malloc(sizeof(dataType) * length_ext * width_ext);
+		if (tempPtr[i] == NULL || currentPtr[i] == NULL)
+			return;
 	}
+	if (tempPtr == NULL || currentPtr == NULL)
+		return;
 
 	//Initialize the arrays to avoid unwanted values
 	initialize3dArrayD(tempPtr, length_ext, width_ext, height_ext, 0.0);
@@ -137,7 +141,9 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	
 	// The Gauss-Seidel Implicit Scheme
 	for(size_t t = 0; t < implicitParameters.timeStepsNum; t++){
+		
 		z = 0; // Steps counter
+		
 		do
 		{
 			z = z + 1;
@@ -154,20 +160,20 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 							+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)]
 							+ currentPtr[k_ext + 1][x_ext] + currentPtr[k_ext - 1][x_ext])) / (1 + 6.0 * coeff));
 						// Gauss-Seidel
-						currentPtr[k_ext][x_ext] = currentPtr[k_ext][x_ext] + implicitParameters.omega_c*(sor - currentPtr[k_ext][x_ext]);
+						currentPtr[k_ext][x_ext] = currentPtr[k_ext][x_ext] + implicitParameters.omega_c * (sor - currentPtr[k_ext][x_ext]);
 					}
 				}
 			}
+
 			// Error Evaluation
 			error = 0.0; // Initialize
-			//reflection3DB(tempPtr, height, length, width, p);
 			for (k = 0, k_ext = 1; k < height; k++, k_ext++){
 				for (i = 0, i_ext = 1; i < length; i++, i_ext++){
 					for (j = 0, j_ext = 1; j < width; j++, j_ext++){
 						// 2D to 1D representation for i, j
 						x_ext = x_new(i_ext, j_ext, length_ext);
 						// Begin Error Calculation
-						error += (dataType)pow(currentPtr[k_ext][x_ext] * (1 + 6.0*coeff)
+						error += (dataType)pow(currentPtr[k_ext][x_ext] * (1 + 6.0 * coeff)
 							- coeff * (currentPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)]
 								+ currentPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] + currentPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
 								+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] + currentPtr[k_ext + 1][x_ext]
@@ -175,6 +181,7 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 					}
 				}
 			}
+
 		} while (error > implicitParameters.tolerance && z < steps);
 
 		//printf("The number of iterations is %zd for timeStep %zd\n", z, t);
