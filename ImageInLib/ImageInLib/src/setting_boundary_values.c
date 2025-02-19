@@ -84,16 +84,7 @@ bool setBoundaryToZeroDirichletBC(dataType **inputDataArrayPtr, size_t length, s
 			{
 				// 1D representation
 				size_t x_n = x_new(i, j, length);
-				/*
-				* (x_n == 0) - top left corner
-				* (x_n == (length - 1)) - top right coner
-				* (x_n == ((width - 1) * length)) - bottom left corner
-				* (x_n == (dim2D - 1)) - bottom right corner
-				* ((x_n > 0) && (x_n < (length - 1))) - first row (excluding left and right corner)
-				* ((x_n >((width - 1) * length)) && (x_n < (dim2D - 1))) - last row (excluding left and right corner)
-				* ((x_n != 0) && (x_n != ((width - 1) * length)) && ((i % length) == 0)) - first column (excluding top and bottom left corner)
-				* ((x_n != (length - 1)) && (x_n != (dim2D - 1)) && ((x_n % length) == (length - 1))) - last column (excluding top and bottom right corner)
-				*/
+
 				if (((x_n == 0) || (x_n == lengthminus) || (x_n == (widthminus * length)) || (x_n == dim2Dminus) || ((x_n > 0) && (x_n < lengthminus))
 					|| ((x_n >(widthminus * length)) && (x_n < dim2Dminus)) || ((x_n != 0) && (x_n != (widthminus * length)) && ((i % length) == 0))
 					|| ((x_n != lengthminus) && (x_n != dim2Dminus) && ((x_n % length) == lengthminus)))
