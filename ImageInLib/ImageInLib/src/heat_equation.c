@@ -92,7 +92,7 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	if (toImplicitImage.imageDataPtr == NULL)
 		return;
 
-	size_t k, i, j, z, x, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
+	size_t k, i, j, x, steps = implicitParameters.maxNumberOfSolverIteration, p = implicitParameters.p;
 	dataType hh = implicitParameters.h * implicitParameters.h;
 	dataType coeff = implicitParameters.timeStepSize / hh;
 	size_t k_ext, j_ext, i_ext, x_ext;
@@ -143,6 +143,7 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 	reflection3D(currentPtr, height_ext, length_ext, width_ext);
 	
 	// The Gauss-Seidel Implicit Scheme
+	size_t z = 0;
 	for(size_t t = 0; t < implicitParameters.timeStepsNum; t++){
 		
 		z = 0; // Steps counter
@@ -187,12 +188,11 @@ void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters impl
 
 		} while (error > implicitParameters.tolerance && z < steps);
 
-		//printf("The number of iterations is %zd for timeStep %zd\n", z, t);
-		//printf("Error is %e for timeStep %zd\n", error, t);
-
 		// Copy current to tempPtr before next time step
 		copyDataToAnotherArray(currentPtr, tempPtr, height_ext, length_ext, width_ext);
 	}
+	printf("The number of iterations is %zd\n", z);
+	printf("Error is %e\n", error);
 
 	// Copy back to original after filtering
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
