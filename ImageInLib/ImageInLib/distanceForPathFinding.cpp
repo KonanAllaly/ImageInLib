@@ -1385,67 +1385,50 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	//dataType** gradientVectorX = new dataType * [height];
-	//dataType** gradientVectorY = new dataType * [height];
-	//dataType** gradientVectorZ = new dataType * [height];
-	//for (k = 0; k < height; k++) {
-	//	gradientVectorX[k] = new dataType[dim2D]{0};
-	//	gradientVectorY[k] = new dataType[dim2D]{0};
-	//	gradientVectorZ[k] = new dataType[dim2D]{0};
-	//}
-	//if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-	//	return false;
-	
-	//compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
+	dataType** gradientVectorX = new dataType * [height];
+	dataType** gradientVectorY = new dataType * [height];
+	dataType** gradientVectorZ = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		gradientVectorX[k] = new dataType[dim2D]{0};
+		gradientVectorY[k] = new dataType[dim2D]{0};
+		gradientVectorZ[k] = new dataType[dim2D]{0};
+	}
+	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
+		return false;
+	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 
-	////use distance map in potential
-	//dataType** distance = new dataType * [height];
-	//dataType** edgeDetector = new dataType * [height];
-	//dataType** maskThreshold = new dataType * [height];
-	//for (k = 0; k < height; k++) {
-	//	distance[k] = new dataType[dim2D]{0};
-	//	edgeDetector[k] = new dataType[dim2D]{0};
-	//	maskThreshold[k] = new dataType[dim2D]{0};
-	//}
+	//use distance map in potential
+	dataType** distance = new dataType * [height];
+	dataType** edgeDetector = new dataType * [height];
+	dataType** maskThreshold = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		distance[k] = new dataType[dim2D]{0};
+		edgeDetector[k] = new dataType[dim2D]{0};
+		maskThreshold[k] = new dataType[dim2D]{0};
+	}
 	
 	dataType norm_of_gradient = 0.0;;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		
-	//		ux = gradientVectorX[k][i];
-	//		uy = gradientVectorY[k][i];
-	//		uz = gradientVectorZ[k][i];
-	//		norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-	//		edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-	//		
-	//		//threshold
-	//		if (edgeDetector[k][i] < parameters.thres) {
-	//			maskThreshold[k][i] = 0.0;
-	//		}
-	//		else {
-	//			maskThreshold[k][i] = 1.0;
-	//		}
-	//	}
-	//}
-	
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-	////rouyTourinFunction_3D(distance, maskThreshold, 0.5, length, width, height, 0.4, ctImageData.spacing.sx);
-
-	//Image_Data distanceMapStr
-	//{
-	//	height,
-	//	length,
-	//	width,
-	//	maskThreshold,
-	//	ctImageData.origin,
-	//	ctImageData.spacing,
-	//	ctImageData.orientation
-	//};
-	//dataType tau = 0.4;
-	//dataType tolerance = 0.5;
-	//rouyTourinDistanceMap(distanceMapStr, distance, 1.0, tolerance, tau);
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			
+			ux = gradientVectorX[k][i];
+			uy = gradientVectorY[k][i];
+			uz = gradientVectorZ[k][i];
+			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
+			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
+			
+			//threshold
+			if (edgeDetector[k][i] < parameters.thres) {
+				maskThreshold[k][i] = 0.0;
+			}
+			else {
+				maskThreshold[k][i] = 1.0;
+			}
+		}
+	}
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
 	//get real world coordinates of the seed point
 	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -1474,27 +1457,25 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			
 			dataType weight_dist = 1.0;// / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
-
 		}
 	}
 
-	//for (k = 0; k < height; k++) {
-	//	delete[] gradientVectorX[k];
-	//	delete[] gradientVectorY[k];
-	//	delete[] gradientVectorZ[k];
-	//	delete[] edgeDetector[k];
-	//	delete[] maskThreshold[k];
-	//	delete[] distance[k];
-	//}
-	//delete[] gradientVectorX;
-	//delete[] gradientVectorY;
-	//delete[] gradientVectorZ;
-	//delete[] edgeDetector;
-	//delete[] maskThreshold;
-	//delete[] distance;
+	for (k = 0; k < height; k++) {
+		delete[] gradientVectorX[k];
+		delete[] gradientVectorY[k];
+		delete[] gradientVectorZ[k];
+		delete[] edgeDetector[k];
+		delete[] maskThreshold[k];
+		delete[] distance[k];
+	}
+	delete[] gradientVectorX;
+	delete[] gradientVectorY;
+	delete[] gradientVectorZ;
+	delete[] edgeDetector;
+	delete[] maskThreshold;
+	delete[] distance;
 
 	return true;
 }
@@ -1509,8 +1490,16 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, 
 	const size_t height = actionMapStr.height;
 	VoxelSpacing spacing = actionMapStr.spacing;
 
-	size_t i = 0, j = 0, k = 0, xd = 0, dim2D = length * width, max_iter = 1000;
+	size_t i = 0, j = 0, k = 0, xd = 0, dim2D = length * width;
+	//size_t max_iter = 1000;
 	//dataType tau = 0.8, tol = 1.0;
+
+	//estimate the max number of iterations
+	Point3D pEnd = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
+	Point3D pStart = getRealCoordFromImageCoord3D(seedPoints[1], actionMapStr.origin, spacing, actionMapStr.orientation);
+	double totalLenght = getPoint3DDistance(pEnd, pStart);
+	size_t max_iter = (size_t)(1.5 * totalLenght);
+	std::cout << "max number of iterations : " << max_iter << std::endl;
 
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
