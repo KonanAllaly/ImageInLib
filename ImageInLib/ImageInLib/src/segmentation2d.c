@@ -655,7 +655,7 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 
 	FILE* file_peak;
 	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "final_segment.csv");
+	sprintf_s(name_ending, sizeof(name_ending), "final_segment_v1.csv");
 	strcat_s(name, sizeof(name), name_ending);
 	if (fopen_s(&file_peak, name, "w") != 0) {
 		printf("Enable to open");
