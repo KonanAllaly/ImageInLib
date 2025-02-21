@@ -31,7 +31,7 @@
 
 // Functions for 3D Images
 
-bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFunct, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters,
+bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters,
 	Point3D * centers, size_t no_of_centers, unsigned char* outputPathPtr) {
 
 	size_t i, j, k, xd;
@@ -140,6 +140,11 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	VPtrs.GtPtr = VtPtr;
 	VPtrs.GbPtr = VbPtr;
 
+	//Array for name construction
+	unsigned char  name[500];
+	unsigned char  name_ending[200];
+	Storage_Flags flags = { false,false };
+
 	//generate initial segmentation function
 	//When we have initial segment, we don't generate
 	//generateInitialSegmentationFunctionForMultipleCentres(segmFuntionPtr, length, width, height, centers, 0.5, 15, no_of_centers);
@@ -155,9 +160,9 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 			for (j = 0, j_n = 1; j < width; j++, j_n++) {
 				xd = x_new(i, j, length);
 				xd_n = x_new(i_n, j_n, length_ext);
-				segmFuntionPtr[k][xd] = segFunct[k][xd];
-				gauss_seidelPtr[k_n][xd_n] = segFunct[k][xd];
-				prevSol_extPtr[k_n][xd_n] = segFunct[k][xd];
+				segmFuntionPtr[k][xd] = initialSegment[k][xd];
+				gauss_seidelPtr[k_n][xd_n] = initialSegment[k][xd];
+				prevSol_extPtr[k_n][xd_n] = initialSegment[k][xd];
 			}
 		}
 	}
@@ -167,22 +172,14 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 	setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 	//compute coefficients from presmoothed image
-	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters, coef_conv);
-
-	//Array for name construction
-	unsigned char  name[500];
-	unsigned char  name_ending[200];
-	Storage_Flags flags = { false,false };
+	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
 
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
-	//strcpy_s(name, sizeof name, outputPathPtr);
-	//sprintf_s(name_ending, sizeof(name_ending), "_smoothed_image.raw");
-	//strcat_s(name, sizeof(name), name_ending);
-	//manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 
+	
 	//loop for segmentation time steps	
 	i = 1;
 	do
@@ -194,7 +191,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 		//calcution of coefficients
-		generalizedGaussSeidelCoefficients(imageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters, coef_conv);
+		generalizedGaussSeidelCoefficients(inputImageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);
 
 		// Call to function that will evolve segmentation function in each discrete time step
 		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, segParameters, CoefPtrs, centers, no_of_centers);
@@ -217,6 +214,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 		i++;
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
+	
 
 	for (i = 0; i < height; i++)
 	{
@@ -268,7 +266,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** segFun
 }
 
 bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataType** edgeGradientPtr, Gradient_Pointers VPtrs,
-	Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, dataType coef_conv)
+	Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters)
 {
 	//checks if the memory was allocated
 	if (inputImageData.imageDataPtr == NULL || edgeGradientPtr == NULL || VPtrs.GePtr == NULL || VPtrs.GwPtr == NULL
@@ -302,46 +300,105 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	if (gradient_coef_ext == NULL || extendedCoefPtr == NULL) 
 		return false;
 
+	dataType coef_conv = segParameters.coef_conv;
+
 	// Initialize array
 	initialize3dArrayD(gradient_coef_ext, length_ext, width_ext, height_ext, 0.0);
 	initialize3dArrayD(extendedCoefPtr, length_ext, width_ext, height_ext, 0.0);
 
-	Image_Data presmoothingData;
-	presmoothingData.height = height_ext;
-	presmoothingData.length = length_ext;
-	presmoothingData.width = width_ext;
-	presmoothingData.imageDataPtr = extendedCoefPtr;
-
-	//copy data to extended area which will be used for calculation of diffusion coefficients
-	//Manual copy because the current function doesn't work for non squared images
-	//copyDataToExtendedArea(inputImageData.imageDataPtr, extendedCoefPtr, height, length, width);
-	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				extendedCoefPtr[k_ext][x_ext] = inputImageData.imageDataPtr[k][x];
-			}
-		}
-	}
-
-	//perform reflection of the extended area to ensure zero Neumann boundary condition (for LHE)
-	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
+	//Image_Data presmoothingData;
+	//presmoothingData.height = height_ext;
+	//presmoothingData.length = length_ext;
+	//presmoothingData.width = width_ext;
+	//presmoothingData.imageDataPtr = extendedCoefPtr;
+	////copy data to extended area which will be used for calculation of diffusion coefficients
+	////Manual copy because the current function doesn't work for non squared images
+	////copyDataToExtendedArea(inputImageData.imageDataPtr, extendedCoefPtr, height, length, width);
+	//for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
+	//	for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+	//		for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+	//			x = x_new(i, j, length);
+	//			x_ext = x_new(i_ext, j_ext, length_ext);
+	//			extendedCoefPtr[k_ext][x_ext] = inputImageData.imageDataPtr[k][x];
+	//		}
+	//	}
+	//}
+	////perform reflection of the extended area to ensure zero Neumann boundary condition (for LHE)
+	//reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	heatImplicitScheme(presmoothingData, explicit_lhe_Parameters); // unconditionnally stable
+	//heatImplicitScheme(inputImageData, explicit_lhe_Parameters); // unconditionnally stable
 
-	//We use the manual copy because the current function doesn't work for non squared images
-	//copyDataToReducedArea(inputImageData.imageDataPtr, extendedCoefPtr, height, length, width);
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				inputImageData.imageDataPtr[k][x] = extendedCoefPtr[k_ext][x_ext];
+				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = inputImageData.imageDataPtr[k][x_new(i, j, length)];
 			}
 		}
 	}
+	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
+
+	/*
+	//new edge detector
+	dataType grad_x = 0, grad_y = 0, grad_z = 0;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				x = x_new(i, j, length);
+
+				//x direction
+				if (i == 0) {
+					grad_x = (inputImageData.imageDataPtr[k][x_new(i + 1, j, length)] - inputImageData.imageDataPtr[k][x_new(i, j, length)]) / h;
+				}
+				else {
+					if (i == length - 1) {
+						grad_x = (inputImageData.imageDataPtr[k][x_new(i, j, length)] - inputImageData.imageDataPtr[k][x_new(i - 1, j, length)]) / h;
+					}
+					else {
+						grad_x = (inputImageData.imageDataPtr[k][x_new(i + 1, j, length)] - inputImageData.imageDataPtr[k][x_new(i - 1, j, length)]) / 2 * h;
+					}
+				}
+
+				//y direction
+				if (j == 0) {
+					grad_y = (inputImageData.imageDataPtr[k][x_new(i, j + 1, length)] - inputImageData.imageDataPtr[k][x_new(i, j, length)]) / h;
+				}
+				else {
+					if (j == width - 1) {
+						grad_y = (inputImageData.imageDataPtr[k][x_new(i, j, length)] - inputImageData.imageDataPtr[k][x_new(i, j - 1, length)]) / h;
+					}
+					else {
+						grad_y = (inputImageData.imageDataPtr[k][x_new(i, j + 1, length)] - inputImageData.imageDataPtr[k][x_new(i, j - 1, length)]) / 2 * h;
+					}
+				}
+
+				//z direction
+				if (k == 0) {
+					grad_z = (inputImageData.imageDataPtr[k + 1][x] - inputImageData.imageDataPtr[k][x]) / h;
+				}
+				else {
+					if (k == height - 1) {
+						grad_z = (inputImageData.imageDataPtr[k][x] - inputImageData.imageDataPtr[k - 1][x]) / h;
+					}
+					else {
+						grad_z = (inputImageData.imageDataPtr[k + 1][x] - inputImageData.imageDataPtr[k - 1][x]) / 2 * h;
+					}
+				}
+
+				dataType norm_of_grad = sqrt(grad_x * grad_x + grad_y * grad_y + grad_z * grad_z);
+				edgeGradientPtr[k][x] = gradientFunction(norm_of_grad * norm_of_grad, segParameters.coef);
+				
+				if (edgeGradientPtr[k][x] < 0.6) {
+					edgeGradientPtr[k][x] = 1.0;
+				}
+				else {
+					edgeGradientPtr[k][x] = 0.0;
+				}
+
+			}
+		}
+	}
+	*/
 
 	//calculation of coefficients
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
@@ -440,9 +497,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				gradient_coef_ext[k_ext][x_ext] = edgeGradientPtr[k][x];
+				gradient_coef_ext[k_ext][x_new(i_ext, j_ext, length_ext)] = edgeGradientPtr[k][x_new(i, j, length)];
 			}
 		}
 	}
@@ -483,19 +538,22 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	return true;
 }
 
-bool generalizedGaussSeidelCoefficients(Segment_Image_Data inputImageData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs, Gradient_Pointers VPtrs, Segmentation_Parameters segParameters, dataType coef_dif)
+bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs, Gradient_Pointers VPtrs, Segmentation_Parameters segParameters)
 {
 	//checks if the memory was allocated
-	if (inputImageData.segmentationFuntionPtr == NULL || edgeGradientPtr == NULL
+	if (inputImageData.imageDataPtr == NULL || edgeGradientPtr == NULL
 		|| CoefPtrs.w_Ptr == NULL || CoefPtrs.n_Ptr == NULL || CoefPtrs.s_Ptr == NULL || CoefPtrs.t_Ptr == NULL || CoefPtrs.b_Ptr == NULL
 		|| VPtrs.GePtr == NULL || VPtrs.GwPtr == NULL || VPtrs.GnPtr == NULL || VPtrs.GsPtr == NULL || VPtrs.GtPtr == NULL || VPtrs.GbPtr == NULL)
 		return false;
 
-	size_t i, j, k, x, x_ext; // length == xDim, width == yDim, height == zDim
+	size_t i, j, k, x, x_ext;
 	size_t kplus1, kminus1, iminus1, iplus1, jminus1, jplus1;
 	size_t dim2D = inputImageData.length * inputImageData.width;
+	dataType coef_dif = segParameters.coef_dif;
+
 	size_t k_ext, j_ext, i_ext;
 	size_t height = inputImageData.height, length = inputImageData.length, width = inputImageData.width;
+
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
 	size_t width_ext = width + 2;
@@ -519,14 +577,12 @@ bool generalizedGaussSeidelCoefficients(Segment_Image_Data inputImageData, dataT
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				extendedCoefPtr[k_ext][x_ext] = inputImageData.segmentationFuntionPtr[k][x];
+				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = inputImageData.imageDataPtr[k][x_new(i, j, length)];
 			}
 		}
 	}
 
-	setBoundaryToZeroDirichletBC(extendedCoefPtr, length_ext, width_ext, height_ext);
+	setBoundaryToZeroDirichletBC(extendedCoefPtr, length_ext, width_ext, height_ext); // In this case, It should work as initializing the array to 0
 
 	//calculation of coefficients
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
@@ -538,6 +594,7 @@ bool generalizedGaussSeidelCoefficients(Segment_Image_Data inputImageData, dataT
 				// 2D to 1D representation for i, j
 				x_ext = x_new(i_ext, j_ext, length_ext);
 				x = x_new(i, j, length);
+
 				iminus1 = i_ext - 1;
 				iplus1 = i_ext + 1;
 				jplus1 = j_ext + 1;
@@ -689,15 +746,13 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 					+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] + CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext]))
 					/ (1 + coef_tauh * (CoefPtrs.e_Ptr[k][x] + CoefPtrs.w_Ptr[k][x] + CoefPtrs.s_Ptr[k][x] + CoefPtrs.n_Ptr[k][x] + CoefPtrs.b_Ptr[k][x] + CoefPtrs.t_Ptr[k][x]))));
 
-					//// SOR implementation using Gauss-Seidel
-					new_value = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
+					//SOR implementation using Gauss-Seidel
+					gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
 
 					////don't change if the old value is higher than the new one
 					//if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
 					//	gauss_seidelPtr[k_ext][x_ext] = new_value;
 					//}
-
-					gauss_seidelPtr[k_ext][x_ext] = new_value;
 
 				}
 			}
@@ -747,9 +802,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				inputImageData.segmentationFuntionPtr[k][x] = gauss_seidelPtr[k_ext][x_ext];
+				inputImageData.segmentationFuntionPtr[k][x_new(i, j, length)] = gauss_seidelPtr[k_ext][x_new(i_ext, j_ext, length_ext)];
 			}
 		}
 	}
