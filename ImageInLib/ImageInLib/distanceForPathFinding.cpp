@@ -1457,7 +1457,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0;// / (1.0 + distance[k][i]);
+			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 		}
 	}
