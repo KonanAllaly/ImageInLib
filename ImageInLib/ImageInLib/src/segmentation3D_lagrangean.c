@@ -327,18 +327,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     if (previous_curve == NULL)
         return false;
 
-    ////File to save the total curve length
-    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    //sprintf_s(ending, sizeof(ending), "total_lenght.csv");
-    //strcat_s(curve_path, sizeof(curve_path), ending);
-    //FILE* file_length;
-    //if (fopen_s(&file_length, curve_path, "w") != 0) {
-    //    printf("Enable to open");
-    //    return false;
-    //}
-    //fprintf(file_length, "x,y\n");
-
-
     //Save the current curve
     strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
     sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", start_ind);
@@ -349,50 +337,17 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         return false;
     }
     fprintf(file_initial_curve, "x,y,z\n");
-    
-    ////Path for distance
-    //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", start_ind);
-    //strcat_s(curve_path, sizeof(curve_path), ending);
-    
-    //FILE* file_dist;
-    //if (fopen_s(&file_dist, curve_path, "w") != 0) {
-    //    printf("Enable to open");
-    //    return false;
-    //}
 
     LinkedPoint3D* iPoint = linked_curve.first_point;
-    //fprintf(file_dist, "x,y\n");
     
     for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
         Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
         point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
         fprintf(file_initial_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
 
-        //fprintf(file_dist, "%d,%f\n", n, iPoint->distance_to_next);
-        //previous_curve[n][0] = iPoint->x;
-        //previous_curve[n][1] = iPoint->y;
-        //previous_curve[n][2] = iPoint->z;
-
         iPoint = iPoint->next;
     }
-    //fclose(file_dist);
     fclose(file_initial_curve);
-
-    //fprintf(file_length, "%d,%f\n", start_ind, total_curve_lenght);
-    //dataType previous_total_length = linked_curve.length;
-    //dataType difference_lenght = 1.0;
-
-    //Track motion of single point 
-    strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    sprintf_s(ending, sizeof(ending), "average_distance_to_next.csv");
-    strcat_s(curve_path, sizeof(curve_path), ending);
-    FILE* local_distance;
-    if (fopen_s(&local_distance, curve_path, "w") != 0) {
-        printf("Enable to open");
-        return false;
-    }
-    fprintf(local_distance, "x,y\n");
 
     size_t it = 1;
     double motion = 0.0;
@@ -408,33 +363,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         
         //evolve curve
         evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
-
-        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-        //sprintf_s(ending, sizeof(ending), "distance/_distance_between_points_%zd.csv", it);
-        //strcat_s(curve_path, sizeof(curve_path), ending);
-        //FILE* file_distance_curve;
-        //if (fopen_s(&file_distance_curve, curve_path, "w") != 0) {
-        //    printf("Enable to open");
-        //    return false;
-        //}
-        //fprintf(file_distance_curve, "x,y\n");
-
-        //strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-        //sprintf_s(ending, sizeof(ending), "motion/_length_motion_%zd.csv", it);
-        //strcat_s(curve_path, sizeof(curve_path), ending);
-        //FILE* file_motion;
-        //if (fopen_s(&file_motion, curve_path, "w") != 0) {
-        //    printf("Enable to open");
-        //    return false;
-        //}
-        //fprintf(file_motion, "x,y\n");
-
-        //fclose(file_distance_curve);
-        //fclose(file_motion);
-        //difference_lenght = fabs(linked_curve.length - previous_total_length);
-        //fprintf(file_length, "%d,%lf\n", it, total_curve_lenght);
-        //previous_total_length = linked_curve.length;
-        //printf("\n");
 
         strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
         sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
@@ -454,22 +382,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
             iPoint->average_distance_to_next += iPoint->distance_to_next;
             fprintf(file_current_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
 
-            //fprintf(file_distance_curve, "%d,%f\n", n, iPoint->distance_to_next);
-            //if(m == 100)
-            //{
-            //    //This is possible because the number of point doesn't change
-            //    motion = sqrt((iPoint->x - previous_curve[m][0]) * (iPoint->x - previous_curve[m][0])
-            //        + (iPoint->y - previous_curve[m][1]) * (iPoint->y - previous_curve[m][1])
-            //        + (iPoint->z - previous_curve[m][2]) * (iPoint->z - previous_curve[m][2]));
-            //    //printf("motion = %lf\n", motion);
-            //    fprintf(file_single_pt, "%d,%lf\n", it, motion);
-            //}
-            //
-            ////Update the previous point
-            //previous_curve[m][0] = iPoint->x;
-            //previous_curve[m][1] = iPoint->y;
-            //previous_curve[m][2] = iPoint->z;
-
             iPoint = iPoint->next;
         }
         fclose(file_current_curve);
@@ -477,12 +389,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         it++;
 
     } while (it < pSegmentationParams->num_time_steps);
-    
-    //fclose(file_single_pt);
-    //fclose(file_length);
-
-    //printf("difference between lenght at equilibrium : %f\n", difference_lenght);
-    //printf("%d time steps to equilibrium", it);
 
     //Store the final curve
     iPoint = linked_curve.first_point;
@@ -492,15 +398,9 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         pResultSegmentation->pPoints[i].y = (dataType)iPoint->y;
         pResultSegmentation->pPoints[i].z = (dataType)iPoint->z;
 
-        //Compute average distance to the next and save
-        if (i < linked_curve.number_of_points - 1) {
-            //iPoint->average_distance_to_next /= pSegmentationParams->num_time_steps;
-            fprintf(local_distance, "%d,%f\n", i, iPoint->distance_to_next);
-        }
-
         iPoint = iPoint->next;
     }
-    fclose(local_distance);
+    //fclose(local_distance);
 
     free(pscheme_data);
     release3dLinkedCurve(&linked_curve);
@@ -546,10 +446,6 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            //pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nvx * dt * pscheme_data[i].m
-            //                     - 0.5 * fmin(pscheme_data[i].alfa, 0.0) * (current_point->x - previous_point->x)
-            //                     - 0.5 * fmin(-pscheme_data[i].alfa, 0.0) * (current_point->x - next_point->x);
-
             pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nvx * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
@@ -576,10 +472,6 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            //pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->nvy * dt * pscheme_data[i].m
-            //                     - 0.5 * fmin(pscheme_data[i].alfa, 0.0) * (current_point->y - previous_point->y)
-            //                     - 0.5 * fmin(-pscheme_data[i].alfa, 0.0) * (current_point->y - next_point->y);
-
             pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->nvy * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
@@ -613,10 +505,6 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            //pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nvz * dt * pscheme_data[i].m
-            //                     - 0.5 * fmin(pscheme_data[i].alfa, 0.0) * (current_point->z - previous_point->z)
-            //                     - 0.5 * fmin(-pscheme_data[i].alfa, 0.0) * (current_point->z - next_point->z);
-
             pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nvz * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
@@ -809,7 +697,6 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        //h_i = current_point->previous->distance_to_next;
         if (i == 1) {
             h_i = current_point->distance_to_next;
         }
@@ -818,20 +705,6 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
             h_i = current_point->previous->distance_to_next;
         }
         
-        //h_i = current_point->previous->distance_to_next;
-        //h_i = current_point->distance_to_next;
-
-        /*
-        if (current_point->next == NULL)
-        {
-            pscheme_data[i].alfa = 0;
-        }
-        else
-        {
-            pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
-        }
-        */
-
         pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
         current_point = current_point->next;
     }
@@ -877,11 +750,6 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
             {
                 h_i_plus = h_i;
             }
-
-            //pscheme_data[i].a = -0.5 * fmax(-pscheme_data[i].alfa, 0.0)  - eps / h_i;      //lower diagonal
-            //pscheme_data[i].c = -0.5 * fmax(pscheme_data[i].alfa, 0.0) - eps / h_i_plus ; //upper diagonal
-            //pscheme_data[i].m = (h_i_plus + h_i) / (2.0 * dt);
-            //pscheme_data[i].b = pscheme_data[i].m - (pscheme_data[i].a + pscheme_data[i].c);//stiffness matrix
 
             pscheme_data[iter].a = -eps / h_i + 0.5 * pscheme_data[iter].alfa;      //lower diagonal
             pscheme_data[iter].c = -eps / h_i_plus - 0.5 * pscheme_data[iter].alfa; //upper diagonal
