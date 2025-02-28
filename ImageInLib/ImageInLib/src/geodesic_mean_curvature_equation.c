@@ -169,8 +169,8 @@ bool geodesicMeanCurvatureTimeStep(Image_Data inputImageData, Filter_Parameters 
 	reflection3D(gauss_seidelPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	heatExplicitScheme(presmoothingData, filterParameters);
 	//heatExplicitScheme(presmoothingData, filterParameters);
+	heatImplicitScheme(presmoothingData, filterParameters);
 
 	//calculation of coefficients
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
@@ -251,26 +251,20 @@ bool geodesicMeanCurvatureTimeStep(Image_Data inputImageData, Filter_Parameters 
 
 				// Calculation of coefficients in east direction
 				ux = (uE - u) / filterParameters.h;
-				uy = (dataType)(((uN + uNE) - (uS + uSE))
-					/ (4.0 * filterParameters.h));
-				uz = (dataType)(((Tu + TuE) - (Bu + BuE))
-					/ (4.0 * filterParameters.h));
+				uy = (dataType)(((uN + uNE) - (uS + uSE)) / (4.0 * filterParameters.h));
+				uz = (dataType)(((Tu + TuE) - (Bu + BuE)) / (4.0 * filterParameters.h));
 				presmoot_e_coefPtr[k][x] = gradientFunction((ux * ux) + (uy * uy) + (uz * uz), filterParameters.edge_detector_coefficient);
 
 				// Calculation of coefficients in west direction
 				ux = (uW - u) / filterParameters.h;
-				uy = (dataType)(((uNW + uN) - (uSW + uS))
-					/ (4.0 * filterParameters.h));
-				uz = (dataType)(((TuW + Tu) - (BuW + Bu))
-					/ (4.0 * filterParameters.h));
+				uy = (dataType)(((uNW + uN) - (uSW + uS)) / (4.0 * filterParameters.h));
+				uz = (dataType)(((TuW + Tu) - (BuW + Bu)) / (4.0 * filterParameters.h));
 				presmoot_w_coefPtr[k][x] = gradientFunction((ux * ux) + (uy * uy) + (uz * uz), filterParameters.edge_detector_coefficient);
 
 				// Calculation of coefficients in north direction
-				ux = (dataType)(((uNE + uE) - (uNW + uW))
-					/ (4.0 * filterParameters.h));
+				ux = (dataType)(((uNE + uE) - (uNW + uW)) / (4.0 * filterParameters.h));
 				uy = (uN - u) / filterParameters.h;
-				uz = (dataType)(((TuN + Tu) - (BuN + Bu))
-					/ (4.0 * filterParameters.h));
+				uz = (dataType)(((TuN + Tu) - (BuN + Bu)) / (4.0 * filterParameters.h));
 				presmoot_n_coefPtr[k][x] = gradientFunction((ux * ux) + (uy * uy) + (uz * uz), filterParameters.edge_detector_coefficient);
 
 				// Calculation of coefficients in south direction
