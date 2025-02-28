@@ -215,7 +215,6 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
-
 	for (i = 0; i < height; i++)
 	{
 		free(imageToBeSegPtr[i]);
@@ -327,7 +326,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	//reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
 	//perfom presmoothing
-	//heatImplicitScheme(inputImageData, explicit_lhe_Parameters); // unconditionnally stable
+	heatImplicitScheme(inputImageData, explicit_lhe_Parameters); // unconditionnally stable
 
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
@@ -337,68 +336,6 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 		}
 	}
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
-
-	/*
-	//new edge detector
-	dataType grad_x = 0, grad_y = 0, grad_z = 0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				x = x_new(i, j, length);
-
-				//x direction
-				if (i == 0) {
-					grad_x = (inputImageData.imageDataPtr[k][x_new(i + 1, j, length)] - inputImageData.imageDataPtr[k][x_new(i, j, length)]) / h;
-				}
-				else {
-					if (i == length - 1) {
-						grad_x = (inputImageData.imageDataPtr[k][x_new(i, j, length)] - inputImageData.imageDataPtr[k][x_new(i - 1, j, length)]) / h;
-					}
-					else {
-						grad_x = (inputImageData.imageDataPtr[k][x_new(i + 1, j, length)] - inputImageData.imageDataPtr[k][x_new(i - 1, j, length)]) / 2 * h;
-					}
-				}
-
-				//y direction
-				if (j == 0) {
-					grad_y = (inputImageData.imageDataPtr[k][x_new(i, j + 1, length)] - inputImageData.imageDataPtr[k][x_new(i, j, length)]) / h;
-				}
-				else {
-					if (j == width - 1) {
-						grad_y = (inputImageData.imageDataPtr[k][x_new(i, j, length)] - inputImageData.imageDataPtr[k][x_new(i, j - 1, length)]) / h;
-					}
-					else {
-						grad_y = (inputImageData.imageDataPtr[k][x_new(i, j + 1, length)] - inputImageData.imageDataPtr[k][x_new(i, j - 1, length)]) / 2 * h;
-					}
-				}
-
-				//z direction
-				if (k == 0) {
-					grad_z = (inputImageData.imageDataPtr[k + 1][x] - inputImageData.imageDataPtr[k][x]) / h;
-				}
-				else {
-					if (k == height - 1) {
-						grad_z = (inputImageData.imageDataPtr[k][x] - inputImageData.imageDataPtr[k - 1][x]) / h;
-					}
-					else {
-						grad_z = (inputImageData.imageDataPtr[k + 1][x] - inputImageData.imageDataPtr[k - 1][x]) / 2 * h;
-					}
-				}
-
-				dataType norm_of_grad = sqrt(grad_x * grad_x + grad_y * grad_y + grad_z * grad_z);
-				edgeGradientPtr[k][x] = gradientFunction(norm_of_grad * norm_of_grad, segParameters.coef);
-				
-				if (edgeGradientPtr[k][x] < 0.6) {
-					edgeGradientPtr[k][x] = 1.0;
-				}
-				else {
-					edgeGradientPtr[k][x] = 0.0;
-				}
-
-			}
-		}
-	}
-	*/
 
 	//calculation of coefficients
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
