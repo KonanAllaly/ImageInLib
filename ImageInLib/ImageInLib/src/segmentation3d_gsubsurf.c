@@ -215,6 +215,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
+
 	for (i = 0; i < height; i++)
 	{
 		free(imageToBeSegPtr[i]);
@@ -325,7 +326,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	////perform reflection of the extended area to ensure zero Neumann boundary condition (for LHE)
 	//reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
 
-	//perfom presmoothing
+	////perfom presmoothing
 	heatImplicitScheme(inputImageData, explicit_lhe_Parameters); // unconditionnally stable
 
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
