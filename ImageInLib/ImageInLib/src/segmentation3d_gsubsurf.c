@@ -175,6 +175,11 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
 
 	strcpy_s(name, sizeof name, outputPathPtr);
+	sprintf_s(name_ending, sizeof(name_ending), "_smoothed.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+
+	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
