@@ -50,8 +50,8 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/aorta/AortaPatient2.vtk";
-	//loading_path = inputPath + "vtk/petct/ct/Patient2_ct.vtk";
+	//loading_path = inputPath + "vtk/petct/aorta/AortaPatient2.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient2_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -1166,7 +1166,7 @@ int main() {
 
 	//======================== Path extraction from multiple seeds ===============================
 	
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -1503,7 +1503,7 @@ int main() {
 	delete[] imageInterpolated;
 	
 	free(ctContainer);
-	
+	*/
 	
 	//======================== Segment lungs connected to trachea ==============
 
@@ -3414,7 +3414,7 @@ int main() {
 	
 	//=============== 3D image ====================
 	
-	/*
+	
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -3426,7 +3426,8 @@ int main() {
 			imageData[k][i] = ctContainer->dataPointer[k][i];
 		}
 	}
-	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	//loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	loading_path = inputPath + "raw/filtered/New/filtered_p2.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
@@ -3450,23 +3451,23 @@ int main() {
 	loading_path = inputPath + "raw/interpolated/interpolated.raw";
 	//manageRAWFile3D<dataType>(interpolatedImage, Length, Width, hauteur, loading_path.c_str(), STORE_DATA, false);
 	
-	////p1
-	//Croping
-	size_t i_min = 200;
-	size_t j_min = 200;
-	size_t k_min = 275;
-	size_t length = 150;
-	size_t width = 150;
-	size_t height = 350;
-
-	////p2
+	//////p1
 	////Croping
-	//size_t i_min = 190;
-	//size_t j_min = 210;
-	//size_t k_min = 477;
+	//size_t i_min = 200;
+	//size_t j_min = 200;
+	//size_t k_min = 275;
 	//size_t length = 150;
 	//size_t width = 150;
 	//size_t height = 350;
+
+	//p2
+	//Croping
+	size_t i_min = 190;
+	size_t j_min = 210;
+	size_t k_min = 477;
+	size_t length = 150;
+	size_t width = 150;
+	size_t height = 350;
 
 	////p3
 	////Croping
@@ -3511,6 +3512,7 @@ int main() {
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
 
+	
 	dataType** imageCrop = new dataType * [height];
 	dataType** initialSegment = new dataType * [height];
 	dataType** maskPath = new dataType * [height];
@@ -3576,7 +3578,7 @@ int main() {
 	
 	
 	FILE* path_file;
-	loading_path = inputPath + "paths/path segmentation/centered_path_p1.csv";
+	loading_path = inputPath + "paths/path segmentation/centered_path_p2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -3748,19 +3750,19 @@ int main() {
 
 	
 	Segmentation_Parameters segParameters = {
-		100,//max iteration number
-		10000,//edge detector coef
+		30,//max iteration number
+		100000,//edge detector coef
 		0.0001,//eps 2
 		100,//number of current time step
 		2000,//number of time step
 		10,//saving frequency
 		0.000001,//segmentation tolerance
-		0.15,//tau
+		1.5 * intSpacing.sx,//tau
 		intSpacing.sx,//h
-		1.4,//omega_c
+		1.5,//omega_c
 		0.001,//tolerance
 		1.0,//convection coef
-		0.01//diffusion coef
+		0.005//diffusion coef
 	};
 
 	Filter_Parameters smoothParameters = {
@@ -3784,7 +3786,7 @@ int main() {
 
 	Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
 	
-	storing_path = outputPath + "segmentation/3D image/interpolate/p1/test/";
+	storing_path = outputPath + "segmentation/3D image/interpolate/p2/";
 	double cpu_start = clock();
 	generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
 	double cpu_end = clock();
@@ -3792,12 +3794,6 @@ int main() {
 	printf("Hundred iterations need : %.3f s", needed_cpu_time);
 	
 	delete[] segCenters;
-	
-
-	for (k = 0; k < hauteur; k++) {
-		delete[] interpolatedImage[k];
-	}
-	delete[] interpolatedImage;
 
 	for (k = 0; k < height; k++) {
 		delete[] imageCrop[k];
@@ -3808,13 +3804,18 @@ int main() {
 	delete[] initialSegment;
 	delete[] maskPath;
 
+	for (k = 0; k < hauteur; k++) {
+		delete[] interpolatedImage[k];
+	}
+	delete[] interpolatedImage;
+
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
 	}
 	delete[] imageData;
 
 	free(ctContainer);
-	*/
+	
 
 	//============== Test penalized front propagation =============
 	
