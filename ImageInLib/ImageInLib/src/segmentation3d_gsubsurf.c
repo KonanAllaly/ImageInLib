@@ -34,6 +34,9 @@
 bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters,
 	Point3D * centers, size_t no_of_centers, unsigned char* outputPathPtr) {
 
+	if (inputImageData.imageDataPtr == NULL || initialSegment == NULL || outputPathPtr == NULL)
+		return false;
+
 	size_t i, j, k, xd;
 	size_t height = inputImageData.height;
 	size_t length = inputImageData.length;
@@ -174,16 +177,34 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	//compute coefficients from presmoothed image
 	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
 
+	bool isFileSaved;
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_smoothed.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	isFileSaved = manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	if (isFileSaved == false) {
+		printf("The file was not saved\n");
+		return false;
+	}
 
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	isFileSaved = manageFile(edgeGradientPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	if (isFileSaved == false) {
+		printf("The file was not saved\n");
+		return false;
+	}
 
+	i = 0;
+	strcpy_s(name, sizeof name, outputPathPtr);
+	sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", i);
+	strcat_s(name, sizeof(name), name_ending);
+	isFileSaved = manageFile(initialSegment, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	if (isFileSaved == false) {
+		printf("The file was not saved\n");
+		return false;
+	}
 	
 	//loop for segmentation time steps	
 	i = 1;
@@ -212,8 +233,12 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 			strcpy_s(name, sizeof name, outputPathPtr);
 			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", i);
 			strcat_s(name, sizeof(name), name_ending);
-			manageFile(imageData.segmentationFuntionPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
-			printf("Step is %zd\n", segParameters.numberOfTimeStep);
+			isFileSaved = manageFile(imageData.segmentationFuntionPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+			printf("Step : %zd\n", segParameters.numberOfTimeStep);
+			if (isFileSaved == false) {
+				printf("The file was not saved\n");
+				return false;
+			}
 		}
 		
 		i++;
