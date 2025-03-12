@@ -43,6 +43,10 @@ using namespace std;
 		double tolerance; //minimal distance to stop
 	} Path_Parameters;
 
+	typedef struct {
+		dataType lamba_1, lambda_2, lamba_3;// The values are sorted, lambda_1 >= lambda_2 >= lambda_3
+	} eigenVector3D;
+
 	// 2D functions
 
 	/// <summary>

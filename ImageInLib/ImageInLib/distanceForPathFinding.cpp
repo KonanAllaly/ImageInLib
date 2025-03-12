@@ -6099,3 +6099,55 @@ bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPt
 
 	return true;
 }
+
+//======================================
+
+/*
+bool computeHessianMatrix(Image_Data inputImageData, const size_t indx, const size_t indy, const size_t indz, eigenVector3D eigen_value) {
+	
+	if (inputImageData.imageDataPtr == NULL)
+		return false;
+
+	size_t length = inputImageData.length;
+	size_t width = inputImageData.width;
+	size_t height = inputImageData.height;
+	VoxelSpacing h = inputImageData.spacing;
+
+	dataType ux, uy, uz, uxx, uyy, uzz, uxy, uxz, uyz;
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, length);
+				
+				if (k == 0) {
+					uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k + 1][xd]) / h.sz;
+				}
+				else {
+					if (k == height - 1) {
+						uz = (inputImageData.imageDataPtr[k][xd] - inputImageData.imageDataPtr[k - 1][xd]) / h.sz;
+					}
+					else {
+						uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k - 1][xd]) / (2 * h.sz);
+					}
+				}
+
+				if (k == 0) {
+					uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k + 1][xd]) / h.sz;
+				}
+				else {
+					if (k == height - 1) {
+						uz = (inputImageData.imageDataPtr[k][xd] - inputImageData.imageDataPtr[k - 1][xd]) / h.sz;
+					}
+					else {
+						uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k - 1][xd]) / (2 * h.sz);
+					}
+				}
+
+
+			}
+		}
+	}
+
+	return true;
+}
+*/
