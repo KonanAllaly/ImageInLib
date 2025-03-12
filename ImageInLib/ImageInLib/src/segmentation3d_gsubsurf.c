@@ -205,6 +205,17 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		printf("The file was not saved\n");
 		return false;
 	}
+
+	FILE* error_file;
+	strcpy_s(name, sizeof name, outputPathPtr);
+	sprintf_s(name_ending, sizeof(name_ending), "_error.csv");
+	strcat_s(name, sizeof(name), name_ending);
+	if (fopen_s(&error_file, name, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(error_file, "ID,distance\n");
+
 	
 	//loop for segmentation time steps	
 	i = 1;
@@ -239,12 +250,16 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 				printf("The file was not saved\n");
 				return false;
 			}
+			fprintf(error_file, "%d,%f\n", i, difference_btw_current_and_previous_sol);
 		}
 		
 		i++;
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
+	
+
+	fclose(error_file);
 
 	for (i = 0; i < height; i++)
 	{
@@ -485,12 +500,12 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 				kplus1 = k_ext + 1;
 				kminus1 = k_ext - 1;
 
-				VPtrs.GePtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)]) / (2 * h);
-				VPtrs.GwPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)]) / (2 * h);
-				VPtrs.GnPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)]) / (2 * h);
-				VPtrs.GsPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)]) / (2 * h);
-				VPtrs.GtPtr[k][x] = -coef_conv * (gradient_coef_ext[kminus1][x_ext] - gradient_coef_ext[kplus1][x_ext]) / (2 * h);
-				VPtrs.GbPtr[k][x] = -coef_conv * (gradient_coef_ext[kplus1][x_ext] - gradient_coef_ext[kminus1][x_ext]) / (2 * h);
+				VPtrs.GePtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)]) / (2 * h);
+				VPtrs.GwPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)]) / (2 * h);
+				VPtrs.GnPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)]) / (2 * h);
+				VPtrs.GsPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)]) / (2 * h);
+				VPtrs.GtPtr[k][x] = -coef_conv * h * (gradient_coef_ext[kminus1][x_ext] - gradient_coef_ext[kplus1][x_ext]) / (2 * h);
+				VPtrs.GbPtr[k][x] = -coef_conv * h * (gradient_coef_ext[kplus1][x_ext] - gradient_coef_ext[kminus1][x_ext]) / (2 * h);
 
 			}
 		}
