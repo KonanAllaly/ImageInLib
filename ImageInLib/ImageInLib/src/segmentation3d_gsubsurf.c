@@ -694,7 +694,9 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 	dataType mean_square_residue = 0.0, gauss_seidel = 0.0;
 
 	// Prepare variables inputImageData.height, inputImageData.length, inputImageData.width
-	size_t height = inputImageData.height, length = inputImageData.length, width = inputImageData.width;
+	size_t height = inputImageData.height;
+	size_t length = inputImageData.length;
+	size_t width = inputImageData.width;
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
 	size_t width_ext = width + 2;
@@ -723,19 +725,17 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 
 					// Gauss-Seidel Formula Evaluation
 					//explicit for advection
-					gauss_seidel = (dataType)(((prevSol_extPtr[k_ext][x_ext] + coef_tauh * (CoefPtrs.e_Ptr[k][x] * gauss_seidelPtr[k_ext][x_ext + 1] 
-					+ CoefPtrs.w_Ptr[k][x] * gauss_seidelPtr[k_ext][x_ext - 1] + CoefPtrs.s_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
+					gauss_seidel = (dataType)(((prevSol_extPtr[k_ext][x_ext] + coef_tauh * (
+					  CoefPtrs.e_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)]
+					+ CoefPtrs.w_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] 
+					+ CoefPtrs.s_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
 					+ CoefPtrs.n_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)]
-					+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] + CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext]))
+					+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] 
+					+ CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext]))
 					/ (1 + coef_tauh * (CoefPtrs.e_Ptr[k][x] + CoefPtrs.w_Ptr[k][x] + CoefPtrs.s_Ptr[k][x] + CoefPtrs.n_Ptr[k][x] + CoefPtrs.b_Ptr[k][x] + CoefPtrs.t_Ptr[k][x]))));
 
 					//SOR implementation using Gauss-Seidel
 					gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
-
-					////don't change if the old value is higher than the new one
-					//if (gauss_seidelPtr[k_ext][x_ext] <= new_value) {
-					//	gauss_seidelPtr[k_ext][x_ext] = new_value;
-					//}
 
 				}
 			}
@@ -758,7 +758,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 							+ CoefPtrs.s_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
 							+ CoefPtrs.n_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)]
 							+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] + CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])
-						- prevSol_extPtr[k_ext][x_ext], 2) * hh);
+						- prevSol_extPtr[k_ext][x_ext], 2));
 				}
 			}
 		}
@@ -768,17 +768,19 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 
 	//printf("number of iteration = %d\n", z);
 
-	if (no_of_centers == 1)
-	{
-		rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
-	}
-	else
-	{
-		for (i = 0; i < no_of_centers; i++)
-		{
-			rescaleLocallyToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext, centers[i].x, centers[i].y, centers[i].z, 6., i);
-		}
-	}
+	//rescaling
+	rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
+	//if (no_of_centers == 1)
+	//{
+	//	rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
+	//}
+	//else
+	//{
+	//	for (i = 0; i < no_of_centers; i++)
+	//	{
+	//		rescaleLocallyToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext, centers[i].x, centers[i].y, centers[i].z, 6., i);
+	//	}
+	//}
 
 	////Copy the current time step to original data array after timeStepsNum
 	//copyDataToReducedArea(inputImageData.segmentationFuntionPtr, gauss_seidelPtr, height, length, width);
