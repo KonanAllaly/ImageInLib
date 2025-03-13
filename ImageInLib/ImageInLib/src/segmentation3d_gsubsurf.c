@@ -178,14 +178,14 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
 
 	bool isFileSaved;
-	strcpy_s(name, sizeof name, outputPathPtr);
-	sprintf_s(name_ending, sizeof(name_ending), "_smoothed.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	isFileSaved = manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
-	if (isFileSaved == false) {
-		printf("The file was not saved\n");
-		return false;
-	}
+	//strcpy_s(name, sizeof name, outputPathPtr);
+	//sprintf_s(name_ending, sizeof(name_ending), "_smoothed.raw");
+	//strcat_s(name, sizeof(name), name_ending);
+	//isFileSaved = manageFile(inputImageData.imageDataPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+	//if (isFileSaved == false) {
+	//	printf("The file was not saved\n");
+	//	return false;
+	//}
 
 	strcpy_s(name, sizeof name, outputPathPtr);
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
@@ -206,16 +206,15 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		return false;
 	}
 
-	FILE* error_file;
-	strcpy_s(name, sizeof name, outputPathPtr);
-	sprintf_s(name_ending, sizeof(name_ending), "_error.csv");
-	strcat_s(name, sizeof(name), name_ending);
-	if (fopen_s(&error_file, name, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(error_file, "ID,distance\n");
-
+	//FILE* error_file;
+	//strcpy_s(name, sizeof name, outputPathPtr);
+	//sprintf_s(name_ending, sizeof(name_ending), "_error.csv");
+	//strcat_s(name, sizeof(name), name_ending);
+	//if (fopen_s(&error_file, name, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(error_file, "ID,distance\n");
 	
 	//loop for segmentation time steps	
 	i = 1;
@@ -250,16 +249,14 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 				printf("The file was not saved\n");
 				return false;
 			}
-			fprintf(error_file, "%d,%f\n", i, difference_btw_current_and_previous_sol);
+			//fprintf(error_file, "%d,%f\n", i, difference_btw_current_and_previous_sol);
 		}
 		
 		i++;
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
-	
-
-	fclose(error_file);
+	//fclose(error_file);
 
 	for (i = 0; i < height; i++)
 	{
@@ -566,7 +563,7 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 	}
 
 	setBoundaryToZeroDirichletBC(extendedCoefPtr, length_ext, width_ext, height_ext); // In this case, It should work as initializing the array to 0
-
+	
 	//calculation of coefficients
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 	{
@@ -656,8 +653,8 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 
 				voxel_coef = (dataType)sqrt(pow(average_face_coef, 2) + segParameters.eps2);
 
-				/* evaluation of norm of gradient of image at each voxel, norm of gradient of presmoothed
-				image at each voxel face and reciprocal of norm of gradient of image at each voxel face*/
+				//evaluation of norm of gradient of image at each voxel, norm of gradient of presmoothed
+				//image at each voxel face and reciprocal of norm of gradient of image at each voxel face
 				CoefPtrs.e_Ptr[k][x] = (dataType)(-min(VPtrs.GePtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_e));
 				CoefPtrs.w_Ptr[k][x] = (dataType)(-min(VPtrs.GwPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_w));
 				CoefPtrs.n_Ptr[k][x] = (dataType)(-min(VPtrs.GnPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_n));
@@ -668,7 +665,7 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 			}
 		}
 	}
-
+	
 	for (i = 0; i < height_ext; i++) {
 		free(extendedCoefPtr[i]);
 	}
@@ -712,6 +709,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 	z = 0;
 	do
 	{
+		
 		//z = z + 1; --> move down
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 		{
@@ -740,7 +738,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 				}
 			}
 		}
-
+		
 		// Error Evaluation
 		mean_square_residue = 0.0; // Initialize
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
@@ -762,6 +760,7 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 				}
 			}
 		}
+		
 		z = z + 1;
 
 	} while (mean_square_residue > segParameters.gauss_seidelTolerance && z < segParameters.maxNoGSIteration);
