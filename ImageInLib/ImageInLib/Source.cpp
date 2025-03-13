@@ -51,7 +51,6 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	//loading_path = inputPath + "vtk/petct/aorta/Segmentation-Aorta-label_3.vtk";
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
@@ -3418,7 +3417,7 @@ int main() {
 	
 	//==================== 3D image ====================
 	
-	/*
+	
 	dataType** imageData = new dataType * [Height];
 	dataType** maskAorta = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
@@ -3426,46 +3425,37 @@ int main() {
 		maskAorta[k] = new dataType[dim2D]{ 0 };
 	}
 	 
-	////copy image
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		//imageData[k][i] = ctContainer->dataPointer[k][i];
-	//		maskAorta[k][i] = ctContainer->dataPointer[k][i];
-	//	}
-	//}
 	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	//Image_Data inputMaskAorta = { Height, Length, Width, maskAorta, ctOrigin, ctSpacing, orientation };
-	*/
-
+	
 	std::cout << "============ Interpolated ================ " << std::endl;
 	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
 	std::cout << "Interpolated Height = " << hauteur << std::endl;
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
 	std::cout << "Interpolated Spacing : (" << intSpacing.sx << ", " << intSpacing.sy << ", " << intSpacing.sz << ")" << std::endl;
 	
-	/*
+	
 	dataType** interpolatedImage = new dataType * [hauteur];
+	dataType** maskInterpolation = new dataType * [hauteur];
 	for (k = 0; k < hauteur; k++) {
 		interpolatedImage[k] = new dataType[dim2D]{ 0 };
+		maskInterpolation[k] = new dataType[dim2D]{ 0 };
 	}
 	Image_Data interpolatedImageData = { hauteur, Length, Width, interpolatedImage, ctOrigin, intSpacing, orientation };
 	
 	imageInterpolation3D(inputImageData, interpolatedImageData, NEAREST_NEIGHBOR);
-	//imageInterpolation3D(inputMaskAorta, interpolatedImageData, NEAREST_NEIGHBOR);
-	*/
+	//==========================================================
 	
-	
-	////p1
-	//Croping
-	size_t i_min = 200;
-	size_t j_min = 200;
-	size_t k_min = 275; // 240 for neww 
-	size_t length = 150;
-	size_t width = 150;
-	size_t height = 350; // 380 for new
+	//////p1
+	////Croping
+	//size_t i_min = 200;
+	//size_t j_min = 200;
+	//size_t k_min = 275; // 240 for neww 
+	//size_t length = 150;
+	//size_t width = 150;
+	//size_t height = 350; // 380 for new
 	
 
 	/*
@@ -3513,6 +3503,7 @@ int main() {
 	//size_t height = 400;
 	*/
 
+	/*
 	std::cout << "============ Cropped ================ " << std::endl;
 	
 	std::cout << "New dimensions : Length = " << length << ", Width = " << width << ", Height = " << height << std::endl;
@@ -3522,7 +3513,6 @@ int main() {
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
 	
-	/*
 	dataType** imageCrop = new dataType * [height];
 	dataType** initialSegment = new dataType * [height];
 	dataType** maskSegment = new dataType * [height];
@@ -3541,33 +3531,29 @@ int main() {
 			}
 		}
 	}
-
-	//storing_path = outputPath + "segmentation/cropAorta.raw";
-	//manageRAWFile3D<dataType>(imageCrop, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	
+	//==========================================================
+	*/
 
 	/*
-	////========== Downsampling =============================
-	//std::cout << "============ Downsampling ================ " << std::endl;
-	//size_t h = (size_t)(height / 2);
-	//size_t w = (size_t)(width / 2);
-	//size_t l = (size_t)(length / 2);
-	//std::cout << "New dimensions : Lenght = " << l << ", Width = " << w << ", Height = " << h << std::endl;
-	//dataType** imageDown = new dataType * [h];
-	//dataType** initialSegment = new dataType * [h];
-	//dataType** maskPath = new dataType * [h];
-	//for (k = 0; k < h; k++) {
-	//	imageDown[k] = new dataType[l * w]{ 0 };
-	//	initialSegment[k] = new dataType[l * w]{ 0 };
-	//	maskPath[k] = new dataType[l * w]{ 0 };
-	//}
-	//VoxelSpacing downSpacing = { 2 * ctSpacing.sx, 2 * ctSpacing.sy, 2 * ctSpacing.sx };
-	//std::cout << "DownSampled Spacing : (" << downSpacing.sx << ", " << downSpacing.sy << ", " << downSpacing.sz << ")" << std::endl;
-	//Image_Data downImageData = { h, l, w, imageDown, newOrigin, downSpacing, orientation };
-	//imageInterpolation3D(croppedImageData, downImageData, NEAREST_NEIGHBOR);
-	//storing_path = outputPath + "down.raw";
-	////manageRAWFile3D<dataType>(imageDown, l, w, h, storing_path.c_str(), STORE_DATA, false);
-	////==========================================================
+	//========== Downsampling =============================
+	std::cout << "============ Downsampling ================ " << std::endl;
+	size_t h = (size_t)(height / 2);
+	size_t w = (size_t)(width / 2);
+	size_t l = (size_t)(length / 2);
+	std::cout << "New dimensions : Lenght = " << l << ", Width = " << w << ", Height = " << h << std::endl;
+	dataType** imageDown = new dataType * [h];
+	dataType** initial_segment = new dataType * [h];
+	dataType** maskPath = new dataType * [h];
+	for (k = 0; k < h; k++) {
+		imageDown[k] = new dataType[l * w]{ 0 };
+		initial_segment[k] = new dataType[l * w]{ 0 };
+		maskPath[k] = new dataType[l * w]{ 0 };
+	}
+	VoxelSpacing downSpacing = { 2 * ctSpacing.sx, 2 * ctSpacing.sy, 2 * ctSpacing.sx };
+	std::cout << "DownSampled Spacing : (" << downSpacing.sx << ", " << downSpacing.sy << ", " << downSpacing.sz << ")" << std::endl;
+	Image_Data downImageData = { h, l, w, imageDown, newOrigin, downSpacing, orientation };
+	imageInterpolation3D(croppedImageData, downImageData, NEAREST_NEIGHBOR);
+	//==========================================================
 	*/
 	
 	/*
@@ -3610,8 +3596,9 @@ int main() {
 	//}
 	//fclose(path_branches);
 	
-	////generate mask path
-	double radius = 30;
+	
+	////generate the initial segment
+	double radius = 25;
 	double offset = 0.5;
 	dataType v = 1.0;
 	//for (k = 0; k < height; k++) {
@@ -3631,49 +3618,123 @@ int main() {
 	//	}
 	//}
 
-	//for (int n = 0; n < path_points.size(); n++) {
-	//	Point3D current = getImageCoordFromRealCoord3D(path_points[n], newOrigin, intSpacing, orientation);
-	//	i = (size_t)current.x;
-	//	j = (size_t)current.y;
-	//	k = (size_t)current.z;
-	//	Point3D pPoint = { i, j, k };
-	//	BoundingBox3D box = findBoundingBox3D(pPoint, length, width, height, radius, offset);
-	//	for (k_n = box.k_min; k_n <= box.k_max; k_n++) {
-	//		for (i_n = box.i_min; i_n <= box.i_max; i_n++) {
-	//			for (j_n = box.j_min; j_n <= box.j_max; j_n++) {
-	//				Point3D current_point = { i_n, j_n, k_n };
-	//				current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
-	//				double pDistance = getPoint3DDistance(current_point, path_points[n]);
-	//				if (pDistance <= radius) {
-	//					//initialSegment[k_n][x_new(i_n, j_n, length)] = 1.0 / (pDistance + v);
-	//					maskSegment[k_n][x_new(i_n, j_n, length)] = 1.0;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+	//Mask for the region of interest
+	size_t indx_min = length, indx_max = 0;
+	size_t indy_min = width, indy_max = 0;
+	size_t indz_min = height, indz_max = 0;
+	for (int n = 0; n < path_points.size(); n++) {
+		Point3D current = getImageCoordFromRealCoord3D(path_points[n], newOrigin, intSpacing, orientation);
+		i = (size_t)current.x;
+		j = (size_t)current.y;
+		k = (size_t)current.z;
+		Point3D pPoint = { i, j, k };
+		BoundingBox3D box = findBoundingBox3D(pPoint, length, width, height, radius, offset);
+		for (k_n = box.k_min; k_n <= box.k_max; k_n++) {
+			for (i_n = box.i_min; i_n <= box.i_max; i_n++) {
+				for (j_n = box.j_min; j_n <= box.j_max; j_n++) {
+					Point3D current_point = { i_n, j_n, k_n };
+					current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
+					double pDistance = getPoint3DDistance(current_point, path_points[n]);
+					if (pDistance <= radius) {
+						maskSegment[k_n][x_new(i_n, j_n, length)] = 1.0;
+						if (indx_min > i_n) {
+							indx_min = i_n;
+						}
+						if (indx_max < i_n) {
+							indx_max = i_n;
+						}
+						if (indy_min > j_n) {
+							indy_min = j_n;
+						}
+						if (indy_max < j_n) {
+							indy_max = j_n;
+						}
+						if (indz_min > k_n) {
+							indz_min = k_n;
+						}
+						if (indz_max < k_n) {
+							indz_max = k_n;
+						}
+					}
+				}
+			}
+		}
+	}
+	std::cout << "Min x = " << indx_min << ", Max x = " << indx_max << ", Length = " << indx_max - indx_min + 1 << std::endl;
+	std::cout << "Min y = " << indy_min << ", Max y = " << indy_max << ", Width = " << indy_max - indy_min + 1 << std::endl;
+	std::cout << "Min z = " << indz_min << ", Max z = " << indz_max << ", Height = " << indz_max - indz_min + 1<< std::endl;
+	storing_path = outputPath + "mask_region_of_interest.raw";
+	manageRAWFile3D<dataType>(maskSegment, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	*/
 
+	/*
+	//crop
+	for (int n = 0; n < path_points.size(); n++) {
+		Point3D current = getImageCoordFromRealCoord3D(path_points[n], newOrigin, intSpacing, orientation);
+		i = (size_t)current.x;
+		j = (size_t)current.y;
+		k = (size_t)current.z;
+		Point3D pPoint = { i, j, k };
+		BoundingBox3D box = findBoundingBox3D(pPoint, length, width, height, radius, offset);
+		for (k_n = box.k_min; k_n <= box.k_max; k_n++) {
+			for (i_n = box.i_min; i_n <= box.i_max; i_n++) {
+				for (j_n = box.j_min; j_n <= box.j_max; j_n++) {
+					Point3D current_point = { i_n, j_n, k_n };
+					current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
+					double pDistance = getPoint3DDistance(current_point, path_points[n]);
+					if (pDistance <= radius) {
+						//initialSegment[k_n][x_new(i_n, j_n, length)] = 1.0 / (pDistance + v);
+						maskSegment[k_n][x_new(i_n, j_n, length)] = 1.0;
+					}
+				}
+			}
+		}
+	}
 	//Image_Data toDistanceMap = { height, length, width, maskSegment, newOrigin, intSpacing, orientation };
 	//rouyTourinDistanceMap(toDistanceMap, initialSegment, 1.0, 0.5, 0.4);
+	*/
 
-	//dataType minData = initialSegment[0][0];
-	//dataType maxData = initialSegment[0][0];
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length * width; i++) {
-	//		if (initialSegment[k][i] > maxData) {
-	//			maxData = initialSegment[k][i];
-	//		}
-	//		if (initialSegment[k][i] < minData) {
-	//			minData = initialSegment[k][i];
-	//		}
-	//	}
-	//}
-	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	/*
+	//Down
+	for (int n = 0; n < path_points.size(); n++) {
+		Point3D current = getImageCoordFromRealCoord3D(path_points[n], newOrigin, downSpacing, orientation);
+		i = (size_t)current.x;
+		j = (size_t)current.y;
+		k = (size_t)current.z;
+		Point3D pPoint = { i, j, k };
+		BoundingBox3D box = findBoundingBox3D(pPoint, l, w, h, radius, offset);
+		for (k_n = box.k_min; k_n <= box.k_max; k_n++) {
+			for (i_n = box.i_min; i_n <= box.i_max; i_n++) {
+				for (j_n = box.j_min; j_n <= box.j_max; j_n++) {
+					Point3D current_point = { i_n, j_n, k_n };
+					current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, downSpacing, orientation);
+					double pDistance = getPoint3DDistance(current_point, path_points[n]);
+					if (pDistance <= radius) {
+						maskPath[k_n][x_new(i_n, j_n, l)] = 1.0;
+					}
+				}
+			}
+		}
+	}
+	Image_Data toDistanceMap = { h, l, w, maskPath, newOrigin, downSpacing, orientation };
+	rouyTourinDistanceMap(toDistanceMap, initial_segment, 1.0, 0.5, 0.4);
 
-	//rescaleNewRange(initialSegment, length, width, height, 0.0, 1.0, maxData, minData);
-	
-	storing_path = outputPath + "initial_segment_old.raw";
-	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	dataType minData = initial_segment[0][0];
+	dataType maxData = initial_segment[0][0];
+	for (k = 0; k < h; k++) {
+		for (i = 0; i < l * w; i++) {
+			if (initial_segment[k][i] > maxData) {
+				maxData = initial_segment[k][i];
+			}
+			if (initial_segment[k][i] < minData) {
+				minData = initial_segment[k][i];
+			}
+		}
+	}
+	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	rescaleNewRange(initial_segment, l, w, h, 0.0, 1.0, maxData, minData);
+	//storing_path = outputPath + "initial_segment_old.raw";
+	//manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 	*/
 
 	/*
@@ -3695,13 +3756,15 @@ int main() {
 	manageRAWFile3D<dataType>(maskSegment, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	*/
 
-	//==================== GSUBSURF ===========================
-
+	
+	/*
+	//==================== Hausdoff distance ===========================
 	
     dataType x = 0, y = 0, z = 0;
 
 	FILE* file_manual;
-	loading_path = inputPath + "vtk/petct/aorta/manual_whitout_branches.csv";
+	//loading_path = inputPath + "vtk/petct/aorta/manual_whitout_branches.csv";
+	loading_path = inputPath + "vtk/petct/aorta/effect of down sampling/seg.csv";
 	if (fopen_s(&file_manual, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -3715,17 +3778,18 @@ int main() {
 		fscanf_s(file_manual, "%f", &z);
 		fscanf_s(file_manual, "\n");
 		Point3D current_point = { x, y, z };
-		current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
-		current_point.x = (size_t)current_point.x;
-		current_point.y = (size_t)current_point.y;
-		current_point.z = (size_t)current_point.z;
-		current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
+		//current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
+		//current_point.x = (size_t)current_point.x;
+		//current_point.y = (size_t)current_point.y;
+		//current_point.z = (size_t)current_point.z;
+		//current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
 		points_manual.push_back(current_point);
 	}
 	fclose(file_manual);
 
 	FILE* file_gsubsurf;
-	loading_path = inputPath + "vtk/petct/aorta/Contour in time/time_3000.csv";
+	//loading_path = inputPath + "vtk/petct/aorta/Contour in time/time_3000.csv";
+	loading_path = inputPath + "vtk/petct/aorta/effect of down sampling/seg_down.csv";
 	if (fopen_s(&file_gsubsurf, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -3739,11 +3803,11 @@ int main() {
 		fscanf_s(file_gsubsurf, "%f", &z);
 		fscanf_s(file_gsubsurf, "\n");
 		Point3D current_point = { x, y, z };
-		current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
-		current_point.x = (size_t)current_point.x;
-		current_point.y = (size_t)current_point.y;
-		current_point.z = (size_t)current_point.z;
-		current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
+		//current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
+		//current_point.x = (size_t)current_point.x;
+		//current_point.y = (size_t)current_point.y;
+		//current_point.z = (size_t)current_point.z;
+		//current_point = getRealCoordFromImageCoord3D(current_point, newOrigin, intSpacing, orientation);
 		points_gsubsurf.push_back(current_point);
 	}
 	fclose(file_gsubsurf);
@@ -3795,21 +3859,22 @@ int main() {
 	}
 	printf("Hausdorf distance : %f\n", ratio_distance);
 
-	//printf("=========================\n");
-	//printf("Mean distance manual to gsubsurf : %f\n", mean_input);
-	//printf("Mean distance gsubsurf to manual : %f\n", mean_segment);
-	//double ratio_mean = 0.0;
-	//if (max_input > max_segment) {
-	//	ratio_mean = mean_segment / mean_input;
-	//}
-	//else {
-	//	ratio_mean = mean_input / mean_segment;
-	//}
-	//printf("Hausdorf mean distance : %f\n", ratio_mean);
+	printf("=========================\n");
+	printf("Mean distance manual to gsubsurf : %f\n", mean_input);
+	printf("Mean distance gsubsurf to manual : %f\n", mean_segment);
+	double ratio_mean = 0.0;
+	if (max_input > max_segment) {
+		ratio_mean = mean_segment / mean_input;
+	}
+	else {
+		ratio_mean = mean_input / mean_segment;
+	}
+	printf("Hausdorf mean distance : %f\n", ratio_mean);
+	*/
+
+	//==================== GSUBSURF ===========================
+
 	
-
-
-	/*
 	Segmentation_Parameters segParameters = {
 		30,//max iteration number
 		50000,//edge detector coef
@@ -3845,11 +3910,14 @@ int main() {
 	Point3D center = { 0.0, 0.0, 0.0 };
 	segCenters[0] = center;
 
-	Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	//Image_Data segmentInputData = { h, l, w, imageDown, newOrigin, downSpacing, orientation };
+	//Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	Image_Data segmentInputData = { hauteur, Length, Width, interpolatedImage, ctOrigin, intSpacing, orientation };
 	
-	storing_path = outputPath + "segmentation/3D image/p1/12-03-2025-12-30/";
+	storing_path = outputPath + "segmentation/3D image/p1/interpolated/";
 	double cpu_start = clock();
-	generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
+	//generalizedSubsurfSegmentation(segmentInputData, initial_segment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
+	generalizedSubsurfSegmentation(segmentInputData, maskInterpolation, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
 	double cpu_end = clock();
 	double needed_cpu_time = ((double)(cpu_end - cpu_start)) / CLOCKS_PER_SEC;
 	printf("Hundred iterations need : %.3f s", needed_cpu_time);
@@ -3857,21 +3925,30 @@ int main() {
 	delete[] segCenters;
 	
 
+	//for (k = 0; k < h; k++) {
+	//	delete[] imageDown[k];
+	//	delete[] initial_segment[k];
+	//	delete[] maskPath[k];
+	//}
+	//delete[] imageDown;
+	//delete[] initial_segment;
+	//delete[] maskPath;
 	
-	
-	for (k = 0; k < height; k++) {
-		delete[] imageCrop[k];
-		delete[] initialSegment[k];
-		delete[] maskSegment[k];
-	}
-	delete[] imageCrop;
-	delete[] initialSegment;
-	delete[] maskSegment;
+	//for (k = 0; k < height; k++) {
+	//	delete[] imageCrop[k];
+	//	delete[] initialSegment[k];
+	//	delete[] maskSegment[k];
+	//}
+	//delete[] imageCrop;
+	//delete[] initialSegment;
+	//delete[] maskSegment;
 	
 	for (k = 0; k < hauteur; k++) {
 		delete[] interpolatedImage[k];
+		delete[] maskInterpolation[k];
 	}
 	delete[] interpolatedImage;
+	delete[] maskInterpolation;
 	
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
@@ -3880,7 +3957,7 @@ int main() {
 	delete[] imageData;
 	delete[] maskAorta;
 	free(ctContainer);
-	*/
+	
 	
 	//============== Test penalized front propagation =============
 	
