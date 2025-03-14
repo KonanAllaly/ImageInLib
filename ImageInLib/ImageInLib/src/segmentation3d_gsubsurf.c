@@ -216,6 +216,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	//}
 	//fprintf(error_file, "ID,distance\n");
 	
+	
 	//loop for segmentation time steps	
 	i = 1;
 	do
@@ -256,6 +257,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
+
 	//fclose(error_file);
 
 	for (i = 0; i < height; i++)
