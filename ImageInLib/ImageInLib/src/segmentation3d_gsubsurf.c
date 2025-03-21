@@ -215,8 +215,16 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		return false;
 	}
 	fprintf(error_file, "ID,distance\n");
+
+	//This change is done on Thursday 20 March 2025, because the computation of the coefficients is done only once
+	//It shoud be done every time step
+	Image_Data segmentationFunction;
+	segmentationFunction.height = height;
+	segmentationFunction.length = length;
+	segmentationFunction.width = width;
+	segmentationFunction.imageDataPtr = segmFuntionPtr;
 	
-	
+	/*
 	//loop for segmentation time steps	
 	i = 1;
 	do
@@ -227,8 +235,9 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		setBoundaryToZeroDirichletBC(gauss_seidelPtr, length_ext, width_ext, height_ext);
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
-		//calcution of coefficients
-		generalizedGaussSeidelCoefficients(inputImageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);
+		////calcution of coefficients
+		//generalizedGaussSeidelCoefficients(inputImageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);//old approach ---> static
+		generalizedGaussSeidelCoefficients(segmentationFunction, edgeGradientPtr, CoefPtrs, VPtrs, segParameters); // new approach ---> dynamic
 
 		// Call to function that will evolve segmentation function in each discrete time step
 		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, segParameters, CoefPtrs, centers, no_of_centers);
@@ -256,7 +265,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		i++;
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
-	
+	*/
 
 	fclose(error_file);
 
@@ -470,6 +479,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 					norm_image_smoothed_t + norm_image_smoothed_b) / 6.0);
 
 				edgeGradientPtr[k][x] = gradientFunction(norm_image_smoothed_average * norm_image_smoothed_average, segParameters.coef);
+				
 
 			}
 		}
