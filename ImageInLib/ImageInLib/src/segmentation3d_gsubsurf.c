@@ -31,8 +31,7 @@
 
 // Functions for 3D Images
 
-bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters,
-	Point3D * centers, size_t no_of_centers, unsigned char* outputPathPtr) {
+bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, unsigned char* outputPathPtr) {
 
 	if (inputImageData.imageDataPtr == NULL || initialSegment == NULL || outputPathPtr == NULL)
 		return false;
@@ -118,14 +117,6 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	//Initialize the arrays to avoid unwanted values
 	initialize3dArrayD(gauss_seidelPtr, length_ext, width_ext, height_ext, 0.0);
 	initialize3dArrayD(prevSol_extPtr, length_ext, width_ext, height_ext, 0.0);
-
-	//Initialization of structures
-	Segment_Image_Data imageData;
-	imageData.height = height;
-	imageData.length = length;
-	imageData.width = width;
-	imageData.segmentationFuntionPtr = segmFuntionPtr;
-	imageData.inputImageToBeSegmented = inputImageData.imageDataPtr;
 
 	Coefficient_Pointers CoefPtrs;
 	CoefPtrs.e_Ptr = e_Ptr;
@@ -216,31 +207,27 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	}
 	fprintf(error_file, "ID,distance\n");
 
-	//This change is done on Thursday 20 March 2025, because the computation of the coefficients is done only once
-	//It shoud be done every time step
 	Image_Data segmentationFunction;
 	segmentationFunction.height = height;
 	segmentationFunction.length = length;
 	segmentationFunction.width = width;
 	segmentationFunction.imageDataPtr = segmFuntionPtr;
 	
-	/*
+	
 	//loop for segmentation time steps	
 	i = 1;
 	do
 	{
 		segParameters.numberOfTimeStep = i;
-		//firstCpuTime = clock() / (dataType)(CLOCKS_PER_SEC);
 
 		setBoundaryToZeroDirichletBC(gauss_seidelPtr, length_ext, width_ext, height_ext);
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 		////calcution of coefficients
-		//generalizedGaussSeidelCoefficients(inputImageData, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);//old approach ---> static
-		generalizedGaussSeidelCoefficients(segmentationFunction, edgeGradientPtr, CoefPtrs, VPtrs, segParameters); // new approach ---> dynamic
+		generalizedGaussSeidelCoefficients(segmentationFunction, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);
 
 		// Call to function that will evolve segmentation function in each discrete time step
-		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, imageData, segParameters, CoefPtrs, centers, no_of_centers);
+		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, segmentationFunction, segParameters, CoefPtrs);
 
 		//Compute the L2 norm of the difference between the current and previous solutions
 		difference_btw_current_and_previous_sol = l2normD(prevSol_extPtr, gauss_seidelPtr, length_ext, width_ext, height_ext, h);
@@ -253,7 +240,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 			strcpy_s(name, sizeof name, outputPathPtr);
 			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%05zd.raw", i);
 			strcat_s(name, sizeof(name), name_ending);
-			isFileSaved = manageFile(imageData.segmentationFuntionPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
+			isFileSaved = manageFile(segmFuntionPtr, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
 			printf("Step : %zd\n", segParameters.numberOfTimeStep);
 			if (isFileSaved == false) {
 				printf("The file was not saved\n");
@@ -265,7 +252,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		i++;
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
-	*/
+	
 
 	fclose(error_file);
 
@@ -509,12 +496,12 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 				kplus1 = k_ext + 1;
 				kminus1 = k_ext - 1;
 
-				VPtrs.GePtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)]) / (2 * h);
-				VPtrs.GwPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)]) / (2 * h);
-				VPtrs.GnPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)]) / (2 * h);
-				VPtrs.GsPtr[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)]) / (2 * h);
-				VPtrs.GtPtr[k][x] = -coef_conv * h * (gradient_coef_ext[kminus1][x_ext] - gradient_coef_ext[kplus1][x_ext]) / (2 * h);
-				VPtrs.GbPtr[k][x] = -coef_conv * h * (gradient_coef_ext[kplus1][x_ext] - gradient_coef_ext[kminus1][x_ext]) / (2 * h);
+				VPtrs.GePtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)]) / (2 * h);
+				VPtrs.GwPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(iminus1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(iplus1, j_ext, length_ext)]) / (2 * h);
+				VPtrs.GnPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)]) / (2 * h);
+				VPtrs.GsPtr[k][x] = -coef_conv * (gradient_coef_ext[k_ext][x_new(i_ext, jplus1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, jminus1, length_ext)]) / (2 * h);
+				VPtrs.GtPtr[k][x] = -coef_conv * (gradient_coef_ext[kminus1][x_ext] - gradient_coef_ext[kplus1][x_ext]) / (2 * h);
+				VPtrs.GbPtr[k][x] = -coef_conv * (gradient_coef_ext[kplus1][x_ext] - gradient_coef_ext[kminus1][x_ext]) / (2 * h);
 
 			}
 		}
@@ -530,21 +517,21 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 	return true;
 }
 
-bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs, Gradient_Pointers VPtrs, Segmentation_Parameters segParameters)
+bool generalizedGaussSeidelCoefficients(Image_Data segmentationData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs, Gradient_Pointers VPtrs, Segmentation_Parameters segParameters)
 {
 	//checks if the memory was allocated
-	if (inputImageData.imageDataPtr == NULL || edgeGradientPtr == NULL
+	if (segmentationData.imageDataPtr == NULL || edgeGradientPtr == NULL
 		|| CoefPtrs.w_Ptr == NULL || CoefPtrs.n_Ptr == NULL || CoefPtrs.s_Ptr == NULL || CoefPtrs.t_Ptr == NULL || CoefPtrs.b_Ptr == NULL
 		|| VPtrs.GePtr == NULL || VPtrs.GwPtr == NULL || VPtrs.GnPtr == NULL || VPtrs.GsPtr == NULL || VPtrs.GtPtr == NULL || VPtrs.GbPtr == NULL)
 		return false;
 
 	size_t i, j, k, x, x_ext;
 	size_t kplus1, kminus1, iminus1, iplus1, jminus1, jplus1;
-	size_t dim2D = inputImageData.length * inputImageData.width;
+	size_t dim2D = segmentationData.length * segmentationData.width;
 	dataType coef_dif = segParameters.coef_dif;
 
 	size_t k_ext, j_ext, i_ext;
-	size_t height = inputImageData.height, length = inputImageData.length, width = inputImageData.width;
+	size_t height = segmentationData.height, length = segmentationData.length, width = segmentationData.width;
 
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
@@ -569,7 +556,7 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = inputImageData.imageDataPtr[k][x_new(i, j, length)];
+				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = segmentationData.imageDataPtr[k][x_new(i, j, length)];
 			}
 		}
 	}
@@ -667,12 +654,12 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 
 				//evaluation of norm of gradient of image at each voxel, norm of gradient of presmoothed
 				//image at each voxel face and reciprocal of norm of gradient of image at each voxel face
-				CoefPtrs.e_Ptr[k][x] = (dataType)(-min(VPtrs.GePtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_e));
-				CoefPtrs.w_Ptr[k][x] = (dataType)(-min(VPtrs.GwPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_w));
-				CoefPtrs.n_Ptr[k][x] = (dataType)(-min(VPtrs.GnPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_n));
-				CoefPtrs.s_Ptr[k][x] = (dataType)(-min(VPtrs.GsPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_s));
-				CoefPtrs.t_Ptr[k][x] = (dataType)(-min(VPtrs.GtPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_t));
-				CoefPtrs.b_Ptr[k][x] = (dataType)(-min(VPtrs.GbPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (h / orig_b));
+				CoefPtrs.e_Ptr[k][x] = (dataType)(-min(VPtrs.GePtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_e));
+				CoefPtrs.w_Ptr[k][x] = (dataType)(-min(VPtrs.GwPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_w));
+				CoefPtrs.n_Ptr[k][x] = (dataType)(-min(VPtrs.GnPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_n));
+				CoefPtrs.s_Ptr[k][x] = (dataType)(-min(VPtrs.GsPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_s));
+				CoefPtrs.t_Ptr[k][x] = (dataType)(-min(VPtrs.GtPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_t));
+				CoefPtrs.b_Ptr[k][x] = (dataType)(-min(VPtrs.GbPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_b));
 
 			}
 		}
@@ -686,11 +673,11 @@ bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** ed
 	return true;
 }
 
-bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType** gauss_seidelPtr, Segment_Image_Data inputImageData,
-	Segmentation_Parameters segParameters, Coefficient_Pointers CoefPtrs, Point3D* centers, size_t no_of_centers)
+bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType** gauss_seidelPtr, Image_Data segmentationData,
+	Segmentation_Parameters segParameters, Coefficient_Pointers CoefPtrs)
 {
 	//check if the memory was allocated successfully
-	if (inputImageData.segmentationFuntionPtr == NULL || prevSol_extPtr == NULL || gauss_seidelPtr == NULL || CoefPtrs.e_Ptr == NULL || CoefPtrs.w_Ptr == NULL
+	if (segmentationData.imageDataPtr == NULL || prevSol_extPtr == NULL || gauss_seidelPtr == NULL || CoefPtrs.e_Ptr == NULL || CoefPtrs.w_Ptr == NULL
 		|| CoefPtrs.n_Ptr == NULL || CoefPtrs.s_Ptr == NULL || CoefPtrs.t_Ptr == NULL || CoefPtrs.b_Ptr == NULL)
 		return false;
 
@@ -702,27 +689,24 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 	// sor - successive over relation value, used in Gauss-Seidel formula
 	dataType mean_square_residue = 0.0, gauss_seidel = 0.0;
 
-	// Prepare variables inputImageData.height, inputImageData.length, inputImageData.width
-	size_t height = inputImageData.height;
-	size_t length = inputImageData.length;
-	size_t width = inputImageData.width;
+	size_t height = segmentationData.height;
+	size_t length = segmentationData.length;
+	size_t width = segmentationData.width;
 	size_t height_ext = height + 2;
 	size_t length_ext = length + 2;
 	size_t width_ext = width + 2;
 	size_t k_ext, j_ext, i_ext;
 	size_t x;
 	size_t x_ext;
-	size_t z; // Steps counter
 
 	const dataType coef_tauh = tau / hh;
 	dataType new_value = 0.0;
 
 	// The Implicit Scheme Evaluation
-	z = 0;
+	size_t count_step = 0;
 	do
 	{
 		
-		//z = z + 1; --> move down
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 		{
 			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
@@ -773,303 +757,21 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 			}
 		}
 		
-		z = z + 1;
+		count_step = count_step + 1;
 
-	} while (mean_square_residue > segParameters.gauss_seidelTolerance && z < segParameters.maxNoGSIteration);
-
-	//printf("number of iteration = %d\n", z);
+	} while (mean_square_residue > segParameters.gauss_seidelTolerance && count_step < segParameters.maxNoGSIteration);
 
 	//rescaling
 	rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
-	//if (no_of_centers == 1)
-	//{
-	//	rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
-	//}
-	//else
-	//{
-	//	for (i = 0; i < no_of_centers; i++)
-	//	{
-	//		rescaleLocallyToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext, centers[i].x, centers[i].y, centers[i].z, 6., i);
-	//	}
-	//}
 
 	////Copy the current time step to original data array after timeStepsNum
-	//copyDataToReducedArea(inputImageData.segmentationFuntionPtr, gauss_seidelPtr, height, length, width);
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				inputImageData.segmentationFuntionPtr[k][x_new(i, j, length)] = gauss_seidelPtr[k_ext][x_new(i_ext, j_ext, length_ext)];
+				segmentationData.imageDataPtr[k][x_new(i, j, length)] = gauss_seidelPtr[k_ext][x_new(i_ext, j_ext, length_ext)];
 			}
 		}
 	}
 
 	return true;
 }
-
-/*
-bool generalizedSubsurfSegmentation(Segment_Image_Data inputImageData, dataType** gauss_seidelPtr, dataType** prevSol_extPtr, dataType** edge_gradient, Segmentation_Parameters segParameters)
-{
-	//check if the memory was allocated successfully
-	if (inputImageData.segmentationFuntionPtr == NULL || gauss_seidelPtr == NULL || prevSol_extPtr == NULL || edge_gradient)
-		return false;
-
-	size_t k, i, j;
-	dataType hhh = segParameters.h * segParameters.h * segParameters.h;
-	dataType tau = segParameters.tau;
-
-	// Error value used to check iteration
-	// sor - successive over relation value, used in Gauss-Seidel formula
-	dataType mean_square_residue = 0.0, gauss_seidel = 0.0;
-
-	// Prepare variables inputImageData.height, inputImageData.length, inputImageData.width
-	size_t height = inputImageData.height;
-	size_t length = inputImageData.length;
-	size_t width = inputImageData.width;
-	size_t height_ext = height + 2;
-	size_t length_ext = length + 2;
-	size_t width_ext = width + 2;
-	size_t k_ext, j_ext, i_ext;
-	size_t x;
-	size_t x_ext;
-	size_t countIter; // Steps counter
-
-	const dataType coef_tauh = tau / hhh;
-	dataType new_value = 0.0;
-	dataType coef_conv = segParameters.coef_conv;
-	dataType coef_dif = segParameters.coef_dif;
-	dataType h = segParameters.h;
-
-	dataType** gradient_coef_ext = (dataType**)malloc(sizeof(dataType*) * height_ext);
-	dataType** extendedCoefPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
-	for (k = 0; k < height_ext; k++) {
-		gradient_coef_ext[k] = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
-		extendedCoefPtr[k] = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
-		if (gradient_coef_ext[k] == NULL || extendedCoefPtr[k] == NULL)
-			return false;
-	}
-	if (gradient_coef_ext == NULL || extendedCoefPtr == NULL)
-		return false;
-
-	dataType** edge_w = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edge_e = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edge_n = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edge_s = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edge_t = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edge_b = (dataType**)malloc(sizeof(dataType*) * height);
-	for (k = 0; k < height; k++) {
-		edge_w[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		edge_e[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		edge_n[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		edge_s[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		edge_t[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		edge_b[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		if (edge_w[k] == NULL || edge_e[k] == NULL || edge_n[k] == NULL || edge_s[k] == NULL || edge_t[k] == NULL || edge_b[k] == NULL)
-			return false;
-	}
-	if (edge_w == NULL || edge_e == NULL || edge_n == NULL || edge_s == NULL || edge_t == NULL || edge_b == NULL)
-		return false;
-
-	dataType** coef_w = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** coef_e = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** coef_n = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** coef_s = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** coef_t = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** coef_b = (dataType**)malloc(sizeof(dataType*) * height);
-	for (k = 0; k < height; k++) {
-		coef_w[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		coef_e[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		coef_n[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		coef_s[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		coef_t[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		coef_b[k] = (dataType*)malloc(sizeof(dataType) * length * width);
-		if (coef_w[k] == NULL || coef_e[k] == NULL || coef_n[k] == NULL || coef_s[k] == NULL || coef_t[k] == NULL || coef_b[k] == NULL)
-			return false;
-	}
-	if (coef_w == NULL || coef_e == NULL || coef_n == NULL || coef_s == NULL || coef_t == NULL || coef_b == NULL)
-		return false;
-
-	//copy data to extended area which will be used in each time step
-	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = inputImageData.segmentationFuntionPtr[k][x_new(i, j, length)];
-				gradient_coef_ext[k_ext][x_new(i_ext, j_ext, length_ext)] = edge_gradient[k][x_new(i, j, length)];
-			}
-		}
-	}
-	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext);
-	reflection3D(gradient_coef_ext, height_ext, length_ext, width_ext);
-
-	size_t iminus1, iplus1, jminus1, jplus1, kminus1, kplus1;
-	dataType u, uN, uS, uE, uW, uNW, uNE, uSE, uSW, Tu, TuN, TuS, TuE, TuW, TuNW, TuNE, TuSE, TuSW, Bu, BuN, BuS, BuE, BuW, BuNW, BuNE, BuSE, BuSW;
-
-	dataType ux, uy, uz, quotient = 4 * h;
-	dataType norm_grad_e, norm_grad_w, norm_grad_n, norm_grad_s, norm_grad_t, norm_grad_b;
-	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				x = x_new(i, j, length);
-				x_ext = x_new(i_ext, j_ext, length_ext);
-
-				iminus1 = i_ext - 1;
-				iplus1 = i_ext + 1;
-				jplus1 = j_ext + 1;
-				jminus1 = j_ext - 1;
-				kplus1 = k_ext + 1;
-				kminus1 = k_ext - 1;
-
-				//values of voxels in the extended data container for the original image
-				u = extendedCoefPtr[k_ext][x_ext];
-				uN = extendedCoefPtr[k_ext][x_new(i_ext, jminus1, length_ext)];
-				uS = extendedCoefPtr[k_ext][x_new(i_ext, jplus1, length_ext)];
-				uE = extendedCoefPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
-				uW = extendedCoefPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
-				uNW = extendedCoefPtr[k_ext][x_new(iminus1, jminus1, length_ext)];
-				uNE = extendedCoefPtr[k_ext][x_new(iplus1, jminus1, length_ext)];
-				uSE = extendedCoefPtr[k_ext][x_new(iplus1, jplus1, length_ext)];
-				uSW = extendedCoefPtr[k_ext][x_new(iminus1, jplus1, length_ext)];
-				Tu = extendedCoefPtr[kminus1][x_ext];
-				TuN = extendedCoefPtr[kminus1][x_new(i_ext, jminus1, length_ext)];
-				TuS = extendedCoefPtr[kminus1][x_new(i_ext, jplus1, length_ext)];
-				TuE = extendedCoefPtr[kminus1][x_new(i_ext + 1, j_ext, length_ext)];
-				TuW = extendedCoefPtr[kminus1][x_new(i_ext - 1, j_ext, length_ext)];
-				TuNW = extendedCoefPtr[kminus1][x_new(iminus1, jminus1, length_ext)];
-				TuNE = extendedCoefPtr[kminus1][x_new(iplus1, jminus1, length_ext)];
-				TuSE = extendedCoefPtr[kminus1][x_new(iplus1, jplus1, length_ext)];
-				TuSW = extendedCoefPtr[kminus1][x_new(iminus1, jplus1, length_ext)];
-				Bu = extendedCoefPtr[kplus1][x_ext];
-				BuN = extendedCoefPtr[kplus1][x_new(i_ext, jminus1, length_ext)];
-				BuS = extendedCoefPtr[kplus1][x_new(i_ext, jplus1, length_ext)];
-				BuE = extendedCoefPtr[kplus1][x_new(i_ext + 1, j_ext, length_ext)];
-				BuW = extendedCoefPtr[kplus1][x_new(i_ext - 1, j_ext, length_ext)];
-				BuNW = extendedCoefPtr[kplus1][x_new(iminus1, jminus1, length_ext)];
-				BuNE = extendedCoefPtr[kplus1][x_new(iplus1, jminus1, length_ext)];
-				BuSE = extendedCoefPtr[kplus1][x_new(iplus1, jplus1, length_ext)];
-				BuSW = extendedCoefPtr[kplus1][x_new(iminus1, jplus1, length_ext)];
-
-				//calculation of coefficients in the original image data
-				// Calculation of coefficients in east direction
-				ux = (uE - u) / h;
-				uy = ((uN + uNE) - (uS + uSE)) / quotient;
-				uz = ((Tu + TuE) - (Bu + BuE)) / quotient;
-				norm_grad_e = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);
-
-				// Calculation of coefficients in west direction
-				ux = (uW - u) / h;
-				uy = ((uNW + uN) - (uSW + uS)) / quotient;
-				uz = ((TuW + Tu) - (BuW + Bu)) / quotient;
-				norm_grad_w = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);
-
-				// Calculation of coefficients in north direction
-				ux = ((uNE + uE) - (uNW + uW)) / quotient;
-				uy = (uN - u) / h;
-				uz = ((TuN + Tu) - (BuN + Bu)) / quotient;
-				norm_grad_n = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);
-
-				// Calculation of coefficients in south direction
-				ux = ((uE + uSE) - (uW + uSW)) / quotient;
-				uy = (uS - u) / h;
-				uz = ((TuS + Tu) - (BuS + Bu)) / quotient;
-				norm_grad_s = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);
-
-				// Calculation of coefficients in top direction
-				ux = ((TuE + uE) - (TuW + uW)) / quotient;
-				uy = ((TuN + uN) - (TuS + uS)) / quotient;
-				uz = (Tu - u) / h;
-				norm_grad_t = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);
-
-				// Calculation of coefficients in bottom direction
-				ux = ((BuW + uW) - (BuE + uE)) / quotient;
-				uy = ((BuN + uN) - (BuS + uS)) / quotient;
-				uz = (Bu - u) / h;
-				norm_grad_b = (dataType)sqrt((ux * ux) + (uy * uy) + (uz * uz) + segParameters.eps2);;
-
-				// evaluation of norm of gradient of image at each voxel
-				dataType average_face_coef = (dataType)(((norm_grad_e + norm_grad_w + norm_grad_n + norm_grad_s + norm_grad_t + norm_grad_b) / 6.0));
-
-				dataType voxel_coef = (dataType)sqrt(pow(average_face_coef, 2) + segParameters.eps2);
-
-				edge_e[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext + 1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext - 1, j_ext, length_ext)]) / 2 * h;
-				edge_w[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext - 1, j_ext, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext + 1, j_ext, length_ext)]) / 2 * h;
-				edge_n[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, j_ext - 1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, j_ext + 1, length_ext)]) / 2 * h;
-				edge_s[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext][x_new(i_ext, j_ext + 1, length_ext)] - gradient_coef_ext[k_ext][x_new(i_ext, j_ext - 1, length_ext)]) / 2 * h;
-				edge_t[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext - 1][x_ext] - gradient_coef_ext[k_ext + 1][x_ext]) / 2 * h;
-				edge_b[k][x] = -coef_conv * h * (gradient_coef_ext[k_ext + 1][x_ext] - gradient_coef_ext[k_ext - 1][x_ext]) / 2 * h;
-
-				coef_e[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_e);
-				coef_w[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_w);
-				coef_n[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_n);
-				coef_s[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_s);
-				coef_t[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_t);
-				coef_b[k][x] = coef_dif * gradient_coef_ext[k_ext][x_ext] * voxel_coef * (h / norm_grad_b);
-
-			}
-		}
-	}
-
-	
-	// The Implicit Scheme Evaluation
-	countIter = 0;
-	do
-	{
-
-		//z = z + 1; --> move down
-		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
-		{
-			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
-			{
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++)
-				{
-					// 2D to 1D representation for i, j
-					x_ext = x_new(i_ext, j_ext, length_ext);
-					x = x_new(i, j, length);
-
-					// Gauss-Seidel Formula Evaluation
-					//explicit for advection
-					gauss_seidel = 
-
-					//SOR implementation using Gauss-Seidel
-					//gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] + segParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
-
-				}
-			}
-		}
-
-		
-		// Error Evaluation
-		mean_square_residue = 0.0; // Initialize
-		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
-		{
-			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
-			{
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++)
-				{
-					// 2D to 1D representation for i, j
-					x_ext = x_new(i_ext, j_ext, length_ext);
-					x = x_new(i, j, length);
-
-					mean_square_residue += (dataType)(pow(gauss_seidelPtr[k_ext][x_ext] * (1 + coef_tauh * (CoefPtrs.e_Ptr[k][x] + CoefPtrs.w_Ptr[k][x] + CoefPtrs.s_Ptr[k][x] + CoefPtrs.n_Ptr[k][x] + CoefPtrs.b_Ptr[k][x] + CoefPtrs.t_Ptr[k][x]))
-						- coef_tauh * (CoefPtrs.e_Ptr[k][x] * gauss_seidelPtr[k_ext][x_ext + 1] + CoefPtrs.w_Ptr[k][x] * gauss_seidelPtr[k_ext][x_ext - 1]
-							+ CoefPtrs.s_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)]
-						+ CoefPtrs.n_Ptr[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)]
-							+ CoefPtrs.b_Ptr[k][x] * gauss_seidelPtr[k_ext + 1][x_ext] + CoefPtrs.t_Ptr[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])
-						- prevSol_extPtr[k_ext][x_ext], 2));
-				}
-			}
-		}
-		
-
-		countIter = countIter + 1;
-
-	} while (mean_square_residue > segParameters.gauss_seidelTolerance && z < segParameters.maxNoGSIteration);
-
-	//printf("number of iteration = %d\n", z);
-
-	//rescaling
-	//rescaleToIntervalZeroOne(gauss_seidelPtr, length_ext, width_ext, height_ext);
-	
-	
-
-	return true;
-}
-*/

@@ -13,17 +13,16 @@ extern "C" {
 
 
 	//3D function
-	bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters,
-		Point3D* centers, size_t no_of_centers, unsigned char* outputPathPtr);
+	bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, unsigned char* outputPathPtr);
 
 	bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataType** edgeGradientPtr, Gradient_Pointers VPtrs,
 		Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters);
 
-	bool generalizedGaussSeidelCoefficients(Image_Data inputImageData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs, 
+	bool generalizedGaussSeidelCoefficients(Image_Data segmentationData, dataType** edgeGradientPtr, Coefficient_Pointers CoefPtrs,
 		Gradient_Pointers VPtrs, Segmentation_Parameters segParameters);
 
-	bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType** gauss_seidelPtr, Segment_Image_Data inputImageData,
-		Segmentation_Parameters segParameters, Coefficient_Pointers CoefPtrs, Point3D* centers, size_t no_of_centers);
+	bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType** gauss_seidelPtr, Image_Data segmentationData,
+		Segmentation_Parameters segParameters, Coefficient_Pointers CoefPtrs);
 
 #ifdef __cplusplus
 }
