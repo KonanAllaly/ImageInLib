@@ -317,7 +317,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath)
 		return false;
 	}
 
-	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/p1/distance_to_next.csv";
+	const char distance_to_next [] = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/distance_to_next.csv";
 	FILE* file_save;
 	if (fopen_s(&file_save, distance_to_next, "w") != 0) {
 		printf("Enable to open");
