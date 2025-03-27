@@ -53,7 +53,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient3_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -84,25 +84,6 @@ int main() {
 	//	}
 	//}
 	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-
-	//dataType** imageData = new dataType * [Height];
-	//for (k = 0; k < Height; k++) {
-	//	imageData[k] = new dataType[dim2D]{ 0 };
-	//}
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		imageData[k][i] = ctContainer->dataPointer[k][i];
-	//	}
-	//}
-	//storing_path = outputPath + "aorta_p6.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	//for (k = 0; k < Height; k++) {
-	//	delete[] imageData[k];
-	//}
-	//delete[] imageData;
-	//free(ctContainer);
-
-	
 
 	//========================= Detect Heart region ==================================
 	
@@ -3420,7 +3401,7 @@ int main() {
 	
 	//==================== 3D image ====================
 	
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	dataType** maskAorta = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
@@ -3535,7 +3516,7 @@ int main() {
 		}
 	}
 	////==========================================================
-	
+	*/
 
 	/*
 	//========== Downsampling =============================
@@ -3559,7 +3540,7 @@ int main() {
 	//==========================================================
 	*/
 	
-	
+	/*
 	//FILE* path_file;
 	//loading_path = inputPath + "paths/path segmentation/centered_path_p3.csv";
 	//if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
@@ -3735,18 +3716,17 @@ int main() {
 	delete[] imageData;
 	delete[] maskAorta;
 	free(ctContainer);
-	
+	*/
 	
 	//============== Test penalized front propagation ====================================
 	
-	/*
+	
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
 	}
 
-	loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
-	//loading_path = inputPath + "raw/filtered/filteredGMC_p6.raw";
+	loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
@@ -3803,59 +3783,93 @@ int main() {
 	//Point3D seed1 = { 259, 255, 244 };
 	//Point3D seed2 = { 258, 252, 344 };
 
+	////Patient 3
+	//Point3D seed1 = { 268, 231, 112 };
+	//Point3D seed2 = { 272, 226, 213 };
+
+	////Patient 4
+	//Point3D seed1 = { 287, 234, 218 };
+	//Point3D seed2 = { 281, 229, 133 };
+
 	////Patient 5
 	//Point3D seed1 = { 266, 245, 471 };
-	//Point3D seed2 = { 242, 218, 640 };
+	//Point3D seed2 = { 239, 221, 616 };
 
-	////Patient 6
-	//Point3D seed1 = { 251, 298, 253 };
-	//Point3D seed2 = { 258, 285, 438 };
-
-	//Patient 3
-	Point3D seed1 = { 268, 231, 112 };
-	Point3D seed2 = { 272, 226, 213 };
+	//Patient 6
+	Point3D seed1 = { 251, 298, 253 };
+	Point3D seed2 = { 258, 285, 438 };
 
 	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
 	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	seed1.x = (size_t)seed1.x;
+	seed1.y = (size_t)seed1.y;
+	seed1.z = (size_t)seed1.z;
 
 	seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
 	seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+	seed2.x = (size_t)seed2.x;
+	seed2.y = (size_t)seed2.y;
+	seed2.z = (size_t)seed2.z;
+
+	//seed3 = getRealCoordFromImageCoord3D(seed3, ctOrigin, ctSpacing, orientation);
+	//seed3 = getImageCoordFromRealCoord3D(seed3, ctOrigin, intSpacing, orientation);
+	//seed3.x = (size_t)seed3.x;
+	//seed3.y = (size_t)seed3.y;
+	//seed3.z = (size_t)seed3.z;
 
 	seedPoints[0] = seed1;
 	seedPoints[1] = seed2;
+	//seedPoints[1] = newSeed;
+	////seedPoints[2] = seed3;
 
 	compute3DPotential(interpolateImageData, potential, seed1, parameters);
 	
-	storing_path = outputPath + "potential_p3.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+	loading_path = outputPath + "potential_p6.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, hauteur, loading_path.c_str(), STORE_DATA, false);
 
-	penalizedFrontPropagation(interpolateImageData, actionMap, potential, seedPoints);
-	
-	storing_path = outputPath + "action_p3.raw";
-	manageRAWFile3D<dataType>(actionMap, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+	//findPathFromOneGivenPoint(interpolateImageData, seedPoints, parameters);
+	//findPathTwoSteps(interpolateImageData, seedPoints, parameters);
+
+	vector<Point3D> key_points;
+
+	Image_Data actionDataStr = { hauteur, Length, Width, actionMap, ctOrigin, intSpacing, orientation };
+	frontPropagationWithKeyPointDetection(actionDataStr, potential, seedPoints, key_points);
+
+	//storing_path = outputPath + "action_p2.raw";
+	//manageRAWFile3D<dataType>(actionMap, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+
+	//penalizedFrontPropagation(interpolateImageData, actionMap, potential, seedPoints);
+	//
+	//storing_path = outputPath + "action_p1.raw";
+	//manageRAWFile3D<dataType>(actionMap, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> path_points;
-	Image_Data actionDataStr = { hauteur, Length, Width, actionMap, ctOrigin, intSpacing, orientation };
 	dataType tau = 0.95 * ctSpacing.sx;
 	dataType tolerance = ctSpacing.sx;
 
 	//copy points to file
-	string saving_csv = outputPath + "path_penalized_p3.csv";
+	string saving_csv = outputPath + "path_new_key_points_p6.csv";
 	FILE* file_penalized;
 	if (fopen_s(&file_penalized, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 
+	for (int nb = 0; nb < key_points.size() - 1; nb++) {
+		
+		seedPoints[0] = key_points[nb];
+		seedPoints[1] = key_points[nb + 1];
+		partialFrontPropagation(actionMap, potential, Length, Width, hauteur, seedPoints);
+		shortestPath3D(actionDataStr, seedPoints, tau, tolerance, path_points);
 
-	shortestPath3D(actionDataStr, seedPoints, tau, tolerance, path_points);
+		for (int n = path_points.size() - 1; n > -1; n--) {
+			path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
+			fprintf(file_penalized, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+		}
+		while (path_points.size() > 0) {
+			path_points.pop_back();
+		}
 
-	for (int n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
-		fprintf(file_penalized, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
 	}
 
 	fclose(file_penalized);
@@ -3876,43 +3890,78 @@ int main() {
 	delete[] actionMap;
 
 	free(ctContainer);
-	*/
+	
 
 	//==================== Compute Hausdoff distance and Ratio ===========================
 	
 	/*
-	dataType img_f, n0, n1, n2, nmg, x, y, z, ptmg, ptid;
+	dataType img_f, n0, n1, n2, nmg, x, y, z, ptmg, ptid, scal;
+	char header[MAX_LINE_LENGTH];
 
 	FILE* file_hausdoff;
-	storing_path = outputPath + "hausdoff_distance.csv";
+	//storing_path = outputPath + "hausdoff_distance_isoline01.csv";
+	storing_path = outputPath + "hausdoff_distance_isoline025.csv";
+	//storing_path = outputPath + "hausdoff_distance_isoline05.csv";
 	if (fopen_s(&file_hausdoff, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-	fprintf(file_hausdoff, "manual,gsubsurf,ratio\n");
+	fprintf(file_hausdoff, "manual,gsubsurf,HD,ratio,mean_manual,mean_gsubsurf,MHD,ratio_mean\n");
 
 	FILE* file_manual;
-	loading_path = inputPath + "vtk/petct/aorta/Hausdoff/segment_aorta_p1.csv";
+	loading_path = inputPath + "vtk/petct/aorta/Hausdoff 24-03/ground_truth.csv";
 	if (fopen_s(&file_manual, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
 	}
+	fgets(header, MAX_LINE_LENGTH, file_manual);
+	fscanf_s(file_manual, ",");
+
 	vector<Point3D> points_manual;
 	while (feof(file_manual) == 0) {
+		
+		//fscanf_s(file_manual, "%f", &x);
+		//fscanf_s(file_manual, ",");
+		//fscanf_s(file_manual, "%f", &y);
+		//fscanf_s(file_manual, ",");
+		//fscanf_s(file_manual, "%f", &z);
+		//fscanf_s(file_manual, "\n");
+
+		//fscanf_s(file_manual, "%f", &img_f);
+		//fscanf_s(file_manual, ","); //=====> missing line in the file
+		fscanf_s(file_manual, "%f", &n0);
+		fscanf_s(file_manual, ",");
+		fscanf_s(file_manual, "%f", &n1);
+		fscanf_s(file_manual, ",");
+		fscanf_s(file_manual, "%f", &n2);
+		fscanf_s(file_manual, ",");
+		fscanf_s(file_manual, "%f", &nmg);
+		fscanf_s(file_manual, ",");
+
 		fscanf_s(file_manual, "%f", &x);
 		fscanf_s(file_manual, ",");
 		fscanf_s(file_manual, "%f", &y);
 		fscanf_s(file_manual, ",");
 		fscanf_s(file_manual, "%f", &z);
+		fscanf_s(file_manual, ",");
+
+		fscanf_s(file_manual, "%f", &ptmg);
+		fscanf_s(file_manual, ",");
+		fscanf_s(file_manual, "%f", &scal);
+		fscanf_s(file_manual, ",");
+		fscanf_s(file_manual, "%f", &ptid);
+
 		fscanf_s(file_manual, "\n");
+
 		Point3D current_point = { x, y, z };
 		points_manual.push_back(current_point);
 	}
+	fclose(file_manual);
 
-	std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff/Isolines 025/step_";
+	//std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 01/step_";
+	std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 025/step_";
+	//std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 05/step_";
 	vector<Point3D>points_gsubsurf;
-
-	char header[MAX_LINE_LENGTH];
 
 	for (size_t n = 1; n <= 40; n++) {
 
@@ -3958,6 +4007,8 @@ int main() {
 
 		double max_manual = 0.0;
 		double max_gsubsurf = 0.0;
+		double mean_manual = 0.0;
+		double mean_gsubsurf = 0.0;
 		for (int mn = 0; mn < points_manual.size(); mn++) {
 			double min_distance = 1000000000000000000000.0;
 			for (int gs = 0; gs < points_gsubsurf.size(); gs++) {
@@ -3969,6 +4020,7 @@ int main() {
 			if (max_manual < min_distance) {
 				max_manual = min_distance;
 			}
+			mean_manual += min_distance;
 		}
 
 		for (int gs = 0; gs < points_gsubsurf.size(); gs++) {
@@ -3982,25 +4034,47 @@ int main() {
 			if (max_gsubsurf < min_distance) {
 				max_gsubsurf = min_distance;
 			}
+			mean_gsubsurf += min_distance;
 		}
+		
+		size_t count_manual = points_manual.size();
+		size_t count_gsubsurf = points_gsubsurf.size();
+		mean_manual /= count_manual;
+		mean_gsubsurf /= count_gsubsurf;
 		dataType ratio = 0.0;
-		if (max_manual < max_gsubsurf) {
-			ratio = max_manual / max_gsubsurf;
+		dataType ratio_mean = 0.0;
+		//if (max_manual < max_gsubsurf) {
+		//	ratio = max_manual / max_gsubsurf;
+		//}
+		//else {
+		//	ratio = max_gsubsurf / max_manual;
+		//}
+		ratio = max_gsubsurf / max_manual;
+		ratio_mean = mean_gsubsurf / mean_manual;
+		
+		dataType HD = 0, MHD = 0;
+		if (max_manual >= max_gsubsurf) {
+			HD = max_manual;
 		}
 		else {
-			ratio = max_gsubsurf / max_manual;
+			HD = max_gsubsurf;
 		}
-		fprintf(file_hausdoff, "%f,%f,%f\n", max_manual, max_gsubsurf, ratio);
+		if (mean_manual >= mean_gsubsurf) {
+			MHD = mean_manual;
+		}
+		else {
+			MHD = mean_gsubsurf;
+		}
+		fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
 
 		while (points_gsubsurf.size() > 0)
 		{
 			points_gsubsurf.pop_back();
 		}
-		fclose(file_gsubsurf);
 
 	}
 	fclose(file_hausdoff);
-	fclose(file_manual);
+	
 	*/
 
 	return EXIT_SUCCESS;
