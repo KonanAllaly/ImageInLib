@@ -53,7 +53,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -3726,7 +3726,7 @@ int main() {
 		imageData[k] = new dataType[dim2D]{ 0 };
 	}
 
-	loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
@@ -3751,53 +3751,41 @@ int main() {
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
 		0.15, //threshold
-		0.005,//epsilon
+		0.001,//epsilon
 		radius
 	};
-
-	//Point3D* seedPoints = new Point3D[2];
-	//Point3D seed1 = { 262, 258, 313 };
-	//Point3D seed2 = { 250, 252, 546 };
-	//seedPoints[0] = seed1;
-	//seedPoints[1] = seed2;
-	////Patient 4
-	//Point3D* seedPoints = new Point3D[2];
-	//Point3D seed1 = { 280, 231, 333 };
-	//Point3D seed2 = { 276, 236, 570 };
-	//seedPoints[0] = seed1;
-	//seedPoints[1] = seed2;
-	////Patient 4
-	//Point3D* seedPoints = new Point3D[2];
-	//Point3D seed1 = { 265, 244, 728 };
-	//Point3D seed2 = { 240, 226, 950 };
-	//seedPoints[0] = seed1;
-	//seedPoints[1] = seed2;
 
 	Point3D* seedPoints = new Point3D[2];
 	
 	////Patient1
-	//Point3D seed1 = { 262, 255, 147 };
+	//Point3D seed1 = { 262, 255, 147 };//current
+	Point3D seed1 = { 260, 256, 143 };//old
 	//Point3D seed2 = { 263, 252, 245 };
+
+	//From centered path
+	//Point3D seed1 = { 4.314575, 70.278534, -663.998901 };
+	Point3D seed2 = { 10.198334, 67.558167, -411.635254 };
 
 	////Patient 2
 	//Point3D seed1 = { 259, 255, 244 };
-	//Point3D seed2 = { 258, 252, 344 };
+	////Point3D seed2 = { 258, 252, 344 }; //Sure inside ---> lead to good result
+	//Point3D seed2 = { 258, 252, 348 };// not sure ---> lead to wrong result
 
 	////Patient 3
 	//Point3D seed1 = { 268, 231, 112 };
 	//Point3D seed2 = { 272, 226, 213 };
 
 	////Patient 4
-	//Point3D seed1 = { 287, 234, 218 };
-	//Point3D seed2 = { 281, 229, 133 };
+	//Point3D seed1 = { 281, 229, 133 };
+	//Point3D seed2 = { 287, 234, 222 };
 
 	////Patient 5
 	//Point3D seed1 = { 266, 245, 471 };
 	//Point3D seed2 = { 239, 221, 616 };
 
-	//Patient 6
-	Point3D seed1 = { 251, 298, 253 };
-	Point3D seed2 = { 258, 285, 438 };
+	////Patient 6
+	//Point3D seed1 = { 251, 298, 253 };
+	//Point3D seed2 = { 258, 285, 438 };
 
 	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
 	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
@@ -3805,63 +3793,56 @@ int main() {
 	seed1.y = (size_t)seed1.y;
 	seed1.z = (size_t)seed1.z;
 
-	seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
 	seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
 	seed2.x = (size_t)seed2.x;
 	seed2.y = (size_t)seed2.y;
 	seed2.z = (size_t)seed2.z;
 
-	//seed3 = getRealCoordFromImageCoord3D(seed3, ctOrigin, ctSpacing, orientation);
-	//seed3 = getImageCoordFromRealCoord3D(seed3, ctOrigin, intSpacing, orientation);
-	//seed3.x = (size_t)seed3.x;
-	//seed3.y = (size_t)seed3.y;
-	//seed3.z = (size_t)seed3.z;
-
 	seedPoints[0] = seed1;
 	seedPoints[1] = seed2;
-	//seedPoints[1] = newSeed;
-	////seedPoints[2] = seed3;
 
-	compute3DPotential(interpolateImageData, potential, seed1, parameters);
+	//compute3DPotential(interpolateImageData, potential, seedPoints, parameters);
 	
-	loading_path = outputPath + "potential_p6.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, hauteur, loading_path.c_str(), STORE_DATA, false);
+	loading_path = outputPath + "potential_p1.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
 
-	//findPathFromOneGivenPoint(interpolateImageData, seedPoints, parameters);
-	//findPathTwoSteps(interpolateImageData, seedPoints, parameters);
+	size_t iStart = (size_t)seedPoints[0].x;
+	size_t jStart = (size_t)seedPoints[0].y;
+	size_t kStart = (size_t)seedPoints[0].z;
+
+	size_t iEnd = (size_t)seedPoints[1].x;
+	size_t jEnd = (size_t)seedPoints[1].y;
+	size_t kEnd = (size_t)seedPoints[1].z;
+
+	std::cout << "Start potential : " << potential[kStart][x_new(iStart, jStart, Length)] << std::endl;
+	std::cout << "End potential : " << potential[kEnd][x_new(iEnd, jEnd, Length)] << std::endl;
 
 	vector<Point3D> key_points;
 
+	const double LengthKeyPoints = 40;
 	Image_Data actionDataStr = { hauteur, Length, Width, actionMap, ctOrigin, intSpacing, orientation };
-	frontPropagationWithKeyPointDetection(actionDataStr, potential, seedPoints, key_points);
-
-	//storing_path = outputPath + "action_p2.raw";
-	//manageRAWFile3D<dataType>(actionMap, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
-
-	//penalizedFrontPropagation(interpolateImageData, actionMap, potential, seedPoints);
-	//
-	//storing_path = outputPath + "action_p1.raw";
-	//manageRAWFile3D<dataType>(actionMap, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+	frontPropagationWithKeyPointDetection(actionDataStr, potential, seedPoints, LengthKeyPoints, key_points);
 
 	vector<Point3D> path_points;
 	dataType tau = 0.95 * ctSpacing.sx;
 	dataType tolerance = ctSpacing.sx;
 
 	//copy points to file
-	string saving_csv = outputPath + "path_new_key_points_p6.csv";
+	string saving_csv = outputPath + "path_new_key_points_p1.csv";
 	FILE* file_penalized;
 	if (fopen_s(&file_penalized, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-
+	
 	for (int nb = 0; nb < key_points.size() - 1; nb++) {
 		
 		seedPoints[0] = key_points[nb];
 		seedPoints[1] = key_points[nb + 1];
 		partialFrontPropagation(actionMap, potential, Length, Width, hauteur, seedPoints);
 		shortestPath3D(actionDataStr, seedPoints, tau, tolerance, path_points);
-
+	
 		for (int n = path_points.size() - 1; n > -1; n--) {
 			path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
 			fprintf(file_penalized, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
@@ -3869,10 +3850,10 @@ int main() {
 		while (path_points.size() > 0) {
 			path_points.pop_back();
 		}
-
+	
 	}
-
 	fclose(file_penalized);
+
 	delete[] seedPoints;
 	
 	for (k = 0; k < Height; k++) {
