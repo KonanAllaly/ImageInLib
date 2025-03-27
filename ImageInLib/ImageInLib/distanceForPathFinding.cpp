@@ -1388,29 +1388,25 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 	dataType** gradientVectorX = new dataType * [height];
 	dataType** gradientVectorY = new dataType * [height];
 	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2D]{0};
-		gradientVectorY[k] = new dataType[dim2D]{0};
-		gradientVectorZ[k] = new dataType[dim2D]{0};
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-	
-	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
-
-	//use distance map in potential
 	dataType** distance = new dataType * [height];
 	dataType** edgeDetector = new dataType * [height];
 	dataType** maskThreshold = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		distance[k] = new dataType[dim2D]{0};
-		edgeDetector[k] = new dataType[dim2D]{0};
-		maskThreshold[k] = new dataType[dim2D]{0};
+		gradientVectorX[k] = new dataType[dim2D]{0};
+		gradientVectorY[k] = new dataType[dim2D]{0};
+		gradientVectorZ[k] = new dataType[dim2D]{0};
+		distance[k] = new dataType[dim2D]{ 0 };
+		edgeDetector[k] = new dataType[dim2D]{ 0 };
+		maskThreshold[k] = new dataType[dim2D]{ 0 };
 	}
+	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || distance == NULL || edgeDetector == NULL || maskThreshold == NULL)
+		return false;
 	
 	dataType norm_of_gradient = 0.0;;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
-
+	
+	
+	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			
@@ -1429,14 +1425,10 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D se
 			}
 		}
 	}
-	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-
-	//get real world coordinates of the seed point
-	Point3D initial_point = getRealCoordFromImageCoord3D(seedPoint, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	//seedStats = getStats(ctImageData, initial_point, parameters.radius);
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint, parameters.radius);
 	dataType seedValCT = seedStats.mean_data;
 
@@ -1590,7 +1582,6 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, 
 	return true;
 }
 
-/*
 bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium) {
 
 	if (ctImageData.imageDataPtr == NULL || seedPoints == NULL)
@@ -1649,6 +1640,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 		ctImageData.orientation
 	};
 
+	dataType tau = 0.95 * ctImageData.spacing.sx;
+	dataType tolerance = ctImageData.spacing.sx;
+
 	//During the first propagation the mask is empty
 	partialPropagation(action, potentialPtr, maskAction, length, width, height, seeds, step);
 	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point_img_coord);
@@ -1659,8 +1653,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//vector for path points
 	vector<Point3D> path_points;
 
-	//path between initial point and second point (found point)
-	shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+	////path between initial point and second point (found point)
+	//shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+	shortestPath3D(action, seeds, tau, tolerance, path_points);
 
 	//write path points coordinates to file
 	int n = 0;
@@ -2044,9 +2039,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 
 	return true;
 }
-*/
 
-/*
 bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
 	size_t i, j, k, xd;
@@ -2063,7 +2056,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	}
 
 	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point_p6.csv";
+	string saving_name, saving_csv = outputPath + "path_point.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2076,16 +2069,21 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	seedsPath[1] = seedPoints[1];
 	vector<Point3D> path_points;
 
-	//======== First step ===========//
-	compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
+	dataType tau = 0.95 * ctImageData.spacing.sx;
+	dataType tolerance = ctImageData.spacing.sx;
 
-	saving_name = outputPath + "potential_p6.raw";
-	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), STORE_DATA, false);
+	//======== First step ===========//
+	//compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
+
+	saving_name = outputPath + "potential.raw";
+	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 
-	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	Image_Data actionDataStr = { height, length, width, action_field, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 	
 	//copy points to file
 	int n = 0;
@@ -2101,10 +2099,11 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 
 	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	double step = 0.6 * getPoint3DDistance(seed1, seed2), dist = 0.0;
+	double step = 0.5 * getPoint3DDistance(seed1, seed2), dist = 0.0;
 	cout << "Step : " << step << endl;
 
 	////======== Second step ===========//
+	compute3DPotential(ctImageData, potential, seedsPath[1], parameters);
 	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[1]);
 
 	dataType min_action = BIG_VALUE, value_temp = 0.0;
@@ -2131,7 +2130,8 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	
 	seedsPath[0] = seedPoints[1];
 	seedsPath[1] = temporary_point;
-	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 
 	for (n = path_points.size() - 1; n > - 1; n--) {
 		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -2148,7 +2148,8 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 	
-	shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 	
 	for (n = path_points.size() - 1; n > -1; n--) {
 		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -2172,9 +2173,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 
 	return true;
 }
-*/
 
-/*
 bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL)
@@ -2189,7 +2188,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension;
 
-	saving_name = path_name + "path_points.csv";
+	saving_name = path_name + "path_points_v2.csv";
 	FILE* file;
 	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -2220,17 +2219,24 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 	
 	double distance_point = getPoint3DDistance(seed1, seed2);
-	double step = 0.5 * distance_point;
+	double step = 50;//0.5 * distance_point;
+	std::cout << "First step : " << step << std::endl;
 
 	//================ find next point inside the aorta 
 
-	// saving_name = path_name + "potential.raw";
-	//store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
+	Image_Data actionDataStr = { height, length, width, actionPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 
 	double radius_to_find_mean = 3.0;
-	compute3DPotential(ctImageData, potentialPtr, seedPoints[0], radius_to_find_mean, parameters);
+	//compute3DPotential(ctImageData, potentialPtr, seedPoints[0], parameters);
 
-	fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seeds[0]);
+	saving_name = path_name + "potential.raw";
+	//store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
+	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
+
+	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seeds[0]);
+	fastMarching3dWithSpacing(ctImageData, actionPtr, potentialPtr, seeds[0], ctImageData.spacing);
+	//saving_name = path_name + "first_action.raw";
+	//manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
 	min_distance = BIG_VALUE;
 	for (k = 0; k < height; k++) {
@@ -2254,7 +2260,9 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 	}
 	
 	seed1 = getRealCoordFromImageCoord3D(temporary_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	distance_point = getPoint3DDistance(seed1, seed2);
+	//distance_point = getPoint3DDistance(seed1, seed2);
+	//step = 0.5 * distance_point;
+	//std::cout << "Second step: " << step << std::endl;
 	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
 
 	//vector for path points
@@ -2262,7 +2270,10 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 
 	//path between initial point and second point
 	seeds[1] = temporary_point;
-	shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+	
+	dataType tau = 0.95 * ctImageData.spacing.sx;
+	dataType tolerance = ctImageData.spacing.sx;
+	shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
 
 	//write just path points coordinates to file
 	int i_n = 0, k_n = 0, k_center = 0;
@@ -2272,6 +2283,9 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
 	}
+	while (path_points.size() != 0) {
+		path_points.pop_back();
+	}
 
 	//============================================
 
@@ -2279,14 +2293,11 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 
 	size_t count_step = 0;
 
-	while (distance_to_stop < distance_point) {
+	
+	while (count_step < 3) {
 		
 		count_step++;
 		std::cout << "count step = " << count_step << std::endl;
-
-		//count_step++;
-		//std::cout << "STEP " << count_step << " : " << std::endl;
-		//extension = to_string(count_step);
 
 		//mask
 		for (k = 0; k < height; k++) {
@@ -2310,7 +2321,8 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 		seeds[0] = seeds[1];
 		initial_point = seeds[1];
 
-		fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, seeds[0]);
+		//fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, seeds[0]);
+		fastMarching3dWithSpacing(ctImageData, newActionPtr, potentialPtr, seeds[0], ctImageData.spacing);
 
 		//saving_name = path_name + "action_field" + extension + ".raw";
 		//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
@@ -2342,16 +2354,15 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 		}
 		
 		std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
-		
-		//slice_stop = (size_t)temporary_point.z;
-		//cout << "current slice stop : " << slice_stop << endl;
 
 		seeds[1] = temporary_point;
-		//path between points
-		//seed1 = getRealCoordFromImageCoord3D(seeds[0], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		seed2 = getRealCoordFromImageCoord3D(seeds[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		distance_point = getPoint3DDistance(seed1, seed2);
-		shortestPath3D(newActionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+		//seed2 = getRealCoordFromImageCoord3D(seeds[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+		//distance_point = getPoint3DDistance(seed1, seed2);
+		//step = 0.5 * distance_point;
+		//std::cout << "The step is : " << step << std::endl;
+
+		actionDataStr.imageDataPtr = newActionPtr;
+		shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
 
 		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
 
@@ -2360,15 +2371,12 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 			point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 			fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
 		}
-		
-		if (count_step == 2) {
-			exit(0);
+		while (path_points.size() != 0) {
+			path_points.pop_back();
 		}
-		
-		//saving_name = path_name + "path.raw";
-		//store3dRawData<dataType>(resultedPath, length, width, height, saving_name.c_str());
-		
+
 	}
+	
 
 	fclose(file);
 
@@ -2387,7 +2395,6 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D * seedPoints, Pot
 
 	return true;
 }
-*/
 
 bool partialFrontPropagation(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints) {
 
@@ -3459,1254 +3466,6 @@ bool partialPropagationWithSpacing(Image_Data actionPtr, dataType** potentialPtr
 	return true;
 }
 
-/*
-////////////////////////////////////////////////////////////////////////////////////////
-//=================== Functions for the 4D fast marching ==============================
-///////////////////////////////////////////////////////////////////////////////////////
-
-double getDistancePoints4D(Point4D p1, Point4D p2) {
-	return (dataType)(sqrt(pow(p1.r - p2.r, 2) + pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2)));
-}
-
-dataType select4DX(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rlength, const size_t i, const size_t j, const size_t k, const size_t l) {
-
-	dataType i_minus, i_plus;
-	size_t zr = x_new(k, l, height);
-
-	if (i == 0) {
-		i_minus = INFINITY;
-	}
-	else {
-		if (i > 0) {
-			i_minus = actionMapPtr[zr][x_new(i - 1, j, length)];
-		}
-		//the case i < 0 is impossible 
-	}
-
-	if (i == length - 1) {
-		i_plus = INFINITY;
-	}
-	else {
-		if (i < length - 1) {
-			i_plus = actionMapPtr[zr][x_new(i + 1, j, length)];
-		}
-		//the case i > length - 1 is impossible 
-	}
-
-	return min(i_minus, i_plus);
-}
-
-dataType select4DY(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rlength, const size_t i, const size_t j, const size_t k, const size_t l) {
-
-	dataType j_minus, j_plus;
-	size_t zr = x_new(k, l, height);
-
-	if (j == 0) {
-		j_minus = INFINITY;
-	}
-	else {
-		if (j > 0) {
-			j_minus = actionMapPtr[zr][x_new(i, j - 1, length)];
-		}
-		//the case j < 0 is impossible 
-	}
-
-	if (j == width - 1) {
-		j_plus = INFINITY;
-	}
-	else {
-		if (j < width - 1) {
-			j_plus = actionMapPtr[zr][x_new(i, j + 1, length)];
-		}
-		//the case j > width - 1 is impossible 
-	}
-
-	return min(j_minus, j_plus);
-}
-
-dataType select4DZ(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rlength, const size_t i, const size_t j, const size_t k, const size_t l) {
-
-	dataType k_minus, k_plus;
-
-	size_t xy = x_new(i, j, length);
-
-	if (k == 0) {
-		k_minus = INFINITY;
-	}
-	else {
-		if (k > 0) {
-			k_minus = actionMapPtr[x_new(k - 1, l, height)][xy];
-		}
-		//the case k < 0 is impossible 
-	}
-
-	if (k == height - 1) {
-		k_plus = INFINITY;
-	}
-	else {
-		if (k < height - 1) {
-			k_plus = actionMapPtr[x_new(k + 1, l, height)][xy];
-		}
-		//the case k > height - 1 is impossible 
-	}
-
-	return min(k_minus, k_plus);
-}
-
-dataType select4DR(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, const size_t rlength, const size_t i, const size_t j, const size_t k, const size_t l) {
-
-	dataType r_minus, r_plus;
-	size_t xy = x_new(i, j, length);
-
-	if (l == 0) {
-		r_minus = INFINITY;
-	}
-	else {
-		if (l > 0) {
-			r_minus = actionMapPtr[x_new(k, l - 1, height)][xy];
-		}
-		//the case r < 0 is impossible 
-	}
-
-	if (l == rlength - 1) {
-		r_plus = INFINITY;
-	}
-	else {
-		if (l < rlength - 1) {
-			r_plus = actionMapPtr[x_new(k, l + 1, height)][xy];
-		}
-		//the case l > rlength - 1 is impossible 
-	}
-
-	return min(r_minus, r_plus);
-}
-
-dataType solve4DQuadratic(dataType X, dataType Y, dataType Z, dataType R, dataType W) {
-
-	dataType sol1 = 0.0, sol2 = 0.0, solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
-
-	if (X != INFINITY && Y != INFINITY && Z != INFINITY && R != INFINITY) {
-		a = 4;
-		b = (dataType)(-2 * (X + Y + Z + R));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) + pow(Z, 2) + pow(R,2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(min(min(X, Y),Z),R) + W);
-		}
-		//cout << "case 1 happened" << endl;
-	}
-
-
-	if (X != INFINITY && Y != INFINITY && Z != INFINITY && R == INFINITY) {
-		a = 3;
-		b = (dataType)(-2 * (X + Y + Z));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) + pow(Z, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(min(X, Y),Z) + W);
-		}
-		//cout << "case 2 happened" << endl;
-	}
-
-	if (X != INFINITY && Y != INFINITY && Z == INFINITY && R != INFINITY) {
-		a = 3;
-		b = (dataType)(-2 * (X + Y + R));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(min(X, Y), R) + W);
-		}
-		//cout << "case 3 happened" << endl;
-	}
-
-	if (X != INFINITY && Y == INFINITY && Z != INFINITY && R != INFINITY) {
-		a = 3;
-		b = (dataType)(-2 * (X + Z + R));
-		c = (dataType)(pow(X, 2) + pow(Z, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(min(X, Z), R) + W);
-		}
-		//cout << "case 4 happened" << endl;
-	}
-
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY && R != INFINITY) {
-		a = 3;
-		b = (dataType)(-2 * (Y + Z + R));
-		c = (dataType)(pow(Y, 2) + pow(Z, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(min(Y, Z), R) + W);
-		}
-		//cout << "case 5 happened" << endl;
-	}
-
-
-	if (X != INFINITY && Y != INFINITY && Z == INFINITY && R == INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (X + Y));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(X, Y) + W);
-		}
-		//cout << "case 6 happened" << endl;
-	}
-
-	if (X != INFINITY && Y == INFINITY && Z != INFINITY && R == INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (X + Z));
-		c = (dataType)(pow(X, 2) + pow(Z, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(X, Z) + W);
-		}
-		//cout << "case 7 happened" << endl;
-	}
-
-	if (X != INFINITY && Y == INFINITY && Z == INFINITY && R != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (X + R));
-		c = (dataType)(pow(X, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(X, R) + W);
-		}
-		//cout << "case 8 happened" << endl;
-	}
-
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY && R == INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (Y + Z));
-		c = (dataType)(pow(Y, 2) + pow(Z, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(Y, Z) + W);
-		}
-		//cout << "case 9 happened" << endl;
-	}
-
-	if (X == INFINITY && Y != INFINITY && Z == INFINITY && R != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (Y + R));
-		c = (dataType)(pow(Y, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(Y, R) + W);
-		}
-		//cout << "case 10 happened" << endl;
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY && R != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (Z + R));
-		c = (dataType)(pow(Z, 2) + pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(min(Z, R) + W);
-		}
-		//cout << "case 11 happened" << endl;
-	}
-
-
-	if (X != INFINITY && Y == INFINITY && Z == INFINITY && R == INFINITY) {
-		a = 1;
-		b = (dataType)(-2 * X);
-		c = (dataType)(pow(X, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(X + W);
-		}
-		//cout << "case 12 happened" << endl;
-	}
-
-	if (X == INFINITY && Y != INFINITY && Z == INFINITY && R == INFINITY) {
-		a = 1;
-		b = (dataType)(-2 * Y);
-		c = (dataType)(pow(Y, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(Y + W);
-		}
-		//cout << "case 13 happened" << endl;
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY && R == INFINITY) {
-		a = 1;
-		b = (dataType)(-2 * Z);
-		c = (dataType)(pow(Z, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(Z + W);
-		}
-		//cout << "case 14 happened" << endl;
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z == INFINITY && R != INFINITY) {
-		a = 1;
-		b = (dataType)(-2 * R);
-		c = (dataType)(pow(R, 2) - W);
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			sol1 = (dataType)((-b + sqrt(delta)) / (2 * a));
-			sol2 = (dataType)((-b - sqrt(delta)) / (2 * a));
-			solution = max(sol1, sol2);
-		}
-		else {
-			solution = (dataType)(R + W);
-		}
-		//cout << "case 15 happened" << endl;
-	}
-
-	return solution;
-}
-
-void swap4DPoints(pointFastMarching4D* a, pointFastMarching4D* b) {
-	pointFastMarching4D temp = *a;
-	*a = *b;
-	*b = temp;
-}
-
-void heapifyDown4D(vector<pointFastMarching4D>& in_Process, int i) {
-
-	int length_array = in_Process.size();
-	int current = i;
-	int left_child = 2 * i + 1;
-	int right_child = 2 * i + 2;
-
-	dataType val_current = 0.0, val_left = 0.0, val_right = 0.0;
-
-	if (current >= 0 && current < length_array) {
-		val_current = in_Process[current].arrival;
-	}
-
-	if (left_child < length_array) {
-		val_left = in_Process[left_child].arrival;
-		if (val_left < val_current) {
-			current = left_child;
-			val_current = in_Process[current].arrival;
-		}
-	}
-
-	if (right_child < length_array) {
-		val_right = in_Process[right_child].arrival;
-		if (val_right < val_current) {
-			current = right_child;
-		}
-	}
-
-	if (current != i) {
-		swap4DPoints(&in_Process[i], &in_Process[current]);
-		heapifyDown4D(in_Process, current);
-	}
-
-}
-
-void heapifyUp4D(vector<pointFastMarching4D>& in_Process, int i) {
-
-	int current = i;
-
-	if (i > 0) {
-		int parent = (i - 1) / 2;
-		dataType val_current = in_Process[current].arrival;
-		dataType val_parent = in_Process[parent].arrival;
-		if (val_current < val_parent) {
-			current = parent;
-		}
-	}
-
-	if (current != i) {
-		swap4DPoints(&in_Process[current], &in_Process[i]);
-		heapifyUp4D(in_Process, current);
-	}
-
-}
-
-void heapifyVector4D(vector<pointFastMarching4D>& in_Process) {
-	int length_array = in_Process.size();
-	int ind, start = length_array / 2 - 1;
-	for (ind = start; ind >= 0; ind--) {
-		heapifyDown4D(in_Process, ind);
-	}
-}
-
-void deleteRootHeap4D(vector<pointFastMarching4D>& in_Process) {
-	//we use type int for indexes because we do operations like pos--
-	int l = in_Process.size();
-	swap4DPoints(&in_Process[0], &in_Process[l - 1]);
-	in_Process.pop_back();
-	heapifyDown4D(in_Process, 0);
-}
-
-void addPointHeap4D(vector<pointFastMarching4D>& in_Process, pointFastMarching4D point) {
-	//we use type int for indexes because we do operations like pos--
-	in_Process.push_back(point);
-	int l = in_Process.size();
-	heapifyUp4D(in_Process, l - 1);
-}
-
-void computePotential4D(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, const size_t radiusLength,  dataType radiusInitial, dataType radiusScale) {
-	
-	size_t height = ctImageData.height;
-	size_t length = ctImageData.length;
-	size_t width = ctImageData.width;
-	size_t i, j, k, l, ij, kl;
-	dataType lamba1 = 1.0, lambda2 = 1.0;
-
-	dataType radius = 0.0;
-	Statistics stats = getPointNeighborhoodStats(ctImageData, seedPoint, radiusInitial);
-	dataType coefInitial = stats.mean_data / radiusInitial;
-	dataType varianceInitial = sqrt(stats.sd_data) / radiusInitial;
-	dataType mean = 0.0, variance = 0.0;
-
-	for (l = 0; l < radiusLength; l++) {
-		radius = (l + 1) * radiusScale;
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < length; i++) {
-				for (j = 0; j < width; j++) {
-					kl = x_new(k, l, height);
-					ij = x_new(i, j, length);
-					Point3D current_point = { i, j, k };
-					stats = getPointNeighborhoodStats(ctImageData, current_point, radius);
-					mean = stats.mean_data / radius;
-					variance = sqrt(stats.sd_data) / radius;
-					potentialPtr[kl][ij] = lamba1 * pow(abs(mean - coefInitial), 2) + lambda2 * pow(abs(variance - varianceInitial), 2);
-				}
-			}
-		}
-	}
-
-}
-
-bool fastMarching4D(dataType** actionMapPtr, dataType** potentialPtr, const size_t length, const size_t width, const size_t height, const size_t radiusLength, Point3D seedPoint, dataType raduisScale, dataType radiusInitial) {
-
-	if (actionMapPtr == NULL || potentialPtr == NULL) {
-		return false;
-	}
-
-	size_t kl = 0, ij = 0;
-	const size_t newHeight = radiusLength * height;
-	size_t dim2D = width * length;
-	size_t** labelArray = new size_t * [newHeight];
-	for (kl = 0; kl < newHeight; kl++) {
-		labelArray[kl] = new size_t[dim2D]{0};
-	}
-	if (labelArray == NULL)
-		return false;
-
-	//size_t current_kl = 0, current_ij = 0;
-
-	//Initialization
-	//All the points are notProcessed ---> label = 3
-	for (kl = 0; kl < newHeight; kl++) {
-		for (ij = 0; ij < dim2D; ij++) {
-			actionMapPtr[kl][ij] = INFINITY;
-			labelArray[kl][ij] = 3;
-		}
-	}
-
-	//Processed the initial point
-	pointFastMarching4D current;
-	size_t i = (size_t)seedPoint.x;
-	size_t j = (size_t)seedPoint.y;
-	size_t k = (size_t)seedPoint.z;
-	size_t l = (size_t)(radiusInitial / raduisScale);
-	//cout << "l = " << l << endl;
-	actionMapPtr[x_new(k, l, height)][x_new(i, j, length)] = 0.0;
-	labelArray[x_new(k, l, height)][x_new(i, j, length)] = 1;
-
-	//find the neighbors of the initial point add them to inProcess
-	vector <pointFastMarching4D> inProcess;
-	 
-	//Top : k - 1
-	if (i >= 0 && i < length && j >= 0 && j < width && k > 0 && l >= 0 && l < radiusLength) {
-		size_t kminus = k - 1;
-		size_t current_ij = x_new(i, j, length);
-		size_t current_kl = x_new(kminus, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, j, kminus, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//Bottom : k + 1
-	if (i >= 0 && i < length && j >= 0 && j < width && k < (height - 1) && l >= 0 && l < radiusLength) {
-		size_t kplus = k + 1;
-		size_t current_ij = x_new(i, j, length);
-		size_t current_kl = x_new(kplus, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, j, kplus, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//East : i + 1
-	if (i < (length - 1) && j >= 0 && j < width && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-		size_t iplus = i + 1;
-		size_t current_ij = x_new(iplus, j, length);
-		size_t current_kl = x_new(k, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { iplus, j, k, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//West : i - 1
-	if (i > 0 && j >= 0 && j < width && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-		size_t iminus = i - 1;
-		size_t current_ij = x_new(iminus, j, length);
-		size_t current_kl = x_new(k, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { iminus, j, k, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//North : j - 1
-	if (i >= 0 && i < length && j > 0 && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-		size_t jminus = j - 1;
-		size_t current_ij = x_new(i, jminus, length);
-		size_t current_kl = x_new(k, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, jminus, k, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//South : j + 1
-	if (i >= 0 && i < length && j < (width - 1) && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-		size_t jplus = j + 1;
-		size_t current_ij = x_new(i, jplus, length);
-		size_t current_kl = x_new(k, l, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, jplus, k, l, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//max radius : l + 1
-	if (i >= 0 && i < length && j >= 0 && j < width && k >= 0 && k < height && l < (radiusLength - 1)) {
-		size_t lplus = l + 1;
-		size_t current_ij = x_new(i, j, length);
-		size_t current_kl = x_new(k, lplus, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, j, k, lplus, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	//min radius : l - 1
-	if (i >= 0 && i < length && j >= 0 && j < width && k >= 0 && k < height && l > 0) {
-		size_t lminus = l - 1;
-		size_t current_ij = x_new(i, j, length);
-		size_t current_kl = x_new(k, lminus, height);
-		dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-		dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-		dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-		dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-		dataType coefSpeed = potentialPtr[current_kl][current_ij];
-		dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-		pointFastMarching4D neighbor = { i, j, k, lminus, action };
-		actionMapPtr[current_kl][current_ij] = action;
-		inProcess.push_back(neighbor);
-		labelArray[current_kl][current_ij] = 2;
-	}
-
-	heapifyVector4D(inProcess);
-	size_t label = 0;
-
-	while (inProcess.size() != 0) {
-
-		//processed the point with minimum action
-		current = inProcess[0];
-		i = current.x;
-		j = current.y;
-		k = current.z;
-		l = current.r;
-		labelArray[x_new(k, l, height)][x_new(i, j, length)] = 1;
-		actionMapPtr[x_new(k, l, height)][x_new(i, j, length)] = current.arrival;
-		deleteRootHeap4D(inProcess);
-
-		//processed neighbors of the minimum in the narrow band
-
-		//Top : k - 1
-		if (i >= 0 && i < length && j >= 0 && j < width && k > 0 && l >= 0 && l < radiusLength) {
-			size_t kminus = k - 1;
-			size_t current_ij = x_new(i, j, length);
-			size_t current_kl = x_new(kminus, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, kminus, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { i, j, kminus, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//Bottom : k + 1
-		if (i >= 0 && i < length && j >= 0 && j < width && k < (height - 1) && l >= 0 && l < radiusLength) {
-			size_t kplus = k + 1;
-			size_t current_ij = x_new(i, j, length);
-			size_t current_kl = x_new(kplus, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, kplus, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { i, j, kplus, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//East : i + 1
-		if (i < (length - 1) && j >= 0 && j < width && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-			size_t iplus = i + 1;
-			size_t current_ij = x_new(iplus, j, length);
-			size_t current_kl = x_new(k, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, iplus, j, k, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { iplus, j, k, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//West : i - 1
-		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-			size_t iminus = i - 1;
-			size_t current_ij = x_new(iminus, j, length);
-			size_t current_kl = x_new(k, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, iminus, j, k, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { iminus, j, k, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//North : j - 1
-		if (i >= 0 && i < length && j > 0 && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-			size_t jminus = j - 1;
-			size_t current_ij = x_new(i, jminus, length);
-			size_t current_kl = x_new(k, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, jminus, k, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { i, jminus, k, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//South : j + 1
-		if (i >= 0 && i < length && j < (width - 1) && k >= 0 && k < height && l >= 0 && l < radiusLength) {
-			size_t jplus = j + 1;
-			size_t current_ij = x_new(i, jplus, length);
-			size_t current_kl = x_new(k, l, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, jplus, k, l);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { i, jplus, k, l, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//Radius min : l - 1
-		if (i >= 0 && i < length && j >= 0 && j < width && k >= 0 && k < height && l > 0) {
-			size_t lminus = l - 1;
-			size_t current_ij = x_new(i, j, length);
-			size_t current_kl = x_new(k, lminus, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, k, lminus);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D minNeighbor = { i, j, k, lminus, action };
-					addPointHeap4D(inProcess, minNeighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-		//Radius max : l + 1
-		if (i >= 0 && i < length && j >= 0 && j < width && k >= 0 && k < height && l < (radiusLength - 1)) {
-			size_t lplus = l + 1;
-			size_t current_ij = x_new(i, j, length);
-			size_t current_kl = x_new(k, lplus, height);
-			label = labelArray[current_kl][current_ij];
-			if (label != 1) {
-				dataType x = select4DX(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-				dataType y = select4DY(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-				dataType z = select4DZ(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-				dataType r = select4DR(actionMapPtr, length, width, height, radiusLength, i, j, k, lplus);
-				dataType coefSpeed = potentialPtr[current_kl][current_ij];
-				dataType action = solve4DQuadratic(x, y, z, r, coefSpeed);
-				if (label == 3) {
-					actionMapPtr[current_kl][current_ij] = action;
-					labelArray[current_kl][current_ij] = 2;
-					pointFastMarching4D neighbor = { i, j, k, lplus, action };
-					addPointHeap4D(inProcess, neighbor);
-				}
-				else {
-					if (label == 2) {
-						if (action < actionMapPtr[current_kl][current_ij]) {
-							actionMapPtr[current_kl][current_ij] = action;
-						}
-					}
-				}
-			}
-		}
-
-	}
-
-	//====================
-	//Saving
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, extension;
-	dataType** actionField = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		actionField[k] = new dataType[dim2D]{ 0 };
-	}
-	for (l = 0; l < radiusLength; l++) {
-		extension = to_string(l);
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < dim2D; i++) {
-				actionField[k][i] = actionMapPtr[x_new(k, l, height)][i];
-			}
-		}
-		saving_name = outputPath + "action4D_" + extension + ".raw";
-		store3dRawData<dataType>(actionField, length, width, height, saving_name.c_str());
-	}
-	for (k = 0; k < height; k++) {
-		delete[] actionField[k];
-	}
-	delete[] actionField;
-	saving_name = outputPath + "action4D.raw";
-	store3dRawData<dataType>(actionMapPtr, length, width, newHeight, saving_name.c_str());
-	//=====================
-
-	for (kl = 0; kl < newHeight; kl++) {
-		delete[] labelArray[kl];
-	}
-	delete[] labelArray;
-
-	return true;
-}
-
-bool compute4DimageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, dataType** gradientVectorR, const size_t length, const size_t width, const size_t height, const size_t radiusLength, dataType h) {
-
-	if (imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || gradientVectorR == NULL) {
-		return false;
-	}
-
-	size_t i = 0, j = 0, k = 0, l = 0;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0, ur = 0.0;
-	size_t index_ij = 0, index_kl = 0;
-
-	for (l = 0; l < radiusLength; l++) {
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < length; i++) {
-				for (j = 0; j < width; j++) {
-
-					index_kl = x_new(k, l, height);
-					index_ij = x_new(i, j, length);
-
-					if (l == 0) {
-						ur = (imageDataPtr[x_new(k, l + 1, height)][index_ij] - imageDataPtr[x_new(k, l, height)][index_ij]) / h;
-					}
-					else {
-						if (l == (radiusLength - 1)) {
-							ur = (imageDataPtr[x_new(k, l, height)][index_ij] - imageDataPtr[x_new(k, l - 1, height)][index_ij]) / h;
-						}
-						else {
-							ur = (imageDataPtr[x_new(k, l + 1, height)][index_ij] - imageDataPtr[x_new(k, l - 1, height)][index_ij]) / (2 * h);
-						}
-					}
-
-					if (k == 0) {
-						uz = (imageDataPtr[x_new(k + 1, l, height)][index_ij] - imageDataPtr[x_new(k, l, height)][index_ij]) / h;
-					}
-					else {
-						if (k == (height - 1)) {
-							uz = (imageDataPtr[x_new(k, l, height)][index_ij] - imageDataPtr[x_new(k - 1, l, height)][index_ij]) / h;
-						}
-						else {
-							uz = (imageDataPtr[x_new(k + 1, l, height)][index_ij] - imageDataPtr[x_new(k - 1, l, height)][index_ij]) / (2 * h);
-						}
-					}
-
-					if (i == 0) {
-						ux = (imageDataPtr[index_kl][x_new(i + 1, j, length)] - imageDataPtr[index_kl][x_new(i, j, length)]) / h;
-					}
-					else {
-						if (i == (length - 1)) {
-							ux = (imageDataPtr[index_kl][x_new(i, j, length)] - imageDataPtr[index_kl][x_new(i - 1, j, length)]) / h;
-						}
-						else {
-							ux = (imageDataPtr[index_kl][x_new(i + 1, j, length)] - imageDataPtr[index_kl][x_new(i - 1, j, length)]) / (2 * h);
-						}
-					}
-
-					if (j == 0) {
-						uy = (imageDataPtr[index_kl][x_new(i, j + 1, length)] - imageDataPtr[index_kl][x_new(i, j, length)]) / h;
-					}
-					else {
-						if (j == (width - 1)) {
-							uy = (imageDataPtr[index_kl][x_new(i, j, length)] - imageDataPtr[index_kl][x_new(i, j - 1, length)]) / h;
-						}
-						else {
-							uy = (imageDataPtr[index_kl][x_new(i, j + 1, length)] - imageDataPtr[index_kl][x_new(i, j - 1, length)]) / (2 * h);
-						}
-					}
-
-					gradientVectorX[index_kl][index_ij] = (dataType)ux;
-					gradientVectorY[index_kl][index_ij] = (dataType)uy;
-					gradientVectorZ[index_kl][index_ij] = (dataType)uz;
-					gradientVectorR[index_kl][index_ij] = (dataType)ur;
-				}
-			}
-		}
-	}
-	return true;
-}
-
-bool shortestPath4D(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t radiusLength, dataType raduisScale, dataType radiusInitial, dataType radiusFinal) {
-
-	if (actionMapPtr == NULL || seedPoints == NULL)
-		return false;	
-	
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path4D_fm.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
-	size_t k, i, j, kl, ij, l, dim2D = length * width, max_iter = 100;
-	double tau = 0.5, tol = 1.0;
-	
-	dataType i_current = seedPoints[1].x;
-	dataType j_current = seedPoints[1].y;
-	dataType k_current = seedPoints[1].z;
-	dataType l_current = radiusFinal / raduisScale;
-
-	dataType i_seed = seedPoints[0].x;
-	dataType j_seed = seedPoints[0].y;
-	dataType k_seed = seedPoints[0].z;
-	dataType l_seed = radiusInitial / raduisScale;
-
-	Point4D final_point = { i_seed, j_seed, k_seed, l_seed };
-
-	const size_t newHeight = radiusLength * height;
-	dataType** gradientVectorX = new dataType * [newHeight];
-	dataType** gradientVectorY = new dataType * [newHeight];
-	dataType** gradientVectorZ = new dataType * [newHeight];
-	dataType** gradientVectorR = new dataType * [newHeight];
-	for (k = 0; k < newHeight; k++) {
-		gradientVectorX[k] = new dataType[dim2D]{0};
-		gradientVectorY[k] = new dataType[dim2D]{0};
-		gradientVectorZ[k] = new dataType[dim2D]{0};
-		gradientVectorR[k] = new dataType[dim2D]{0};
-		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL || gradientVectorR[k] == NULL)
-			return false;
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || gradientVectorR == NULL)
-		return false;
-
-	//Normalization of the gradient
-	compute4DimageGradient(actionMapPtr, gradientVectorX, gradientVectorY, gradientVectorZ, gradientVectorR, length, width, height, radiusLength, 1.0);
-
-	dataType ux = 0.0, uy = 0.0, uz = 0.0, ur = 0.0, norm_of_gradient = 0.0;
-	for (k = 0; k < newHeight; k++) {
-		for (i = 0; i < dim2D; i++) {
-			ux = gradientVectorX[k][i];
-			uy = gradientVectorY[k][i];
-			uz = gradientVectorZ[k][i];
-			ur = gradientVectorR[k][i];
-			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz + ur * ur);
-			gradientVectorX[k][i] = ux / norm_of_gradient;
-			gradientVectorY[k][i] = uy / norm_of_gradient;
-			gradientVectorZ[k][i] = uz / norm_of_gradient;
-			gradientVectorR[k][i] = ur / norm_of_gradient;
-		}
-	}
-
-	size_t count = 0;
-	double dist_to_end = 0.0;
-
-	fprintf(file,"x,y,z,radius\n");
-
-	do {
-
-		i = (size_t)i_current; //round(i_current);
-		j = (size_t)j_current; //round(j_current);
-		k = (size_t)k_current; //round(k_current);
-		l = (size_t)l_current; //round(l_current);
-		kl = x_new(k, l, height);
-		ij = x_new(i, j, length);
-
-		l_current = l_current - tau * gradientVectorR[kl][ij];
-		k_current = k_current - tau * gradientVectorZ[kl][ij];
-		i_current = i_current - tau * gradientVectorX[kl][ij];
-		j_current = j_current - tau * gradientVectorY[kl][ij];
-
-		fprintf(file,"%f,%f,%f,%f\n", i_current, j_current, k_current, l_current * raduisScale);
-		
-		Point4D current_point = { i_current, j_current, k_current, l_current };
-		dist_to_end = getDistancePoints4D(current_point, final_point);
-		count++;
-
-	} while (dist_to_end > tol && count < max_iter);
-
-	cout << "distance to end point : " << dist_to_end << endl;
-
-	fclose(file);
-	for (k = 0; k < newHeight; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-		delete[] gradientVectorR[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
-	delete[] gradientVectorR;
-
-	return true;
-}
-
-bool shortestPath3DPlus(dataType** actionMapPtr, const size_t length, const size_t width, const size_t height, dataType h, Point3D* seedPoints, const size_t radiusLength, dataType raduisScale, dataType radiusInitial, dataType radiusFinal) {
-
-	if (actionMapPtr == NULL || seedPoints == NULL)
-		return false;
-
-	size_t i, j, k, l, dim2D = length * width;
-	size_t kl, ij, max_iter = 100;
-	double tau = 0.5, tol = 1.0;
-
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string extension, saving_name, saving_csv;
-
-	dataType i_seed = seedPoints[0].x;
-	dataType j_seed = seedPoints[0].y;
-	dataType k_seed = seedPoints[0].z;
-	Point3D final_point = { i_seed, j_seed, k_seed };
-
-	dataType** actionField = new dataType * [height];
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		actionField[k] = new dataType[dim2D]{ 0 };
-		gradientVectorX[k] = new dataType[dim2D]{ 0 };
-		gradientVectorY[k] = new dataType[dim2D]{ 0 };
-		gradientVectorZ[k] = new dataType[dim2D]{ 0 };
-		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL)
-			return false;
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-
-	dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
-
-	size_t count = 0;
-	double dist_to_end = 0.0;
-
-	VoxelSpacing spacing = { 1.0, 1.0, 1.0 };
-
-	for (l = 0; l < radiusLength; l++) {
-
-		dataType i_current = seedPoints[1].x;
-		dataType j_current = seedPoints[1].y;
-		dataType k_current = seedPoints[1].z;
-
-		extension = to_string(l);
-		saving_csv = outputPath + "path_point_" + extension + ".csv";
-		FILE* file;
-		if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-			printf("Enable to open");
-			return false;
-		}
-
-		//extract action
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < dim2D; i++) {
-				actionField[k][i] = actionMapPtr[x_new(k, l, height)][i];
-			}
-		}
-
-		compute3dImageGradient(actionField, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, spacing);
-
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < dim2D; i++) {
-				ux = gradientVectorX[k][i];
-				uy = gradientVectorY[k][i];
-				uz = gradientVectorZ[k][i];
-				norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-				gradientVectorX[k][i] = ux / norm_of_gradient;
-				gradientVectorY[k][i] = uy / norm_of_gradient;
-				gradientVectorZ[k][i] = uz / norm_of_gradient;
-			}
-		}
-		
-		dist_to_end = 0.0;
-		count = 0;
-
-		fprintf(file, "x,y,z\n");
-		do {
-
-			i = (size_t)i_current;
-			j = (size_t)j_current;
-			k = (size_t)k_current;
-
-			ij = x_new(i, j, length);
-			k_current = k_current - tau * gradientVectorZ[k][ij];
-			i_current = i_current - tau * gradientVectorX[k][ij];
-			j_current = j_current - tau * gradientVectorY[k][ij];
-
-			fprintf(file, "%f,%f,%f\n", i_current, j_current, k_current);
-
-			Point3D current_point = { i_current, j_current, k_current};
-			dist_to_end = getPoint3DDistance(current_point, final_point);
-			count++;
-
-		} while (dist_to_end > tol && count < max_iter);
-		fclose(file);
-	}
-
-	cout << "distance to end point : " << dist_to_end << endl;
-	for (k = 0; k < height; k++) {
-		delete[] actionField[k];
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-	}
-	delete[] actionField;
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
-
-	return true;
-}
-*/
-
 bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed) {
 	
 	if (distancePtr == NULL)
@@ -4774,288 +3533,6 @@ void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialP
 
 	delete[] radiusArray;
 }
-
-/*
-void compute3DPotentialMeanVariance(Image_Data ctImageData, dataType** potentialPtr, Point3D seedPoint, dataType radiusInitial, dataType radiusMin, dataType radiusMax, dataType radiusStep) {
-
-	size_t width = ctImageData.width;
-	size_t length = ctImageData.length;
-	size_t height = ctImageData.height;
-	size_t i = 0, j = 0, k = 0;
-	dataType lambda1 = 1.0, lambda2 = 1.0, omega = 0.00001;
-
-	Statistics stats = getPointNeighborhoodStats(ctImageData, seedPoint, radiusInitial);
-	dataType meanInitial = stats.mean_data / radiusInitial, mean = 0.0;
-	dataType varianceInitial = stats.variance / radiusInitial, variance = 0.0;
-
-	dataType radius = 0.0, value = 0.0, minValue = 0.0;
-	dataType meanVal = 0.0, varianceVal = 0.0;
-	
-	dataType offset = 2.0;
-	Statistics result = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-	BoundingBox3D box = { 0, 0, 0, 0, 0, 0 };
-
-	//===========================================
-
-	
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				Point3D current_point = { i, j, k };
-				box = findBoundingBox3D(current_point, length, width, height, radiusMax, offset);
-				for (size_t kn = box.k_min; kn <= box.k_max; kn++) {
-					for (size_t in = box.i_min; in <= box.i_max; in++) {
-						for (size_t jn = box.j_min; jn <= box.j_max; jn++) {
-							radius = radiusMin;
-							while (radius <= radiusMax) {
-
-							}
-						}
-
-					}
-				}
-			}
-		}
-	}
-
-	Statistics result = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-	BoundingBox3D box = { 0, 0, 0, 0, 0, 0 };
-	dataType offset = 2.0;
-	//box = findBoundingBox3D(point_of_interest, imageData.length, imageData.width, imageData.height, radius, offset);
-	Point3D seed = {0.0,0.0,0.0};//getRealCoordFromImageCoord3D(point_of_interest, imageData.origin, imageData.spacing, imageData.orientation);
-
-	dataType sum = 0.0;
-	result.max_data = 0.0;
-	result.min_data = 1000000000000000;
-	int nb_point = 0;
-
-	for (k = box.k_min; k <= box.k_max; k++) {
-		for (i = box.i_min; i <= box.i_max; i++) {
-			for (j = box.j_min; j <= box.j_max; j++) {
-				Point3D current_point = { i, j, k };
-				current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-				double dist = getPoint3DDistance(seed, current_point);
-				if (dist <= radius) {
-					dataType voxel_value = imageData.imageDataPtr[k][x_new(i, j, length)];
-					if (voxel_value < result.min_data) {
-						result.min_data = voxel_value;
-					}
-					if (voxel_value > result.max_data) {
-						result.max_data = voxel_value;
-					}
-					sum = sum + voxel_value;
-					nb_point = nb_point + 1;
-				}
-			}
-		}
-	}
-
-	if (nb_point != 0) {
-		result.mean_data = sum / (dataType)nb_point;
-		dataType sum_diff = 0.0;
-		for (k = box.k_min; k <= box.k_max; k++) {
-			for (i = box.i_min; i <= box.i_max; i++) {
-				for (j = box.j_min; j <= box.j_max; j++) {
-					Point3D current_point = { i, j, k };
-					current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-					double dist = getPoint3DDistance(seed, current_point);
-					if (dist <= radius) {
-						sum_diff = sum_diff + pow(imageData.imageDataPtr[k][x_new(i, j, length)] - result.mean_data, 2);
-					}
-				}
-			}
-		}
-		result.variance = sum_diff / (dataType)nb_point;
-		result.sd_data = sqrt(sum_diff / (dataType)nb_point);
-	}
-	else {
-		result.mean_data = 0;
-		result.sd_data = 0.0;
-		result.max_data = 0.0;
-		result.min_data = 0.0;
-		result.variance = 0.0;
-	}
-
-
-	//============================================
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				radius = radiusMin;
-				meanVal = 0.0;
-				varianceVal = 0.0;
-				Point3D current_point = { i, j, k };
-				while (radius <= radiusMax) {
-					stats = getPointNeighborhoodStats(ctImageData, current_point, radius);
-					mean = stats.mean_data / radius;
-					variance = stats.variance / radius;
-					if (mean > meanVal) {
-						meanVal = mean;
-					}
-					if (variance > varianceVal) {
-						varianceVal = variance;
-					}
-					radius = radius + radiusStep;
-				}
-				value = omega + lambda1 * pow(meanVal - meanInitial, 2) + lambda2 * pow(varianceVal - varianceInitial, 2);
-				potentialPtr[k][x_new(i, j, length)] = value;
-			}
-		}
-	}
-
-}
-*/
-
-/*
-//=====================================
-bool fastSweepingWithSpacing(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue) {
-	
-	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
-	{
-		return true;
-	}
-
-	dataType hx = ctImageData.spacing.sx;
-	dataType hy = ctImageData.spacing.sy;
-	dataType hz = ctImageData.spacing.sz;
-	
-	int length = ctImageData.length;
-	int width = ctImageData.width;
-	int height = ctImageData.height;
-
-	int length_minus = length - 1;
-	int width_minus = width - 1;
-	int height_minus = height - 1;
-
-	int i, j, k;
-	const size_t maxSweepNb = 8;
-	size_t sweepNb = 8;
-	size_t sweepDirection;
-	dataType x, y, z;
-	dataType a, b, c;
-
-	while (sweepNb < maxSweepNb) {
-
-		sweepDirection = sweepNb;
-
-		switch (sweepDirection) {
-
-		case 0:
-			for (k = 0; k < height; k++) {
-				for (i = 0; i < length; i++) {
-					for (j = width_minus; j > -1; j--) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-						//sorting
-						//a = min(min(x, y), z);
-						//b = max(min(0, 0), a);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 1:
-			for (k = 0; k < height; k++) {
-				for (i = length_minus; i > -1; i--) {
-					for (j = width_minus; j > -1; j--) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 2:
-			for (k = 0; k < height; k++) {
-				for (i = length_minus; i > -1; i--) {
-					for (j = 0; j < width; j++) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 3:
-			for (k = height_minus; k > -1; k--) {
-				for (i = 0; i < length; i++) {
-					for (j = 0; j < width; j++) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 4:
-			for (k = height_minus; k > -1; k--) {
-				for (i = 0; i < length; i++) {
-					for (j = width - 1; j > -1; j--) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 5:
-			for (k = height_minus; k > -1; k--) {
-				for (i = length_minus; i > -1; i--) {
-					for (j = 0; j < width; j++) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		case 6:
-			for (k = height_minus; k > -1; k--) {
-				for (i = length_minus; i > -1; i--) {
-					for (j = width_minus; j > -1; j--) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-
-			}
-			sweepNb++;
-			break;
-
-		default:
-			for (k = 0; k < height; k++) {
-				for (i = 0; i < length; i++) {
-					for (j = 0; j < width; j++) {
-						x = min(distancePtr[k][x_new(i + 1, j, length)], distancePtr[k][x_new(i - 1, j, length)]);
-						y = min(distancePtr[k][x_new(i, j + 1, length)], distancePtr[k][x_new(i, j - 1, length)]);
-						x = min(distancePtr[k + 1][x_new(i, j, length)], distancePtr[k - 1][x_new(i, j, length)]);
-					}
-				}
-			}
-			sweepNb++;
-			break;
-
-		}
-	}
-
-	return true;
-
-}
-*/
 
 dataType min0(dataType x, dataType y) {
 	if (y - x > 0)
@@ -5591,110 +4068,6 @@ dataType FastSweepingUpdate(dataType** distancePtr, size_t length, size_t width,
 	return dist;
 }
 
-bool fastSweeping3dWithSpacing(Image_Data inputImageData, dataType** distancePtr) {
-	
-	if (inputImageData.imageDataPtr == NULL || distancePtr == NULL)
-		return false;
-
-	const size_t length = inputImageData.length;
-	const size_t width = inputImageData.width;
-	const size_t height = inputImageData.height;
-	VoxelSpacing h = inputImageData.spacing;
-
-	size_t lenght_minus = length - 1;
-	size_t width_minus = width - 1;
-	size_t height_minus = height - 1;
-
-	//initialization
-	for (size_t k = 0; k < height; k++) {
-		for (size_t i = 0; i < length; i++) {
-			for (size_t j = 0; j < width; j++) {
-				size_t xd = x_new(i, j, length);
-				if (inputImageData.imageDataPtr[k][xd] == 1.0) {
-					distancePtr[k][xd] = BIG_VALUE;
-				}
-				else {
-					distancePtr[k][xd] = BIG_VALUE;
-				}
-			}
-		}
-	}
-
-	//sweep1
-	for (int k = 0; k < height; k++) {
-		for (int i = 0; i < length; i++) {
-			for (int j = 0; j < width; j++) {
-
-			}
-		}
-	}
-
-	//sweep2
-	for (int k = 0; k < height; k++) {
-		for (int i = 0; i < length; i++) {
-			for (int j = width_minus; j >= 0; j--) {
-
-			}
-		}
-	}
-
-	//sweep3
-	for (int k = 0; k < height; k++) {
-		for (int i = lenght_minus; i >= 0; i--) {
-			for (int j = 0; j < width; j++) {
-
-			}
-		}
-	}
-
-	//sweep4
-	for (int k = height_minus; k >= 0; k--) {
-		for (int i = 0; i < length; i++) {
-			for (int j = 0; j < width; j++) {
-
-			}
-		}
-	}
-
-	//sweep5
-	for (int k = 0; k < height; k++) {
-		for (int i = lenght_minus; i >= 0; i--) {
-			for (int j = width_minus; j >= 0; j--) {
-
-			}
-		}
-	}
-
-	//sweep6
-	for (int k = height_minus; k >= 0; k--) {
-		for (int i = lenght_minus; i >= 0; i--) {
-			for (int j = 0; j < width; j++) {
-
-			}
-		}
-	}
-
-	//sweep7
-	for (int k = height_minus; k > 0; k--) {
-		for (int i = 0; i < length; i++) {
-			for (int j = width_minus; j > 0; j--) {
-
-			}
-		}
-	}
-
-	//sweep8
-	for (int k = height_minus; k >= 0; k--) {
-		for (int i = lenght_minus; i >= 0; i--) {
-			for (int j = width_minus; j >= 0; j--) {
-
-			}
-		}
-	}
-
-	return true;
-}
-
 bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPtr, dataType** potentialFuncPtr, Point3D* seedPoints) {
 
 	if (inputImageData.imageDataPtr == NULL || actionMapPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL) {
@@ -6100,54 +4473,544 @@ bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPt
 	return true;
 }
 
-//======================================
+//=======================================
 
-/*
-bool computeHessianMatrix(Image_Data inputImageData, const size_t indx, const size_t indy, const size_t indz, eigenVector3D eigen_value) {
-	
-	if (inputImageData.imageDataPtr == NULL)
+bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, vector<Point3D>& key_points) {
+
+	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL) {
+		return false;
+	}
+
+	const size_t length = actionMapStr.length;
+	const size_t width = actionMapStr.width;
+	const size_t height = actionMapStr.height;
+
+	vector <pointFastMarching3D> inProcess;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+
+	size_t** labelArray = new size_t * [height];
+	for (k = 0; k < height; k++) {
+		labelArray[k] = new size_t[dim2D]{ 0 };
+	}
+	if (labelArray == NULL)
 		return false;
 
-	size_t length = inputImageData.length;
-	size_t width = inputImageData.width;
-	size_t height = inputImageData.height;
-	VoxelSpacing h = inputImageData.spacing;
+	dataType x = 0.0, y = 0.0, z = 0.0;
+	size_t currentIndx = 0;
 
-	dataType ux, uy, uz, uxx, uyy, uzz, uxy, uxz, uyz;
-	for (size_t k = 0; k < height; k++) {
-		for (size_t i = 0; i < length; i++) {
-			for (size_t j = 0; j < width; j++) {
-				size_t xd = x_new(i, j, length);
-				
-				if (k == 0) {
-					uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k + 1][xd]) / h.sz;
+	//Initialization
+	//All the points are notProcessed ---> label = 3
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			actionMapStr.imageDataPtr[k][i] = INFINITY;
+			labelArray[k][i] = 3;
+		}
+	}
+
+	//Processed the initial point
+	pointFastMarching3D current;
+	i = (size_t)seedPoint[0].x;
+	j = (size_t)seedPoint[0].y;
+	k = (size_t)seedPoint[0].z;
+	if (i < 0 || i > length || j < 0 || j > width || k < 0 || k > height) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+	currentIndx = x_new(i, j, length);
+	actionMapStr.imageDataPtr[k][currentIndx] = 0.0;
+	labelArray[k][currentIndx] = 1;
+
+	double distanceToCurrentSourcePoint = 0.0;
+	Point3D currentSourcePoint = { i, j, k };
+	key_points.push_back(currentSourcePoint);
+
+	//find the neighbours of the initial point add add them to inProcess
+	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
+	size_t kminus = 0, kplus = 0, iminus = 0, iplus = 0, jminus = 0, jplus = 0;
+	size_t indxNorth = 0, indxSouth = 0, indxWest = 0, indxEast = 0;
+	dataType dTop = 0.0, dBottom = 0.0, dNorth = 0.0, dSouth = 0.0, dWest = 0.0, dEast = 0.0, coefSpeed = 0.0;
+
+	//Top
+	if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+		kminus = k - 1;
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		coefSpeed = potentialFuncPtr[kminus][currentIndx];
+		dTop = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+		actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+		inProcess.push_back(TopNeighbor);
+		labelArray[kminus][currentIndx] = 2;
+	}
+
+	//East
+	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
+		iplus = i + 1;
+		indxEast = x_new(iplus, j, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		coefSpeed = potentialFuncPtr[k][indxEast];
+		dEast = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+		actionMapStr.imageDataPtr[k][indxEast] = dEast;
+		inProcess.push_back(EastNeighbor);
+		labelArray[k][indxEast] = 2;
+	}
+
+	//North
+	if (k >= 0 && k < height && j > 0 && i >= 0 && i < length) {
+		jminus = j - 1;
+		indxNorth = x_new(i, jminus, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		coefSpeed = potentialFuncPtr[k][indxNorth];
+		dNorth = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+		actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+		inProcess.push_back(NorthNeighbor);
+		labelArray[k][indxNorth] = 2;
+	}
+
+	//West
+	if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
+		iminus = i - 1;
+		indxWest = x_new(iminus, j, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		coefSpeed = potentialFuncPtr[k][indxWest];
+		dWest = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+		actionMapStr.imageDataPtr[k][indxWest] = dWest;
+		inProcess.push_back(WestNeighbor);
+		labelArray[k][indxWest] = 2;
+	}
+
+	//South
+	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
+		jplus = j + 1;
+		indxSouth = x_new(i, jplus, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		coefSpeed = potentialFuncPtr[k][indxSouth];
+		dSouth = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+		actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+		inProcess.push_back(SouthNeighbor);
+		labelArray[k][indxSouth] = 2;
+	}
+
+	//Bottom
+	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
+		kplus = k + 1;
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		coefSpeed = potentialFuncPtr[kplus][currentIndx];
+		dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+		actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+		inProcess.push_back(BottomNeighbor);
+		labelArray[kplus][currentIndx] = 2;
+	}
+
+	heapifyVector3D(inProcess);
+	size_t label = 0;
+
+	int l = 0, m = 0;
+	size_t nbSourcePoint = 0;
+	dataType max_weighted_distance = 0.0;
+
+	size_t iEnd = (size_t)seedPoint[1].x;
+	size_t jEnd = (size_t)seedPoint[1].y;
+	size_t kEnd = (size_t)seedPoint[1].z;
+	
+	double LengthKeyPoints = 50;
+	
+	while (inProcess.size() != 0 && labelArray[kEnd][x_new(iEnd, jEnd, length)] != 1) {
+
+		//processed the point with minimum distance
+		current = inProcess[0];
+		i = current.x;
+		j = current.y;
+		k = current.z;
+		currentIndx = x_new(i, j, length);
+		labelArray[k][currentIndx] = 1;
+		dataType arrival_for_max = current.arrival;
+		
+		Point3D pSource = { i, j, k };
+		Point3D pSourceReal = getRealCoordFromImageCoord3D(pSource, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		Point3D pCurrent = getRealCoordFromImageCoord3D(currentSourcePoint, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		distanceToCurrentSourcePoint = getPoint3DDistance(pCurrent, pSourceReal);
+		if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+			
+			currentSourcePoint = pSource;
+			key_points.push_back(currentSourcePoint);
+			actionMapStr.imageDataPtr[k][currentIndx] = 0;
+
+			
+			//Top
+			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) 
+			{
+				kminus = k - 1;
+				actionMapStr.imageDataPtr[kminus][currentIndx] = INFINITY;
+				labelArray[kminus][currentIndx] = 3;
+			}
+
+			//East
+			if(i < length_minus && j >= 0 && j < width && k >= 0 && k < height)
+			{
+				iplus = i + 1;
+				indxEast = x_new(iplus, j, length);
+				actionMapStr.imageDataPtr[k][indxEast] = INFINITY;
+				labelArray[k][indxEast] = 3;
+			}
+
+			//North
+			if (j > 0 && i >= 0 && i < length && k >= 0 && k < height)
+			{
+				jminus = j - 1;
+				indxNorth = x_new(i, jminus, length);
+				actionMapStr.imageDataPtr[k][indxNorth] = INFINITY;
+				labelArray[k][indxNorth] = 3;
+			}
+
+			//West
+			if (i > 0 && j >= 0 && j < width && k >= 0 && k < height)
+			{
+				iminus = i - 1;
+				indxWest = x_new(iminus, j, length);
+				actionMapStr.imageDataPtr[k][indxWest] = INFINITY;
+				labelArray[k][indxWest] = 3;
+			}
+
+			//South
+			if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height)
+			{
+				jplus = j + 1;
+				indxSouth = x_new(i, jplus, length);
+				actionMapStr.imageDataPtr[k][indxSouth] = INFINITY;
+				labelArray[k][indxSouth] = 3;
+			}
+
+			//Bottom
+			if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width)
+			{
+				kplus = k + 1;
+				actionMapStr.imageDataPtr[kplus][currentIndx] = INFINITY;
+				labelArray[kplus][currentIndx] = 3;
+			}
+			
+
+			while (inProcess.size() != 0) {
+				inProcess.pop_back();
+			}
+		}
+		else {
+			actionMapStr.imageDataPtr[k][currentIndx] = current.arrival;
+			deleteRootHeap3D(inProcess);
+		}
+
+		if (arrival_for_max > max_weighted_distance) {
+			max_weighted_distance = arrival_for_max;
+		}
+		
+		//processed neighbors of the minimum in the narrow band
+
+		//Top
+		if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+			kminus = k - 1;
+			label = labelArray[kminus][currentIndx];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				coefSpeed = potentialFuncPtr[kminus][currentIndx];
+				dTop = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[kminus][currentIndx] = 2;
+					
+					//Point3D pTop = { i, j, kminus };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pTop);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pTop;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[kminus][currentIndx] = 0;
+					//	dTop = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
+
+					actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+					pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+					addPointHeap3D(inProcess, TopNeighbor);
+
 				}
 				else {
-					if (k == height - 1) {
-						uz = (inputImageData.imageDataPtr[k][xd] - inputImageData.imageDataPtr[k - 1][xd]) / h.sz;
-					}
-					else {
-						uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k - 1][xd]) / (2 * h.sz);
+					if (label == 2) {
+						if (dTop < actionMapStr.imageDataPtr[kminus][currentIndx]) {
+							actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+						}
 					}
 				}
+			}
+		}
 
-				if (k == 0) {
-					uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k + 1][xd]) / h.sz;
+		//East
+		if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
+			iplus = i + 1;
+			indxEast = x_new(iplus, j, length);
+			label = labelArray[k][indxEast];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				coefSpeed = potentialFuncPtr[k][indxEast];
+				dEast = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[k][indxEast] = 2;
+					
+					//Point3D pEast = { iplus, j, k };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pEast);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pEast;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[k][indxEast] = 0;
+					//	dEast = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
+
+					actionMapStr.imageDataPtr[k][indxEast] = dEast;
+					pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+					addPointHeap3D(inProcess, EastNeighbor);
+
 				}
 				else {
-					if (k == height - 1) {
-						uz = (inputImageData.imageDataPtr[k][xd] - inputImageData.imageDataPtr[k - 1][xd]) / h.sz;
-					}
-					else {
-						uz = (inputImageData.imageDataPtr[k + 1][xd] - inputImageData.imageDataPtr[k - 1][xd]) / (2 * h.sz);
+					if (label == 2) {
+						if (dEast < actionMapStr.imageDataPtr[k][indxEast]) {
+							actionMapStr.imageDataPtr[k][indxEast] = dEast;
+						}
 					}
 				}
+			}
+		}
 
+		//North
+		if (j > 0 && i >= 0 && i < length && k >= 0 && k < height) {
+			jminus = j - 1;
+			indxNorth = x_new(i, jminus, length);
+			label = labelArray[k][indxNorth];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				coefSpeed = potentialFuncPtr[k][indxNorth];
+				dNorth = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[k][indxNorth] = 2;
+					
+					//Point3D pNorth = { i, jminus, k };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pNorth);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pNorth;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[k][indxNorth] = 0;
+					//	dNorth = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
 
+					actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+					pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+					addPointHeap3D(inProcess, NorthNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dNorth < actionMapStr.imageDataPtr[k][indxNorth]) {
+							actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+						}
+					}
+				}
+			}
+		}
+
+		//West
+		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
+			iminus = i - 1;
+			indxWest = x_new(iminus, j, length);
+			label = labelArray[k][indxWest];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				coefSpeed = potentialFuncPtr[k][indxWest];
+				dWest = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[k][indxWest] = 2;
+					
+					//Point3D pWest = { iminus, j, k };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pWest);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pWest;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[k][indxWest] = 0;
+					//	dWest = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
+
+					actionMapStr.imageDataPtr[k][indxWest] = dWest;
+					pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+					addPointHeap3D(inProcess, WestNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dWest < actionMapStr.imageDataPtr[k][indxWest]) {
+							actionMapStr.imageDataPtr[k][indxWest] = dWest;
+						}
+					}
+				}
+			}
+		}
+
+		//South
+		if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
+			jplus = j + 1;
+			indxSouth = x_new(i, jplus, length);
+			label = labelArray[k][indxSouth];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				coefSpeed = potentialFuncPtr[k][indxSouth];
+				dSouth = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[k][indxSouth] = 2;
+					
+					//Point3D pSouth = { i, jplus, k };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pSouth);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pSouth;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[k][indxSouth] = 0;
+					//	dSouth = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
+
+					actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+					pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+					addPointHeap3D(inProcess, SouthNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
+							actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+						}
+					}
+				}
+			}
+		}
+
+		//Bottom
+		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
+			kplus = k + 1;
+			label = labelArray[kplus][currentIndx];
+			if (label != 1) {
+				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				coefSpeed = potentialFuncPtr[kplus][currentIndx];
+				dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+				if (label == 3) {
+					labelArray[kplus][currentIndx] = 2;
+					
+					//Point3D pBottom = { i, j, kplus };
+					//distanceToCurrentSourcePoint = getPoint3DDistance(currentSourcePoint, pBottom);
+					//if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+					//	currentSourcePoint = pBottom;
+					//	listOfSourcePoint.push_back(currentSourcePoint);
+					//	key_points.push_back(currentSourcePoint);
+					//	actionMapStr.imageDataPtr[kplus][currentIndx] = 0;
+					//	dBottom = 0;
+					//	////Empty the alive points
+					//	//while (inProcess.size() != 0) {
+					//	//	deleteRootHeap3D(inProcess);
+					//	//}
+					//	while (inProcess.size() != 0) {
+					//		inProcess.pop_back();
+					//	}
+					//}
+
+					actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+					pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+					addPointHeap3D(inProcess, BottomNeighbor);					
+				}
+				else {
+					if (label == 2) {
+						if (dBottom < actionMapStr.imageDataPtr[kplus][currentIndx]) {
+							actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+						}
+					}
+				}
+			}
+		}
+
+	}
+	
+	key_points.push_back(seedPoint[1]);
+	std::cout << "The source Points are: " << std::endl;
+	for (int nb = 0; nb < key_points.size(); nb++) {
+		std::cout << "Point " << nb + 1 << " : " << key_points[nb].x << " " << key_points[nb].y << " " << key_points[nb].z << std::endl;
+	}
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+				actionMapStr.imageDataPtr[k][i] = max_weighted_distance + 1;
 			}
 		}
 	}
 
+	for (k = 0; k < height; k++) {
+		delete[] labelArray[k];
+	}
+	delete[] labelArray;
+
 	return true;
 }
-*/
