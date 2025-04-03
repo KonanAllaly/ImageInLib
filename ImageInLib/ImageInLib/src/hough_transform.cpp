@@ -82,53 +82,8 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 		}
 	}
 
-	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
-	//manageRAWFile2D<dataType>(maskThreshold, length, width, outputPath.c_str(), STORE_DATA, false);
-
-	////copy edge detector to mask threshold
-	//initialize2dArray(maskThreshold, length, width);
-	//copyDataToAnother2dArray(edgeDetector, maskThreshold, length, width);
-	////thresholding of the edge detector
-	//thresholding2DFunction(maskThreshold, length, width, params.thres, params.thres);
-
-	/*
-	//==================
-	//create mask in threshold for second circle detection
-	//double r_max = 8.5; //--> P2
-	//Point2D mask_center = { 294, 315 };
-	//double r_max = 12.0; //--> P3
-	//Point2D mask_center = { 252, 252 }; //--> P3
-	//double r_max = 9.0; //--> P1
-	//Point2D mask_center = { 279, 296 }; //--> P1
-	//double r_max = 14.0; //--> P4
-	//Point2D mask_center = { 255, 222 }; //--> P4
-	//double r_max = 12.0; //--> P5
-	//Point2D mask_center = { 270, 233 }; //--> P5
-	//double r_max = 12.5; //--> P6
-	//Point2D mask_center = { 281, 284 }; //--> P6
-	//double r_max = 13.5; //--> P7
-	//Point2D mask_center = { 249, 294 }; //--> P7
-	//double r_max = 12.0; //--> P2 : automatic
-	//Point2D mask_center = { 254, 248 }; //--> P2 automatic
-	//double r_max = 13.5; //--> P2 : for poster (v1)
-	//Point2D mask_center = { 253, 248 }; //--> P2 for poster (v1)
-	//double r_max = 12; //--> P2 : for poster
-	//Point2D mask_center = { 292, 314 }; //--> P2 for poster
-	double r_max = 14; //--> P4 : for poster
-	Point2D mask_center = { 287, 288 }; //--> P4 for poster
-	mask_center = getRealCoordFromImageCoord2D(mask_center, originImage, params.spacing, orientation);
-	for (i = 0; i < length; i++) {
-		for (j = 0; j < width; j++) {
-			Point2D current_point_mask = { (dataType)i, (dataType)j };
-			current_point_mask = getRealCoordFromImageCoord2D(current_point_mask, originImage, params.spacing, orientation);
-			double dis_mask = getPoint2DDistance(mask_center, current_point_mask);
-			if (dis_mask <= r_max) {
-				maskThreshold[x_new(i, j, length)] = 1.0;
-			}
-		}
-	}
-	//==================
-	*/
+	std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
+	manageRAWFile2D<dataType>(maskThreshold, length, width, outputPath.c_str(), STORE_DATA, false);
 
 	initialize2dArray(foundCirclePtr, length, width);
 
@@ -283,8 +238,6 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 	//copy back
 	copyDataToAnother2dArray(houghSpaceMax, houghSpacePtr, length, width);
 
-	//max_ratio = getTheMaxValue(houghSpaceMax, length, width);
-
 	//Draw search domain
 	box = findBoundingBox2D(seed, length, width, params.radius_max, params.offset);
 	for (size_t i = box.i_min; i <= box.i_max; i++) {
@@ -294,9 +247,6 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 			}
 		}
 	}
-
-	////add the seed
-	//imageDataPtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 0.0;
 
 	free(edgeDetector);
 	free(maskThreshold);
@@ -918,7 +868,7 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 	return true;
 }
 
-Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, const HoughParameters hParameters) {
+Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters) {
 
 	//if (imageDataPtr.imageDataPtr == NULL)
 	//{
@@ -1139,4 +1089,22 @@ Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, 
 	Point2D imageCentroid = { x / counts, y / counts };
 	
 	return imageCentroid;
+}
+
+bool isCurrentSliceLiverSlice(dataType* imageDataPtr, size_t length, size_t width, size_t indSlice, dataType foreGroundValue) {
+	
+	if (imageDataPtr == NULL) {
+		return false;
+	}
+
+	bool findForeGroundPixel = false;
+
+	for (size_t i = 0; i < length * width; i++) {
+		if (imageDataPtr[i] == foreGroundValue) {
+			findForeGroundPixel = true;
+			break;
+		}
+	}
+
+	return findForeGroundPixel;
 }
