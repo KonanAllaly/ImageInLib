@@ -3409,8 +3409,8 @@ int main() {
 		maskAorta[k] = new dataType[dim2D]{ 0 };
 	}
 	 
-	loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 	
@@ -3428,9 +3428,9 @@ int main() {
 		maskInterpolation[k] = new dataType[dim2D]{ 0 };
 	}
 	Image_Data interpolatedImageData = { hauteur, Length, Width, interpolatedImage, ctOrigin, intSpacing, orientation };
-	imageInterpolation3D(inputImageData, interpolatedImageData, NEAREST_NEIGHBOR);
+	//imageInterpolation3D(inputImageData, interpolatedImageData, NEAREST_NEIGHBOR);
 	//==========================================================
-	
+	*/
 	
 	////p1
 	////Croping
@@ -3441,7 +3441,6 @@ int main() {
 	//size_t width = 150;
 	//size_t height = 350; // 380 for new
 	
-	
 	////p2
 	////Croping
 	//size_t i_min = 190;
@@ -3451,14 +3450,14 @@ int main() {
 	//size_t width = 150;
 	//size_t height = 350;
 
-	//p3
-	//Croping
-	size_t i_min = 190;
-	size_t j_min = 180;
-	size_t k_min = 260;
-	size_t length = 150;
-	size_t width = 150;
-	size_t height = 380;
+	////p3
+	////Croping
+	//size_t i_min = 190;
+	//size_t j_min = 180;
+	//size_t k_min = 260;
+	//size_t length = 150;
+	//size_t width = 150;
+	//size_t height = 380;
 
 	////p4
 	////Croping
@@ -3477,7 +3476,6 @@ int main() {
 	//size_t width = 160;
 	//size_t height = 360;
 	
-	
 	////p6
 	//size_t i_min = 180;
 	//size_t j_min = 245;
@@ -3486,7 +3484,7 @@ int main() {
 	//size_t width = 150;
 	//size_t height = 400;
 	
-	
+	/*
 	std::cout << "============ Cropped ================ " << std::endl;
 	
 	std::cout << "New dimensions : Length = " << length << ", Width = " << width << ", Height = " << height << std::endl;
@@ -3495,8 +3493,9 @@ int main() {
 	Point3D newOrigin = { i_min, j_min, k_min };
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
+	*/
 	
-	
+	/*
 	dataType** imageCrop = new dataType * [height];
 	dataType** initialSegment = new dataType * [height];
 	dataType** maskSegment = new dataType * [height];
@@ -3515,8 +3514,9 @@ int main() {
 			}
 		}
 	}
-	////==========================================================
 	*/
+	////==========================================================
+	
 
 	/*
 	//========== Downsampling =============================
@@ -3541,42 +3541,47 @@ int main() {
 	*/
 	
 	/*
-	//FILE* path_file;
-	//loading_path = inputPath + "paths/path segmentation/centered_path_p3.csv";
-	//if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
+	FILE* path_file;
+	//loading_path = inputPath + "paths/path segmentation/centered_path_p1.csv";
+	loading_path = inputPath + "paths/automatic key points/centered/path_p2.csv";
+	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
 
-	//dataType x = 0, y = 0, z = 0;
-	//vector<Point3D> path_points;
-	//while (feof(path_file) == 0) {
-	//	fscanf_s(path_file, "%f", &x);
-	//	fscanf_s(path_file, ",");
-	//	fscanf_s(path_file, "%f", &y);
-	//	fscanf_s(path_file, ",");
-	//	fscanf_s(path_file, "%f", &z);
-	//	fscanf_s(path_file, "\n");
-	//	Point3D current_point = { x, y, z };
-	//	current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
-	//	path_points.push_back(current_point);
-	//	maskSegment[(size_t)current_point.z][x_new((size_t)current_point.x, (size_t)current_point.y, length)] = 1.0;
-	//}
-	//fclose(path_file);
+	dataType x = 0, y = 0, z = 0;
+	vector<Point3D> path_points;
+	while (feof(path_file) == 0) {
+		fscanf_s(path_file, "%f", &x);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &y);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &z);
+		fscanf_s(path_file, "\n");
+		Point3D current_point = { x, y, z };
+		current_point = getImageCoordFromRealCoord3D(current_point, newOrigin, intSpacing, orientation);
+		path_points.push_back(current_point);
+		maskSegment[(size_t)current_point.z][x_new((size_t)current_point.x, (size_t)current_point.y, length)] = 1.0;
+	}
+	fclose(path_file);
 
-	//Image_Data toDistanceMap = { height, length, width, maskSegment, newOrigin, intSpacing, orientation };
-	//rouyTourinDistanceMap(toDistanceMap, initialSegment, 0, 0.5, 0.4);
+	Image_Data toDistanceMap = { height, length, width, maskSegment, newOrigin, intSpacing, orientation };
+	rouyTourinDistanceMap(toDistanceMap, initialSegment, 0, 0.5, 0.4);
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			initialSegment[k][x_new(i, j, length)] = 1.0 / (initialSegment[k][x_new(i, j, length)] + 1.0);
-	//		}
-	//	}
-	//}
+	storing_path = outputPath + "distance_map_p2.raw";
+	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	storing_path = outputPath + "initial_segment_p3.raw";
-	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				initialSegment[k][x_new(i, j, length)] = 1.0 / (initialSegment[k][x_new(i, j, length)] + 1.0);
+			}
+		}
+	}
+
+	storing_path = outputPath + "initial_segment_p2.raw";
+	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	*/
 	
 	//////generate the initial segment
 	//double radius = 25;
@@ -3639,7 +3644,7 @@ int main() {
 
 	//==================== GSUBSURF ===========================
 
-	
+	/*
 	Segmentation_Parameters segParameters = {
 		30,//Maximum number of Gauss-Seidel iterations
 		100000,//edge detector coef
@@ -3674,7 +3679,7 @@ int main() {
 	Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
 	//Image_Data segmentInputData = { h, l, w, imageDown, newOrigin, downSpacing, orientation };
 	
-	storing_path = outputPath + "segmentation/3D image/p3/23-03-2025/";
+	storing_path = outputPath + "segmentation/3D image/p2/31-03-2025/";
 	double cpu_start = clock();
 	generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
 	//generalizedSubsurfSegmentation(segmentInputData, initial_segment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
@@ -3701,26 +3706,26 @@ int main() {
 	delete[] imageCrop;
 	delete[] initialSegment;
 	delete[] maskSegment;
-	
-	for (k = 0; k < hauteur; k++) {
-		delete[] interpolatedImage[k];
-		delete[] maskInterpolation[k];
-	}
-	delete[] interpolatedImage;
-	delete[] maskInterpolation;
-	
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] maskAorta[k];
-	}
-	delete[] imageData;
-	delete[] maskAorta;
-	free(ctContainer);
 	*/
+	
+	//for (k = 0; k < hauteur; k++) {
+	//	delete[] interpolatedImage[k];
+	//	delete[] maskInterpolation[k];
+	//}
+	//delete[] interpolatedImage;
+	//delete[] maskInterpolation;
+	//
+	//for (k = 0; k < Height; k++) {
+	//	delete[] imageData[k];
+	//	delete[] maskAorta[k];
+	//}
+	//delete[] imageData;
+	//delete[] maskAorta;
+	//free(ctContainer);
 	
 	//============== Test penalized front propagation ====================================
 	
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -3871,26 +3876,26 @@ int main() {
 	delete[] actionMap;
 
 	free(ctContainer);
-	
+	*/
 
 	//==================== Compute Hausdoff distance and Ratio ===========================
 	
 	/*
 	dataType img_f, n0, n1, n2, nmg, x, y, z, ptmg, ptid, scal;
 	char header[MAX_LINE_LENGTH];
+	string inputPointCloud = inputPath + "vtk/petct/aorta/Hausdoff 31-03/Isolines/";
 
 	FILE* file_hausdoff;
-	//storing_path = outputPath + "hausdoff_distance_isoline01.csv";
-	storing_path = outputPath + "hausdoff_distance_isoline025.csv";
-	//storing_path = outputPath + "hausdoff_distance_isoline05.csv";
+	storing_path = inputPointCloud + "h distance/hausdoff_distance_patient2.csv";
 	if (fopen_s(&file_hausdoff, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 	fprintf(file_hausdoff, "manual,gsubsurf,HD,ratio,mean_manual,mean_gsubsurf,MHD,ratio_mean\n");
 
+	
 	FILE* file_manual;
-	loading_path = inputPath + "vtk/petct/aorta/Hausdoff 24-03/ground_truth.csv";
+	loading_path = inputPointCloud + "manual/_patient_2.csv";
 	if (fopen_s(&file_manual, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -3898,18 +3903,10 @@ int main() {
 	fgets(header, MAX_LINE_LENGTH, file_manual);
 	fscanf_s(file_manual, ",");
 
+	
 	vector<Point3D> points_manual;
 	while (feof(file_manual) == 0) {
-		
-		//fscanf_s(file_manual, "%f", &x);
-		//fscanf_s(file_manual, ",");
-		//fscanf_s(file_manual, "%f", &y);
-		//fscanf_s(file_manual, ",");
-		//fscanf_s(file_manual, "%f", &z);
-		//fscanf_s(file_manual, "\n");
 
-		//fscanf_s(file_manual, "%f", &img_f);
-		//fscanf_s(file_manual, ","); //=====> missing line in the file
 		fscanf_s(file_manual, "%f", &n0);
 		fscanf_s(file_manual, ",");
 		fscanf_s(file_manual, "%f", &n1);
@@ -3939,11 +3936,124 @@ int main() {
 	}
 	fclose(file_manual);
 
-	//std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 01/step_";
-	std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 025/step_";
-	//std::string path_root = inputPath + "vtk/petct/aorta/Hausdoff 24-03/Isoline 05/step_";
+
+
 	vector<Point3D>points_gsubsurf;
 
+	FILE* file_gsubsurf;
+	//std::string path_root = inputPointCloud + "gsubsurf/_02_patient_1.csv";
+	std::string path_root = inputPointCloud + "gsubsurf/_02_patient_2.csv";
+	//std::string path_root = inputPointCloud + "gsubsurf/_03_patient_3.csv";
+	//std::string path_root = inputPointCloud + "gsubsurf/_03_patient_4.csv";
+	//std::string path_root = inputPointCloud + "gsubsurf/_017_patient_5.csv";
+	//std::string path_root = inputPointCloud + "gsubsurf/_03_patient_6.csv";
+	if (fopen_s(&file_gsubsurf, path_root.c_str(), "r") != 0) {
+		printf("Enable to open the file");
+		return false;
+	}
+	fgets(header, MAX_LINE_LENGTH, file_gsubsurf);
+	fscanf_s(file_gsubsurf, ",");
+
+	while (feof(file_gsubsurf) == 0) {
+
+		fscanf_s(file_gsubsurf, "%f", &img_f);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &n0);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &n1);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &n2);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &nmg);
+		fscanf_s(file_gsubsurf, ",");
+
+		fscanf_s(file_gsubsurf, "%f", &x);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &y);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &z);
+		fscanf_s(file_gsubsurf, ",");
+
+		fscanf_s(file_gsubsurf, "%f", &ptmg);
+		fscanf_s(file_gsubsurf, ",");
+		fscanf_s(file_gsubsurf, "%f", &ptid);
+
+		fscanf_s(file_gsubsurf, "\n");
+
+		Point3D current_point = { x, y, z };
+		points_gsubsurf.push_back(current_point);
+	}
+	fclose(file_gsubsurf);
+
+	size_t count_similar = 0;
+
+	double max_manual = 0.0;
+	double max_gsubsurf = 0.0;
+	double mean_manual = 0.0;
+	double mean_gsubsurf = 0.0;
+	for (int mn = 0; mn < points_manual.size(); mn++) {
+		double min_distance = 1000000000000000000000.0;
+		for (int gs = 0; gs < points_gsubsurf.size(); gs++) {
+			double pDistance = getPoint3DDistance(points_manual[mn], points_gsubsurf[gs]);
+			if (min_distance > pDistance) {
+				min_distance = pDistance;
+			}
+		}
+		if (max_manual < min_distance) {
+			max_manual = min_distance;
+		}
+		if (min_distance <= 1.171875) {
+			count_similar++;
+		}
+		mean_manual += min_distance;
+	}
+
+	for (int gs = 0; gs < points_gsubsurf.size(); gs++) {
+		double min_distance = 1000000000000000000000.0;
+		for (int mn = 0; mn < points_manual.size(); mn++) {
+			double pDistance = getPoint3DDistance(points_manual[mn], points_gsubsurf[gs]);
+			if (min_distance > pDistance) {
+				min_distance = pDistance;
+			}
+		}
+		if (max_gsubsurf < min_distance) {
+			max_gsubsurf = min_distance;
+		}
+		mean_gsubsurf += min_distance;
+	}
+
+	size_t count_manual = points_manual.size();
+	size_t count_gsubsurf = points_gsubsurf.size();
+	mean_manual /= count_manual;
+	mean_gsubsurf /= count_gsubsurf;
+	dataType ratio = 0.0;
+	dataType ratio_mean = 0.0;
+	ratio = max_gsubsurf / max_manual;
+	ratio_mean = mean_gsubsurf / mean_manual;
+
+	dataType HD = 0, MHD = 0;
+	if (max_manual >= max_gsubsurf) {
+		HD = max_manual;
+	}
+	else {
+		HD = max_gsubsurf;
+	}
+	if (mean_manual >= mean_gsubsurf) {
+		MHD = mean_manual;
+	}
+	else {
+		MHD = mean_gsubsurf;
+	}
+
+	std::cout << "We have : " << count_manual << " point in the manual segmentation" << std::endl;
+	std::cout << "We have : " << count_gsubsurf << " point in the segmentation" << std::endl;
+	std::cout << "We have : " << count_similar << " similar_points" << std::endl;
+
+	fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
+	fclose(file_hausdoff);
+	*/
+
+	/*
 	for (size_t n = 1; n <= 40; n++) {
 
 		FILE* file_gsubsurf;
@@ -4055,8 +4165,223 @@ int main() {
 
 	}
 	fclose(file_hausdoff);
-	
 	*/
+
+	//==================== Test new fast marching ========================================
+
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** action = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+	}
+
+	////Patient1
+	//Point3D seed1 = { 262, 255, 147 };
+	//Point3D seed2 = { 263, 252, 245 };
+	//imageData[147][x_new(262, 255, Length)] = 1.0;
+	//imageData[245][x_new(263, 252, Length)] = 1.0;
+
+	dataType foregroundValue = 0;
+
+	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	thresholding3dFunctionN(imageData, Length, Width, Height, -900, -200, 0.0, 1.0);
+
+	//storing_path = outputPath + "threshold.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Image_Data toActionMap = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+	//fastMarching3dForDistanceMap(toActionMap, action, potential, foregroundValue);
+
+	rouyTourinDistanceMap(toActionMap, action, foregroundValue, 0.5, 0.4);
+
+	storing_path = outputPath + "distance_map_RT.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] action[k];
+		delete[] potential[k];
+	}
+	delete[] imageData;
+	delete[] action;
+	delete[] potential;
+
+	*/
+
+	//==================== Aorta bifurcation detection ===================================
+
+	dataType** imageData = new dataType * [Height];
+	dataType** liverData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		liverData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//loading_path = inputPath + "raw/liver/liver_p1.raw";
+	//manageRAWFile3D<dataType>(liverData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	FILE* liver_points;
+	storing_path = outputPath + "liver_centers.csv";
+	if (fopen_s(&liver_points, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	storing_path = outputPath + "found_centers.csv";
+	FILE* pFound_points;
+	if (fopen_s(&pFound_points, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* liverSlice = new dataType[dim2D]{ 0 };
+	dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
+	dataType* houghSpacePtr = new dataType[dim2D]{ 0 };
+	Point2D pOrigin = { 0.0, 0.0 };
+	PixelSpacing pSpacing = {ctSpacing.sx, ctSpacing.sy};
+	OrientationMatrix2D pOrientation = { {1.0, 0.0}, { 0.0, 1.0 } };
+	Image_Data2D sliceData = { Length, Width, imageSlice, pOrigin, pSpacing, pOrientation};
+	dataType imageBackground = 0.0;
+	dataType foreGroundValue = 1.0;
+	
+	HoughParameters hParameters =
+	{
+		7.5,   //minimal radius
+		20.0,  //maximal radius
+		0.5,   //radius step
+		0.5,   //epsilon
+		60,   //offset 
+		1000,  //K edge detector coefficient
+		0.15,  //threshold edge detector
+	};
+
+	Point2D found_point = { 0.0, 0.0 };
+	//Point2D liver_centroid = { 0.0, 0.0 };
+	BoundingBox2D boxLiver;
+	size_t count_liver_slices = 0;
+
+	for (k = 126; k <= 245; k++) {
+		
+		copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
+		//storing_path = outputPath + "inputSlice.raw";
+		//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+		
+		/*
+		copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
+		//storing_path = outputPath + "liverSlice.raw";
+		//manageRAWFile2D(liverSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+		bool findSeed = isCurrentSliceLiverSlice(liverSlice, Length, Width, k, foreGroundValue);
+		if (findSeed == true) {
+
+			extension = to_string(k);
+
+			liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
+			
+			//std::cout << "Found centroid : " << liver_centroid.x << " " << liver_centroid.y << std::endl;
+			//found_point = localHoughTransform(sliceData, liver_centroid, houghSpacePtr, foundCirclePtr, hParameters);
+			
+			storing_path = outputPath + "threshold/thres_slice_" + extension + ".raw";
+			found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
+
+			//Draw Hough bounding box
+			boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+			for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
+				for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
+					if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
+						imageSlice[x_new(ix, jy, Length)] = 1.0;
+					}
+				}
+			}
+
+			if (found_point.x != 0.0 && found_point.y != 0.0) {
+				
+				Point3D pSeed = { found_point.x, found_point.y, k };
+				pSeed = getRealCoordFromImageCoord3D(pSeed, ctOrigin, ctSpacing, orientation);
+				fprintf(pFound_points, "%f,%f,%f\n", pSeed.x, pSeed.y, pSeed.z);
+				imageSlice[x_new((size_t)found_point.x, (size_t)found_point.y, Length)] = 1.0;
+
+			}
+
+			Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
+			pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
+			fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
+			imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
+			
+			count_liver_slices++;
+
+			//extension = to_string(k);
+			storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
+			manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+		}
+		*/
+
+		extension = to_string(k);
+
+		//liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
+		Point2D liver_centroid = { 256.0, 256.0 };
+
+		//std::cout << "Found centroid : " << liver_centroid.x << " " << liver_centroid.y << std::endl;
+		//found_point = localHoughTransform(sliceData, liver_centroid, houghSpacePtr, foundCirclePtr, hParameters);
+
+		storing_path = outputPath + "threshold/thres_slice_" + extension + ".raw";
+		found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
+
+		//Draw Hough bounding box
+		boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+		for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
+			for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
+				if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
+					imageSlice[x_new(ix, jy, Length)] = 1.0;
+				}
+			}
+		}
+
+		if (found_point.x != 0.0 && found_point.y != 0.0) {
+
+			Point3D pSeed = { found_point.x, found_point.y, k };
+			pSeed = getRealCoordFromImageCoord3D(pSeed, ctOrigin, ctSpacing, orientation);
+			fprintf(pFound_points, "%f,%f,%f\n", pSeed.x, pSeed.y, pSeed.z);
+			imageSlice[x_new((size_t)found_point.x, (size_t)found_point.y, Length)] = 1.0;
+
+		}
+
+		//Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
+		//pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
+		//fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
+		//imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
+
+		count_liver_slices++;
+
+		//extension = to_string(k);
+		storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
+		manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	}
+	std::cout << "We have " << count_liver_slices << " slices containing the Liver" << std::endl;
+	fclose(liver_points);
+	fclose(pFound_points);
+
+	delete[] imageSlice;
+	delete[] liverSlice;
+	delete[] foundCirclePtr;
+	delete[] houghSpacePtr;
+
+	for (k = 0; k < Height; k++) {
+		delete imageData[k];
+		delete liverData[k];
+	}
+	delete[] imageData;
+	delete[] liverData;
 
 	return EXIT_SUCCESS;
 }
