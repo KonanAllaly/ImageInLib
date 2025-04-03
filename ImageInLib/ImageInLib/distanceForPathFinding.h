@@ -352,3 +352,7 @@ using namespace std;
 	bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPtr, dataType** potentialFuncPtr, Point3D* seedPoints);
 
 	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& path_points);
+
+	//==================================
+
+	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr);

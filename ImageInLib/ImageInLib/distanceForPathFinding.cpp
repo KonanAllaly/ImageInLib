@@ -4920,3 +4920,410 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	return true;
 }
+
+//=======================================
+
+bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr) {
+
+	if (ctImageData.imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL) {
+		return false;
+	}
+
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
+	const size_t height = ctImageData.height;
+	VoxelSpacing spacing = ctImageData.spacing;
+
+	vector <pointFastMarching3D> inProcess;
+
+	size_t** labelArray = new size_t * [height];
+	for (size_t k = 0; k < height; k++) {
+		labelArray[k] = new size_t[length * width]{ 0 };
+	}
+	if (labelArray == NULL)
+		return false;
+
+	//Initialization : Proceed the sources points
+	//All the points are notProcessed ---> label = 3
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				
+				size_t xd = x_new(i, j, length);
+				if (ctImageData.imageDataPtr[k][xd] == 0.0) {
+					distanceFuncPtr[k][xd] = 0.0;
+					labelArray[k][xd] = 1;
+				}
+				else {
+					distanceFuncPtr[k][xd] = INFINITY;
+					labelArray[k][xd] = 3;
+				}
+
+			}
+		}
+	}
+
+	////find the neighbours of the initial point add add them to inProcess
+	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
+	
+
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				
+				size_t xd = x_new(i, j, length);
+				
+
+				if (labelArray[k][xd] == 1) {
+					
+					//Top
+					if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+						size_t kminus = k - 1;
+						size_t label = labelArray[kminus][xd];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kminus);
+							dataType coefSpeed = 1.0;//potentialFuncPtr[kminus][currentIndx];
+							dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) { //this condition is necessary because source point can be neighbors
+								pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+								inProcess.push_back(TopNeighbor);
+								distanceFuncPtr[kminus][xd] = dTop;
+								labelArray[kminus][xd] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[kminus][xd] > dTop) {
+										distanceFuncPtr[kminus][xd] = dTop;
+									}
+								}
+							}
+						}
+					}
+
+					//East
+					if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
+						size_t iplus = i + 1;
+						size_t indxEast = x_new(iplus, j, length);
+						size_t label = labelArray[k][indxEast];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
+							size_t coefSpeed = 1.0;//potentialFuncPtr[k][indxEast];
+							size_t dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) {
+								pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+								inProcess.push_back(EastNeighbor);
+								distanceFuncPtr[k][indxEast] = dEast;
+								labelArray[k][indxEast] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[k][indxEast] > dEast) {
+										distanceFuncPtr[k][indxEast] = dEast;
+									}
+								}
+							}
+						}
+					}
+
+					//North
+					if (k >= 0 && k < height && j > 0 && i >= 0 && i < length) {
+						size_t jminus = j - 1;
+						size_t indxNorth = x_new(i, jminus, length);
+						size_t label = labelArray[k][indxNorth];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jminus, k);
+							dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxNorth];
+							dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) {
+								pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+								inProcess.push_back(NorthNeighbor);
+								distanceFuncPtr[k][indxNorth] = dNorth;
+								labelArray[k][indxNorth] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[k][indxNorth] > dNorth) {
+										distanceFuncPtr[k][indxNorth] = dNorth;
+									}
+								}
+							}
+						}
+						
+					}
+
+					//West
+					if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
+						size_t iminus = i - 1;
+						size_t indxWest = x_new(iminus, j, length);
+						size_t label = labelArray[k][indxWest];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
+							dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxWest];
+							dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) {
+								pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+								inProcess.push_back(WestNeighbor);
+								distanceFuncPtr[k][indxWest] = dWest;
+								labelArray[k][indxWest] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[k][indxWest] > dWest) {
+										distanceFuncPtr[k][indxWest] = dWest;
+									}
+								}
+							}
+						}
+					}
+
+					//South
+					if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
+						size_t jplus = j + 1;
+						size_t indxSouth = x_new(i, jplus, length);
+						size_t label = labelArray[k][indxSouth];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
+							dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxSouth];
+							dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) {
+								pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+								inProcess.push_back(SouthNeighbor);
+								distanceFuncPtr[k][indxSouth] = dSouth;
+								labelArray[k][indxSouth] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[k][indxSouth] > dSouth) {
+										distanceFuncPtr[k][indxSouth] = dSouth;
+									}
+								}
+							}
+						}
+						
+					}
+
+					//Bottom
+					if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
+						size_t kplus = k + 1;
+						size_t label = labelArray[kplus][xd];
+						if (label != 1) {
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
+							dataType coefSpeed = 1.0;//potentialFuncPtr[kplus][xd];
+							dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+							if (label == 3) {
+								pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+								inProcess.push_back(BottomNeighbor);
+								distanceFuncPtr[kplus][xd] = dBottom;
+								labelArray[kplus][xd] = 2;
+							}
+							else {
+								if (label == 2) {
+									if (distanceFuncPtr[kplus][xd] > dBottom) {
+										distanceFuncPtr[kplus][xd] = dBottom;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	heapifyVector3D(inProcess);
+
+	int l = 0, m = 0;
+
+	while (inProcess.size() != 0) {
+
+		//processed the point with minimum distance
+		pointFastMarching3D current = inProcess[0];
+		size_t i = current.x;
+		size_t j = current.y;
+		size_t k = current.z;
+		size_t currentIndx = x_new(i, j, length);
+		labelArray[k][currentIndx] = 1;
+		distanceFuncPtr[k][currentIndx] = current.arrival;
+		deleteRootHeap3D(inProcess);
+
+		//Top
+		if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+			size_t kminus = k - 1;
+			size_t label = labelArray[kminus][currentIndx];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kminus);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[kminus][currentIndx];
+				dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[kminus][currentIndx] = dTop;
+					labelArray[kminus][currentIndx] = 2;
+					pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+					addPointHeap3D(inProcess, TopNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dTop < distanceFuncPtr[kminus][currentIndx]) {
+							distanceFuncPtr[kminus][currentIndx] = dTop;
+						}
+					}
+				}
+			}
+		}
+
+		//East
+		if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			size_t label = labelArray[k][indxEast];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxEast];
+				dataType dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[k][indxEast] = dEast;
+					labelArray[k][indxEast] = 2;
+					pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+					addPointHeap3D(inProcess, EastNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dEast < distanceFuncPtr[k][indxEast]) {
+							distanceFuncPtr[k][indxEast] = dEast;
+						}
+					}
+				}
+			}
+		}
+
+		//North
+		if (j > 0 && i >= 0 && i < length && k >= 0 && k < height) {
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			size_t label = labelArray[k][indxNorth];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jminus, k);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxNorth];
+				dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[k][indxNorth] = dNorth;
+					labelArray[k][indxNorth] = 2;
+					pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+					addPointHeap3D(inProcess, NorthNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dNorth < distanceFuncPtr[k][indxNorth]) {
+							distanceFuncPtr[k][indxNorth] = dNorth;
+						}
+					}
+				}
+			}
+		}
+
+		//West
+		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			size_t label = labelArray[k][indxWest];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxWest];
+				dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[k][indxWest] = dWest;
+					labelArray[k][indxWest] = 2;
+					pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+					addPointHeap3D(inProcess, WestNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dWest < distanceFuncPtr[k][indxWest]) {
+							distanceFuncPtr[k][indxWest] = dWest;
+						}
+					}
+				}
+			}
+		}
+
+		//South
+		if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			size_t label = labelArray[k][indxSouth];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[k][indxSouth];
+				dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[k][indxSouth] = dSouth;
+					labelArray[k][indxSouth] = 2;
+					pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+					addPointHeap3D(inProcess, SouthNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dSouth < distanceFuncPtr[k][indxSouth]) {
+							distanceFuncPtr[k][indxSouth] = dSouth;
+						}
+					}
+				}
+			}
+		}
+
+		//Bottom
+		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
+			size_t kplus = k + 1;
+			size_t label = labelArray[kplus][currentIndx];
+			if (label != 1) {
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
+				dataType coefSpeed = 1.0;//potentialFuncPtr[kplus][currentIndx];
+				dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					distanceFuncPtr[kplus][currentIndx] = dBottom;
+					labelArray[kplus][currentIndx] = 2;
+					pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+					addPointHeap3D(inProcess, BottomNeighbor);
+				}
+				else {
+					if (label == 2) {
+						if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
+							distanceFuncPtr[kplus][currentIndx] = dBottom;
+						}
+					}
+				}
+			}
+		}
+
+	}
+	
+	for (size_t k = 0; k < height; k++) {
+		delete[] labelArray[k];
+	}
+	delete[] labelArray;
+
+	return true;
+}
