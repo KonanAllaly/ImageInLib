@@ -62,6 +62,8 @@ void houghTransform(Image_Data2D imageDataStr, dataType* foundCirclePtr, HoughPa
 
 bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters);
 
-Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, const HoughParameters hParameters);
+Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters);
 
 Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, dataType imageBackground);
+
+bool isCurrentSliceLiverSlice(dataType* imageDataPtr, size_t length, size_t width, size_t indSlice, dataType foreGroundValue);
