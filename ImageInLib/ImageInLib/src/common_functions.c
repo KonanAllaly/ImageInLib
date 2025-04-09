@@ -581,12 +581,6 @@ bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t len
 		return false;
 	}
 
-
-	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2)
-	{
-		return false;
-	}
-
 	size_t x = ind_x, y = ind_y, z = ind_z;
 	if (x >= width)
 	{
@@ -653,6 +647,69 @@ bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t len
 	grad->z = dz;
 
 	return true;
+}
+
+//==============================================================================
+
+HessianMatrix getHessianMatrix3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume)
+{
+	HessianMatrix hessian_matrix = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	
+	if (imageDataPtr == NULL || fVolume.sx == 0 || fVolume.sy == 0 || fVolume.sz == 0 ||
+		ind_x == 0 || ind_y == 0 || ind_z == 0 ||
+		ind_x == length - 1 || ind_y == width - 1 || ind_z == height - 1)
+	{
+		return;
+	}
+	
+	size_t i = ind_x, j = ind_y, k = ind_z;
+
+	size_t iplus = i + 1, iminus = i - 1;
+	size_t jplus = j + 1, jminus = j - 1;
+	size_t kplus = k + 1, kminus = k - 1;
+
+	size_t ind_current = x_new(i, j, length);
+
+	//current slice
+	dataType u = imageDataPtr[k][ind_current];
+
+	dataType uN = imageDataPtr[k][x_new(i, jplus, length)];
+	dataType uS = imageDataPtr[k][x_new(i, jminus, length)];
+	dataType uT = imageDataPtr[kminus][ind_current];
+	dataType uB = imageDataPtr[kplus][ind_current];
+
+	dataType uNE = imageDataPtr[k][x_new(iminus, jplus, length)];
+	dataType uNW = imageDataPtr[k][x_new(iminus, jminus, length)];
+	dataType uSE = imageDataPtr[k][x_new(iplus, jplus, length)];
+	dataType uSW = imageDataPtr[k][x_new(iplus, jminus, length)];
+	
+	////Top slice
+	dataType uTE = imageDataPtr[kminus][x_new(iplus, j, length)];
+	dataType uTW = imageDataPtr[kminus][x_new(iminus, j, length)];
+	dataType uTS = imageDataPtr[kminus][x_new(i, jminus, length)];
+	dataType uTN = imageDataPtr[kminus][x_new(i, jplus, length)];
+	
+	//Bottom slice
+	
+	dataType uBN = imageDataPtr[kplus][x_new(iminus, j, length)];
+	dataType uBW = imageDataPtr[kplus][x_new(i, jminus, length)];
+	dataType uBE = imageDataPtr[kplus][x_new(i, jplus, length)];
+	dataType uBS = imageDataPtr[kplus][x_new(iplus, j, length)];
+
+	// Hessian Matrix
+	hessian_matrix.grad_xx = (uSE - 2 * u - uS) / (fVolume.sx * fVolume.sx);
+	hessian_matrix.grad_xy = (uSE - uNE - uSW + uNW) / (4 * fVolume.sx * fVolume.sy);
+	hessian_matrix.grad_xz = (uBS - uBN - uTE - uTW) / (4 * fVolume.sx * fVolume.sz);
+
+	hessian_matrix.grad_yx = (uSE - uNE - uSW + uNW) / (4 * fVolume.sx * fVolume.sy);
+	hessian_matrix.grad_yy = (uN - 2 * u + uS) / (fVolume.sy * fVolume.sy);
+	hessian_matrix.grad_yz = (uBE - uBW - uTN + uTS) / (4 * fVolume.sy * fVolume.sz);
+
+	hessian_matrix.grad_zx = (uBS - uBN - uTE - uTW) / (4 * fVolume.sx * fVolume.sz);
+	hessian_matrix.grad_zy = (uBE - uBW - uTN + uTS) / (4 * fVolume.sy * fVolume.sz);
+	hessian_matrix.grad_zz = (uT - 2 * u + uB) / (fVolume.sz * fVolume.sz);
+	
+	return hessian_matrix;
 }
 
 
