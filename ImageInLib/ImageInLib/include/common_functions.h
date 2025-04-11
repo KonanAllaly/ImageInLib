@@ -95,12 +95,6 @@ extern "C" {
 		dataType min_data, max_data, mean_data, sd_data, variance;
 	} Statistics;
 
-	typedef struct {
-		dataType grad_xx, grad_xy, grad_xz;
-		dataType grad_yx, grad_yy, grad_yz;
-		dataType grad_zx, grad_zy, grad_zz;
-	} HessianMatrix;
-
 	//==============================================================================
 	// Shapes Container
 	typedef struct {
@@ -238,8 +232,6 @@ extern "C" {
 	bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad);
 
 	bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume, Point3D* grad);
-
-	HessianMatrix getHessianMatrix3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume);
 
 #endif // !COMMON_FUNCTIONS
 
