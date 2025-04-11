@@ -159,6 +159,12 @@
     <Filter Include="Source Files\Cropping">
       <UniqueIdentifier>{70d2e55e-2560-45eb-82d5-200f87bcd642}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Linear Algebra">
+      <UniqueIdentifier>{53e76c99-37ed-4414-9f3d-ebb9cc979fab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Linear Algebra">
+      <UniqueIdentifier>{1594c4ac-7a54-46aa-b7dc-f9696c1186c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\transformations.c">
@@ -341,6 +347,9 @@
     <ClCompile Include="src\enhancement.c">
       <Filter>Source Files\Filtering</Filter>
     </ClCompile>
+    <ClCompile Include="src\eigen_systems.c">
+      <Filter>Source Files\Linear Algebra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -510,6 +519,9 @@
     </ClInclude>
     <ClInclude Include="include\enhancement.h">
       <Filter>Header Files\Filtering</Filter>
+    </ClInclude>
+    <ClInclude Include="include\eigen_systems.h">
+      <Filter>Header Files\Linear Algebra</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
