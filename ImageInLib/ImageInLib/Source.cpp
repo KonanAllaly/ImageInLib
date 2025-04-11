@@ -24,6 +24,8 @@
 #include "enhancement.h"
 #include "../src/fast_marching.h"
 #include "../src/non_linear_heat_equation.h"
+#include "eigen_systems.h"
+#include "../src/pca.h"
 
 #define MAX_LINE_LENGTH 1024
 
@@ -70,20 +72,21 @@ int main() {
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
 
-	////Find the minimum and maximum values to perform shiftting
-	//dataType minData = ctContainer->dataPointer[0][0];
-	//dataType maxData = ctContainer->dataPointer[0][0];
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (ctContainer->dataPointer[k][i] > maxData) {
-	//			maxData = ctContainer->dataPointer[k][i];
-	//		}
-	//		if (ctContainer->dataPointer[k][i] < minData) {
-	//			minData = ctContainer->dataPointer[k][i];
-	//		}
-	//	}
-	//}
-	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	//Find the minimum and maximum values to perform shiftting
+	dataType minData = ctContainer->dataPointer[0][0];
+	dataType maxData = ctContainer->dataPointer[0][0];
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (ctContainer->dataPointer[k][i] > maxData) {
+				maxData = ctContainer->dataPointer[k][i];
+			}
+			if (ctContainer->dataPointer[k][i] < minData) {
+				minData = ctContainer->dataPointer[k][i];
+			}
+		}
+	}
+	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	
 
 	//========================= Detect Heart region ==================================
 	
@@ -4213,7 +4216,8 @@ int main() {
 	*/
 
 	//==================== Aorta bifurcation detection ===================================
-
+	
+	
 	dataType** imageData = new dataType * [Height];
 	dataType** liverData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
@@ -4265,7 +4269,7 @@ int main() {
 	};
 
 	Point2D found_point = { 0.0, 0.0 };
-	//Point2D liver_centroid = { 0.0, 0.0 };
+	Point2D liver_centroid = { 0.0, 0.0 };
 	BoundingBox2D boxLiver;
 	size_t count_liver_slices = 0;
 
@@ -4275,7 +4279,7 @@ int main() {
 		//storing_path = outputPath + "inputSlice.raw";
 		//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 		
-		/*
+		
 		copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
 		//storing_path = outputPath + "liverSlice.raw";
 		//manageRAWFile2D(liverSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
@@ -4323,8 +4327,7 @@ int main() {
 			manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 		}
-		*/
-
+		
 		extension = to_string(k);
 
 		//liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
@@ -4382,6 +4385,237 @@ int main() {
 	}
 	delete[] imageData;
 	delete[] liverData;
+	
+
+	//==================== Test filtering by Hessian  ====================================
+
+    /*
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	////loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	rescaleNewRange(imageData, Length, Width, Height, 0.0, maxData - minData, minData, maxData);
+
+	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	size_t hauteur = (size_t)(Height * (ctSpacing.sz / ctSpacing.sx));
+	dataType** vesselnessImage = new dataType * [hauteur];
+	dataType** interpolate = new dataType*[hauteur]{ 0 };
+	for (k = 0; k < hauteur; k++) {
+		vesselnessImage[k] = new dataType[dim2D]{ 0 };
+		interpolate[k] = new dataType[dim2D]{ 0 };
+	}
+
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data toVesselNess = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
+
+	imageInterpolation3D(inputImageData, toVesselNess, NEAREST_NEIGHBOR);
+
+	dataType sigma = 1.0;
+	gaussianFiltering(interpolate, vesselnessImage, Length, Width, hauteur, sigma);
+
+	size_t k_interest = 268;
+	size_t i_interest = 275;
+	size_t j_interest = 195;
+	
+
+	dataType** hessian_matrix = new dataType * [3];
+	dataType** eigen_vectors = new dataType * [3];
+	for (k = 0; k < 3; k++) {
+		hessian_matrix[k] = new dataType[3]{ 0 };
+		eigen_vectors[k] = new dataType[3]{ 0 };
+	}
+	
+	dataType* d = new dataType[3]{0};
+	size_t max_sweeps = 0;
+	size_t dim = 3;
+
+	//getHessianMatrix3D(vesselnessImage, hessian_matrix, Length, Width, hauteur, i_interest, j_interest, k_interest, intSpacing);
+
+	hessian_matrix[0][0] = 4.0;
+	hessian_matrix[0][1] = 2.0;
+	hessian_matrix[0][2] = 0.0;
+	hessian_matrix[1][0] = 2.0;
+	hessian_matrix[1][1] = 3.0;
+	hessian_matrix[1][2] = 0.0;
+	hessian_matrix[2][0] = 0.0;
+	hessian_matrix[2][1] = 0.0;
+	hessian_matrix[2][2] = 1.0;
+
+	std::cout << std::endl;
+	std::cout << "Hessian matrix : " << std::endl;
+	std::cout << hessian_matrix[0][0] << " " << hessian_matrix[0][1] << " " << hessian_matrix[0][2] << std::endl;
+	std::cout << hessian_matrix[1][0] << " " << hessian_matrix[1][1] << " " << hessian_matrix[1][2] << std::endl;
+	std::cout << hessian_matrix[2][0] << " " << hessian_matrix[2][1] << " " << hessian_matrix[2][2] << std::endl;
+
+	eigenSystems(hessian_matrix, dim, d, eigen_vectors, &max_sweeps);
+
+	//d[0] = 5.561;
+	//d[1] = 1.439;
+	//d[2] = 1.0;
+
+	std::cout << std::endl;
+	std::cout << "Eigen values : " << std::endl;
+	for (size_t i = 0; i < dim; i++) {
+		std::cout << d[i] << " ";
+	}
+
+	//eigen_vectors[0][0] = 0.8507;
+	//eigen_vectors[0][1] = 0.5257;
+	//eigen_vectors[0][2] = 0.0;
+	//eigen_vectors[1][0] = -0.5257;
+	//eigen_vectors[1][1] = 0.8507;
+	//eigen_vectors[1][2] = 0.0;
+	//eigen_vectors[2][0] = 0.0;
+	//eigen_vectors[2][1] = 0.0;
+	//eigen_vectors[2][2] = 1.0;
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "Eigen vectors : " << std::endl;
+	std::cout << eigen_vectors[0][0] << " " << eigen_vectors[0][1] << " " << eigen_vectors[0][2] << std::endl;
+	std::cout << eigen_vectors[1][0] << " " << eigen_vectors[1][1] << " " << eigen_vectors[1][2] << std::endl;
+	std::cout << eigen_vectors[2][0] << " " << eigen_vectors[2][1] << " " << eigen_vectors[2][2] << std::endl;
+	std::cout << std::endl;
+
+	//Compute the residual for eigen values
+	dataType* residual = new dataType[dim];
+	for (i = 0; i < dim; i++) {
+		residual[i] = 0.0;
+		for (j = 0; j < dim; j++) {
+			residual[i] += hessian_matrix[i][j] * eigen_vectors[1][j];
+		}
+	}
+	for (i = 0; i < dim; i++) {
+		residual[i] -= d[i] * eigen_vectors[1][i];
+	}
+	dataType norm = 0.0;
+	std::cout << "Residual : " << std::endl;
+	for (i = 0; i < dim; i++) {
+		norm += residual[i] * residual[i];
+	}
+	std::cout << sqrt(norm) << std::endl;
+	delete[] residual;
+
+	//sortEigenValues(d, dim);
+	//std::cout << "Sorted eigen values : " << std::endl;
+	//for (size_t i = 0; i < dim; i++) {
+	//	std::cout << d[i] << " ";
+	//}
+
+	for (k = 0; k < 3; k++) {
+		delete[] hessian_matrix[k];
+		delete[] eigen_vectors[k];
+	}
+	delete[] hessian_matrix;
+	delete[] eigen_vectors;
+	delete[] d;
+	
+	
+	
+	//const dataType sigma = 1.0;
+	//const size_t kernelSize = 2 * (size_t)sigma + 1;
+	//dataType** kernel = new dataType * [kernelSize];
+	//for (k = 0; k < kernelSize; k++) {
+	//	kernel[k] = new dataType[kernelSize * kernelSize]{ 0 };
+	//}
+	//generateGaussianKernel(kernel, kernelSize, sigma);
+
+	////Print kernel
+	//std::cout << "Gaussian kernel : " << std::endl;
+	//for (k = 0; k < kernelSize; k++) {
+	//	for (i = 0; i < kernelSize; i++) {
+	//		for (j = 0; j < kernelSize; j++) {
+	//			std::cout << kernel[k][x_new(i, j, kernelSize)] << " ";
+	//		}
+	//		std::cout << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//}
+
+	//dataType sum_point = 0.0;
+	//for (k = 0; k < kernelSize; k++) {
+	//	for (i = 0; i < kernelSize * kernelSize; i++) {
+	//		sum_point += kernel[k][i];
+	//	}
+	//}
+	//std::cout << "Sum of the kernel : " << sum_point << std::endl;
+	//
+
+	//for (k = 0; k < kernelSize; k++) {
+	//	delete[] kernel[k];
+	//}
+	//delete[] kernel;
+	
+
+    
+	//const dataType sigma = 1.0;
+	//multiscaleFiltering(toVesselNess, vesselnessImage, sigma);
+	//storing_path = outputPath + "vesselness2.raw";
+	//manageRAWFile3D<dataType>(vesselnessImage, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
+	
+
+    
+	//dataType sigma = 4.0;
+	//const size_t p = (size_t)sigma;
+	//const size_t pLength = Length + 2 * p;
+	//const size_t pWidth = Width + 2 * p;
+	//const size_t pHeight = Height + 2 * p;
+	//dataType** imageDataExt = new dataType * [pHeight];
+	//for (k = 0; k < pHeight; k++) {
+	//	imageDataExt[k] = new dataType[pLength * pWidth]{ 0 };
+	//}
+
+	////Initilization
+	//for (k = 0; k < pHeight; k++) {
+	//	for (i = 0; i < pLength * pWidth; i++) {
+	//		imageDataExt[k][i] = minData;
+	//	}
+	//}
+
+	////Copy to extended area
+	//size_t i_ext, j_ext, k_ext, xd_ext;
+	//for (k = 0, k_ext = p; k < Height; k++, k_ext++) {
+	//	for (i = 0, i_ext = p; i < Length; i++, i_ext++) {
+	//		for (j = 0, j_ext = p; j < Width; j++, j_ext++) {
+	//			xd = x_new(i, j, Length);
+	//			xd_ext = x_new(i_ext, j_ext, pLength);
+	//			imageDataExt[k_ext][xd_ext] = imageData[k][xd];
+	//		}
+	//	}
+	//}
+
+	//reflection3DB(imageDataExt, Height, Length, Width, p);
+
+	//storing_path = outputPath + "reflectedCtImage.raw";
+	//manageRAWFile3D<dataType>(imageDataExt, pLength, pWidth, pHeight, storing_path.c_str(), STORE_DATA, false);
+
+	//for (k = 0; k < pHeight; k++) {
+	//	delete[] imageDataExt[k];
+	//}
+	//delete[] imageDataExt;
+	
+
+	
+	//for (k = 0; k < hauteur; k++) {
+	//	delete[] interpolate[k];
+	//	delete[] vesselnessImage[k];
+	//}
+	//delete[] interpolate;
+	//delete[] vesselnessImage;
+
+	//for (k = 0; k < Height; k++) {
+	//	delete[] imageData[k];
+	//}
+	//delete[] imageData;
+	//free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }
