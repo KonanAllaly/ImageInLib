@@ -38,36 +38,6 @@ bool getHessianMatrix3D(dataType** imageDataPtr, dataType** hessianMatrix, const
 
 	size_t xd = x_new(i, j, length);
 	dataType u = imageDataPtr[k][xd];
-	
-	////current slice
-	//dataType uN = imageDataPtr[k][x_new(iminus, j, length)];
-	//dataType uS = imageDataPtr[k][x_new(iplus, j, length)];
-	//dataType uE = imageDataPtr[k][x_new(i, jplus, length)];
-	//dataType uS = imageDataPtr[k][x_new(i, jminus, length)];
-	//dataType uT = imageDataPtr[kminus][ind_current];
-	//dataType uB = imageDataPtr[kplus][ind_current];
-	//dataType uNE = imageDataPtr[k][x_new(iminus, jplus, length)];
-	//dataType uNW = imageDataPtr[k][x_new(iminus, jminus, length)];
-	//dataType uSE = imageDataPtr[k][x_new(iplus, jplus, length)];
-	//dataType uSW = imageDataPtr[k][x_new(iplus, jminus, length)];
-	//////Top slice
-	//dataType uTE = imageDataPtr[kminus][x_new(i, jplus, length)];
-	//dataType uTW = imageDataPtr[kminus][x_new(i, jminus, length)];
-	//dataType uTS = imageDataPtr[kminus][x_new(iplus, j, length)];
-	//dataType uTN = imageDataPtr[kminus][x_new(iminus, j, length)];
-	////Bottom slice
-	//dataType uBN = imageDataPtr[kplus][x_new(iminus, j, length)];
-	//dataType uBW = imageDataPtr[kplus][x_new(i, jminus, length)];
-	//dataType uBE = imageDataPtr[kplus][x_new(i, jplus, length)];
-	//dataType uBS = imageDataPtr[kplus][x_new(iplus, j, length)];
-	//hessianMatrix[0][1] = (uSE - uNE - uSW + uNW) / (4 * fVolume.sx * fVolume.sy);
-	//hessianMatrix[0][2] = (uBS - uBN - uTE - uTW) / (4 * fVolume.sx * fVolume.sz);
-	//hessianMatrix[1][0] = (uSE - uNE - uSW + uNW) / (4 * fVolume.sx * fVolume.sy);
-	//hessianMatrix[1][1] = (uN - 2 * u + uS) / (fVolume.sy * fVolume.sy);
-	//hessianMatrix[1][2] = (uBE - uBW - uTN + uTS) / (4 * fVolume.sy * fVolume.sz);
-	//hessianMatrix[2][0] = (uBS - uBN - uTE - uTW) / (4 * fVolume.sx * fVolume.sz);
-	//hessianMatrix[2][1] = (uBE - uBW - uTN + uTS) / (4 * fVolume.sy * fVolume.sz);
-	//hessianMatrix[2][2] = (uT - 2 * u + uB) / (fVolume.sz * fVolume.sz);
 
 	// Hessian Matrix
 	// x direction
@@ -87,8 +57,6 @@ bool getHessianMatrix3D(dataType** imageDataPtr, dataType** hessianMatrix, const
 		/ (fVolume.sy * fVolume.sy);
 
 	hessianMatrix[1][0] = hessianMatrix[0][1];
-	//(imageDataPtr[k][x_new(iplus, jplus, length)] + imageDataPtr[k][x_new(iminus, jminus, length)]
-	//- imageDataPtr[k][x_new(iplus, jminus, length)] - imageDataPtr[k][x_new(iminus, jplus, length)]) / (4 * fVolume.sy * fVolume.sx);
 
 	hessianMatrix[1][2] = (imageDataPtr[kplus][x_new(i, jplus, length)] + imageDataPtr[kminus][x_new(i, jminus, length)]
 		- imageDataPtr[kplus][x_new(i, jminus, length)] - imageDataPtr[kminus][x_new(i, jplus, length)])
@@ -98,12 +66,8 @@ bool getHessianMatrix3D(dataType** imageDataPtr, dataType** hessianMatrix, const
 	hessianMatrix[2][2] = (imageDataPtr[kplus][xd] - 2 * u + imageDataPtr[kminus][xd]) / (fVolume.sz * fVolume.sz);
 
 	hessianMatrix[2][1] = hessianMatrix[1][2];
-	//(imageDataPtr[kplus][x_new(i, jplus, length)] + imageDataPtr[kminus][x_new(i, jminus, length)]
-	//- imageDataPtr[kplus][x_new(i, jminus, length)] - imageDataPtr[kminus][x_new(i, jplus, length)]) / (4 * fVolume.sz * fVolume.sy);
 
 	hessianMatrix[2][0] = hessianMatrix[0][2];
-	//(imageDataPtr[kplus][x_new(iplus, j, length)] + imageDataPtr[kminus][x_new(iminus, j, length)]
-	//- imageDataPtr[kplus][x_new(iminus, j, length)] - imageDataPtr[kminus][x_new(iplus, j, length)]) / (4 * fVolume.sz * fVolume.sx);
 
 	return true;
 }
@@ -413,7 +377,7 @@ bool multiscaleFiltering(Image_Data inputImageData, dataType** vesselnessImage, 
 	reflection3D(imageDataExt, height_ext, length_ext, width_ext);
 
 	dataType rb, ra, s, c;
-	dataType alpha2 = 0.025, beta2 = 0.025;
+	dataType alpha2 = 0.25, beta2 = 0.25;
 
 	size_t it, jt;
 
