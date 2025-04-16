@@ -55,7 +55,7 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient5_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -4225,21 +4225,23 @@ int main() {
 		liverData[k] = new dataType[dim2D]{ 0 };
 	}
 
-	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
+	loading_path = inputPath + "raw/filtered/New/filtered_p5.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
+	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	//rescaleNewRange(imageData, Length, Width, Height, 0.0, maxData - minData, minData, maxData);
+	//storing_path = outputPath + "patient1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	//loading_path = inputPath + "raw/liver/liver_p1.raw";
 	//manageRAWFile3D<dataType>(liverData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	FILE* liver_points;
-	storing_path = outputPath + "liver_centers.csv";
+	storing_path = outputPath + "detect aorta p5/liver_centers.csv";
 	if (fopen_s(&liver_points, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-
-	storing_path = outputPath + "found_centers.csv";
+	storing_path = outputPath + "detect aorta p5/found_centers.csv";
 	FILE* pFound_points;
 	if (fopen_s(&pFound_points, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -4259,118 +4261,102 @@ int main() {
 	
 	HoughParameters hParameters =
 	{
-		7.5,   //minimal radius
-		20.0,  //maximal radius
+		5.0,   //minimal radius
+		19.0,  //maximal radius
 		0.5,   //radius step
 		0.5,   //epsilon
-		60,   //offset 
+		50,   //offset 
 		1000,  //K edge detector coefficient
-		0.15,  //threshold edge detector
+		0.25,  //threshold edge detector
+	};
+
+	//filtering parameters
+	Filter_Parameters filter_parameters
+	{
+		0.25,//tau
+		ctSpacing.sx,//h
+		0.0,//sigma
+		0,//K--> we use heat implicit
+		1.5,//omega
+		0.001,//tolerance
+		0.000001,//eps 2
+		0.000001,//coef
+		1,//p
+		5,//time step number, p1-->10
+		100,//max solver iteration
+	};
+
+	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
+	Image_Data2D IMAGE
+	{
+		Length,
+		Width,
+		imageSlice,
+		pOrigin,
+		spacing
 	};
 
 	Point2D found_point = { 0.0, 0.0 };
-	Point2D liver_centroid = { 0.0, 0.0 };
 	BoundingBox2D boxLiver;
 	size_t count_liver_slices = 0;
 
-	for (k = 126; k <= 245; k++) {
+	//p1 : 127 to 282
+	//p5 " 453 to 690
+	for (k = 500; k <= 500; k++) {
 		
+		extension = to_string(k);
+
 		copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
-		//storing_path = outputPath + "inputSlice.raw";
-		//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
-		
-		
-		copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
-		//storing_path = outputPath + "liverSlice.raw";
-		//manageRAWFile2D(liverSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
-		bool findSeed = isCurrentSliceLiverSlice(liverSlice, Length, Width, k, foreGroundValue);
+		//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+		//heatImplicit2dScheme(IMAGE, filter_parameters);
+		////copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
+
+		bool findSeed = true;//isCurrentSliceLiverSlice(liverSlice, Length, Width, k, foreGroundValue);
 		if (findSeed == true) {
-
-			extension = to_string(k);
-
-			liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
 			
-			//std::cout << "Found centroid : " << liver_centroid.x << " " << liver_centroid.y << std::endl;
-			//found_point = localHoughTransform(sliceData, liver_centroid, houghSpacePtr, foundCirclePtr, hParameters);
-			
-			storing_path = outputPath + "threshold/thres_slice_" + extension + ".raw";
+			//Point2D liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
+			Point2D liver_centroid = { 256, 256 };
+
+			//storing_path = outputPath + "detect aorta p5/threshold/thres_" + extension + ".raw";
+			storing_path = outputPath + "thres_" + extension + ".raw";
 			found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
 
-			//Draw Hough bounding box
-			boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
-			for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
-				for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
-					if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
-						imageSlice[x_new(ix, jy, Length)] = 1.0;
-					}
-				}
-			}
+			////Draw Hough bounding box
+			//boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+			//for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
+			//	for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
+			//		if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
+			//			imageSlice[x_new(ix, jy, Length)] = 1.0;
+			//		}
+			//	}
+			//}
 
 			if (found_point.x != 0.0 && found_point.y != 0.0) {
-				
 				Point3D pSeed = { found_point.x, found_point.y, k };
 				pSeed = getRealCoordFromImageCoord3D(pSeed, ctOrigin, ctSpacing, orientation);
 				fprintf(pFound_points, "%f,%f,%f\n", pSeed.x, pSeed.y, pSeed.z);
 				imageSlice[x_new((size_t)found_point.x, (size_t)found_point.y, Length)] = 1.0;
-
 			}
 
-			Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
-			pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
-			fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
-			imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
-			
-			count_liver_slices++;
+			//Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
+			//pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
+			//fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
+			//imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
 
-			//extension = to_string(k);
-			storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
-			manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+			//storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
+			//storing_path = outputPath + "slice_" + extension + ".raw";
+			//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
+			//storing_path = outputPath + "detect aorta p5/slice/found_" + extension + ".raw";
+			storing_path = outputPath + "found_" + extension + ".raw";
+			manageRAWFile2D(foundCirclePtr, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+			//storing_path = outputPath + "detect aorta p5/slice/slice_" + extension + ".raw";
+			storing_path = outputPath + "slice_" + extension + ".raw";
+			manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 		}
-		
-		extension = to_string(k);
-
-		//liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
-		Point2D liver_centroid = { 256.0, 256.0 };
-
-		//std::cout << "Found centroid : " << liver_centroid.x << " " << liver_centroid.y << std::endl;
-		//found_point = localHoughTransform(sliceData, liver_centroid, houghSpacePtr, foundCirclePtr, hParameters);
-
-		storing_path = outputPath + "threshold/thres_slice_" + extension + ".raw";
-		found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
-
-		//Draw Hough bounding box
-		boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
-		for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
-			for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
-				if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
-					imageSlice[x_new(ix, jy, Length)] = 1.0;
-				}
-			}
-		}
-
-		if (found_point.x != 0.0 && found_point.y != 0.0) {
-
-			Point3D pSeed = { found_point.x, found_point.y, k };
-			pSeed = getRealCoordFromImageCoord3D(pSeed, ctOrigin, ctSpacing, orientation);
-			fprintf(pFound_points, "%f,%f,%f\n", pSeed.x, pSeed.y, pSeed.z);
-			imageSlice[x_new((size_t)found_point.x, (size_t)found_point.y, Length)] = 1.0;
-
-		}
-
-		//Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
-		//pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
-		//fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
-		//imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
-
-		count_liver_slices++;
-
-		//extension = to_string(k);
-		storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
-		manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	}
-	std::cout << "We have " << count_liver_slices << " slices containing the Liver" << std::endl;
 	fclose(liver_points);
 	fclose(pFound_points);
 
@@ -4378,13 +4364,14 @@ int main() {
 	delete[] liverSlice;
 	delete[] foundCirclePtr;
 	delete[] houghSpacePtr;
-
+	
 	for (k = 0; k < Height; k++) {
 		delete imageData[k];
 		delete liverData[k];
 	}
 	delete[] imageData;
 	delete[] liverData;
+	free(ctContainer);
 	
 
 	//==================== Test filtering by Hessian  ====================================
@@ -4614,6 +4601,136 @@ int main() {
 	//	delete[] imageData[k];
 	//}
 	//delete[] imageData;
+	//free(ctContainer);
+	*/
+
+	//==================== Test edge detector ==================================
+
+	/*
+	size_t Height = 406, Length = 512, Width = 512;
+	size_t dim2D = Length * Width;
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* edgeImage = new dataType[dim2D]{ 0 };
+
+	//copyDataToAnother2dArray(imageData[142], imageSlice, Length, Width);
+
+	//Point2D grad;
+	//PixelSpacing sliceSpacing = { ctSpacing.sx, ctSpacing.sy };
+	//
+	//for (i = 0; i < Length; i++) {
+	//	for (j = 0; j < Width; j++) {
+	//		getGradient2D(imageSlice, Length, Width, i, j, sliceSpacing, &grad);
+	//		dataType norm = sqrt(grad.x * grad.x + grad.y * grad.y);
+	//		if (norm >= 0.003) {
+	//			edgeImage[x_new(i, j, Length)] = 1.0;
+	//		}
+	//		else {
+	//			edgeImage[x_new(i, j, Length)] = 0.0;
+	//		}
+	//	}
+	//}
+
+	Point2D seed = { 256, 256 };
+	Point2D origin = { 0.0, 0.0 };
+	PixelSpacing spacing = { 0.976562, 0.976562 };
+	OrientationMatrix2D orientation = { {1.0, 0.0}, { 0.0, 1.0 } };
+	//seed = getRealCoordFromImageCoord2D(seed, origin, spacing, orientation);
+	double radius = 16.0;
+	dataType perimeter = 2 * M_PI * radius;
+	size_t number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
+	double step = 2 * M_PI / (double)number_of_circle_points;
+	size_t quad1 = 0, quad2 = 0, quad3 = 0, quad4 = 0;
+	
+	for (k = 0; k < number_of_circle_points; k++) {
+		
+		double angle = k * step;
+		double x = seed.x + radius * cos(angle);
+		double y = seed.y + radius * sin(angle);
+		//Point2D p = { x, y };
+		//Point2D pImage = getImageCoordFromRealCoord2D(p, origin, spacing, orientation);
+		
+		size_t indx = 0;//pImage.x;
+		if (x < 0) {
+			indx = 0;
+		}
+		else {
+			if (x > Length - 1) {
+				indx = Length - 1;
+			}
+			else {
+				indx = (size_t)(x + 0.5);
+			}
+		}
+
+		size_t indy = 0;//pImage.y;
+		if (y < 0) {
+			indy = 0;
+		}
+		else {
+			if (y > Width - 1) {
+				indy = Width - 1;
+			}
+			else {
+				indy = (size_t)(y + 0.5);
+			}
+		}
+		
+		//if (angle <= M_PI / 2.0) 
+		//{
+		//	imageSlice[x_new(indx, indy, Length)] = 1.0;
+		//}
+		//else {
+		//	if (angle <= M_PI) {
+		//		imageSlice[x_new(indx, indy, Length)] = 1.0;
+		//	}
+		//	else {
+		//		if(angle <= 3 * M_PI / 2.0){
+		//			imageSlice[x_new(indx, indy, Length)] = 1.0;
+		//		}
+		//		else {
+		//			imageSlice[x_new(indx, indy, Length)] = 1.0;
+		//		}
+		//	}
+		//}
+		imageSlice[x_new(indx, indy, Length)] = 1.0;
+	}
+
+	HoughParameters hParameters =
+	{
+		5.0,   //minimal radius
+		19.0,  //maximal radius
+		0.5,   //radius step
+		0.5,   //epsilon
+		50,   //offset 
+		1000,  //K edge detector coefficient
+		0.25,  //threshold edge detector
+	};
+
+	Image_Data2D imageDataPtr = { Length, Width, imageSlice, origin, spacing, orientation };
+	localCircleDetection(imageDataPtr, edgeImage, seed, hParameters, storing_path);
+
+	storing_path = outputPath + "edge_slice_127.raw";
+	manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	storing_path = outputPath + "find_circle.raw";
+	manageRAWFile2D<dataType>(edgeImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+
+	delete[] imageSlice;
+	delete[] edgeImage;
+	for (k = 0; k < Height; k++) {
+		delete imageData[k];
+	}
+	delete[] imageData;
+	
 	//free(ctContainer);
 	*/
 
