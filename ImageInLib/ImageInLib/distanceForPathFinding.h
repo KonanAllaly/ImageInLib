@@ -356,3 +356,7 @@ using namespace std;
 	//==================================
 
 	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr);
+
+	Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D seedPoint, const double LengthKeyPoints);
+
+	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);

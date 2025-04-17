@@ -1430,11 +1430,11 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
-	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	dataType value_second_pt = seedStats.mean_data;
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	//dataType value_second_pt = seedStats.mean_data;
 
-	dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	//dataType seedValCT = value_first_pt;
+	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	dataType seedValCT = value_first_pt;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -1586,9 +1586,9 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, 
 	return true;
 }
 
-bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters, size_t stop_criterium) {
+bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
-	if (ctImageData.imageDataPtr == NULL || seedPoints == NULL)
+	if (ctImageData.imageDataPtr == NULL)
 		return false;
 
 	size_t k = 0, i = 0, j = 0, x = 0;
@@ -1614,15 +1614,17 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	dataType** actionPtr = new dataType * [height];
 	dataType** maskAction = new dataType * [height];
 	dataType** potentialPtr = new dataType * [height];
+	dataType** edgeImage = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		actionPtr[k] = new dataType[dim2D]{ 0 };
 		maskAction[k] = new dataType[dim2D]{ 0 };
 		potentialPtr[k] = new dataType[dim2D]{ 0 };
+		edgeImage[k] = new dataType[dim2D]{ 0 };
 	}
 	if (actionPtr == NULL || maskAction == NULL || potentialPtr == NULL)
 		return false;
 
-	//compute3DPotential(ctImageData, potentialPtr, seedPoints[0], parameters);
+	//compute3DPotential(ctImageData, potentialPtr, seedPoints, parameters);
 	saving_name = path_name + "potential.raw";
 	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
@@ -1648,8 +1650,11 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	dataType tolerance = ctImageData.spacing.sx;
 
 	//During the first propagation the mask is empty
-	partialPropagation(action, potentialPtr, maskAction, length, width, height, seeds, step);
+	//partialPropagation(action, potentialPtr, maskAction, length, width, height, seeds, step);
 	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point_img_coord);
+
+	seeds[1] = nextKeyPointDetection(action, potentialPtr, seeds[0], step);
+	partialFrontPropagation(actionPtr, potentialPtr, length, width, height, seeds);
 
 	saving_name = path_name + "action_initial.raw";
 	manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
@@ -1657,28 +1662,63 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//vector for path points
 	vector<Point3D> path_points;
 
-	////path between initial point and second point (found point)
-	//shortestPath3D(actionPtr, length, width, height, ctImageData.spacing, seeds, path_points);
+	//path between initial point and second point (found point)
 	shortestPath3D(action, seeds, tau, tolerance, path_points);
 
+	//======================= Circle detection ==========================
+	//Search for circle around the found points
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* houghSpace = new dataType[dim2D]{ 0 };
+
+	Point2D seed2D = { 0.0, 0.0 };
+	Point2D center2D = { 0.0, 0.0 };
+	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
+	Image_Data2D IMAGE = {length, width, imageSlice, center2D, spacing};
+	HoughParameters hParameters = {
+		5.0,   //minimal radius
+		19.0,  //maximal radius
+		0.5,   //radius step
+		0.5,   //epsilon
+		3,   //offset, 50 without defined seed 
+		1000,  //K edge detector coefficient
+		0.25,  //threshold edge detector
+	};
+
+	string loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/edge image/edge_image_p1.raw";
+	string hough_path = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
+	bool detected = false;
+	size_t count_detected = 0;
+
+	for (int n = 0; n < path_points.size() - 1; n--) {
+		k = (size_t)path_points[n].z;
+		Point2D seed_circle = { path_points[n].x, path_points[n].y };
+		copyDataToAnother2dArray(edgeImage[k], imageSlice, length, width);
+		detected = isCircleDetected(IMAGE, houghSpace, seed_circle, hParameters, hough_path);
+		if (detected == false) {
+			count_detected++;
+		}
+	}
+	std::cout << count_detected << " circles not detected" << std::endl;
+
+	//===================================================================
+	
 	//write path points coordinates to file
-	int n = 0;
+	//int n = 0;
 	Point3D point_file = { 0.0, 0.0, 0.0 };
-	for (n = path_points.size() - 1; n > -1; n--) {
+	for (int n = path_points.size() - 1; n > -1; n--) {
 		point_file = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
 		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
 	}
 
-	////empty the vector contaning path points
-	//while (path_points.size() > 0) {
-	//	path_points.pop_back();
-	//}
+	//empty the vector contaning path points
+	while (path_points.size() > 0) {
+		path_points.pop_back();
+	}
 
 	fclose(file);
 
-	
-	//Update the mask
-	copyDataToAnotherArray(actionPtr, maskAction, height, length, width);
+	////Update the mask
+	//copyDataToAnotherArray(actionPtr, maskAction, height, length, width);
 
 	////Second segment
 	//seeds[0] = seeds[1];
@@ -1701,43 +1741,9 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//	path_points.pop_back();
 	//}
 	
-
-	//=========== Hough transform parameters ==================
-	
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* houghSpace = new dataType[dim2D]{ 0 };
-	dataType* voteArray = new dataType[dim2D]{ 0 };
-
-	//Slice extraction
-	
-	////filtering parameters
-	//Filter_Parameters filter_parameters;
-	//filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	//filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	//filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-
-	Point2D seed2D = { 0.0, 0.0 };
-	Point2D center2D = { 0.0, 0.0 };
-	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
-	Image_Data2D IMAGE
-	{
-		length,
-		width,
-		imageSlice,
-		center2D,
-		spacing
-	};
-
-	//HoughParameters hParameters = { 6.0, 19.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
-	//dataType max_ratio = 1.0;
-
-	//================ Use circle detection as path finding stopping criterium =====================
-	
-	
 	//size_t num_slice_processed = 0;
 	//int len = path_points.size();
 	//std::cout << len << " point to be processed" << std::endl;
-	//
 	//Point3D next_point = { 0.0, 0.0, 0.0 };
 	//size_t m;
 	//for (n = len - 1; n > -1; n--) {
@@ -1749,7 +1755,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//	slice_number = to_string(m);
 	//	
 	//	copyDataToAnother2dArray(ctImageData.imageDataPtr[m], imageSlice, length, width);
-
 	//	////Slice rescaling
 	//	//rescaleNewRange2D(imageSlice, length, width, 0.0, 1.0);
 	//	////Slice filtering
@@ -2036,10 +2041,12 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 		delete[] actionPtr[k];
 		delete[] maskAction[k];
 		delete[] potentialPtr[k];
+		delete[] edgeImage[k];
 	}
 	delete[] actionPtr;
 	delete[] maskAction;
 	delete[] potentialPtr;
+	delete[] edgeImage;
 
 	return true;
 }
@@ -5326,4 +5333,462 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	delete[] labelArray;
 
 	return true;
+}
+
+//=======================================
+
+Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D seedPoint, const double LengthKeyPoints) {
+
+	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL) {
+		std::cout << "Wrong input";
+		return Point3D{ -1.0, -1.0, -1.0 };
+	}
+
+	const size_t length = actionMapStr.length;
+	const size_t width = actionMapStr.width;
+	const size_t height = actionMapStr.height;
+	VoxelSpacing spacing = actionMapStr.spacing;
+
+	vector <pointFastMarching3D> inProcess;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+
+	size_t** labelArray = new size_t * [height];
+	for (k = 0; k < height; k++) {
+		labelArray[k] = new size_t[dim2D]{ 0 };
+	}
+	if (labelArray == NULL) {
+		std::cout << "Label array non defined";
+		return Point3D{ -1.0, -1.0, -1.0 };
+	}
+
+	dataType x = 0.0, y = 0.0, z = 0.0;
+	size_t currentIndx = 0;
+
+	//Initialization
+	//All the points are notProcessed ---> label = 3
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			actionMapStr.imageDataPtr[k][i] = INFINITY;
+			labelArray[k][i] = 3;
+		}
+	}
+
+	//Processed the initial point
+	pointFastMarching3D current;
+	if(seedPoint.x < 0 || seedPoint.y < 0 || seedPoint.z < 0) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return Point3D{-1, -1, -1};
+	}
+	else {
+		i = (size_t)seedPoint.x;
+		j = (size_t)seedPoint.y;
+		k = (size_t)seedPoint.z;
+		if (i > length || j > width || k > height) {
+			std::cout << "Error in the input seed point" << std::endl;
+			return Point3D{ -1, -1, -1 };
+		}
+	}
+	currentIndx = x_new(i, j, length);
+	actionMapStr.imageDataPtr[k][currentIndx] = 0.0;
+	labelArray[k][currentIndx] = 1;
+
+	double distanceToCurrentSourcePoint = 0.0;
+	Point3D currentSourcePoint = { i, j, k };
+
+	vector <Point3D> key_points;
+	//key_points.push_back(currentSourcePoint);
+
+	//find the neighbours of the initial point add add them to inProcess
+	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
+	size_t kminus = 0, kplus = 0, iminus = 0, iplus = 0, jminus = 0, jplus = 0;
+	size_t indxNorth = 0, indxSouth = 0, indxWest = 0, indxEast = 0;
+	dataType dTop = 0.0, dBottom = 0.0, dNorth = 0.0, dSouth = 0.0, dWest = 0.0, dEast = 0.0, coefSpeed = 0.0;
+
+	//Top
+	if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+		kminus = k - 1;
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		coefSpeed = potentialFuncPtr[kminus][currentIndx];
+		//dTop = solve3dQuadratic(x, y, z, coefSpeed);
+		dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+		actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+		inProcess.push_back(TopNeighbor);
+		labelArray[kminus][currentIndx] = 2;
+	}
+
+	//East
+	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
+		iplus = i + 1;
+		indxEast = x_new(iplus, j, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		coefSpeed = potentialFuncPtr[k][indxEast];
+		//dEast = solve3dQuadratic(x, y, z, coefSpeed);
+		dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+		actionMapStr.imageDataPtr[k][indxEast] = dEast;
+		inProcess.push_back(EastNeighbor);
+		labelArray[k][indxEast] = 2;
+	}
+
+	//North
+	if (k >= 0 && k < height && j > 0 && i >= 0 && i < length) {
+		jminus = j - 1;
+		indxNorth = x_new(i, jminus, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		coefSpeed = potentialFuncPtr[k][indxNorth];
+		//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
+		dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+		actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+		inProcess.push_back(NorthNeighbor);
+		labelArray[k][indxNorth] = 2;
+	}
+
+	//West
+	if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
+		iminus = i - 1;
+		indxWest = x_new(iminus, j, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		coefSpeed = potentialFuncPtr[k][indxWest];
+		//dWest = solve3dQuadratic(x, y, z, coefSpeed);
+		dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+		actionMapStr.imageDataPtr[k][indxWest] = dWest;
+		inProcess.push_back(WestNeighbor);
+		labelArray[k][indxWest] = 2;
+	}
+
+	//South
+	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
+		jplus = j + 1;
+		indxSouth = x_new(i, jplus, length);
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		coefSpeed = potentialFuncPtr[k][indxSouth];
+		//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
+		dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+		actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+		inProcess.push_back(SouthNeighbor);
+		labelArray[k][indxSouth] = 2;
+	}
+
+	//Bottom
+	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
+		kplus = k + 1;
+		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		coefSpeed = potentialFuncPtr[kplus][currentIndx];
+		//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+		dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+		actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+		inProcess.push_back(BottomNeighbor);
+		labelArray[kplus][currentIndx] = 2;
+	}
+
+	heapifyVector3D(inProcess);
+	size_t label = 0;
+
+	int l = 0, m = 0;
+	size_t nbSourcePoint = 0;
+	dataType max_weighted_distance = 0.0;
+
+	//size_t iEnd = (size_t)seedPoint[1].x;
+	//size_t jEnd = (size_t)seedPoint[1].y;
+	//size_t kEnd = (size_t)seedPoint[1].z;
+
+	while (inProcess.size() != 0 && distanceToCurrentSourcePoint < LengthKeyPoints) {
+
+		//processed the point with minimum distance
+		current = inProcess[0];
+		i = current.x;
+		j = current.y;
+		k = current.z;
+		currentIndx = x_new(i, j, length);
+		labelArray[k][currentIndx] = 1;
+		dataType arrival_for_max = current.arrival;
+
+		Point3D pSource = { i, j, k };
+		Point3D pSourceReal = getRealCoordFromImageCoord3D(pSource, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		Point3D pCurrent = getRealCoordFromImageCoord3D(currentSourcePoint, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		distanceToCurrentSourcePoint = getPoint3DDistance(pCurrent, pSourceReal);
+		
+		if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+
+			currentSourcePoint = pSource;
+			key_points.push_back(currentSourcePoint);
+			actionMapStr.imageDataPtr[k][currentIndx] = 0;
+
+			//Top
+			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length)
+			{
+				kminus = k - 1;
+				actionMapStr.imageDataPtr[kminus][currentIndx] = INFINITY;
+				labelArray[kminus][currentIndx] = 3;
+			}
+
+			//East
+			if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height)
+			{
+				iplus = i + 1;
+				indxEast = x_new(iplus, j, length);
+				actionMapStr.imageDataPtr[k][indxEast] = INFINITY;
+				labelArray[k][indxEast] = 3;
+			}
+
+			//North
+			if (j > 0 && i >= 0 && i < length && k >= 0 && k < height)
+			{
+				jminus = j - 1;
+				indxNorth = x_new(i, jminus, length);
+				actionMapStr.imageDataPtr[k][indxNorth] = INFINITY;
+				labelArray[k][indxNorth] = 3;
+			}
+
+			//West
+			if (i > 0 && j >= 0 && j < width && k >= 0 && k < height)
+			{
+				iminus = i - 1;
+				indxWest = x_new(iminus, j, length);
+				actionMapStr.imageDataPtr[k][indxWest] = INFINITY;
+				labelArray[k][indxWest] = 3;
+			}
+
+			//South
+			if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height)
+			{
+				jplus = j + 1;
+				indxSouth = x_new(i, jplus, length);
+				actionMapStr.imageDataPtr[k][indxSouth] = INFINITY;
+				labelArray[k][indxSouth] = 3;
+			}
+
+			//Bottom
+			if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width)
+			{
+				kplus = k + 1;
+				actionMapStr.imageDataPtr[kplus][currentIndx] = INFINITY;
+				labelArray[kplus][currentIndx] = 3;
+			}
+
+			while (inProcess.size() != 0) {
+				inProcess.pop_back();
+			}
+		}
+		else {
+			actionMapStr.imageDataPtr[k][currentIndx] = current.arrival;
+			deleteRootHeap3D(inProcess);
+		}
+
+		if (arrival_for_max > max_weighted_distance) {
+			max_weighted_distance = arrival_for_max;
+		}
+
+		//Continue the propagation only if key point is not detected
+		if (key_points.size() == 0) {
+			
+			//processed neighbors of the minimum in the narrow band
+			//Top
+			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
+				kminus = k - 1;
+				label = labelArray[kminus][currentIndx];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+					coefSpeed = potentialFuncPtr[kminus][currentIndx];
+					//dTop = solve3dQuadratic(x, y, z, coefSpeed);
+					dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[kminus][currentIndx] = 2;
+						actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+						pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
+						addPointHeap3D(inProcess, TopNeighbor);
+					}
+					else {
+						if (label == 2) {
+							if (dTop < actionMapStr.imageDataPtr[kminus][currentIndx]) {
+								actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+							}
+						}
+					}
+				}
+			}
+
+			//East
+			if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
+				iplus = i + 1;
+				indxEast = x_new(iplus, j, length);
+				label = labelArray[k][indxEast];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+					coefSpeed = potentialFuncPtr[k][indxEast];
+					//dEast = solve3dQuadratic(x, y, z, coefSpeed);
+					dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[k][indxEast] = 2;
+						actionMapStr.imageDataPtr[k][indxEast] = dEast;
+						pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
+						addPointHeap3D(inProcess, EastNeighbor);
+
+					}
+					else {
+						if (label == 2) {
+							if (dEast < actionMapStr.imageDataPtr[k][indxEast]) {
+								actionMapStr.imageDataPtr[k][indxEast] = dEast;
+							}
+						}
+					}
+				}
+			}
+
+			//North
+			if (j > 0 && i >= 0 && i < length && k >= 0 && k < height) {
+				jminus = j - 1;
+				indxNorth = x_new(i, jminus, length);
+				label = labelArray[k][indxNorth];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+					coefSpeed = potentialFuncPtr[k][indxNorth];
+					//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
+					dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[k][indxNorth] = 2;
+						actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+						pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
+						addPointHeap3D(inProcess, NorthNeighbor);
+					}
+					else {
+						if (label == 2) {
+							if (dNorth < actionMapStr.imageDataPtr[k][indxNorth]) {
+								actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+							}
+						}
+					}
+				}
+			}
+
+			//West
+			if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
+				iminus = i - 1;
+				indxWest = x_new(iminus, j, length);
+				label = labelArray[k][indxWest];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+					coefSpeed = potentialFuncPtr[k][indxWest];
+					//dWest = solve3dQuadratic(x, y, z, coefSpeed);
+					dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[k][indxWest] = 2;
+						actionMapStr.imageDataPtr[k][indxWest] = dWest;
+						pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
+						addPointHeap3D(inProcess, WestNeighbor);
+					}
+					else {
+						if (label == 2) {
+							if (dWest < actionMapStr.imageDataPtr[k][indxWest]) {
+								actionMapStr.imageDataPtr[k][indxWest] = dWest;
+							}
+						}
+					}
+				}
+			}
+
+			//South
+			if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
+				jplus = j + 1;
+				indxSouth = x_new(i, jplus, length);
+				label = labelArray[k][indxSouth];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					coefSpeed = potentialFuncPtr[k][indxSouth];
+					//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
+					dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[k][indxSouth] = 2;
+						actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+						pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+						addPointHeap3D(inProcess, SouthNeighbor);
+					}
+					else {
+						if (label == 2) {
+							if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
+								actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+							}
+						}
+					}
+				}
+			}
+
+			//Bottom
+			if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
+				kplus = k + 1;
+				label = labelArray[kplus][currentIndx];
+				if (label != 1) {
+					x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+					y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+					z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+					coefSpeed = potentialFuncPtr[kplus][currentIndx];
+					//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
+					dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[kplus][currentIndx] = 2;
+						actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+						pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+						addPointHeap3D(inProcess, BottomNeighbor);
+					}
+					else {
+						if (label == 2) {
+							if (dBottom < actionMapStr.imageDataPtr[kplus][currentIndx]) {
+								actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+							}
+						}
+					}
+				}
+			}
+
+		}
+
+	}
+
+	////key_points.push_back(seedPoint[1]);
+	//std::cout << "The source Points are: " << std::endl;
+	//for (int nb = 0; nb < key_points.size(); nb++) {
+	//	std::cout << "Point " << nb + 1 << " : " << key_points[nb].x << " " << key_points[nb].y << " " << key_points[nb].z << std::endl;
+	//}
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+				actionMapStr.imageDataPtr[k][i] = max_weighted_distance + 1;
+			}
+		}
+	}
+
+	for (k = 0; k < height; k++) {
+		delete[] labelArray[k];
+	}
+	delete[] labelArray;
+
+	return key_points[0];
 }
