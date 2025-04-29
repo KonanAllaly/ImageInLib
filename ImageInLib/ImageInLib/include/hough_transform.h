@@ -69,3 +69,7 @@ Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, 
 bool isCurrentSliceLiverSlice(dataType* imageDataPtr, size_t length, size_t width, size_t indSlice, dataType foreGroundValue);
 
 bool isCircleDetected(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold);
+
+bool bruteForceDmap2D(Image_Data2D imageDataStr, dataType* distanceMap, dataType backGroundValue);
+
+Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold);
