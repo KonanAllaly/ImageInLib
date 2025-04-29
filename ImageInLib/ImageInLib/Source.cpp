@@ -48,10 +48,7 @@ int main() {
 	*/
 	
 	
-	OrientationMatrix orientation;
-	orientation.v1 = { 1.0, 0.0, 0.0 }; 
-	orientation.v2 = { 0.0, 1.0, 0.0 }; 
-	orientation.v3 = { 0.0, 0.0, 1.0 };
+	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
@@ -71,7 +68,6 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
-
 	//Find the minimum and maximum values to perform shiftting
 	dataType minData = ctContainer->dataPointer[0][0];
 	dataType maxData = ctContainer->dataPointer[0][0];
@@ -3518,8 +3514,8 @@ int main() {
 		}
 	}
 	*/
-	////==========================================================
-	
+
+	////========================================================
 
 	/*
 	//========== Downsampling =============================
@@ -4217,39 +4213,33 @@ int main() {
 
 	//==================== Aorta bifurcation detection ===================================
 	
-	
-	const size_t hauteur = 406;//(size_t)((ctSpacing.sz / ctSpacing.sx)* Height);
+	/*
+	const size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx)* Height);
 	
 	dataType** imageData = new dataType * [hauteur];
+	dataType** inputImageData = new dataType * [hauteur];
 	dataType** edgeImage = new dataType * [hauteur];
 	for (k = 0; k < hauteur; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
+		inputImageData[k] = new dataType[dim2D]{ 0 };
 		edgeImage[k] = new dataType[dim2D]{ 0 };
 	}
 
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data interpolate = { hauteur, Length, Width, inputImageData, ctOrigin, intSpacing, orientation };
+	Image_Data inputD = { Height, Length, Width, ctContainer->dataPointer, ctOrigin, ctSpacing, orientation };
+	imageInterpolation3D(inputD, interpolate, NEAREST_NEIGHBOR);
+	rescaleNewRange(inputImageData, Length, Width, hauteur, 0.0, 1.0, maxData, minData);
+
+
 	////loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//loading_path = inputPath + "raw/edge image/edge_image_p1.raw";
-	//manageRAWFile3D<dataType>(edgeImage, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
-
-	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-
-	//VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	//Image_Data interpolImageData = { hauteur, Length, Width, imageData, ctOrigin, intSpacing, orientation };
-	//Image_Data inputImageData = { Height, Length, Width, ctContainer->dataPointer, ctOrigin, ctSpacing, orientation};
-	//imageInterpolation3D(inputImageData, interpolImageData, NEAREST_NEIGHBOR);
-	//rescaleNewRange(imageData, Length, Width, hauteur, 0.0, 1.0, minData, maxData);
-
-	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-	//rescaleNewRange(imageData, Length, Width, Height, 0.0, maxData - minData, minData, maxData);
-	//storing_path = outputPath + "patient1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	//loading_path = inputPath + "raw/liver/liver_p1.raw";
-	//manageRAWFile3D<dataType>(liverData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	loading_path = inputPath + "raw/edge image/edge_image_p1.raw";
+	manageRAWFile3D<dataType>(edgeImage, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
 
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
 	dataType* liverSlice = new dataType[dim2D]{ 0 };
 	dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
-	dataType* houghSpacePtr = new dataType[dim2D]{ 0 };
+	dataType* inputSlice = new dataType[dim2D]{ 0 };
 	Point2D pOrigin = { 0.0, 0.0 };
 	PixelSpacing pSpacing = {ctSpacing.sx, ctSpacing.sy};
 	OrientationMatrix2D pOrientation = { {1.0, 0.0}, { 0.0, 1.0 } };
@@ -4297,109 +4287,56 @@ int main() {
 	Point2D found_point = { 0.0, 0.0 };
 	BoundingBox2D boxLiver;
 	size_t count_liver_slices = 0;
-	
-	////FILE* liver_points;
-	////storing_path = outputPath + "detect aorta p1/liver_centers.csv";
-	////if (fopen_s(&liver_points, storing_path.c_str(), "w") != 0) {
-	////	printf("Enable to open");
-	////	return false;
-	////}
-	//storing_path = outputPath + "detect aorta/found_centers.csv";
-	//FILE* pFound_points;
-	//if (fopen_s(&pFound_points, storing_path.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
 
 	//p1 : 127 to 282 , interpolated 279 to 611
 	//p5 " 453 to 690
-	for (k = 157; k <= 229; k++) {
-		
-		extension = to_string(k);
+	for (k = 339; k <= 491; k++) {
 		
 		Point2D liver_centroid = { 256, 256 };
-		//copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
-		//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-		////Draw Hough bounding box
-		//boxLiver = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
-		//for (size_t ix = boxLiver.i_min; ix <= boxLiver.i_max; ix++) {
-		//	for (size_t jy = boxLiver.j_min; jy <= boxLiver.j_max; jy++) {
-		//		if (ix == boxLiver.i_min || ix == boxLiver.i_max || jy == boxLiver.j_min || jy == boxLiver.j_max) {
-		//			imageSlice[x_new(ix, jy, Length)] = 1.0;
-		//		}
-		//	}
-		//}
-		//storing_path = outputPath + "detect aorta/slice/slice_" + extension + ".raw";
-		//manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-		copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
-		rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-		heatImplicit2dScheme(IMAGE, filter_parameters);
+		copyDataToAnother2dArray(edgeImage[k], imageSlice, Length, Width);
+		copyDataToAnother2dArray(inputImageData[k], inputSlice, Length, Width);
+
+		//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+		//heatImplicit2dScheme(IMAGE, filter_parameters);
 		////copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
 
-		bool findSeed = true;//isCurrentSliceLiverSlice(liverSlice, Length, Width, k, foreGroundValue);
-		if (findSeed == true) {
-			
-			//Point2D liver_centroid = get2dImagecentroid(liverSlice, Length, Width, imageBackground);
-			
-			//storing_path = outputPath + "detect aorta/threshold/thres_" + extension + ".raw";
-			storing_path = outputPath + "detect aorta/csv/centers_" + extension + ".csv";
-			//storing_path = outputPath + "thres_" + extension + ".raw";
-			found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
+		extension = to_string(k);
+		storing_path = outputPath + "filter_hough_points/f_centers/center_ratio_radius_" + extension + ".csv";
+		found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
 
-			//if (found_point.x != 0.0 && found_point.y != 0.0) {
-			//	Point3D pSeed = { found_point.x, found_point.y, k };
-			//	pSeed = getRealCoordFromImageCoord3D(pSeed, ctOrigin, ctSpacing, orientation);
-			//	fprintf(pFound_points, "%f,%f,%f\n", pSeed.x, pSeed.y, pSeed.z);
-			//	//imageSlice[x_new((size_t)found_point.x, (size_t)found_point.y, Length)] = 1.0;
-			//}
-
-			//Point3D pLiver = { liver_centroid.x, liver_centroid.y, k };
-			//pLiver = getRealCoordFromImageCoord3D(pLiver, ctOrigin, ctSpacing, orientation);
-			//fprintf(liver_points, "%f,%f,%f\n", pLiver.x, pLiver.y, pLiver.z);
-			//imageSlice[x_new((size_t)liver_centroid.x, (size_t)liver_centroid.y, Length)] = 1.0;
-
-			//storing_path = outputPath + "detect aorta/slice_" + extension + ".raw";
-			//storing_path = outputPath + "slice_" + extension + ".raw";
-			//manageRAWFile2D(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-			//storing_path = outputPath + "detect aorta p1/slice/found_" + extension + ".raw";
-			////storing_path = outputPath + "found_" + extension + ".raw";
-			//manageRAWFile2D(foundCirclePtr, Length, Width, storing_path.c_str(), STORE_DATA, false);
-			//storing_path = outputPath + "detect aorta/slice/slice_" + extension + ".raw";
-			//////storing_path = outputPath + "slice_" + extension + ".raw";
-			//manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+		//save slice and bounding box
+		BoundingBox2D box = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+		for (i = box.i_min; i <= box.i_max; i++) {
+			for (j = box.j_min; j <= box.j_max; j++) {
+				if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+					imageSlice[x_new(i, j, Length)] = 1.0;
+					inputSlice[x_new(i, j, Length)] = 0.0;
+				}
+			}
 		}
+
+		storing_path = outputPath + "filter_hough_points/edge/edge_image_" + extension + ".raw";
+		manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+		storing_path = outputPath + "filter_hough_points/input/input_image_" + extension + ".raw";
+		manageRAWFile2D<dataType>(inputSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
 	}
-	//fclose(liver_points);
-	//fclose(pFound_points);
 	
-
-	/*
-	Point2D liver_centroid = { 256, 256 };
-	k = 450;
-	copyDataToAnother2dArray(edgeImage[k], imageSlice, Length, Width);
-	storing_path = outputPath + "threshold_440.raw";
-	found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
-
-	copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
-	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-	storing_path = outputPath + "slice_440.raw";
-	manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
-	*/
-
 	delete[] imageSlice;
 	delete[] liverSlice;
 	delete[] foundCirclePtr;
-	delete[] houghSpacePtr;
+	delete[] inputSlice;
 	
 	for (k = 0; k < hauteur; k++) {
 		delete imageData[k];
-		//delete liverData[k];
+		delete inputImageData[k];
 	}
 	delete[] imageData;
-	//delete[] liverData;
+	delete[] inputImageData;
 	free(ctContainer);
+	*/
 	
 
 	//==================== Test filtering by Hessian  ====================================
@@ -4833,6 +4770,1205 @@ int main() {
 	////filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
 	//HoughParameters hParameters = { 6.0, 19.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
 	*/
+
+	//==================== Filter out points with no neighbors in previous and next slice ==============
+
+	/*
+	string current_slice;// = outputPath + "test_slice/centers_slice_378.csv";
+	string previous_slice;// = outputPath + "test_slice/centers_slice_377.csv";
+	string next_slice;// = outputPath + "test_slice/centers_slice_379.csv";
+
+	std::vector<Point2D> points_current, points_previous, points_next;
+	dataType x = 0, y = 0;
+
+	//One slice
+	for (k = 340; k <= 490; k++) {
+		
+		extension = to_string(k);
+		current_slice = outputPath + "test_slice/centers_slice_" + extension + ".csv";
+		previous_slice = outputPath + "test_slice/centers_slice_" + to_string(k - 1) + ".csv";
+		next_slice = outputPath + "test_slice/centers_slice_" + to_string(k + 1) + ".csv";
+
+		FILE* current_p_centers;
+		if (fopen_s(&current_p_centers, current_slice.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(current_p_centers) == 0) {
+			fscanf_s(current_p_centers, "%f", &x);
+			fscanf_s(current_p_centers, ",");
+			fscanf_s(current_p_centers, "%f", &y);
+			fscanf_s(current_p_centers, "\n");
+			Point2D p = { x, y };
+			points_current.push_back(p);
+		}
+		fclose(current_p_centers);
+
+		FILE* previous_p_centers;
+		if (fopen_s(&previous_p_centers, previous_slice.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers) == 0) {
+			fscanf_s(previous_p_centers, "%f", &x);
+			fscanf_s(previous_p_centers, ",");
+			fscanf_s(previous_p_centers, "%f", &y);
+			fscanf_s(previous_p_centers, "\n");
+			Point2D p = { x, y };
+			points_previous.push_back(p);
+		}
+		fclose(previous_p_centers);
+
+		FILE* next_p_centers;
+		if (fopen_s(&next_p_centers, next_slice.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers) == 0) {
+			fscanf_s(next_p_centers, "%f", &x);
+			fscanf_s(next_p_centers, ",");
+			fscanf_s(next_p_centers, "%f", &y);
+			fscanf_s(next_p_centers, "\n");
+			Point2D p = { x, y };
+			points_next.push_back(p);
+		}
+		fclose(next_p_centers);
+
+		size_t nb_previous = 0, nb_next = 0;
+		size_t ind_previous = 0, ind_next = 0;
+		Point2D pNorth = { 0.0, 0.0 }, pSouth = { 0.0, 0.0 }, pEast = { 0.0, 0.0 }, pWest = { 0.0, 0.0 };
+		Point2D pNorthEast = { 0.0, 0.0 }, pNorthWest = { 0.0, 0.0 }, pSouthEast = { 0.0, 0.0 }, pSouthWest = { 0.0, 0.0 };
+		Point2D pCurrent = { 0.0, 0.0 };
+
+		//Save the remaining points in current slice
+		FILE* pFiltered_centers;
+		string filtered_centers = outputPath + "filtered_one_slice/filtered_centers_" + extension + ".csv";
+		if (fopen_s(&pFiltered_centers, filtered_centers.c_str(), "w") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+
+		for (size_t it = 0; it < points_current.size(); it++) {
+
+			i = (size_t)points_current[it].x;
+			j = (size_t)points_current[it].y;
+			pCurrent.x = i; 
+			pCurrent.y = j;
+			nb_next = 0; 
+			nb_previous = 0;
+
+			if (i > 0 && i < Length - 1 && j > 0 && j < Width - 1) {
+
+				pNorth.x = i; 
+				pNorth.y = j + 1;
+				
+				pSouth.x = i; 
+				pSouth.y = j - 1;
+				
+				pEast.x = i + 1; 
+				pEast.y = j;
+				
+				pWest.x = i - 1; 
+				pWest.y = j;
+				
+				pNorthEast.x = i + 1; 
+				pNorthEast.y = j + 1;
+				
+				pNorthWest.x = i - 1; 
+				pNorthWest.y = j + 1;
+				
+				pSouthEast.x = i + 1; 
+				pSouthEast.y = j - 1;
+				
+				pSouthWest.x = i - 1; 
+				pSouthWest.y = j - 1;
+
+			}
+
+			//Check if the current point has neighboors in next slice
+			for (ind_next = 0; ind_next < points_next.size(); ind_next++) {
+				if (points_next[ind_next].x == pCurrent.x && points_next[ind_next].y == pCurrent.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pNorth.x && points_next[ind_next].y == pNorth.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pSouth.x && points_next[ind_next].y == pSouth.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pEast.x && points_next[ind_next].y == pEast.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pWest.x && points_next[ind_next].y == pWest.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pNorthEast.x && points_next[ind_next].y == pNorthEast.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pNorthWest.x && points_next[ind_next].y == pNorthWest.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pSouthEast.x && points_next[ind_next].y == pSouthEast.y) {
+					nb_next++;
+				}
+				if (points_next[ind_next].x == pSouthWest.x && points_next[ind_next].y == pSouthWest.y) {
+					nb_next++;
+				}
+			}
+
+			//Chech if the current point has neighboors in previous slice
+			for (ind_previous = 0; ind_previous < points_previous.size(); ind_previous++) {
+				if (points_previous[ind_previous].x == pCurrent.x && points_previous[ind_previous].y == pCurrent.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pNorth.x && points_previous[ind_previous].y == pNorth.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pSouth.x && points_previous[ind_previous].y == pSouth.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pEast.x && points_previous[ind_previous].y == pEast.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pWest.x && points_previous[ind_previous].y == pWest.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pNorthEast.x && points_previous[ind_previous].y == pNorthEast.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pNorthWest.x && points_previous[ind_previous].y == pNorthWest.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pSouthEast.x && points_previous[ind_previous].y == pSouthEast.y) {
+					nb_previous++;
+				}
+				if (points_previous[ind_previous].x == pSouthWest.x && points_previous[ind_previous].y == pSouthWest.y) {
+					nb_previous++;
+				}
+			}
+
+			if (nb_previous != 0 && nb_next != 0) {
+				fprintf(pFiltered_centers, "%f,%f\n", points_current[it].x, points_current[it].y);
+			}
+
+		}
+
+		fclose(pFiltered_centers);
+
+		while (points_current.size() > 0) {
+			points_current.pop_back();
+		}
+		while (points_previous.size() > 0) {
+			points_previous.pop_back();
+		}
+		while (points_next.size() > 0) {
+			points_next.pop_back();
+		}
+
+	}
+	*/
+	
+	/*
+	const size_t Length = 512, Width = 512;
+	dataType x, y, ratio, radius;
+
+	//five slices
+	std::vector<Point2D> points_current;
+	std::vector<Point2D> points_previous_1, points_previous_2, points_previous_3, points_previous_4, points_previous_5;
+	std::vector<Point2D> points_next_1, points_next_2, points_next_3, points_next_4, points_next_5;
+	std::vector<dataType> ratios, radiuses;
+
+	k = 344;
+	dataType max_ratio = 0, max_radius = 0, initial_max = 0, initial_max_radius = 0;
+	Point2D max_point = { 0.0, 0.0 }, initial_point_max = {0.0, 0.0};
+	string to_slice = outputPath + "filter_hough_points/f_centers/center_ratio_radius_";
+	for (k = 344; k <= 486; k++) {
+
+		extension = to_string(k);
+		string current_slice = to_slice + extension + ".csv";
+		string previous_slice_5 = to_slice + to_string(k - 5) + ".csv";
+		string previous_slice_4 = to_slice + to_string(k - 4) + ".csv";
+		string previous_slice_3 = to_slice + to_string(k - 3) + ".csv";
+		string previous_slice_2 = to_slice + to_string(k - 2) + ".csv";
+		string previous_slice_1 = to_slice + to_string(k - 1) + ".csv";
+		string next_slice_1 = to_slice + to_string(k + 1) + ".csv";
+		string next_slice_2 = to_slice + to_string(k + 2) + ".csv";
+		string next_slice_3 = to_slice + to_string(k + 3) + ".csv";
+		string next_slice_4 = to_slice + to_string(k + 4) + ".csv";
+		string next_slice_5 = to_slice + to_string(k + 5) + ".csv";
+
+		FILE* current_p_centers;
+		if (fopen_s(&current_p_centers, current_slice.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(current_p_centers) == 0) {
+			fscanf_s(current_p_centers, "%f", &x);
+			fscanf_s(current_p_centers, ",");
+			fscanf_s(current_p_centers, "%f", &y);
+			fscanf_s(current_p_centers, ",");
+			fscanf_s(current_p_centers, "%f", &ratio);
+			fscanf_s(current_p_centers, ",");
+			fscanf_s(current_p_centers, "%f", &radius);
+			fscanf_s(current_p_centers, "\n");
+			ratios.push_back(ratio);
+			radiuses.push_back(radius);
+			Point2D p = { x, y };
+			points_current.push_back(p);
+		}
+		fclose(current_p_centers);
+		
+		FILE* previous_p_centers_5;
+		if (fopen_s(&previous_p_centers_5, previous_slice_5.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers_5) == 0) {
+			fscanf_s(previous_p_centers_5, "%f", &x);
+			fscanf_s(previous_p_centers_5, ",");
+			fscanf_s(previous_p_centers_5, "%f", &y);
+			fscanf_s(previous_p_centers_5, ",");
+			fscanf_s(previous_p_centers_5, "%f", &ratio);
+			fscanf_s(previous_p_centers_5, ",");
+			fscanf_s(previous_p_centers_5, "%f", &radius);
+			fscanf_s(previous_p_centers_5, "\n");
+			Point2D p = { x, y };
+			points_previous_5.push_back(p);
+		}
+		fclose(previous_p_centers_5);
+
+		FILE* previous_p_centers_4;
+		if (fopen_s(&previous_p_centers_4, previous_slice_4.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers_4) == 0) {
+			fscanf_s(previous_p_centers_4, "%f", &x);
+			fscanf_s(previous_p_centers_4, ",");
+			fscanf_s(previous_p_centers_4, "%f", &y);
+			fscanf_s(previous_p_centers_4, ",");
+			fscanf_s(previous_p_centers_4, "%f", &ratio);
+			fscanf_s(previous_p_centers_4, ",");
+			fscanf_s(previous_p_centers_4, "%f", &radius);
+			fscanf_s(previous_p_centers_4, "\n");
+			Point2D p = { x, y };
+			points_previous_4.push_back(p);
+		}
+		fclose(previous_p_centers_4);
+
+		FILE* previous_p_centers_3;
+		if (fopen_s(&previous_p_centers_3, previous_slice_3.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers_3) == 0) {
+			fscanf_s(previous_p_centers_3, "%f", &x);
+			fscanf_s(previous_p_centers_3, ",");
+			fscanf_s(previous_p_centers_3, "%f", &y);
+			fscanf_s(previous_p_centers_3, ",");
+			fscanf_s(previous_p_centers_3, "%f", &ratio);
+			fscanf_s(previous_p_centers_3, ",");
+			fscanf_s(previous_p_centers_3, "%f", &radius);
+			fscanf_s(previous_p_centers_3, "\n");
+			Point2D p = { x, y };
+			points_previous_3.push_back(p);
+		}
+		fclose(previous_p_centers_3);
+
+		FILE* previous_p_centers_2;
+		if (fopen_s(&previous_p_centers_2, previous_slice_2.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers_2) == 0) {
+			fscanf_s(previous_p_centers_2, "%f", &x);
+			fscanf_s(previous_p_centers_2, ",");
+			fscanf_s(previous_p_centers_2, "%f", &y);
+			fscanf_s(previous_p_centers_2, ",");
+			fscanf_s(previous_p_centers_2, "%f", &ratio);
+			fscanf_s(previous_p_centers_2, ",");
+			fscanf_s(previous_p_centers_2, "%f", &radius);
+			fscanf_s(previous_p_centers_2, "\n");
+			Point2D p = { x, y };
+			points_previous_2.push_back(p);
+		}
+		fclose(previous_p_centers_2);
+
+		FILE* previous_p_centers_1;
+		if (fopen_s(&previous_p_centers_1, previous_slice_1.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(previous_p_centers_1) == 0) {
+			fscanf_s(previous_p_centers_1, "%f", &x);
+			fscanf_s(previous_p_centers_1, ",");
+			fscanf_s(previous_p_centers_1, "%f", &y);
+			fscanf_s(previous_p_centers_1, ",");
+			fscanf_s(previous_p_centers_1, "%f", &ratio);
+			fscanf_s(previous_p_centers_1, ",");
+			fscanf_s(previous_p_centers_1, "%f", &radius);
+			fscanf_s(previous_p_centers_1, "\n");
+			Point2D p = { x, y };
+			points_previous_1.push_back(p);
+		}
+		fclose(previous_p_centers_1);
+
+		FILE* next_p_centers_1;
+		if (fopen_s(&next_p_centers_1, next_slice_1.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers_1) == 0) {
+			fscanf_s(next_p_centers_1, "%f", &x);
+			fscanf_s(next_p_centers_1, ",");
+			fscanf_s(next_p_centers_1, "%f", &y);
+			fscanf_s(next_p_centers_1, ",");
+			fscanf_s(next_p_centers_1, "%f", &ratio);
+			fscanf_s(next_p_centers_1, ",");
+			fscanf_s(next_p_centers_1, "%f", &radius);
+			fscanf_s(next_p_centers_1, "\n");
+			Point2D p = { x, y };
+			points_next_1.push_back(p);
+		}
+		fclose(next_p_centers_1);
+
+		FILE* next_p_centers_2;
+		if (fopen_s(&next_p_centers_2, next_slice_2.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers_2) == 0) {
+			fscanf_s(next_p_centers_2, "%f", &x);
+			fscanf_s(next_p_centers_2, ",");
+			fscanf_s(next_p_centers_2, "%f", &y);
+			fscanf_s(next_p_centers_2, ",");
+			fscanf_s(next_p_centers_2, "%f", &ratio);
+			fscanf_s(next_p_centers_2, ",");
+			fscanf_s(next_p_centers_2, "%f", &radius);
+			fscanf_s(next_p_centers_2, "\n");
+			Point2D p = { x, y };
+			points_next_2.push_back(p);
+		}
+		fclose(next_p_centers_2);
+
+		FILE* next_p_centers_3;
+		if (fopen_s(&next_p_centers_3, next_slice_3.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers_3) == 0) {
+			fscanf_s(next_p_centers_3, "%f", &x);
+			fscanf_s(next_p_centers_3, ",");
+			fscanf_s(next_p_centers_3, "%f", &y);
+			fscanf_s(next_p_centers_3, ",");
+			fscanf_s(next_p_centers_3, "%f", &ratio);
+			fscanf_s(next_p_centers_3, ",");
+			fscanf_s(next_p_centers_3, "%f", &radius);
+			fscanf_s(next_p_centers_3, "\n");
+			Point2D p = { x, y };
+			points_next_3.push_back(p);
+		}
+		fclose(next_p_centers_3);
+
+		FILE* next_p_centers_4;
+		if (fopen_s(&next_p_centers_4, next_slice_4.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers_4) == 0) {
+			fscanf_s(next_p_centers_4, "%f", &x);
+			fscanf_s(next_p_centers_4, ",");
+			fscanf_s(next_p_centers_4, "%f", &y);
+			fscanf_s(next_p_centers_4, ",");
+			fscanf_s(next_p_centers_4, "%f", &ratio);
+			fscanf_s(next_p_centers_4, ",");
+			fscanf_s(next_p_centers_4, "%f", &radius);
+			fscanf_s(next_p_centers_4, "\n");
+			Point2D p = { x, y };
+			points_next_4.push_back(p);
+		}
+		fclose(next_p_centers_4);
+
+		FILE* next_p_centers_5;
+		if (fopen_s(&next_p_centers_5, next_slice_5.c_str(), "r") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		while (feof(next_p_centers_5) == 0) {
+			fscanf_s(next_p_centers_5, "%f", &x);
+			fscanf_s(next_p_centers_5, ",");
+			fscanf_s(next_p_centers_5, "%f", &y);
+			fscanf_s(next_p_centers_5, ",");
+			fscanf_s(next_p_centers_5, "%f", &ratio);
+			fscanf_s(next_p_centers_5, ",");
+			fscanf_s(next_p_centers_5, "%f", &radius);
+			fscanf_s(next_p_centers_5, "\n");
+			Point2D p = { x, y };
+			points_next_5.push_back(p);
+		}
+		fclose(next_p_centers_5);
+
+		Point2D pNorth = { 0.0, 0.0 }, pSouth = { 0.0, 0.0 }, pEast = { 0.0, 0.0 }, pWest = { 0.0, 0.0 };
+		Point2D pNorthEast = { 0.0, 0.0 }, pNorthWest = { 0.0, 0.0 }, pSouthEast = { 0.0, 0.0 }, pSouthWest = { 0.0, 0.0 };
+		Point2D pCurrent = { 0.0, 0.0 };
+		
+		//Save the remaining points in current slice
+		FILE* pFiltered_centers;
+		string filtered_centers = outputPath + "filter_hough_points/filtered/one slice/f_points_" + extension + ".csv";
+		if (fopen_s(&pFiltered_centers, filtered_centers.c_str(), "w") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		
+		size_t nb_previous_1 = 0, nb_previous_2 = 0, nb_previous_3 = 0, nb_previous_4 = 0, nb_previous_5 = 0;
+		size_t nb_next_1 = 0, nb_next_2 = 0, nb_next_3 = 0, nb_next_4 = 0, nb_next_5 = 0;
+		size_t ind = 0;
+
+		max_ratio = 0; max_radius = 0;
+		initial_max = 0; initial_max_radius = 0;
+		for (size_t it = 0; it < points_current.size(); it++) {
+
+			if (initial_max < ratios[it]) {
+				initial_max = ratios[it];
+				initial_max_radius = radiuses[it];
+				initial_point_max = points_current[it];
+			}
+
+			i = (size_t)points_current[it].x;
+			j = (size_t)points_current[it].y;
+			pCurrent.x = i;
+			pCurrent.y = j;
+
+			nb_previous_1 = 0; nb_previous_2 = 0; nb_previous_3 = 0; nb_previous_4 = 0; nb_previous_5 = 0;
+			nb_next_1 = 0; nb_next_2 = 0; nb_next_3 = 0; nb_next_4 = 0; nb_next_5 = 0;
+
+			//Compute the neigbors in given slice
+			if (i > 0 && i < Length - 1 && j > 0 && j < Width - 1) {
+
+				pNorth.x = i;
+				pNorth.y = j + 1;
+
+				pSouth.x = i;
+				pSouth.y = j - 1;
+
+				pEast.x = i + 1;
+				pEast.y = j;
+
+				pWest.x = i - 1;
+				pWest.y = j;
+
+				pNorthEast.x = i + 1;
+				pNorthEast.y = j + 1;
+
+				pNorthWest.x = i - 1;
+				pNorthWest.y = j + 1;
+
+				pSouthEast.x = i + 1;
+				pSouthEast.y = j - 1;
+
+				pSouthWest.x = i - 1;
+				pSouthWest.y = j - 1;
+
+			}
+
+			//Check neighbors in slices above
+			for (ind = 0; ind < points_next_1.size(); ind++) {
+				if (points_next_1[ind].x == pCurrent.x && points_next_1[ind].y == pCurrent.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pNorth.x && points_next_1[ind].y == pNorth.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pSouth.x && points_next_1[ind].y == pSouth.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pEast.x && points_next_1[ind].y == pEast.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pWest.x && points_next_1[ind].y == pWest.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pNorthEast.x && points_next_1[ind].y == pNorthEast.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pNorthWest.x && points_next_1[ind].y == pNorthWest.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pSouthEast.x && points_next_1[ind].y == pSouthEast.y) {
+					nb_next_1++;
+				}
+				if (points_next_1[ind].x == pSouthWest.x && points_next_1[ind].y == pSouthWest.y) {
+					nb_next_1++;
+				}
+			}
+
+			for (ind = 0; ind < points_next_2.size(); ind++) {
+				if (points_next_2[ind].x == pCurrent.x && points_next_2[ind].y == pCurrent.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pNorth.x && points_next_2[ind].y == pNorth.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pSouth.x && points_next_2[ind].y == pSouth.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pEast.x && points_next_2[ind].y == pEast.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pWest.x && points_next_2[ind].y == pWest.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pNorthEast.x && points_next_2[ind].y == pNorthEast.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pNorthWest.x && points_next_2[ind].y == pNorthWest.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pSouthEast.x && points_next_2[ind].y == pSouthEast.y) {
+					nb_next_2++;
+				}
+				if (points_next_2[ind].x == pSouthWest.x && points_next_2[ind].y == pSouthWest.y) {
+					nb_next_2++;
+				}
+			}
+
+			for (ind = 0; ind < points_next_3.size(); ind++) {
+				if (points_next_3[ind].x == pCurrent.x && points_next_3[ind].y == pCurrent.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pNorth.x && points_next_3[ind].y == pNorth.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pSouth.x && points_next_3[ind].y == pSouth.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pEast.x && points_next_3[ind].y == pEast.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pWest.x && points_next_3[ind].y == pWest.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pNorthEast.x && points_next_3[ind].y == pNorthEast.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pNorthWest.x && points_next_3[ind].y == pNorthWest.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pSouthEast.x && points_next_3[ind].y == pSouthEast.y) {
+					nb_next_3++;
+				}
+				if (points_next_3[ind].x == pSouthWest.x && points_next_3[ind].y == pSouthWest.y) {
+					nb_next_3++;
+				}
+			}
+
+			for (ind = 0; ind < points_next_4.size(); ind++) {
+				if (points_next_4[ind].x == pCurrent.x && points_next_4[ind].y == pCurrent.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pNorth.x && points_next_4[ind].y == pNorth.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pSouth.x && points_next_4[ind].y == pSouth.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pEast.x && points_next_4[ind].y == pEast.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pWest.x && points_next_4[ind].y == pWest.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pNorthEast.x && points_next_4[ind].y == pNorthEast.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pNorthWest.x && points_next_4[ind].y == pNorthWest.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pSouthEast.x && points_next_4[ind].y == pSouthEast.y) {
+					nb_next_4++;
+				}
+				if (points_next_4[ind].x == pSouthWest.x && points_next_4[ind].y == pSouthWest.y) {
+					nb_next_4++;
+				}
+			}
+
+			for (ind = 0; ind < points_next_5.size(); ind++) {
+				if (points_next_5[ind].x == pCurrent.x && points_next_5[ind].y == pCurrent.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pNorth.x && points_next_5[ind].y == pNorth.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pSouth.x && points_next_5[ind].y == pSouth.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pEast.x && points_next_5[ind].y == pEast.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pWest.x && points_next_5[ind].y == pWest.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pNorthEast.x && points_next_5[ind].y == pNorthEast.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pNorthWest.x && points_next_5[ind].y == pNorthWest.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pSouthEast.x && points_next_5[ind].y == pSouthEast.y) {
+					nb_next_5++;
+				}
+				if (points_next_5[ind].x == pSouthWest.x && points_next_5[ind].y == pSouthWest.y) {
+					nb_next_5++;
+				}
+			}
+
+			//Chech neighbors in slices below 
+			for (ind = 0; ind < points_previous_1.size(); ind++) {
+				if (points_previous_1[ind].x == pCurrent.x && points_previous_1[ind].y == pCurrent.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pNorth.x && points_previous_1[ind].y == pNorth.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pSouth.x && points_previous_1[ind].y == pSouth.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pEast.x && points_previous_1[ind].y == pEast.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pWest.x && points_previous_1[ind].y == pWest.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pNorthEast.x && points_previous_1[ind].y == pNorthEast.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pNorthWest.x && points_previous_1[ind].y == pNorthWest.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pSouthEast.x && points_previous_1[ind].y == pSouthEast.y) {
+					nb_previous_1++;
+				}
+				if (points_previous_1[ind].x == pSouthWest.x && points_previous_1[ind].y == pSouthWest.y) {
+					nb_previous_1++;
+				}
+			}
+
+			for (ind = 0; ind < points_previous_2.size(); ind++) {
+				if (points_previous_2[ind].x == pCurrent.x && points_previous_2[ind].y == pCurrent.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pNorth.x && points_previous_2[ind].y == pNorth.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pSouth.x && points_previous_2[ind].y == pSouth.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pEast.x && points_previous_2[ind].y == pEast.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pWest.x && points_previous_2[ind].y == pWest.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pNorthEast.x && points_previous_2[ind].y == pNorthEast.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pNorthWest.x && points_previous_2[ind].y == pNorthWest.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pSouthEast.x && points_previous_2[ind].y == pSouthEast.y) {
+					nb_previous_2++;
+				}
+				if (points_previous_2[ind].x == pSouthWest.x && points_previous_2[ind].y == pSouthWest.y) {
+					nb_previous_2++;
+				}
+			}
+
+			for (ind = 0; ind < points_previous_3.size(); ind++) {
+				if (points_previous_3[ind].x == pCurrent.x && points_previous_3[ind].y == pCurrent.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pNorth.x && points_previous_3[ind].y == pNorth.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pSouth.x && points_previous_3[ind].y == pSouth.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pEast.x && points_previous_3[ind].y == pEast.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pWest.x && points_previous_3[ind].y == pWest.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pNorthEast.x && points_previous_3[ind].y == pNorthEast.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pNorthWest.x && points_previous_3[ind].y == pNorthWest.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pSouthEast.x && points_previous_3[ind].y == pSouthEast.y) {
+					nb_previous_3++;
+				}
+				if (points_previous_3[ind].x == pSouthWest.x && points_previous_3[ind].y == pSouthWest.y) {
+					nb_previous_3++;
+				}
+			}
+
+			for (ind = 0; ind < points_previous_4.size(); ind++) {
+				if (points_previous_4[ind].x == pCurrent.x && points_previous_4[ind].y == pCurrent.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pNorth.x && points_previous_4[ind].y == pNorth.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pSouth.x && points_previous_4[ind].y == pSouth.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pEast.x && points_previous_4[ind].y == pEast.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pWest.x && points_previous_4[ind].y == pWest.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pNorthEast.x && points_previous_4[ind].y == pNorthEast.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pNorthWest.x && points_previous_4[ind].y == pNorthWest.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pSouthEast.x && points_previous_4[ind].y == pSouthEast.y) {
+					nb_previous_4++;
+				}
+				if (points_previous_4[ind].x == pSouthWest.x && points_previous_4[ind].y == pSouthWest.y) {
+					nb_previous_4++;
+				}
+			}
+
+			for (ind = 0; ind < points_previous_5.size(); ind++) {
+				if (points_previous_5[ind].x == pCurrent.x && points_previous_5[ind].y == pCurrent.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pNorth.x && points_previous_5[ind].y == pNorth.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pSouth.x && points_previous_5[ind].y == pSouth.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pEast.x && points_previous_5[ind].y == pEast.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pWest.x && points_previous_5[ind].y == pWest.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pNorthEast.x && points_previous_5[ind].y == pNorthEast.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pNorthWest.x && points_previous_5[ind].y == pNorthWest.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pSouthEast.x && points_previous_5[ind].y == pSouthEast.y) {
+					nb_previous_5++;
+				}
+				if (points_previous_5[ind].x == pSouthWest.x && points_previous_5[ind].y == pSouthWest.y) {
+					nb_previous_5++;
+				}
+			}
+
+			////Keep the center if it has neighboors in all slices
+			//if (nb_next_1 != 0 && nb_next_2 != 0 && nb_next_3 != 0 && nb_next_4 != 0 && nb_next_5 != 0 &&
+			//	nb_previous_1 != 0 && nb_previous_2 != 0 && nb_previous_3 != 0 && nb_previous_4 != 0 && nb_previous_5 != 0) {
+			//	fprintf(pFiltered_centers, "%f,%f\n", points_current[it].x, points_current[it].y);
+			//	if (max_ratio < ratios[it]) {
+			//		max_ratio = ratios[it];
+			//		max_radius = radiuses[it];
+			//		max_point = points_current[it];
+			//	}
+			//}
+
+			////Keep the center if it has neighboors in all slices
+			//if (nb_next_1 != 0 && nb_next_2 != 0 && nb_next_3 != 0 && nb_next_4 != 0 &&
+			//	nb_previous_1 != 0 && nb_previous_2 != 0 && nb_previous_3 != 0 && nb_previous_4 != 0) {
+			//	fprintf(pFiltered_centers, "%f,%f\n", points_current[it].x, points_current[it].y);
+			//	if (max_ratio < ratios[it]) {
+			//		max_ratio = ratios[it];
+			//		max_radius = radiuses[it];
+			//		max_point = points_current[it];
+			//	}
+			//}
+
+			//Keep the center if it has neighboors in all slices
+			if (nb_next_1 != 0 && nb_previous_1 != 0) {
+				fprintf(pFiltered_centers, "%f,%f\n", points_current[it].x, points_current[it].y);
+				if (max_ratio < ratios[it]) {
+					max_ratio = ratios[it];
+					max_radius = radiuses[it];
+					max_point = points_current[it];
+				}
+			}
+
+		}
+
+		//empty the vectors
+		while (points_current.size() > 0) {
+			points_current.pop_back();
+		}
+		while (points_previous_1.size() > 0) {
+			points_previous_1.pop_back();
+		}
+		while (points_previous_2.size() > 0) {
+			points_previous_2.pop_back();
+		}
+		while (points_previous_3.size() > 0) {
+			points_previous_3.pop_back();
+		}
+		while (points_previous_4.size() > 0) {
+			points_previous_4.pop_back();
+		}
+		while (points_previous_5.size() > 0) {
+			points_previous_5.pop_back();
+		}
+		while (points_next_1.size() > 0) {
+			points_next_1.pop_back();
+		}
+		while (points_next_2.size() > 0) {
+			points_next_2.pop_back();
+		}
+		while (points_next_3.size() > 0) {
+			points_next_3.pop_back();
+		}
+		while (points_next_4.size() > 0) {
+			points_next_4.pop_back();
+		}
+		while (points_next_5.size() > 0) {
+			points_next_5.pop_back();
+		}
+
+		//draw initial circle for current slice
+		FILE* pInitial_centers;
+		string found_centers_initial = outputPath + "filter_hough_points/filtered/initial/initial_circle_" + extension + ".csv";
+		if (fopen_s(&pInitial_centers, found_centers_initial.c_str(), "w") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		double perimeter = 2 * M_PI * initial_max_radius;
+		size_t number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
+		double step = 2 * M_PI / (double)number_of_circle_points;
+		BoundingBox2D box = findBoundingBox2D(initial_point_max, Length, Width, initial_max_radius, 1.0);
+		for (size_t np = 0; np < number_of_circle_points; np++)
+		{
+			double phi = (double)np * step;
+			double coordx = 0.5 + initial_point_max.x + initial_max_radius * cos(phi);
+			double coordy = 0.5 + initial_point_max.y + initial_max_radius * sin(phi);
+			size_t indx, indy;
+
+			if (coordx < 0) {
+				indx = 0;
+			}
+			else {
+				if (coordx > Length - 1) {
+					indx = Length - 1;
+				}
+				else {
+					indx = (size_t)coordx;
+				}
+			}
+
+			if (coordy < 0) {
+				indy = 0;
+			}
+			else {
+				if (coordy > Width - 1) {
+					indy = Width - 1;
+				}
+				else {
+					indy = (size_t)coordy;
+				}
+			}
+
+			fprintf(pInitial_centers, "%d,%d\n", indx, indy);
+		}
+		fclose(pInitial_centers);
+		
+		//draw found circle for current slice
+		FILE* pFound_centers;
+		string found_centers = outputPath + "filter_hough_points/filtered/one slice/circle_" + extension + ".csv";
+		if (fopen_s(&pFound_centers, found_centers.c_str(), "w") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		perimeter = 2 * M_PI * max_radius;
+		number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
+		step = 2 * M_PI / (double)number_of_circle_points;
+		box = findBoundingBox2D(max_point, Length, Width, max_radius, 1.0);
+		for (size_t np = 0; np < number_of_circle_points; np++)
+		{
+			double phi = (double)np * step;
+			//adding +0.5 make it looks more like circle
+			double coordx = 0.5 + max_point.x + max_radius * cos(phi);
+			double coordy = 0.5 + max_point.y + max_radius * sin(phi);
+			size_t indx, indy;
+
+			if (coordx < 0) {
+				indx = 0;
+			}
+			else {
+				if (coordx > Length - 1) {
+					indx = Length - 1;
+				}
+				else {
+					indx = (size_t)coordx;
+				}
+			}
+
+			if (coordy < 0) {
+				indy = 0;
+			}
+			else {
+				if (coordy > Width - 1) {
+					indy = Width - 1;
+				}
+				else {
+					indy = (size_t)coordy;
+				}
+			}
+
+			fprintf(pFound_centers, "%d,%d\n", indx, indy);
+		}
+		
+		while (ratios.size() > 0) {
+			ratios.pop_back();
+		}
+		while (radiuses.size() > 0) {
+			radiuses.pop_back();
+		}	
+
+		fclose(pFound_centers);
+		fclose(pFiltered_centers);
+	}
+	*
+
+
+	//=================== Segment the pelvis =========================
+	
+
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** maskThreshold = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		maskThreshold[k] = new dataType[dim2D]{ 0 };
+	}
+	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	copyDataToAnotherArray(ctContainer->dataPointer, maskThreshold, Height, Length, Width);
+
+	////Crop the volume from the lungs
+	//size_t lungs_last_slice = 201; //p1
+	//size_t lungs_last_slice = 292; //p2
+	//size_t lungs_last_slice = 171; //p3
+	size_t lungs_last_slice = 158; //p4
+	//size_t lungs_last_slice = 565; //p5
+	//size_t lungs_last_slice = 355; //p6
+	for (k = lungs_last_slice; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			maskThreshold[k][i] = minData;//imageData[k][i];
+		}
+	}
+
+	thresholding3dFunctionN(maskThreshold, Length, Width, Height, 500, maxData, 0.0, 1.0);
+
+	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	storing_path = outputPath + "bones_p4.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+	//dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
+
+	int** labelArray = new int* [Height];
+	bool** status = new bool* [Height];
+	for (k = 0; k < Height; k++) {
+		labelArray[k] = new int[dim2D] { 0 };
+		status[k] = new bool[dim2D];
+	}
+	if (labelArray == NULL || status == NULL)
+		return false;
+
+	//Initialization
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			status[k][i] = false;
+		}
+	}
+
+	int numberOfRegionCells = countNumberOfRegionsCells(maskThreshold, Length, Width, Height, 1.0);
+
+	labelling3D(maskThreshold, labelArray, status, Length, Width, Height, 1.0);
+
+	//Counting
+	int* countingArray = new int[numberOfRegionCells] {0};
+	if (countingArray == NULL)
+		return false;
+
+	//Get regions sizes
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (labelArray[k][i] > 0) {
+				countingArray[labelArray[k][i]]++;
+			}
+		}
+	}
+
+	//Number of regions
+	int numberOfRegions = 0;
+	for (i = 0; i < numberOfRegionCells; i++) {
+		if (countingArray[i] > 0) {
+			numberOfRegions++;
+		}
+	}
+
+	//Find the largest region
+	size_t regionSize = 0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (countingArray[labelArray[k][i]] > regionSize) {
+				regionSize = countingArray[labelArray[k][i]];
+			}
+		}
+	}
+
+	//Keep and save the largest region
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (countingArray[labelArray[k][i]] == regionSize) {
+				maskThreshold[k][i] = 1.0;
+			}
+			else {
+				maskThreshold[k][i] = 0.0;
+			}
+		}
+	}
+
+	storing_path = outputPath + "pelvis_p4.raw";
+	store3dRawData<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str());
+
+	delete[] countingArray;
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] maskThreshold[k];
+		delete[] labelArray[k];
+		delete[] status[k];
+	}
+	delete[] imageData;
+	delete[] maskThreshold;
+	delete[] labelArray;
+	delete[] status;
+	free(ctContainer);
+	*/
+
+	//==================== Distance map to improve Hough transform =========================
+	
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+	
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	const size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
+	dataType** imgInterpolated = new dataType * [hauteur];
+	for (k = 0; k < hauteur; k++) {
+		imgInterpolated[k] = new dataType[dim2D]{ 0 };
+	}
+
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data interpolate = { hauteur, Length, Width, imgInterpolated, ctOrigin, intSpacing, orientation };
+	//imageInterpolation3D(inputImage, interpolate, TRILINEAR);
+
+	storing_path = outputPath + "interpolate_trilinear.raw";
+	manageRAWFile3D<dataType>(imgInterpolated, Length, Width, hauteur, storing_path.c_str(), LOAD_DATA, false);
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* maskThreshold = new dataType[dim2D]{ 0 };
+	dataType* distanceMap = new dataType[dim2D]{ 0 };
+
+	//double radius = 15.0;
+	PixelSpacing sliceSpacing = { ctSpacing.sx, ctSpacing.sy };
+	Point2D origin = { 0.0, 0.0 };
+	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0 } };
+	Image_Data2D IMAGE
+	{
+		Length,
+		Width,
+		imageSlice,
+		origin,
+		sliceSpacing,
+		orientation2D
+	};
+	HoughParameters hParameters =
+	{
+		7.0,   //minimal radius
+		20.0,  //maximal radius
+		0.5,   //radius step
+		0.5,   //epsilon
+		40,   //offset 
+		1000,  //K edge detector coefficient
+		0.15,  //threshold edge detector
+	};
+	Image_Data2D imageDataToHoughTransform =
+	{
+		Length,
+		Width,
+		imageSlice,
+		origin,
+		sliceSpacing,
+		orientation2D
+	};
+
+	//save all the found circles
+	FILE* found_points;
+	storing_path = outputPath + "tests hough 28-04/found_centers_V2.csv";
+	if (fopen_s(&found_points, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	size_t slice_of_interest = 519;
+	Point2D seed = { 256.0, 256.0 };
+
+	for (k = 357; k <= 457; k++) {
+		
+		extension = to_string(k);
+		copyDataToAnother2dArray(imgInterpolated[k], imageSlice, Length, Width);
+		initialize2dArray(distanceMap, Length, Width);
+
+		storing_path = outputPath + "tests hough 28-04/potential_center_" + extension + ".csv";
+		//Point2D found_point = localCircleDetection(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
+		Point2D found_point = localCircleDetectionWithOptimization(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
+
+		if (found_point.x != -1 && found_point.y != -1) {
+			Point3D pCenter = { found_point.x, found_point.y, k };
+			pCenter = getRealCoordFromImageCoord3D(pCenter, ctOrigin, intSpacing, orientation);
+			fprintf(found_points, "%f,%f,%f\n", pCenter.x, pCenter.y, pCenter.z);
+		}
+		//storing_path = outputPath + "tests hough 28-04/found_circle_" + extension + ".raw";
+		//manageRAWFile2D<dataType>(distanceMap, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	}
+	fclose(found_points);
+
+	delete[] imageSlice;
+	delete[] distanceMap;
+	for (k = 0; k < hauteur; k++) {
+		if (k < Height){
+			delete[] imageData[k];
+		}
+		delete[] imgInterpolated[k];
+	}
+	delete[] imageData;
+	delete[] imgInterpolated;
 
 	return EXIT_SUCCESS;
 }
