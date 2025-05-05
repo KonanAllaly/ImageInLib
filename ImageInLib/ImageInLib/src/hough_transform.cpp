@@ -60,14 +60,6 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 	dataType* maskThreshold = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* houghSpaceMax = (dataType*)malloc(sizeof(dataType) * dim2D);
 	
-	//dataType* gradientX = (dataType*)malloc(sizeof(dataType) * dim2D);
-	//dataType* gradientY = (dataType*)malloc(sizeof(dataType) * dim2D);
-	//initialize2dArray(gradientX, length, width);
-	//initialize2dArray(gradientY, length, width);
-	////compute the edge detector
-	//initialize2dArray(edgeDetector, length, width);
-	//computeImageGradient(imageDataStr, gradientX, gradientY);
-	
 	dataType norm_of_gradient = 0.0;
 	Point2D grad;
 	for (size_t i = 0; i < length; i++) {
@@ -75,7 +67,6 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 			size_t xd = x_new(i, j, length);
 			getGradient2D(imageDataStr.imageDataPtr, length, width, i, j, imageDataStr.spacing, &grad);
 			norm_of_gradient = sqrt(grad.x * grad.x + grad.y * grad.y);
-			//norm_of_gradient = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
 			edgeDetector[xd] = gradientFunction(norm_of_gradient, params.K);
 			//threshold of edge detector
 			if (edgeDetector[xd] < params.thres) {
@@ -247,8 +238,6 @@ Point2D localHoughTransform(Image_Data2D imageDataStr, Point2D seed, dataType* h
 	free(edgeDetector);
 	free(maskThreshold);
 	free(houghSpaceMax);
-	//free(gradientX);
-	//free(gradientY);
 
 	return found_center;
 }
@@ -290,8 +279,8 @@ Point2D localHoughWithCanny(Image_Data2D imageDataStr, Point2D seed, dataType* h
 		normGradient[i] = sqrt(gradientX[i] * gradientX[i] + gradientY[i] * gradientY[i]);
 	}
 	
-	//nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, length, width);
-	//thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
+	nonMaximumSuppression(maskThreshold, normGradient, gradientAngle, length, width);
+	thresholdByHyteresis(maskThreshold, normGradient, statusPixel, length, width, 0.005, 0.009);
 
 	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
 	//manageRAWFile2D<dataType>(maskThreshold, length, width, outputPath.c_str(), LOAD_DATA, false);
@@ -527,131 +516,11 @@ void houghTransform(Image_Data2D imageDataStr, dataType* foundCirclePtr, HoughPa
 					}
 					radius += parameters.radius_step;
 				}
-				
-				/*
-				while (radius <= parameters.radius_max) {
-
-					//initialize the 2D array
-					initialize2dArray(houghSpacePtr, length, width);
-
-					//find the bounding box of the current center
-					box = findBoundingBox2D(test_center, length, width, radius, parameters.offset);
-
-					//small bounding box
-					i_min = (size_t)(box.i_min + radius + parameters.epsilon);
-					if (box.i_max >= radius) {
-						i_max = (size_t)(box.i_max - radius - parameters.epsilon);
-					}
-
-					j_min = (size_t)(box.j_min + radius + parameters.epsilon);
-					if (box.j_max >= radius) {
-						j_max = (size_t)(box.j_max - radius - parameters.epsilon);
-					}
-
-					//visit all the pixels in the bounding box
-					for (size_t i = i_min; i <= i_max; i++) {
-						for (size_t j = j_min; j <= j_max; j++) {
-
-							size_t xd = x_new(i, j, length);
-
-							center_circle.x = (dataType)i;
-							center_circle.y = (dataType)j;
-							getRealCoordFromImageCoord2D(center_circle, originImage, parameters.spacing, orientation);
-
-							//vote
-							count_vote = 0;
-							count_neighbor = 0;
-							total_neighbor = 0;
-
-							if (maskThreshold[x_new(i, j, length)] == background) {
-								for (size_t i_new = box.i_min; i_new <= box.i_max; i_new++) {
-									for (size_t j_new = box.j_min; j_new <= box.j_max; j_new++) {
-
-										size_t xd_new = x_new(i_new, j_new, length);
-
-										current_point.x = (dataType)i_new;
-										current_point.y = (dataType)j_new;
-
-										getRealCoordFromImageCoord2D(current_point, originImage, parameters.spacing, orientation);
-										dist_point = getPoint2DDistance(center_circle, current_point);
-
-										//count foreground pixels in the band
-										if (dist_point >= (radius - parameters.epsilon) && dist_point <= (radius + parameters.epsilon)) {
-											total_neighbor++;
-											if (maskThreshold[xd_new] == foreground) {
-												count_vote++;
-											}
-										}
-										//count foreground pixels close to the current center
-										if (dist_point < (radius - parameters.epsilon) && maskThreshold[xd_new] == foreground) {
-											count_neighbor++;
-										}
-
-									}
-								}
-							}
-
-							//compute ratios
-							hough_ratio = (dataType)count_vote / (dataType)total_neighbor;
-							if (count_neighbor == 0) {
-								houghSpacePtr[xd] = hough_ratio;
-							}
-						}
-					}
-
-					//keep the maximal ratio for each pixel
-					for (size_t i = box.i_min; i <= box.i_max; i++) {
-						for (size_t j = box.j_min; j <= box.j_max; j++) {
-							size_t xd = x_new(i, j, length);
-							if (houghSpacePtr[xd] > houghSpaceMax[xd]) {
-								houghSpaceMax[xd] = houghSpacePtr[xd];
-							}
-						}
-					}
-
-					//find the maximal ratio for current radius
-					max_ratio = getTheMaxValue(houghSpacePtr, length, width);
-					//find the maximal ratio for whole radius range
-					if (max_ratio > found_ratio) {
-						found_ratio = max_ratio;
-						found_radius = radius;
-						test_max = true;
-					}
-					//update the found_center if the value of found_ratio was updated
-					if (test_max == true) {
-						found_center = getPointWithMaximalValue2D(houghSpaceMax, length, width);
-						test_max = false;
-					}
-					radius += parameters.radius_step;
-
-				}
-				*/
-
 			}
 			foundCirclePtr[x_new(p, q, length)] = count_vote;
 
 			//if (found_radius != 0.0) {
 			//	printf("Found radius = %lf\n", found_radius);
-			//}
-
-			////Draw found circle
-			//if (found_radius != 0.0) {
-			//	//add found center
-			//	foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
-			//	//bounding box for found circle
-			//	box = findBoundingBox2D(found_center, length, width, found_radius, parameters.offset);
-			//	Point2D pt_draw = getRealCoordFromImageCoord2D(found_center, originImage, parameters.spacing, orientation);
-			//	for (size_t i = box.i_min; i <= box.i_max; i++) {
-			//		for (size_t j = box.j_min; j <= box.j_max; j++) {
-			//			current_point.x = (dataType)i;
-			//			current_point.y = (dataType)j;
-			//			current_point = getRealCoordFromImageCoord2D(current_point, originImage, parameters.spacing, orientation);
-			//			dist_point = getPoint2DDistance(pt_draw, current_point);
-			//			if (dist_point >= (found_radius - parameters.epsilon) && dist_point <= (found_radius + parameters.epsilon)) {
-			//				foundCirclePtr[x_new(i, j, length)] = 1.0;
-			//			}
-			//		}
-			//	}
 			//}
 		}
 	}
@@ -795,19 +664,16 @@ bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameter
 	return true;
 }
 
-Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold) {
+Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold, std::string path_found_centers) {
 
 	if (imageDataPtr.imageDataPtr == NULL || foundCirclePtr == NULL)
 	{
 		return Point2D{ -1.0, -1.0 };
 	}
 
-	Point2D first_centroid = {0.0 , 0.0};
-	Point2D second_centroid = { 0.0 , 0.0 };
-
-	size_t height = imageDataPtr.height;
+	size_t length = imageDataPtr.height;
 	size_t width = imageDataPtr.width;
-	size_t dim2D = height * width;
+	size_t dim2D = length * width;
 	double radius;
 	double offset = 1.0, perimeter, step, phi, distance_between_points = 1.0;
 	size_t indx = 0, indy = 0, number_of_circle_points;
@@ -826,63 +692,54 @@ Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr
 	size_t count_neight_center = 0;
 	size_t number_of_potential_center = 0;
 
+	//to be sure that the same point is not counted multiple time
+	bool* status = new bool[dim2D] { false }; 
+
 	//////////////////////////////////////
+	dataType* edgeImage = new dataType[dim2D]{ 0 };
 	dataType* maskThreshold = new dataType[dim2D]{ 0 };
-	dataType* distanceMap = new dataType[dim2D]{ 0 };
 	//Computation of edge image
 	Point2D grad;
-	for (size_t i = 0; i < height; i++) {
+	for (size_t i = 0; i < length; i++) {
 		for (size_t j = 0; j < width; j++) {
 			//Compute gradient : in 2D the spacing just scale the gradient
-			getGradient2D(imageDataPtr.imageDataPtr, height, width, i, j, imageDataPtr.spacing, &grad);
+			getGradient2D(imageDataPtr.imageDataPtr, length, width, i, j, imageDataPtr.spacing, &grad);
 			//Compute norm of the gradient
 			dataType norm_gradient = sqrt(grad.x * grad.x + grad.y * grad.y);
 			//Compute the corresponding edge value
 			dataType edge_value = gradientFunction(norm_gradient, hParameters.K);
 			//Threshold of edge detector
 			if (edge_value < hParameters.thres) {
-				maskThreshold[x_new(i, j, height)] = 1.0;
+				//edgeImage[x_new(i, j, length)] = 1.0;
+				maskThreshold[x_new(i, j, length)] = 1.0;
 			}
 		}
 	}
-	//copyDataToAnother2dArray(imageDataPtr.imageDataPtr, maskThreshold, height, width);
-	//manageRAWFile2D<dataType>(maskThreshold, height, width, path_threshold.c_str(), STORE_DATA, false);
+	//removeSingleEdgePixel(edgeImage, maskThreshold, length, width, 1.0);
+	//copyDataToAnother2dArray(imageDataPtr.imageDataPtr, maskThreshold, length, width);
+	manageRAWFile2D<dataType>(maskThreshold, length, width, path_threshold.c_str(), STORE_DATA, false);
 	/////////////////////////////////////////
 
-	
-	//Image_Data2D imageDataToDistanceMap =
-	//{
-	//	height,
-	//	width,
-	//	maskThreshold,
-	//	imageDataPtr.origin,
-	//	imageDataPtr.spacing,
-	//	imageDataPtr.orientation,
-	//};
-	//bruteForceDmap2D(imageDataToDistanceMap, distanceMap, 1.0);
-	//std::string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/dnap.raw";
-	//manageRAWFile2D<dataType>(distanceMap, height, width, outputPath.c_str(), LOAD_DATA, false);
-
 	//Restrict the search in small region of the image given by the offset 
-	BoundingBox2D box = findBoundingBox2D(seed, height, width, hParameters.radius_max, hParameters.offset);
-	initialize2dArray(foundCirclePtr, height, width);
-
+	BoundingBox2D box = findBoundingBox2D(seed, length, width, hParameters.radius_max, hParameters.offset);
+	initialize2dArray(foundCirclePtr, length, width);
+	
 	size_t quad1 = 0, quad2 = 0, quad3 = 0, quad4 = 0;
 	size_t point_out_of_bounding_box = 0;
-	double epsilon = 0.5 * hParameters.radius_step;
+	size_t computed_pixel = 0;
 	
 	//Search for potential circles only in the bounding box
 	for (size_t i = box.i_min; i <= box.i_max; i++)
 	{
 		for (size_t j = box.j_min; j <= box.j_max; j++)
 		{
-			size_t xd = x_new(i, j, height);
+			size_t xd = x_new(i, j, length);
 		
 			//The potential center can not be foreground pixel
 			if (maskThreshold[xd] == 0.0) {
 
+
 				Point2D point_center = { i, j };
-				Point2D center_real = getRealCoordFromImageCoord2D(point_center, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
 
 				//Voting for all the radiuses represented by k
 				for (size_t k = 0; k < number_of_radiuses; k++)
@@ -891,51 +748,50 @@ Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr
 					//Compute the current radius
 					radius = hParameters.radius_min + k * hParameters.radius_step;
 
-					//Count fouground pixels too close to the potential center
-					BoundingBox2D box_neighbor = findBoundingBox2D(point_center, height, width, radius, 1.0);
-					count_neight_center = 0;
+					// be sure that every edge pixel is not counted multiple time during voting
+					for (size_t st = 0; st < dim2D; st++)
+					{
+						status[st] = false;
+					}
 
+					//Count fouground pixels too close to the potential center
+					BoundingBox2D box_neighbor = findBoundingBox2D(point_center, length, width, radius, 1.0);
+					count_neight_center = 0;
 					for (size_t i_n = box_neighbor.i_min; i_n <= box_neighbor.i_max; i_n++) {
 						for (size_t j_n = box_neighbor.j_min; j_n <= box_neighbor.j_max; j_n++) {
 							Point2D current_p = { i_n, j_n };
-							current_p = getRealCoordFromImageCoord2D(current_p, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
-							double d_n = getPoint2DDistance(center_real, current_p);
-							if (d_n < (radius - epsilon) && maskThreshold[x_new(i_n, j_n, height)] == 1.0) {
+							double d_n = getPoint2DDistance(point_center, current_p);
+							if (d_n < radius && maskThreshold[x_new(i_n, j_n, length)] == 1.0) {
 								count_neight_center++;
 							}
 						}
 					}
 					
-					//Count the foreground pixel belonging to the circle
-					
-					if (count_neight_center == 0) {
+					if (count_neight_center <= 5) {
 						
 						perimeter = 2 * M_PI * radius;
 						number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5); //distance between points is 1.0
 						step = 2 * M_PI / (double)number_of_circle_points;
 						
-						quad1 = 0; 
-						quad2 = 0; 
-						quad3 = 0;
-						quad4 = 0;
+						quad1 = 0; quad2 = 0; quad3 = 0; quad4 = 0;
 						point_out_of_bounding_box = 0;
-
+						computed_pixel = 0;
 						for (size_t np = 0; np < number_of_circle_points; np++)
 						{
 							phi = (double)np * step;
-							//adding +0.5 make it looks more like circle
-							coordx = 0.5 + point_center.x + radius * cos(phi);
-							coordy = 0.5 + point_center.y + radius * sin(phi);
+							coordx = point_center.x + radius * cos(phi);
+							coordy = point_center.y + radius * sin(phi);
 
 							if (coordx < 0) {
 								indx = 0;
 							}
 							else {
-								if (coordx > height - 1) {
-									indx = height - 1;
+								if (coordx > length - 1) {
+									indx = length - 1;
 								}
 								else {
-									indx = (size_t)coordx;
+									//indx = (size_t)coordx;
+									indx = (size_t)round(coordx);
 								}
 							}
 
@@ -947,48 +803,57 @@ Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr
 									indy = width - 1;
 								}
 								else {
-									indy = (size_t)coordy;
+									//indy = (size_t)coordy;
+									indy = (size_t)round(coordy);
 								}
 							}
 
 							//Be sure that the found circle doesn't cross the bounding box
 							if (indx >= box.i_min && indx <= box.i_max && indy >= box.j_min && indy <= box.j_max)
 							{
+								//represent the maximum number of pixels that belong to the circle
+								computed_pixel++;
+
 								//verify this condition to be sure that the point is inside the image
-								size_t xd_quad = x_new(indx, indy, height);
+								size_t xd_quad = x_new(indx, indy, length);
 								if (maskThreshold[xd_quad] == 1.0) {
 									
-									accumulation[k][xd] += 1;
+									//be sure that every point vote just once
+									if (status[xd_quad] == false) {
+										
+										status[xd_quad] = true;
+										accumulation[k][xd] += 1;
 
-									//Be sure that every quadrant is filled with at least one point
-									if (phi <= (M_PI / 2.0))
-									{
-										//first quadrant
-										quad1++;
-									}
-									else
-									{
-										if (phi <= M_PI)
+										//Be sure that every quadrant is filled with at least one point
+										if (phi <= (M_PI / 2.0))
 										{
-											//second quadrant
-											quad2++;
+											//first quadrant
+											quad1++;
 										}
 										else
 										{
-											if (phi <= (3 * M_PI / 2.0))
+											if (phi <= M_PI)
 											{
-												//third quadrant
-												quad3++;
+												//second quadrant
+												quad2++;
 											}
 											else
 											{
-												//fourth quadrant
-												quad4++;
+												if (phi <= (3 * M_PI / 2.0))
+												{
+													//third quadrant
+													quad3++;
+												}
+												else
+												{
+													//fourth quadrant
+													quad4++;
+												}
 											}
 										}
+										
 									}
 								}
-								
 							}
 							else {
 								//be sure that the current center doesn't cross the bounding box
@@ -997,145 +862,140 @@ Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr
 
 						}
 
+						
 						//If one quadrant is empty, the point is not a circle center
 						if ((quad1 > 0) && (quad2 > 0) && (quad3 > 0) && (quad4 > 0) && (point_out_of_bounding_box == 0))
 						{
-							accumulation[k][xd] /= (dataType)number_of_circle_points;
+							accumulation[k][xd] /= (dataType)computed_pixel;
 						}
 						else {
 							accumulation[k][xd] = 0;
 						}
-
+						
+						
 					}
 					else {
 						//set the accumulation for given radius to 0 if there are foreground pixels inside the circle
 						accumulation[k][xd] = 0;
 					}
 
-					////Filter out points with few votes
-					//if (accumulation[k][xd] < 0.25) {
-					//	accumulation[k][xd] = 0;
-					//}
-
 				}
-
 			}
 		}
 	}
 
-	////save all the found circles
-	//FILE* found_points;
-	//if (fopen_s(&found_points, path_threshold.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return{ -1.0, -1.0 };
-	//}
+	//save all the found circles
+	FILE* found_points;
+	if (fopen_s(&found_points, path_found_centers.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return{ -1.0, -1.0 };
+	}
 
 	//Find the maximal accumulation
 	dataType maxAccum = 0;
-	dataType maxSecond = 0;
 	double radius_max = 0.0;
-	size_t several_centroid = 0.0;
 	double radius_exp = 0;
-	dataType diff = 0.0, minDif = 10000;
-	Point2D minPoint = { 0.0, 0.0 };
 	
+	Point2D found_center = { 0.0 , 0.0 };
 	for (size_t k = 0; k < number_of_radiuses; k++) {
 		for (size_t i = box.i_min; i <= box.i_max; i++) {
 			for (size_t j = box.j_min; j <= box.j_max; j++) {
-				size_t xd = x_new(i, j, height);
+				size_t xd = x_new(i, j, length);
 				if (accumulation[k][xd] > maxAccum) {
 					maxAccum = accumulation[k][xd];
-					first_centroid.x = i;
-					first_centroid.y = j;
+					found_center.x = i;
+					found_center.y = j;
 					radius_max = hParameters.radius_min + k * hParameters.radius_step;
 				}
-				//if (accumulation[k][xd] > maxSecond && maxSecond < maxAccum) {
-				//	second_centroid.x = i;
-				//	second_centroid.y = j;
-				//}
+				
+				//save the potential centers
+				if (accumulation[k][xd] > 0) {
+					dataType x = (dataType)i;
+					dataType y = (dataType)j;
+					dataType ratio = accumulation[k][xd];
+					radius_exp = hParameters.radius_min + k * hParameters.radius_step;
+					//fprintf(found_points, "%f,%f,%f,%f\n", x, y,ratio,radius_exp);//image coordinates system
+					fprintf(found_points, "%f,%f\n", x, y);
+					
+					/*
+					//save the whole circle
+					perimeter = 2 * M_PI * radius_exp;
+					number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
+					step = 2 * M_PI / (double)number_of_circle_points;
+					for (size_t it = 0; it < number_of_circle_points; it++) {
+						phi = (double)it * step;
+						coordx = x + radius_exp * cos(phi);
+						coordy = y + radius_exp * sin(phi);
 
-				////save the potential center
-				//if (accumulation[k][xd] > 0) {
-				//	dataType x = (dataType)i;
-				//	dataType y = (dataType)j;
-				//	Point2D pCenter = { x, y };
-				//	pCenter = getRealCoordFromImageCoord2D(pCenter, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
-				//	dataType ratio = accumulation[k][xd];
-				//	radius_exp = hParameters.radius_min + k * hParameters.radius_step;
-				//	//fprintf(found_points, "%f,%f,%f,%f\n", x, y,ratio,radius_exp);//image coordinates system
-				//	//several_centroid++;
+						if (coordx < 0) {
+							indx = 0;
+						}
+						else {
+							if (coordx > length - 1) {
+								indx = length - 1;
+							}
+							else {
+								indx = (size_t)round(coordx);
+							}
+						}
 
-				//	//fprintf(found_points, "%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, radius_exp);//real world coordinates system
-				//	//fprintf(found_points, "%f,%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, distanceMap[xd], radius_exp);//real world coordinates system
-				//	
-				//	////Discard point not matching with distance map
-				//	//if (distanceMap[xd] >= (radius_exp - epsilon) && distanceMap[xd] <= (radius_exp + epsilon)) {
-				//	//	fprintf(found_points, "%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, radius_exp);//real world coordinates system
-				//	//}
+						if (coordy < 0) {
+							indy = 0;
+						}
+						else {
+							if (coordy > width - 1) {
+								indy = width - 1;
+							}
+							else {
+								indy = (size_t)round(coordy);
+							}
+						}
 
-				//	//// Keep the point with the minimal difference between the distance map and the radius
-				//	//diff = fabs(distanceMap[xd] - radius_exp);
-				//	//if (diff < minDif) {
-				//	//	minDif = diff;
-				//	//	minPoint.x = pCenter.x;
-				//	//	minPoint.y = pCenter.y;
-				//	//}
-				//}
+						fprintf(found_points, "%d,%d\n", indx, indy);
+					}
+					*/
+
+				}
 			}
 		}
 	}
-	//fprintf(found_points, "%f,%f,%f,%f\n", minPoint.x, minPoint.y, minDif, radius_exp);//real world coordinates system
-	//fclose(found_points);
 	
-	//std::cout << "We have " << several_centroid << " potential centers" << std::endl;
-	std::cout << "The radius of found circle is : " << radius_max << std::endl;
-	std::cout << "The found center is : (" << first_centroid.x << ","  << first_centroid.y << ")" << std::endl;
-	
-	if (first_centroid.x == 0 && first_centroid.y == 0) {
+	if (found_center.x == 0 && found_center.y == 0) {
 		std::cout << "No circle found" << std::endl;
 		return Point2D{ -1.0, -1.0 };
 	}
-
-	////bounding box for Hough Transform
-	//for (size_t i = box.i_min; i <= box.i_max; i++) {
-	//	for (size_t j = box.j_min; j <= box.j_max; j++) {
-	//		size_t xd = x_new(i, j, height);
-	//		if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-	//			foundCirclePtr[xd] = 1.0;
-	//		}
-	//	}
-	//}
+	
+	std::cout << "The radius of found circle is : " << radius_max << std::endl;
+	std::cout << "The found center is : (" << found_center.x << ","  << found_center.y << ")" << std::endl;
 
 	/*
-	if (first_centroid.x != 0 && first_centroid.y != 0) {
+	if (found_center.x != 0 && found_center.y != 0) {
 		
 		////add found center
-		//foundCirclePtr[x_new((size_t)first_centroid.x, (size_t)first_centroid.y, height)] = 1.0;
+		//foundCirclePtr[x_new((size_t)found_center.x, (size_t)found_center.y, length)] = 1.0;
 
-		//Draw found circle
 		perimeter = 2 * M_PI * radius_max;
-		number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
+		number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5); //distance between points is 1.0
 		step = 2 * M_PI / (double)number_of_circle_points;
-		box = findBoundingBox2D(seed, height, width, radius_max, hParameters.offset);
-		quad1 = 0, quad2 = 0, quad3 = 0, quad4 = 0;
+	
 		for (size_t np = 0; np < number_of_circle_points; np++)
 		{
 			phi = (double)np * step;
-			coordx = first_centroid.x + radius_max * cos(phi);
-			coordy = first_centroid.y + radius_max * sin(phi);
-
+			coordx = found_center.x + radius_max * cos(phi);
+			coordy = found_center.y + radius_max * sin(phi);
+	
 			if (coordx < 0) {
 				indx = 0;
 			}
 			else {
-				if (coordx > height - 1) {
-					indx = height - 1;
+				if (coordx > length - 1) {
+					indx = length - 1;
 				}
 				else {
-					indx = (size_t)coordx;
+					indx = (size_t)round(coordx);
 				}
 			}
-
+	
 			if (coordy < 0) {
 				indy = 0;
 			}
@@ -1144,24 +1004,27 @@ Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr
 					indy = width - 1;
 				}
 				else {
-					indy = (size_t)coordy;
+					indy = (size_t)round(coordy);
 				}
 			}
 			
-			foundCirclePtr[x_new(indx, indy, height)] = 1.0;
+			fprintf(found_points, "%d,%d\n", indx, indy);
+			//foundCirclePtr[x_new(indx, indy, length)] = 1.0;
 		}
 	}
 	*/
+
+	fclose(found_points);
 	
 	delete[] maskThreshold;
-	delete[] distanceMap;
+	delete[] status;
 
 	for (size_t k = 0; k < number_of_radiuses; k++) {
 		delete[] accumulation[k];
 	}
 	delete[] accumulation;
 
-	return first_centroid;
+	return found_center;
 }
 
 Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, dataType imageBackground)
@@ -1210,14 +1073,14 @@ bool isCurrentSliceLiverSlice(dataType* imageDataPtr, size_t length, size_t widt
 	return findForeGroundPixel;
 }
 
-bool isCircleDetected(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold) {
+bool isCircleDetected(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold, std::string path_found_centers) {
 
 	if (imageDataPtr.imageDataPtr == NULL || foundCirclePtr == NULL)
 	{
 		return false;
 	}
 
-	Point2D found_center = localCircleDetection(imageDataPtr, foundCirclePtr, seed, hParameters, path_threshold);
+	Point2D found_center = localCircleDetection(imageDataPtr, foundCirclePtr, seed, hParameters, path_threshold, path_found_centers);
 
 	if (found_center.x == -1.0 && found_center.y == -1.0) {
 		return false;
@@ -1302,6 +1165,7 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 	//////////////////////////////////////
 	dataType* maskThreshold = new dataType[dim2D]{ 0 };
 	dataType* edgeDetector = new dataType[dim2D]{ 0 };
+	bool* status = new bool[dim2D]{ false };
 	
 	//Computation edge detector 
 	Point2D grad;
@@ -1381,6 +1245,13 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 							}
 						}
 
+						//Be sure that the same foreground pixel is not counted multiple time
+						for (size_t sx = box.i_min; sx <= box.i_max; sx++) {
+							for (size_t sy = box.j_min; sy <= box.j_max; sy++) {
+								status[x_new(sx, sy, height)] = false;
+							}
+						}
+
 						//Count the foreground pixel belonging to the circle
 						count_foreground = 0;
 						if (count_neight_center == 0) {
@@ -1431,10 +1302,10 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 								{
 									//verify this condition to be sure that the point is inside the image
 									size_t xd_quad = x_new(indx, indy, height);
-									if (maskThreshold[xd_quad] == 1.0) {
+									if (maskThreshold[xd_quad] == 1.0 && status[xd_quad] == false) {
 
 										accumulation[k][xd] += 1;
-										//count_foreground++;
+										status[xd_quad] = true;
 
 										//Be sure that every quadrant is filled with at least one point
 										if (phi <= (M_PI / 2.0))
@@ -1499,7 +1370,9 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 				for (size_t j = box.j_min; j <= box.j_max; j++)
 				{
 					size_t xd = x_new(i, j, height);
-					cumulative_accumulation[k][xd] += accumulation[k][xd];
+					if (accumulation[k][xd] > cumulative_accumulation[k][xd]) {
+						cumulative_accumulation[k][xd] = accumulation[k][xd];
+					}
 				}
 			}
 		}
@@ -1508,12 +1381,12 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 
 	}
 
-	////save all the found circles
-	//FILE* found_points;
-	//if (fopen_s(&found_points, path_threshold.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return{ -1.0, -1.0 };
-	//}
+	//save all the found circles
+	FILE* found_points;
+	if (fopen_s(&found_points, path_threshold.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return{ -1.0, -1.0 };
+	}
 
 	//Find the maximal accumulation
 	dataType maxAccum = 0;
@@ -1525,11 +1398,9 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 	Point2D minPoint = { 0.0, 0.0 };
 
 	for (size_t k = 0; k < number_of_radiuses; k++) {
-		//radius = hParameters.radius_min + k * hParameters.radius_step;
-		//perimeter = 2 * M_PI * radius;
-		//number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
 		for (size_t i = box.i_min; i <= box.i_max; i++) {
 			for (size_t j = box.j_min; j <= box.j_max; j++) {
+				
 				size_t xd = x_new(i, j, height);
 				if (cumulative_accumulation[k][xd] > maxAccum) {
 					maxAccum = cumulative_accumulation[k][xd];
@@ -1538,43 +1409,21 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 					radius_max = hParameters.radius_min + k * hParameters.radius_step;
 				}
 
-				//if (accumulation[k][xd] > maxSecond && maxSecond < maxAccum) {
-				//	second_centroid.x = i;
-				//	second_centroid.y = j;
-				//}
-
-				////save the potential center
-				//if (accumulation[k][xd] > 0) {
-				//	dataType x = (dataType)i;
-				//	dataType y = (dataType)j;
-				//	Point2D pCenter = { x, y };
-				//	pCenter = getRealCoordFromImageCoord2D(pCenter, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
-				//	dataType ratio = accumulation[k][xd];
-				//	radius_exp = hParameters.radius_min + k * hParameters.radius_step;
-				//	//fprintf(found_points, "%f,%f,%f,%f\n", x, y,ratio,radius_exp);//image coordinates system
-				//	//several_centroid++;
-
-				//	//fprintf(found_points, "%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, radius_exp);//real world coordinates system
-				//	//fprintf(found_points, "%f,%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, distanceMap[xd], radius_exp);//real world coordinates system
-				//	
-				//	////Discard point not matching with distance map
-				//	//if (distanceMap[xd] >= (radius_exp - epsilon) && distanceMap[xd] <= (radius_exp + epsilon)) {
-				//	//	fprintf(found_points, "%f,%f,%f,%f\n", pCenter.x, pCenter.y, ratio, radius_exp);//real world coordinates system
-				//	//}
-
-				//	//// Keep the point with the minimal difference between the distance map and the radius
-				//	//diff = fabs(distanceMap[xd] - radius_exp);
-				//	//if (diff < minDif) {
-				//	//	minDif = diff;
-				//	//	minPoint.x = pCenter.x;
-				//	//	minPoint.y = pCenter.y;
-				//	//}
-				//}
+				//save the potential center
+				if (cumulative_accumulation[k][xd] > 0) {
+					dataType x = (dataType)i;
+					dataType y = (dataType)j;
+					Point2D pCenter = { x, y };
+					pCenter = getRealCoordFromImageCoord2D(pCenter, imageDataPtr.origin, imageDataPtr.spacing, imageDataPtr.orientation);
+					dataType ratio = cumulative_accumulation[k][xd];
+					radius_exp = hParameters.radius_min + k * hParameters.radius_step;
+					fprintf(found_points, "%f,%f,%f,%f\n", x, y, ratio, radius_exp);//image coordinates system
+					//fprintf(found_points, "%f,%f,%f,%f\n", x, y,ratio,radius_exp);//image coordinates system
+				}
 			}
 		}
 	}
-	//fprintf(found_points, "%f,%f,%f,%f\n", minPoint.x, minPoint.y, minDif, radius_exp);//real world coordinates system
-	//fclose(found_points);
+	
 
 	//std::cout << "We have " << several_centroid << " potential centers" << std::endl;
 	std::cout << "The radius of found circle is : " << radius_max << std::endl;
@@ -1585,21 +1434,7 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 		return Point2D{ -1.0, -1.0 };
 	}
 
-	////bounding box for Hough Transform
-	//for (size_t i = box.i_min; i <= box.i_max; i++) {
-	//	for (size_t j = box.j_min; j <= box.j_max; j++) {
-	//		size_t xd = x_new(i, j, height);
-	//		if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-	//			foundCirclePtr[xd] = 1.0;
-	//		}
-	//	}
-	//}
-
-	/*
 	if (first_centroid.x != 0 && first_centroid.y != 0) {
-
-		////add found center
-		//foundCirclePtr[x_new((size_t)first_centroid.x, (size_t)first_centroid.y, height)] = 1.0;
 
 		//Draw found circle
 		perimeter = 2 * M_PI * radius_max;
@@ -1637,10 +1472,11 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 				}
 			}
 
-			foundCirclePtr[x_new(indx, indy, height)] = 1.0;
+			fprintf(found_points, "%d,%d\n", indx, indy);//image coordinates system
+			//foundCirclePtr[x_new(indx, indy, height)] = 1.0;
 		}
 	}
-	*/
+	fclose(found_points);
 
 	delete[] maskThreshold;
 	delete[] edgeDetector;
@@ -1653,5 +1489,52 @@ Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType
 	delete[] cumulative_accumulation;
 
 	return first_centroid;
+}
+
+bool removeSingleEdgePixel(dataType* maskThreshold, dataType* edgeImage, const size_t length, const size_t width, dataType foreground_value) {
+	if (edgeImage == NULL)
+		return false;
+
+	size_t count = 0;
+	for (size_t i = 1; i < length - 1; i++) {
+		for (size_t j = 1; j < width - 1; j++) {
+			size_t xd = x_new(i, j, length);
+			count = 0;
+			if (maskThreshold[xd] == foreground_value) {
+				if (maskThreshold[x_new(i - 1, j, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i + 1, j, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i, j - 1, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i, j + 1, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i - 1, j - 1, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i - 1, j + 1, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i + 1, j - 1, length)] == foreground_value) {
+					count++;
+				}
+				if (maskThreshold[x_new(i + 1, j + 1, length)] == foreground_value) {
+					count++;
+				}
+			}
+			if (count < 3) {
+				edgeImage[x_new(i, j, length)] = 0.0;
+			}
+			else {
+				edgeImage[xd] = maskThreshold[xd];
+			}
+		}
+	}
+
+	return true;
 }
 

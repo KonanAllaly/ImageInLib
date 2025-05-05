@@ -62,14 +62,16 @@ void houghTransform(Image_Data2D imageDataStr, dataType* foundCirclePtr, HoughPa
 
 bool circleDetection(Image_Data2D imageDataPtr, const HoughParameters hParameters);
 
-Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold);
+Point2D localCircleDetection(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold, std::string path_found_centers);
 
 Point2D get2dImagecentroid(dataType* imageDataPtr, size_t length, size_t width, dataType imageBackground);
 
 bool isCurrentSliceLiverSlice(dataType* imageDataPtr, size_t length, size_t width, size_t indSlice, dataType foreGroundValue);
 
-bool isCircleDetected(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold);
+bool isCircleDetected(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold, std::string path_found_centers);
 
 bool bruteForceDmap2D(Image_Data2D imageDataStr, dataType* distanceMap, dataType backGroundValue);
 
 Point2D localCircleDetectionWithOptimization(Image_Data2D imageDataPtr, dataType* foundCirclePtr, Point2D seed, HoughParameters hParameters, std::string path_threshold);
+
+bool removeSingleEdgePixel(dataType* maskThreshold, dataType* edgeImage, const size_t length, const size_t width, dataType foreground_value);
