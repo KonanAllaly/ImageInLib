@@ -25,7 +25,6 @@
 #include "../src/fast_marching.h"
 #include "../src/non_linear_heat_equation.h"
 #include "eigen_systems.h"
-#include "../src/pca.h"
 
 #define MAX_LINE_LENGTH 1024
 
@@ -46,7 +45,6 @@ int main() {
 	the origins. We also define the orientation matrix in 2D/3D
 	needed when we need to perform interpolation.
 	*/
-	
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
@@ -4216,30 +4214,29 @@ int main() {
 	/*
 	const size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx)* Height);
 	
-	dataType** imageData = new dataType * [hauteur];
+	dataType** imageData = new dataType * [Height];
 	dataType** inputImageData = new dataType * [hauteur];
-	dataType** edgeImage = new dataType * [hauteur];
 	for (k = 0; k < hauteur; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
+		if (k < Height) {
+			imageData[k] = new dataType[dim2D]{ 0 };
+		}
 		inputImageData[k] = new dataType[dim2D]{ 0 };
-		edgeImage[k] = new dataType[dim2D]{ 0 };
 	}
+
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
 	Image_Data interpolate = { hauteur, Length, Width, inputImageData, ctOrigin, intSpacing, orientation };
-	Image_Data inputD = { Height, Length, Width, ctContainer->dataPointer, ctOrigin, ctSpacing, orientation };
-	imageInterpolation3D(inputD, interpolate, NEAREST_NEIGHBOR);
-	rescaleNewRange(inputImageData, Length, Width, hauteur, 0.0, 1.0, maxData, minData);
-
-
-	////loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	loading_path = inputPath + "raw/edge image/edge_image_p1.raw";
-	manageRAWFile3D<dataType>(edgeImage, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
+	Image_Data inputD = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+	
+	////imageInterpolation3D(inputD, interpolate, NEAREST_NEIGHBOR);
+	//imageInterpolation3D(inputD, interpolate, TRILINEAR);
+	storing_path = outputPath + "interpolated_p1.raw";
+	manageRAWFile3D<dataType>(inputImageData, Length, Width, hauteur, storing_path.c_str(), LOAD_DATA, false);
 
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* liverSlice = new dataType[dim2D]{ 0 };
 	dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
-	dataType* inputSlice = new dataType[dim2D]{ 0 };
 	Point2D pOrigin = { 0.0, 0.0 };
 	PixelSpacing pSpacing = {ctSpacing.sx, ctSpacing.sy};
 	OrientationMatrix2D pOrientation = { {1.0, 0.0}, { 0.0, 1.0 } };
@@ -4250,12 +4247,12 @@ int main() {
 	HoughParameters hParameters =
 	{
 		7.0,   //minimal radius
-		21.0,  //maximal radius
+		15.0,  //maximal radius
 		0.5,   //radius step
 		0.5,   //epsilon
-		50,   //offset 
+		40,   //offset 
 		1000,  //K edge detector coefficient
-		0.15,  //threshold edge detector
+		0.2,  //threshold edge detector
 	};
 
 	//filtering parameters
@@ -4285,59 +4282,100 @@ int main() {
 	};
 
 	Point2D found_point = { 0.0, 0.0 };
-	BoundingBox2D boxLiver;
-	size_t count_liver_slices = 0;
+	Point2D liver_centroid = { 256.0, 256.0 };
 
+	std::string path_found_circles;
+	std::string path_hough = outputPath + "Hough Transform 02-05/";
+
+	////Save the points in clusters wise
+	//FILE* p_centers;
+	//string accum_centers = path_hough + "accumulated_ceneters.csv";
+	//if (fopen_s(&p_centers, accum_centers.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+
+	////Single slice
+	//size_t k_slice = 450;
+	//copyDataToAnother2dArray(inputImageData[k_slice], imageSlice, Length, Width);
+	//storing_path = outputPath + "Hough Transform 02-05/threshold.raw";
+	//path_found_circles = outputPath + "Hough Transform 02-05/found_centers.csv";
+	//found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path, path_found_circles);
+	//storing_path = outputPath + "Hough Transform 02-05/found_circles.raw";
+	//manageRAWFile2D<dataType>(foundCirclePtr, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	
 	//p1 : 127 to 282 , interpolated 279 to 611
 	//p5 " 453 to 690
-	for (k = 339; k <= 491; k++) {
-		
-		Point2D liver_centroid = { 256, 256 };
+	//p1, interpolated, 339 to 491 (liver)
+	//k = 425, 633
 
-		copyDataToAnother2dArray(edgeImage[k], imageSlice, Length, Width);
-		copyDataToAnother2dArray(inputImageData[k], inputSlice, Length, Width);
+	size_t k_slice = 393;
+	copyDataToAnother2dArray(inputImageData[k_slice], imageSlice, Length, Width);
+	storing_path = outputPath + "Hough Transform 02-05/found_s_390.csv";
+	found_point = localCircleDetectionWithOptimization(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
+	
+	
+	//dataType x, y;
+	//for (k = 390; k <= 400; k++) {
+	//	
+	//	Point2D liver_centroid = { 256, 256 };
 
-		//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
-		//heatImplicit2dScheme(IMAGE, filter_parameters);
-		////copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
+	//	copyDataToAnother2dArray(inputImageData[k], imageSlice, Length, Width);
 
-		extension = to_string(k);
-		storing_path = outputPath + "filter_hough_points/f_centers/center_ratio_radius_" + extension + ".csv";
-		found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path);
+	//	//rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+	//	//heatImplicit2dScheme(IMAGE, filter_parameters);
+	//	////copyDataToAnother2dArray(liverData[k], liverSlice, Length, Width);
 
-		//save slice and bounding box
-		BoundingBox2D box = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
-		for (i = box.i_min; i <= box.i_max; i++) {
-			for (j = box.j_min; j <= box.j_max; j++) {
-				if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
-					imageSlice[x_new(i, j, Length)] = 1.0;
-					inputSlice[x_new(i, j, Length)] = 0.0;
-				}
-			}
-		}
+	//	extension = to_string(k);
+	//	path_found_circles = outputPath + "Hough Transform 02-05/centers/found_centers" + extension + ".csv";
+	//	storing_path = outputPath + "Hough Transform 02-05/threshold/threshold_" + extension + ".raw";
+	//	found_point = localCircleDetection(sliceData, foundCirclePtr, liver_centroid, hParameters, storing_path, path_found_circles);
 
-		storing_path = outputPath + "filter_hough_points/edge/edge_image_" + extension + ".raw";
-		manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//	FILE* current_p_centers;
+	//	if (fopen_s(&current_p_centers, path_found_circles.c_str(), "r") != 0) {
+	//		printf("Enable to open");
+	//		return false;
+	//	}
+	//	while (feof(current_p_centers) == 0) {
+	//		fscanf_s(current_p_centers, "%f", &x);
+	//		fscanf_s(current_p_centers, ",");
+	//		fscanf_s(current_p_centers, "%f", &y);
+	//		fscanf_s(current_p_centers, "\n");
+	//		
+	//		fprintf(p_centers, "%f,%f\n", x, y);
+	//	}
+	//	fclose(current_p_centers);
 
-		storing_path = outputPath + "filter_hough_points/input/input_image_" + extension + ".raw";
-		manageRAWFile2D<dataType>(inputSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//	////save slice and bounding box
+	//	//BoundingBox2D box = findBoundingBox2D(liver_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+	//	//for (i = box.i_min; i <= box.i_max; i++) {
+	//	//	for (j = box.j_min; j <= box.j_max; j++) {
+	//	//		if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+	//	//			imageSlice[x_new(i, j, Length)] = 1.0;
+	//	//		}
+	//	//	}
+	//	//}
 
-	}
+	//	//storing_path = path_hough + "input/slice_" + extension + ".raw";
+	//	//manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	//}
+	//fclose(p_centers);
+	
 	
 	delete[] imageSlice;
-	delete[] liverSlice;
 	delete[] foundCirclePtr;
-	delete[] inputSlice;
 	
 	for (k = 0; k < hauteur; k++) {
-		delete imageData[k];
+		if (k < Height) {
+			delete[] imageData[k];
+		}
 		delete inputImageData[k];
 	}
 	delete[] imageData;
 	delete[] inputImageData;
 	free(ctContainer);
 	*/
-	
 
 	//==================== Test filtering by Hessian  ====================================
 
@@ -4978,14 +5016,16 @@ int main() {
 	std::vector<Point2D> points_next_1, points_next_2, points_next_3, points_next_4, points_next_5;
 	std::vector<dataType> ratios, radiuses;
 
-	k = 344;
 	dataType max_ratio = 0, max_radius = 0, initial_max = 0, initial_max_radius = 0;
 	Point2D max_point = { 0.0, 0.0 }, initial_point_max = {0.0, 0.0};
-	string to_slice = outputPath + "filter_hough_points/f_centers/center_ratio_radius_";
-	for (k = 344; k <= 486; k++) {
+	//string to_slice = outputPath + "filter_hough_points/f_centers/center_ratio_radius_";
+	string to_slice = outputPath + "filter_hough_29_04/";
+	for (k = 425; k <= 633; k++) {
 
 		extension = to_string(k);
-		string current_slice = to_slice + extension + ".csv";
+		string current_slice = to_slice + "found_centers/center_ratio_radius_" + extension + ".csv";
+		
+		
 		string previous_slice_5 = to_slice + to_string(k - 5) + ".csv";
 		string previous_slice_4 = to_slice + to_string(k - 4) + ".csv";
 		string previous_slice_3 = to_slice + to_string(k - 3) + ".csv";
@@ -4996,6 +5036,7 @@ int main() {
 		string next_slice_3 = to_slice + to_string(k + 3) + ".csv";
 		string next_slice_4 = to_slice + to_string(k + 4) + ".csv";
 		string next_slice_5 = to_slice + to_string(k + 5) + ".csv";
+		
 
 		FILE* current_p_centers;
 		if (fopen_s(&current_p_centers, current_slice.c_str(), "r") != 0) {
@@ -5017,6 +5058,7 @@ int main() {
 			points_current.push_back(p);
 		}
 		fclose(current_p_centers);
+		
 		
 		FILE* previous_p_centers_5;
 		if (fopen_s(&previous_p_centers_5, previous_slice_5.c_str(), "r") != 0) {
@@ -5207,10 +5249,12 @@ int main() {
 			points_next_5.push_back(p);
 		}
 		fclose(next_p_centers_5);
+		
 
 		Point2D pNorth = { 0.0, 0.0 }, pSouth = { 0.0, 0.0 }, pEast = { 0.0, 0.0 }, pWest = { 0.0, 0.0 };
 		Point2D pNorthEast = { 0.0, 0.0 }, pNorthWest = { 0.0, 0.0 }, pSouthEast = { 0.0, 0.0 }, pSouthWest = { 0.0, 0.0 };
 		Point2D pCurrent = { 0.0, 0.0 };
+		
 		
 		//Save the remaining points in current slice
 		FILE* pFiltered_centers;
@@ -5606,7 +5650,7 @@ int main() {
 			}
 
 		}
-
+		
 		//empty the vectors
 		while (points_current.size() > 0) {
 			points_current.pop_back();
@@ -5642,9 +5686,19 @@ int main() {
 			points_next_5.pop_back();
 		}
 
+		initial_max = 0; initial_max_radius = 0;
+		for (size_t it = 0; it < points_current.size(); it++) {
+			if (initial_max < ratios[it]) {
+				initial_max = ratios[it];
+				initial_max_radius = radiuses[it];
+				initial_point_max = points_current[it];
+			}
+		}
+
 		//draw initial circle for current slice
 		FILE* pInitial_centers;
-		string found_centers_initial = outputPath + "filter_hough_points/filtered/initial/initial_circle_" + extension + ".csv";
+		//string found_centers_initial = outputPath + "filter_hough_points/filtered/initial/initial_circle_" + extension + ".csv";
+		string found_centers_initial = to_slice + "initial/initial_circle_" + extension + ".csv";
 		if (fopen_s(&pInitial_centers, found_centers_initial.c_str(), "w") != 0) {
 			printf("Enable to open");
 			return false;
@@ -5743,12 +5797,12 @@ int main() {
 
 		fclose(pFound_centers);
 		fclose(pFiltered_centers);
-	}
-	*
+		
 
+	}
+	*/
 
 	//=================== Segment the pelvis =========================
-	
 
 	/*
 	dataType** imageData = new dataType * [Height];
@@ -5868,6 +5922,7 @@ int main() {
 
 	//==================== Distance map to improve Hough transform =========================
 	
+    /*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -5913,7 +5968,7 @@ int main() {
 		20.0,  //maximal radius
 		0.5,   //radius step
 		0.5,   //epsilon
-		40,   //offset 
+		50,   //offset 
 		1000,  //K edge detector coefficient
 		0.15,  //threshold edge detector
 	};
@@ -5926,7 +5981,9 @@ int main() {
 		sliceSpacing,
 		orientation2D
 	};
+	Point2D seed = { 256.0, 256.0 };
 
+	
 	//save all the found circles
 	FILE* found_points;
 	storing_path = outputPath + "tests hough 28-04/found_centers_V2.csv";
@@ -5934,9 +5991,6 @@ int main() {
 		printf("Enable to open");
 		return false;
 	}
-
-	size_t slice_of_interest = 519;
-	Point2D seed = { 256.0, 256.0 };
 
 	for (k = 357; k <= 457; k++) {
 		
@@ -5958,6 +6012,12 @@ int main() {
 
 	}
 	fclose(found_points);
+	
+
+	size_t slice_of_interest = 519;
+	copyDataToAnother2dArray(imgInterpolated[slice_of_interest], imageSlice, Length, Width);
+	storing_path = outputPath + "threshold.raw";
+	Point2D found_point = localCircleDetection(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
 
 	delete[] imageSlice;
 	delete[] distanceMap;
@@ -5969,6 +6029,205 @@ int main() {
 	}
 	delete[] imageData;
 	delete[] imgInterpolated;
+	*/
+
+	//==================== Hough Transform in Lung region =========================
+
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** lungsData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		lungsData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	
+	loading_path = inputPath + "raw/lungs/iterative/lungs_p6.raw";
+	manageRAWFile3D<dataType>(lungsData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//get lungs centroid
+	dataType* centroid_lungs = new dataType[3]{ 0 };
+	centroidImage(lungsData, centroid_lungs, Height, Length, Width, 0.0);
+	Point3D centroid_lungs_3D = { centroid_lungs[0], centroid_lungs[1], centroid_lungs[2] };
+	Point2D slice_centroid = { centroid_lungs_3D.x, centroid_lungs_3D.y };
+	size_t index_slice = (size_t)centroid_lungs_3D.z;
+	centroid_lungs_3D = getRealCoordFromImageCoord3D(centroid_lungs_3D, ctOrigin, ctSpacing, orientation);
+
+	FILE* cLungs;
+	string lungs_centroid = outputPath + "lungs_centroid_p6.csv";
+	if (fopen_s(&cLungs, lungs_centroid.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(cLungs, "%f,%f,%f\n", centroid_lungs_3D.x, centroid_lungs_3D.y, centroid_lungs_3D.z);
+	fclose(cLungs);
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* foundCirclePtr = new dataType[dim2D]{ 0 };
+
+	copyDataToAnother2dArray(imageData[index_slice], imageSlice, Length, Width);
+
+	Point2D sOrigin = { 0.0, 0.0 };
+	PixelSpacing sSpacing = { ctSpacing.sx, ctSpacing.sy };
+	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0 } };
+	Image_Data2D imageDataToHoughTransform = { Length, Width, imageSlice, sOrigin, sSpacing, orientation2D};
+
+	HoughParameters hParameters =
+	{
+		10,   //minimal radius
+		20.0,  //maximal radius
+		0.25,   //radius step
+		0.5,   //epsilon
+		60,   //offset 
+		1000,  //K edge detector coefficient
+		0.15,  //threshold edge detector
+	};
+	
+	storing_path = outputPath + "centers_p6.csv";
+	//storing_path = outputPath + "threshold_p6.raw";
+	Point2D found_point = localCircleDetection(imageDataToHoughTransform, foundCirclePtr, slice_centroid, hParameters, storing_path);
+
+	//draw search area
+	BoundingBox2D box = findBoundingBox2D(slice_centroid, Length, Width, hParameters.radius_max, hParameters.offset);
+	for (size_t in = box.i_min; in <= box.i_max; in++) {
+		for (size_t jn = box.j_min; jn <= box.j_max; jn++) {
+			if (in == box.i_min || in == box.i_max || jn == box.j_min || jn == box.j_max) {
+				imageSlice[x_new(in, jn, Length)] = 0.0;
+			}
+		}
+	}
+
+	storing_path = outputPath + "slice_centroid_p6.raw";
+	manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	storing_path = outputPath + "found_circle_p6.raw";
+	manageRAWFile2D<dataType>(foundCirclePtr, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	////save all the found circles
+	//FILE* found_points;
+	//storing_path = outputPath + "point.csv";
+	//if (fopen_s(&found_points, storing_path.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//}
+	//FILE* found_pixels;
+	//storing_path = outputPath + "pixels.csv";
+	//if (fopen_s(&found_pixels, storing_path.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//}
+	
+	//Point2D center = { 256.0, 256.0 };
+	//dataType radius = 15.5;
+	//dataType perimetre = 2 * M_PI * radius;
+	//dataType step = 2 * M_PI / perimetre;
+	//size_t nb_point = (size_t)(perimetre + 1.0);
+	//
+	//size_t indx, indy;
+	//for (size_t np = 0; np < nb_point; np++)
+	//{
+	//	dataType phi = (dataType)np * step;
+	//	dataType coordx = 0.5 + center.x + radius * cos(phi);
+	//	dataType coordy = 0.5 + center.y + radius * sin(phi);
+	//
+	//	if (coordx < 0) {
+	//		indx = 0;
+	//	}
+	//	else {
+	//		if (coordx > Length - 1) {
+	//			indx = Length - 1;
+	//		}
+	//		else {
+	//			indx = (size_t)round(coordx);
+	//		}
+	//	}
+	//
+	//	if (coordy < 0) {
+	//		indy = 0;
+	//	}
+	//	else {
+	//		if (coordy > Width - 1) {
+	//			indy = Width - 1;
+	//		}
+	//		else {
+	//			indy = (size_t)round(coordy);
+	//		}
+	//	}
+	//
+	//	fprintf(found_points, "%f,%f\n", coordx, coordy);
+	//	fprintf(found_pixels, "%d,%d\n", indx, indy);
+	//}
+	//fclose(found_pixels);
+	//fclose(found_points);
+	
+	delete[] imageSlice;
+	delete[] foundCirclePtr;
+
+	for (k = 0; k < Height; k++) {
+		//if (k < height) {
+		//	delete[] crop_lungs[k];
+		//	delete[] distance_map[k];
+		//	delete[] image_for_hough[k];
+		//}
+		delete[] imageData[k];
+		delete[] lungsData[k];
+	}
+	delete[] imageData;
+	delete[] lungsData;
+	free(ctContainer);
+	*/
+
+	//==================== Hough Transform with optimization of smoothong and edge detector ===
+
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
+
+	dataType* imageSlice = new dataType[dim2D]{ 0 };
+	dataType* smoothImage = new dataType[dim2D]{ 0 };
+	dataType* maskThreshold = new dataType[dim2D]{ 0 };
+
+	size_t kslice = 242;
+	copyDataToAnother2dArray(imageData[kslice], imageSlice, Length, Width);
+
+	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+
+	const dataType sigma = 1.0;
+	gaussianSmoothing2D(imageSlice, smoothImage, Length, Width, sigma);
+
+	Point2D grad;
+	dataType K = 1000;
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			//getGradient2D(imageSlice, Length, Width, i, j, spacing, &grad);
+			getGradient2D(smoothImage, Length, Width, i, j, spacing, &grad);
+			dataType norm_gradient = sqrt(grad.x * grad.x + grad.y * grad.y);
+			dataType edge_value = gradientFunction(norm_gradient, K);
+			//threshold
+			if (edge_value < 0.05) {
+				maskThreshold[x_new(i, j, Length)] = 1.0;
+			}
+		}
+	}
+
+	storing_path = outputPath + "edge_image.raw";
+	manageRAWFile2D<dataType>(maskThreshold, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	delete[] imageSlice;
+	delete[] smoothImage;
+	delete[] maskThreshold;
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+	}
+	delete[] imageData;
 
 	return EXIT_SUCCESS;
 }
