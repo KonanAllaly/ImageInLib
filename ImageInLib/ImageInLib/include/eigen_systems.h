@@ -18,6 +18,14 @@ bool gaussianFiltering(dataType** imageDataPtr, dataType** filteredImageDataPtr,
 
 bool multiscaleFiltering(Image_Data inputImageData, dataType** vesselnessImage, dataType sigma);
 
+//============================================
+
+void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p);
+
+bool generateGaussianKernel2D(dataType* kernel, const size_t kernelSize, const dataType sigma);
+
+bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, const size_t length, const size_t width, const dataType sigma);
+
 #ifdef __cplusplus
 }
 

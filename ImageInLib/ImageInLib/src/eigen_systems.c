@@ -239,6 +239,7 @@ bool generateGaussianKernel(dataType** kernel, const size_t kernelSize, const da
 			}
 		}
 	}
+	
 	//The empirical normalization is considered to avoid accumulated errors
 	// Analitical normalization ---> 1.0 / pow(sqrt(2.0 * M_PI * sigma * sigma), d);  d is the dimension
 	for (k = 0; k < kernelSize; k++) {
@@ -427,5 +428,113 @@ bool multiscaleFiltering(Image_Data inputImageData, dataType** vesselnessImage, 
 	}
 	free(imageDataExt);
 
+	return true;
+}
+
+//=====================================================================================================
+
+void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p)
+{
+	size_t i, j;
+	size_t length = imageLength, width = imageWidth; // Actual X, Y dimensions
+	size_t rowLength = length + 2 * p;
+	
+	// Modified Dimension less 1
+	size_t mlength = length - 1, mwidth = width - 1;
+	
+	// Y reflection
+	for (j = p; j <= (mwidth) + p; j++)
+	{
+		toReflectImage[x_new(p - 1, j, rowLength)] = toReflectImage[x_new(p + 1, j, rowLength)];
+		toReflectImage[x_new((mlength) + p + 1, j, rowLength)] = toReflectImage[x_new((mlength) + p - 1, j, rowLength)];
+	}
+	// X Direction
+	for (i = 0; i <= (mlength) + 2 * p; i++)
+	{
+		toReflectImage[x_new(i, p - 1, rowLength)] = toReflectImage[x_new(i, p + 1, rowLength)];
+		toReflectImage[x_new(i, (mwidth) + p + 1, rowLength)] = toReflectImage[x_new(i, (mwidth) + p - 1, rowLength)];
+	}
+}
+
+bool generateGaussianKernel2D(dataType* kernel, const size_t kernelSize, const dataType sigma) {
+
+	if (kernel == NULL || kernelSize < 1 || sigma <= 0) {
+		return false;
+	}
+
+	dataType sum = 0.0;
+	for (size_t i = 0; i < kernelSize; i++) {
+		for (size_t j = 0; j < kernelSize; j++) {
+			size_t xd = x_new(i, j, kernelSize);
+			kernel[xd] = exp(-(pow(i, 2) + (j, 2)) / (2.0 * sigma * sigma));
+			sum += kernel[xd];
+		}
+	}
+
+	//The empirical normalization is considered to avoid accumulated errors
+	// Analitical normalization ---> 1.0 / pow(sqrt(2.0 * M_PI * sigma * sigma), d);  d is the dimension
+	for (size_t i = 0; i < kernelSize * kernelSize; i++) {
+		kernel[i] /= sum;
+	}
+	return true;
+}
+
+bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, const size_t length, const size_t width, const dataType sigma) {
+
+	if (imageDataPtr == NULL || smoothImageDataPtr == NULL || sigma <= 0) {
+		return false;
+	}
+
+	size_t i, j, k, xd;
+	const size_t kernelSize = 2 * (size_t)sigma + 1;
+	const size_t p = (size_t)sigma;
+	if (kernelSize < 3) {
+		return false;
+	}
+
+	dataType* kernel = (dataType*)malloc(kernelSize * kernelSize * sizeof(dataType*));
+	if (kernel == NULL) {
+		return false;
+	}
+
+	//generate the Gaussian Kernel
+	generateGaussianKernel2D(kernel, kernelSize, sigma);
+
+	const size_t pLength = length + 2 * p;
+	const size_t pWidth = width + 2 * p;
+	dataType* imageDataExt = (dataType*)malloc(pLength * pWidth * sizeof(dataType));
+
+	//Copy to extended area
+	size_t i_ext, j_ext, k_ext, xd_ext;
+	for (i = 0, i_ext = p; i < length; i++, i_ext++) {
+		for (j = 0, j_ext = p; j < width; j++, j_ext++) {
+			xd = x_new(i, j, length);
+			xd_ext = x_new(i_ext, j_ext, pLength);
+			imageDataExt[xd_ext] = imageDataPtr[xd];
+		}
+	}
+	
+	reflection2DB(imageDataExt, length, width, p);
+
+	//Convolution
+	size_t im, jm, km, xdm, xdn;
+	for (i = 0, i_ext = p; i < length; i++, i_ext++) {
+		for (j = 0, j_ext = p; j < width; j++, j_ext++) {
+			xd = x_new(i, j, length);
+			xd_ext = x_new(i_ext, j_ext, pLength);
+			for (size_t ki = 0; ki < kernelSize; ki++) {
+				for (size_t kj = 0; kj < kernelSize; kj++) {
+					im = i_ext + ki - p;
+					jm = j_ext + kj - p;
+					xdm = x_new(im, jm, pLength);
+					xdn = x_new(ki, kj, kernelSize);
+					smoothImageDataPtr[xd] += kernel[xdn] * imageDataExt[xdm];
+				}
+			}
+		}
+	}
+
+	free(kernel);
+	
 	return true;
 }
