@@ -1693,7 +1693,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 		k = (size_t)path_points[n].z;
 		Point2D seed_circle = { path_points[n].x, path_points[n].y };
 		copyDataToAnother2dArray(edgeImage[k], imageSlice, length, width);
-		detected = isCircleDetected(IMAGE, houghSpace, seed_circle, hParameters, hough_path);
+		//detected = isCircleDetected(IMAGE, houghSpace, seed_circle, hParameters, hough_path);// Add new path !!!
 		if (detected == false) {
 			count_detected++;
 		}
