@@ -6179,6 +6179,7 @@ int main() {
 
 	//==================== Hough Transform with optimization of smoothong and edge detector ===
 
+	
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -6186,25 +6187,50 @@ int main() {
 
 	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
 
-	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
+	Point2D pOrigin = { 0.0, 0.0 };
 
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
 	dataType* smoothImage = new dataType[dim2D]{ 0 };
 	dataType* maskThreshold = new dataType[dim2D]{ 0 };
 
-	size_t kslice = 242;
-	copyDataToAnother2dArray(imageData[kslice], imageSlice, Length, Width);
+	dataType K = 1000;
+	Filter_Parameters filter_parameters{
+		0.25 * ctSpacing.sx * ctSpacing.sx,//tau
+		ctSpacing.sx,//h
+		0.0,//sigma
+		K,//edge detector coefficient
+		1.5,//omega_c
+		1e-3,//tolerance
+		1e-6,//epsilon2
+		1e-6,//coef
+		1,//p
+		1,//number of time step
+		100,// max solver iteration
+	};
 
-	rescaleNewRange2D(imageSlice, Length, Width, 0.0, 1.0);
+	Image_Data2D sliceData = { Length, Width, smoothImage, pOrigin, spacing };
+
+	size_t kslice = 242;
+	//copyDataToAnother2dArray(imageData[kslice], imageSlice, Length, Width);
+	copyDataToAnother2dArray(imageData[kslice], smoothImage, Length, Width);
+
+	rescaleNewRange2D(smoothImage, Length, Width, 0.0, 1.0);
+
+	//storing_path = outputPath + "input.raw";
+	//manageRAWFile2D<dataType>(smoothImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	const dataType sigma = 1.0;
-	gaussianSmoothing2D(imageSlice, smoothImage, Length, Width, sigma);
+	//gaussianSmoothing2D(imageSlice, smoothImage, Length, Width, sigma);
+	geodesicMeanCurvature2D(sliceData, filter_parameters);
+
+	storing_path = outputPath + "filtered_gmcf.raw";
+	manageRAWFile2D<dataType>(smoothImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	Point2D grad;
-	dataType K = 1000;
 	for (i = 0; i < Length; i++) {
 		for (j = 0; j < Width; j++) {
 			//getGradient2D(imageSlice, Length, Width, i, j, spacing, &grad);
@@ -6224,10 +6250,14 @@ int main() {
 	delete[] imageSlice;
 	delete[] smoothImage;
 	delete[] maskThreshold;
+
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
 	}
 	delete[] imageData;
+
+	free(ctContainer);
+	
 
 	return EXIT_SUCCESS;
 }

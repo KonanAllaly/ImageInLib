@@ -1,8 +1,3 @@
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4D Image Segmentation Methods
-* Language:  C
-*/
 #include <stdio.h> // Standard lib for input and output functions
 #include <stdlib.h>
 #include <math.h> // Maths functions i.e. pow, sin, cos
@@ -12,6 +7,7 @@
 #include "setting_boundary_values.h"
 #include "common_functions.h"
 #include "filter_params.h"
+#include "eigen_systems.h"
 
 // Local Function Prototype
 
@@ -969,4 +965,191 @@ bool geodesicMeanCurvatureRectangularTimeStep(Image_Data inputImageData, Filteri
 	free(coefPtr_b);
 
 	return true;
+}
+
+bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filtering_parameters)
+{
+
+	if (inputImage.imageDataPtr == NULL) {
+		return false;
+	}
+
+	const size_t length = inputImage.height, width = inputImage.width;
+	PixelSpacing spacing = inputImage.spacing;
+	dataType eps2 = filtering_parameters.eps2;
+
+	size_t i, j, i_ext, j_ext;
+	const size_t length_ext = length + 2, width_ext = width + 2;
+	size_t dim2D = length * width, dim2D_ext = length_ext * width_ext;
+	dataType tau = filtering_parameters.timeStepSize, h = filtering_parameters.h;
+	dataType tol = filtering_parameters.tolerance, omega = filtering_parameters.omega_c;
+	dataType coef_edge_detector = filtering_parameters.edge_detector_coefficient, eps = filtering_parameters.eps2;
+	dataType coef_tau = tau / (h * h), gauss_seidel_coef = 0.0;
+	size_t maxIter = filtering_parameters.maxNumberOfSolverIteration;
+
+	dataType* smothedImage = (dataType*)malloc(dim2D * sizeof(dataType));
+	Point2D iOrigin = { 0.0, 0.0 };
+	Image_Data2D imageData = { length, width, smothedImage, iOrigin, spacing };
+
+	copyDataToAnother2dArray(inputImage.imageDataPtr, smothedImage, length, width);
+
+	//heat2dExplicitScheme(imageData, filtering_parameters);
+	//heatImplicit2dScheme(imageData, filtering_parameters);
+	gaussianSmoothing2D(inputImage.imageDataPtr, smothedImage, length, width, 1.0);
+
+	dataType* previous_Solution = (dataType*)malloc(dim2D_ext * sizeof(dataType));
+	dataType* gauss_Seidel_Sol = (dataType*)malloc(dim2D_ext * sizeof(dataType));
+	dataType* extended_image_data = (dataType*)malloc(dim2D_ext * sizeof(dataType));
+	if (previous_Solution == NULL || gauss_Seidel_Sol == NULL) {
+		return false;
+	}
+
+	copyDataTo2dExtendedArea(smothedImage, extended_image_data, length, width);
+	reflection2D(extended_image_data, length_ext, width_ext);
+
+	dataType* uNorth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* uSouth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* uEast = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* uWest = (dataType*)malloc(dim2D * sizeof(dataType));
+	if (uNorth == NULL || uSouth == NULL || uEast == NULL || uWest == NULL)
+		return false;
+
+	dataType* gNorth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* gSouth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* gEast = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* gWest = (dataType*)malloc(dim2D * sizeof(dataType));
+	if (gNorth == NULL || gSouth == NULL || gEast == NULL || gWest == NULL)
+		return false;
+
+	dataType* coefNorth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* coefSouth = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* coefEast = (dataType*)malloc(dim2D * sizeof(dataType));
+	dataType* coefWest = (dataType*)malloc(dim2D * sizeof(dataType));
+	if (coefNorth == NULL || coefSouth == NULL || coefEast == NULL || coefWest == NULL)
+		return false;
+
+	dataType uP, uN, uNW, uNE, uS, uSW, uSE, uW, uE;
+	dataType ux, uy, current_value, u_average, avg_norm_gardient;
+
+	for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+		for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+			size_t iplus = i_ext + 1;
+			size_t iminus = i_ext - 1;
+			size_t jplus = j_ext + 1;
+			size_t jminus = j_ext - 1;
+
+			size_t currentIndx = x_new(i, j, length);
+			uP = extended_image_data[x_new(i_ext, j_ext, length_ext)];
+			uE = extended_image_data[x_new(iplus, j_ext, length_ext)];
+			uW = extended_image_data[x_new(iminus, j_ext, length_ext)];
+			uN = extended_image_data[x_new(i_ext, jminus, length_ext)];
+			uS = extended_image_data[x_new(i_ext, jplus, length_ext)];
+			uNE = extended_image_data[x_new(iplus, jminus, length_ext)];
+			uNW = extended_image_data[x_new(iminus, jminus, length_ext)];
+			uSE = extended_image_data[x_new(iplus, jplus, length_ext)];
+			uSW = extended_image_data[x_new(iminus, jplus, length_ext)];
+
+			//East
+			ux = (uE - uP) / h;
+			uy = (uNE + uN - uS - uSE) / (4.0 * h);
+			current_value = ux * ux + uy * uy;
+			uEast[currentIndx] = sqrt(current_value + eps2);
+			gEast[currentIndx] = gradientFunction(current_value, coef_edge_detector);
+
+			//West
+			ux = (uP - uW) / h;
+			uy = (uNW + uN - uSW - uS) / (4.0 * h);
+			current_value = ux * ux + uy * uy;
+			uWest[currentIndx] = sqrt(current_value + eps2);
+			gEast[currentIndx] = gradientFunction(current_value, coef_edge_detector);
+
+			//North
+			ux = (uNE + uE - uNW - uW) / (4.0 * h);
+			uy = (uN - uP) / h;
+			current_value = ux * ux + uy * uy;
+			uNorth[currentIndx] = (current_value + eps2);
+			gNorth[currentIndx] = gradientFunction(current_value, coef_edge_detector);
+
+			//South
+			ux = (uSE + uE - uSW - uW) / (4.0 * h);
+			uy = (uP - uS) / h;
+			current_value = ux * ux + uy * uy;
+			uSouth[currentIndx] = (current_value + eps2);
+			gSouth[currentIndx] = gradientFunction(current_value, coef_edge_detector);
+
+			u_average = (dataType)((uEast[currentIndx] + uWest[currentIndx] + uNorth[currentIndx] + uSouth[currentIndx]) / 4.0);
+			avg_norm_gardient = sqrt(u_average * u_average + eps);
+
+			coefEast[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gEast[currentIndx] * (1.0 / uEast[currentIndx]));
+			coefWest[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gWest[currentIndx] * (1.0 / uWest[currentIndx]));
+			coefNorth[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gNorth[currentIndx] * (1.0 / uNorth[currentIndx]));
+			coefSouth[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gSouth[currentIndx] * (1.0 / uSouth[currentIndx]));
+
+		}
+	}
+
+	copyDataToAnother2dArray(extended_image_data, gauss_Seidel_Sol, length_ext, width_ext);
+	copyDataToAnother2dArray(extended_image_data, previous_Solution, length_ext, width_ext);
+
+	//copyDataTo2dExtendedArea(inputImage.imageDataPtr, gauss_Seidel_Sol, length, width);
+	//reflection2D(gauss_Seidel_Sol, length_ext, width_ext);
+	//copyDataTo2dExtendedArea(inputImage.imageDataPtr, previous_Solution, length, width);
+	//reflection2D(previous_Solution, length_ext, width_ext);
+
+	size_t cpt = 0;
+	dataType error = 0.0;
+	do {
+		cpt++;
+
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+				size_t currentIndx = x_new(i, j, length);
+				size_t currentIndx_ext = x_new(i_ext, j_ext, length_ext);
+
+				gauss_seidel_coef = (dataType)((previous_Solution[currentIndx_ext] + coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)]
+					+ coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)])
+					/ (1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]));
+
+				gauss_Seidel_Sol[currentIndx_ext] = gauss_Seidel_Sol[currentIndx_ext] + omega * (gauss_seidel_coef - gauss_Seidel_Sol[currentIndx_ext]);
+			}
+		}
+
+		error = 0.0;
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+				size_t currentIndx = x_new(i, j, length);
+				size_t currentIndx_ext = x_new(i_ext, j_ext, length_ext);
+
+				error += (dataType)(pow((1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]) * gauss_Seidel_Sol[currentIndx_ext]
+					- (coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)]
+						+ coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)]) - previous_Solution[currentIndx_ext], 2) * h * h);
+			}
+		}
+
+	} while (cpt < maxIter && error > tol);
+
+	//Copy back
+	copyDataTo2dReducedArea(inputImage.imageDataPtr, gauss_Seidel_Sol, length, width);
+
+	free(uNorth);
+	free(uSouth);
+	free(uEast);
+	free(uWest);
+
+	free(gNorth);
+	free(gSouth);
+	free(gEast);
+	free(gWest);
+
+	free(coefNorth);
+	free(coefSouth);
+	free(coefEast);
+	free(coefWest);
+
+	free(previous_Solution);
+	free(gauss_Seidel_Sol);
+	free(extended_image_data);
 }
