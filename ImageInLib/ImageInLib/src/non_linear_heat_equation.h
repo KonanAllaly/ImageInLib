@@ -2,16 +2,11 @@
 extern "C" {
 #endif
 
-	/*
-	* Author: Markjoe Olunna UBA
-	* Purpose: ImageInLife project - 4D Image Segmentation Methods
-	* Language:  C
-	*/
 #pragma once
 #ifndef HEAT_EQUATION_H
 #define HEAT_EQUATION_H
 
-	// INCLUDEs
+// INCLUDEs
 #include <stdbool.h>
 #include <stddef.h>
 #include "common_functions.h" // ImageData structs, Reflection functions
@@ -36,6 +31,8 @@ extern "C" {
 	//=================
 
 	bool geodesicMeanCurvatureRectangularTimeStep(Image_Data inputImageData, Filtering_Parameters filterParameters);
+
+	bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filtering_parameters);
 
 #endif // !HEAT_QUATION_H
 
