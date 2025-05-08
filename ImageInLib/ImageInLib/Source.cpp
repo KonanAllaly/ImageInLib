@@ -6177,7 +6177,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Hough Transform with optimization of smoothong and edge detector ===
+	//==================== Hough Transform with optimization =====================
 
 	
 	dataType** imageData = new dataType * [Height];
@@ -6185,71 +6185,83 @@ int main() {
 		imageData[k] = new dataType[dim2D]{ 0 };
 	}
 
-	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-
-	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	PixelSpacing spacing = { ctSpacing.sx, ctSpacing.sy };
 	Point2D pOrigin = { 0.0, 0.0 };
 
 	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* smoothImage = new dataType[dim2D]{ 0 };
-	dataType* maskThreshold = new dataType[dim2D]{ 0 };
+	dataType* foundCircles = new dataType[dim2D]{ 0 };
+	dataType* houghSpacePtr = new dataType[dim2D]{ 0 };
 
-	dataType K = 1000;
-	Filter_Parameters filter_parameters{
-		0.25 * ctSpacing.sx * ctSpacing.sx,//tau
-		ctSpacing.sx,//h
-		0.0,//sigma
-		K,//edge detector coefficient
-		1.5,//omega_c
-		1e-3,//tolerance
-		1e-6,//epsilon2
-		1e-6,//coef
-		1,//p
-		1,//number of time step
-		100,// max solver iteration
+	HoughParameters hParameters =
+	{
+		8.0,   //minimal radius
+		15.0,  //maximal radius
+		0.5,   //radius step
+		0.5,   //epsilon
+		60,   //offset 
+		1000,  //K edge detector coefficient
+		0.2,  //threshold edge detector
 	};
 
-	Image_Data2D sliceData = { Length, Width, smoothImage, pOrigin, spacing };
+	Image_Data2D sliceData = { Length, Width, imageSlice, pOrigin, spacing };
 
-	size_t kslice = 242;
+	//size_t kslice = 242;
 	//copyDataToAnother2dArray(imageData[kslice], imageSlice, Length, Width);
-	copyDataToAnother2dArray(imageData[kslice], smoothImage, Length, Width);
 
-	rescaleNewRange2D(smoothImage, Length, Width, 0.0, 1.0);
+	Point2D seed = { 256.0, 256.0 };
 
-	//storing_path = outputPath + "input.raw";
-	//manageRAWFile2D<dataType>(smoothImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//std::string p_threshold = outputPath + "edge_image_025.raw";
+	//std::string p_points = outputPath + "potential_centers_025.csv";
+	//Point2D found_point = localCircleDetection(sliceData, foundCircles, seed, hParameters, p_threshold, p_points);
+	//Point2D found_point = localHoughTransform(sliceData, seed, houghSpacePtr, foundCircles, hParameters);
+	//Point2D found_point = localHoughWithCanny(sliceData, seed, houghSpacePtr, foundCircles, hParameters);
 
-	const dataType sigma = 1.0;
-	//gaussianSmoothing2D(imageSlice, smoothImage, Length, Width, sigma);
-	geodesicMeanCurvature2D(sliceData, filter_parameters);
+	////Draw bounding box
+	BoundingBox2D box = findBoundingBox2D(seed, Length, Width, hParameters.radius_max, hParameters.offset);
+	//for (i = box.i_min; i <= box.i_max; i++) {
+	//	for (j = box.j_min; j <= box.j_max; j++) {
+	//		if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+	//			foundCircles[x_new(i, j, Length)] = 1.0;
+	//		}
+	//	}
+	//}
 
-	storing_path = outputPath + "filtered_gmcf.raw";
-	manageRAWFile2D<dataType>(smoothImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-	Point2D grad;
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			//getGradient2D(imageSlice, Length, Width, i, j, spacing, &grad);
-			getGradient2D(smoothImage, Length, Width, i, j, spacing, &grad);
-			dataType norm_gradient = sqrt(grad.x * grad.x + grad.y * grad.y);
-			dataType edge_value = gradientFunction(norm_gradient, K);
-			//threshold
-			if (edge_value < 0.05) {
-				maskThreshold[x_new(i, j, Length)] = 1.0;
-			}
-		}
+	//save all the found circles
+	FILE* found_points_hough;
+	std::string points_test = outputPath + "Test Hough 06-05/centers_p1.csv";
+	if (fopen_s(&found_points_hough, points_test.c_str(), "w") != 0) {
+		printf("Enable to open");
 	}
 
-	storing_path = outputPath + "edge_image.raw";
-	manageRAWFile2D<dataType>(maskThreshold, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	for (k = 201; k <= 231; k++) {
+		
+		extension = to_string(k);
+		std::string p_threshold = outputPath + "Test Hough 06-05/threshold/edge_image_" + extension + ".raw";
+		std::string p_points = outputPath + "Test Hough 06-05/center/potential_centers_" + extension + ".csv";
+
+		copyDataToAnother2dArray(imageData[k], imageSlice, Length, Width);
+		Point2D found_point = localCircleDetection(sliceData, foundCircles, seed, hParameters, p_threshold, p_points);
+		
+		fprintf(found_points_hough, "%f,%f\n", found_point.x, found_point.y);
+		for (i = box.i_min; i <= box.i_max; i++) {
+			for (j = box.j_min; j <= box.j_max; j++) {
+				if (i == box.i_min || i == box.i_max || j == box.j_min || j == box.j_max) {
+					imageSlice[x_new(i, j, Length)] = 1.0;
+				}
+			}
+		}
+		storing_path = outputPath + "Test Hough 06-05/slice/slices_" + extension + ".raw";
+		manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	}
+	fclose(found_points_hough);
 
 	delete[] imageSlice;
-	delete[] smoothImage;
-	delete[] maskThreshold;
+	delete[] foundCircles;
 
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
@@ -6257,7 +6269,6 @@ int main() {
 	delete[] imageData;
 
 	free(ctContainer);
-	
 
 	return EXIT_SUCCESS;
 }
