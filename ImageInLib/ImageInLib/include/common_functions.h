@@ -378,6 +378,7 @@ extern "C" {
 	/// </summary>
 	/// <param name="linked_curve">pointer to given LinkedCurve to be released</param>
 	void releaseLinkedCurve(LinkedCurve* linked_curve);		
+
 	/// <summary>
 	/// Initializes plinked_curve by data given by pcurve 
 	/// </summary>
@@ -387,6 +388,7 @@ extern "C" {
 	/// <param name="close_curve">flag indicating, if the curve should be cloesed or open</param>
 	/// <returns>Returns true, if the initialisation succeeds, false otherwide</returns>
 	bool initializeLinkedCurve(Curve2D* pcurve, LinkedCurve* plinked_curve, const bool reverse, const bool close_curve);
+	
 	/// <summary>
 	/// Updates the distance to the next linked point and the lenght of the whole curve as well
 	/// </summary>
@@ -394,12 +396,14 @@ extern "C" {
 	/// <param name="linked_point">pointer to given LinkedPoint</param>
 	/// <returns>returns the new length </returns>
 	double updateDistanceToNext(LinkedCurve* linked_curve, LinkedPoint* linked_point);
+	
 	/// <summary>
 	/// update all local and global lengths of the given curve
 	/// </summary>
 	/// <param name="linked_curve">pointer to given curve</param>
 	/// <returns>returns true, if the lenghts were upadted successfully, false otherwise</returns>
 	bool updateLinkedCurveLengths(LinkedCurve* linked_curve);
+	
 	/// <summary>
 	/// Updates thegiven LinkedPoint and corresponding lenths
 	/// </summary>
@@ -510,10 +514,10 @@ extern "C" {
 	/// </summary>
 	/// <param name="linked_curve">pointer to given linked curve</param>
 	/// <param name="linked_point">pointer to given linked curve</param>
-	/// <param name="x"></param>
-	/// <param name="y"></param>
-	/// <param name="z"></param>
-	/// <returns></returns>
+	/// <param name="x">point x coordinate</param>
+	/// <param name="y">point y coordinate</param>
+	/// <param name="z">point z coordinate</param>
+	/// <returns>return true if everything went well, false otherwise</returns>
 	bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double x, const double y, const double z);
 
 	typedef enum
@@ -525,7 +529,7 @@ extern "C" {
 	/// <summary>
 	/// function to create 3D linked curve
 	/// </summary>
-	/// <returns>return true if everything went well, false otherwise</returns>
+	/// <returns>return empty 3D linked curve</returns>
 	LinkedCurve3D create3dLinkedCurve();
 
 	/// <summary>
@@ -552,7 +556,7 @@ extern "C" {
 	/// <param name="point_x">point x coordinate</param>
 	/// <param name="point_y">point y coordinate</param>
 	/// <param name="point_z">point z coordinate</param>
-	/// <returns></returns>
+	/// <returns>return 3D linked points</returns>
 	LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z);
 
 	/// <summary>
