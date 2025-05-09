@@ -342,9 +342,8 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     
     for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
         Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
-        point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
+        //point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
         fprintf(file_initial_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
-
         iPoint = iPoint->next;
     }
     fclose(file_initial_curve);
@@ -378,10 +377,9 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         for (size_t m = 0; m < linked_curve.number_of_points; m++) {
 
             Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
-            point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
+            //point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
             iPoint->average_distance_to_next += iPoint->distance_to_next;
             fprintf(file_current_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
-
             iPoint = iPoint->next;
         }
         fclose(file_current_curve);
@@ -545,7 +543,8 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
+    //const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
+    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
