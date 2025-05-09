@@ -80,7 +80,7 @@ extern "C" {
 	} LinkedCurve;
 
 	// Common 3D Points - {x,y,z}
-	typedef struct ptsstruct { //TODO: use better tag to differentiate 2D and 3D points
+	typedef struct ptsstruct { 
 		dataType x;
 		dataType y;
 		dataType z;
@@ -458,7 +458,7 @@ extern "C" {
 	/// </summary>
 	/// <param name="pCurve">Pointer to the curve to be copied</param>
 	/// <param name="array">Alocated array of expected size length (same as the curve) * 3</param>
-	/// <returns></returns>
+	/// <returns>return true if everything went well, false otherwise</returns>
 	bool copyCurve3DPointsToArray(const Curve3D* pCurve, dataType** pArray);
 
 	/// <summary>
@@ -497,8 +497,23 @@ extern "C" {
 		double length;
 	} LinkedCurve3D;
 
+	/// <summary>
+	/// Updates the distance to the next linked point and the lenght of the whole curve as well
+	/// </summary>
+	/// <param name="linked_curve">pointer to given linked curve</param>
+	/// <param name="linked_point">pointer to given linked curve</param>
+	/// <returns>returns the new length </returns>
 	double updateDistance3dToNext(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point);
 
+	/// <summary>
+	/// Updates the distance to the next linked point and the lenght of the whole curve as well
+	/// </summary>
+	/// <param name="linked_curve">pointer to given linked curve</param>
+	/// <param name="linked_point">pointer to given linked curve</param>
+	/// <param name="x"></param>
+	/// <param name="y"></param>
+	/// <param name="z"></param>
+	/// <returns></returns>
 	bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double x, const double y, const double z);
 
 	typedef enum
@@ -507,16 +522,53 @@ extern "C" {
 		THREE_D
 	} pDimension;
 
+	/// <summary>
+	/// function to create 3D linked curve
+	/// </summary>
+	/// <returns>return true if everything went well, false otherwise</returns>
 	LinkedCurve3D create3dLinkedCurve();
 
+	/// <summary>
+	/// check if the 3D curve is oriented
+	/// </summary>
+	/// <param name="pcurve">input curve</param>
+	/// <returns>return true if everything went well, false otherwise</returns>
 	bool is3dCurveOrientedPositively(const Curve3D* pcurve);
 
+	/// <summary>
+	/// Create linked point
+	/// </summary>
+	/// <param name="point_x">point x coordinate</param>
+	/// <param name="point_y">point y coordinate</param>
+	/// <param name="point_z">point z coordinate</param>
+	/// <returns>return linked point</returns>
 	LinkedPoint3D* create3dLinkedPoint(const double point_x, const double point_y, const double point_z);
 
+	/// <summary>
+	/// Pushes a point by the coordinates x, y and z after the given linked point
+	/// </summary>
+	/// <param name="linked_curve">linked curve</param>
+	/// <param name="linked_point">linked point of the linked_curve (the function pushes a new point after this point)</param>
+	/// <param name="point_x">point x coordinate</param>
+	/// <param name="point_y">point y coordinate</param>
+	/// <param name="point_z">point z coordinate</param>
+	/// <returns></returns>
 	LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z);
 
+	/// <summary>
+	/// Initialize given 3d linked curve (opened or closed)
+	/// </summary>
+	/// <param name="pcurve">the input curve, contains all initial curve points</param>
+	/// <param name="plinked_curve">linked curve</param>
+	/// <param name="reverse">check if the linked curve should be reverted or not</param>
+	/// <param name="close_curve">check whether the curve is opened or closed</param>
+	/// <returns>return true if everything went well, false otherwise</returns>
 	bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve);
 
+	/// <summary>
+	/// release a given linked curve
+	/// </summary>
+	/// <param name="linked_curve">linked</param>
 	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
 
 	BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius);
