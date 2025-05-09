@@ -308,7 +308,6 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
         free(pgrad_z[k]);
         free(abs_val_grad[k]);
         free(edge_detector[k]);
-
     }
     free(pgrad_x);
     free(pgrad_y);
@@ -380,6 +379,16 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         it++;
 
     } while (it < pSegmentationParams->num_time_steps);
+
+    LinkedPoint3D* pPoint = linked_curve.first_point;
+
+    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    {
+        pResultSegmentation->pPoints[i].x = (dataType)pPoint->x;
+        pResultSegmentation->pPoints[i].y = (dataType)pPoint->y;
+        pResultSegmentation->pPoints[i].z = (dataType)pPoint->z;
+        pPoint = pPoint->next;
+    }
 
     free(pscheme_data);
     release3dLinkedCurve(&linked_curve);
