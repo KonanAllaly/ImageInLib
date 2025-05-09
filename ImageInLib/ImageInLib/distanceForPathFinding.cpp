@@ -511,6 +511,7 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 		}
 
 	}
+	return true;
 }
 
 bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints) {
@@ -1146,10 +1147,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		currentIndx = x_new(j, i, width);
 		labelArray[k][currentIndx] = 1;
 		distanceFuncPtr[k][currentIndx] = current.arrival;
-		//l = inProcess.size();
-		//swap3dPoints(&inProcess[0], &inProcess[l - 1]);
-		//inProcess.pop_back();
-		//heapifyDown3D(inProcess, 0);
+		
 		deleteRootHeap3D(inProcess);
 
 		//Treat neighbors of the minimum in the narrow band
@@ -1167,9 +1165,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[kplus][currentIndx] = dBottom;
 					labelArray[kplus][currentIndx] = 2;
 					pointFastMarching3D BottomNeighbor = { j, i, kplus, dBottom };
-					//inProcess.push_back(BottomNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, BottomNeighbor);
 				}
 				else {
@@ -1196,9 +1191,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[kminus][currentIndx] = dTop;
 					labelArray[kminus][currentIndx] = 2;
 					pointFastMarching3D TopNeighbor = { j, i, kminus, dTop };
-					//inProcess.push_back(TopNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, TopNeighbor);
 				}
 				else {
@@ -1226,9 +1218,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxEast] = dEast;
 					labelArray[k][indxEast] = 2;
 					pointFastMarching3D EastNeighbor = { j, iplus, k, dEast };
-					//inProcess.push_back(EastNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, EastNeighbor);
 				}
 				else {
@@ -1256,9 +1245,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxWest] = dWest;
 					labelArray[k][indxWest] = 2;
 					pointFastMarching3D WestNeighbor = { j, iminus, k, dWest };
-					//inProcess.push_back(WestNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, WestNeighbor);
 				}
 				else {
@@ -1286,9 +1272,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxNorth] = dNorth;
 					labelArray[k][indxNorth] = 2;
 					pointFastMarching3D NorthNeighbor = { jminus, i, k, dNorth };
-					//inProcess.push_back(NorthNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, NorthNeighbor);
 				}
 				else {
@@ -1316,9 +1299,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					distanceFuncPtr[k][indxSouth] = dSouth;
 					labelArray[k][indxSouth] = 2;
 					pointFastMarching3D SouthNeighbor = { jplus, i, k, dSouth };
-					//inProcess.push_back(SouthNeighbor);
-					//l = inProcess.size();
-					//heapifyUp3D(inProcess, l - 1);
 					addPointHeap3D(inProcess, SouthNeighbor);
 				}
 				else {
@@ -1331,27 +1311,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 			}
 		}
 	}
-
-	//size_t cpt1 = 0, cpt2 = 0,cpt3 = 0 ;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			currentIndx = x_new(j, i, width);
-	//			if (distanceFuncPtr[k][currentIndx] == INFINITY) {
-	//				cpt1++;
-	//			}
-	//			if (labelArray[k][currentIndx] == 2) {
-	//				cpt2++;
-	//			}
-	//			if (labelArray[k][currentIndx] == 3) {
-	//				cpt3++;
-	//			}
-	//		}
-	//	}
-	//}
-	//cout << cpt1 << " point(s) with distance = INFINITY" << endl;;
-	//cout << cpt2 << " point(s) with label = 2" << endl;
-	//cout << cpt3 << " point(s) with label = 3" << endl;
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
@@ -1441,87 +1400,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
 	delete[] gradientVectorZ;
-
-	return true;
-}
-
-dataType min0(dataType x, dataType y) {
-	if (y - x > 0)
-		return pow(x - y, 2);
-	else
-		return 0;
-}
-
-bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau) {
-
-	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
-		return false;
-	
-	size_t height = ctImageData.height;
-	size_t length = ctImageData.length;
-	size_t width = ctImageData.width;
-	size_t i, j, k, x;
-
-	size_t height_ext = height + 2;
-	size_t length_ext = length + 2;
-	size_t width_ext = length + 2;
-	size_t i_ext, j_ext, k_ext, x_ext;
-
-	dataType** previousSolution = new dataType * [height_ext];
-	for (k = 0; k < height_ext; k++) {
-		previousSolution[k] = new dataType[length_ext * width_ext]{ 0 };
-	}
-	
-	double mass = 10.0;
-	dataType hx = ctImageData.spacing.sx;
-	dataType hy = ctImageData.spacing.sy;
-	dataType hz = ctImageData.spacing.sz;
-	dataType value = 0.0;
-
-	size_t count_iteration = 0;
-	size_t count_point_to_processed = 0;
-	size_t max_iteration = 1000;
-
-	while (mass > tolerance && count_iteration < max_iteration) {
-
-		copyDataToExtendedArea(distancePtr, previousSolution, height, length, width);
-		reflection3D(previousSolution, height_ext, length_ext, width_ext);
-
-		count_iteration++;
-		mass = 0.0;
-		for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
-			for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-					if (ctImageData.imageDataPtr[k][x_new(i, j, length)] == foregroundValue) {
-						if (count_iteration == 1) {
-							count_point_to_processed++;
-						}
-						value = previousSolution[k_ext][x_new(i_ext, j_ext, length_ext)];
-						distancePtr[k][x_new(i, j, length)] = value + tau - tau * sqrt((1.0 / pow(hx, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext + 1, j_ext, length_ext)], value))
-							+ (1.0 / pow(hy, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext, j_ext + 1, length_ext)], value))
-							+ (1.0 / pow(hz, 2)) * max(min0(previousSolution[k_ext - 1][x_new(i_ext, j_ext, length_ext)], value), min0(previousSolution[k_ext + 1][x_new(i_ext, j_ext, length_ext)], value)));
-						
-						//Compute the mass
-						mass += pow(previousSolution[k_ext][x_new(i_ext, j_ext, length_ext)] - distancePtr[k][x_new(i, j, length)], 2);
-					}
-				}
-			}
-		}
-		mass = sqrt(mass);
-
-		//if (count_iteration % 10 == 0) {
-		//	std::cout << "Mass = " << mass << std::endl;
-		//	std::cout << count_iteration << " iterations" << std::endl;
-		//}
-
-	}
-	//std::cout << count_point_to_processed << " points were processed" << std::endl;
-
-	for (k = 0; k < height_ext; k++) {
-		delete[] previousSolution[k];
-	}
-	delete[] previousSolution;
-	
 
 	return true;
 }
