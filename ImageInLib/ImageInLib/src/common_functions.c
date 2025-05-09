@@ -98,7 +98,7 @@ dataType edgeDetector(dataType value, dataType coef)
 
 dataType similarIntensityDetector(dataType currValue, dataType refValue, dataType coef)
 {
-	return (dataType)(1.0 / (1 + coef * pow(currValue - refValue,2)));
+	return (dataType)(1.0 / (1 + coef * pow(currValue - refValue, 2)));
 }
 
 //==============================================================================
@@ -299,8 +299,8 @@ Point3D getPointWithTheHighestValue(dataType** distanceMapPtr, const size_t leng
 				size_t x = x_new(i, j, length);
 				if (distanceMapPtr[k][x] > max_value) {
 					max_value = distanceMapPtr[k][x];
-					result.x = (dataType)i; 
-					result.y = (dataType)j; 
+					result.x = (dataType)i;
+					result.y = (dataType)j;
 					result.z = (dataType)k;
 				}
 			}
@@ -380,7 +380,7 @@ Point2D getCurveCentroid(const Curve2D* pcurve)
 {
 	if (pcurve == NULL)
 	{
-		return (Point2D){ 0.0, 0.0};
+		return (Point2D) { 0.0, 0.0 };
 	}
 	dataType x = 0, y = 0;
 
@@ -389,7 +389,7 @@ Point2D getCurveCentroid(const Curve2D* pcurve)
 		y += pcurve->pPoints[i].y;
 	}
 
-	return (Point2D){x/ pcurve->numPoints, y/ pcurve->numPoints	};
+	return (Point2D) { x / pcurve->numPoints, y / pcurve->numPoints };
 }
 
 bool getGradient2D(dataType* pbase_data, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const FiniteVolumeSize2D sz, Point2D* grad)
@@ -1010,7 +1010,7 @@ bool is3dCurveOrientedPositively(const Curve3D* pcurve)
 			y_i_plus = pcurve->pPoints[i + 1].y;
 			z_i_plus = pcurve->pPoints[i + 1].z;
 		}
-
+    
 		Point3D cross_product = {y_i * z_i_plus - z_i * y_i_plus , z_i * x_i_plus - x_i * z_i_plus, x_i * y_i_plus - y_i * x_i_plus };
 		signed_area += norm3D(cross_product);
 	}
@@ -1123,7 +1123,7 @@ void release3dLinkedCurve(LinkedCurve3D* linked_curve)
 }
 
 BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius) {
-	
+  
 	size_t x_min, x_max, y_min, y_max, z_min, z_max;
 
 	double ind_x_min = point.x - (radius + 0.5);

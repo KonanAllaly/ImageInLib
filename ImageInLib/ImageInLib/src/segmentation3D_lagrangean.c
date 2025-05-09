@@ -87,11 +87,11 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
         pgrad_z[k] = (dataType*)malloc(sliceSize);
         abs_val_grad[k] = (dataType*)malloc(sliceSize);
         edge_detector[k] = (dataType*)malloc(sliceSize);
-        if (pgrad_x[k] == NULL || pgrad_y[k] == NULL || pgrad_z[k] == NULL || 
+        if (pgrad_x[k] == NULL || pgrad_y[k] == NULL || pgrad_z[k] == NULL ||
             abs_val_grad[k] == NULL || edge_detector[k] == NULL)
             return false;
     }
-    if (pgrad_x == NULL || pgrad_y == NULL || pgrad_z == NULL || 
+    if (pgrad_x == NULL || pgrad_y == NULL || pgrad_z == NULL ||
         abs_val_grad == NULL || edge_detector == NULL)
         return false;
 
@@ -424,7 +424,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     LinkedPoint3D* current_point = plinked_curve->first_point;
 
     //////////////////////    X component ///////////////////////////////////////////////////////////
-    
+  
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
 
@@ -546,7 +546,7 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
 void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
     const double eps, const double mu)
 {
-    
+
     //check if the pointers a well allocated
     if (plinked_curve == NULL || pscheme_data == NULL)
     {
@@ -570,7 +570,7 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        if (is_closed_curve || (i > 1 && i < plinked_curve->number_of_points)) 
+        if (is_closed_curve || (i > 1 && i < plinked_curve->number_of_points))
         {
             h_i = current_point->previous->distance_to_next;
             h_i_plus = current_point->distance_to_next;
@@ -711,7 +711,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
 
 bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt)
 {
-    if (plinked_curve == NULL || pscheme_data == NULL) 
+    if (plinked_curve == NULL || pscheme_data == NULL)
     {
         return false;
     }
@@ -752,7 +752,7 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
         }
         else
         {
-            if (iter == 1) 
+            if (iter == 1)
             {
                 h_i = current_point->distance_to_next;
                 h_i_plus = h_i;
@@ -762,13 +762,13 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
                 h_i = current_point->previous->distance_to_next;
                 h_i_plus = h_i;
             }
-            
+          
             pscheme_data[iter].a = 0.0;
             pscheme_data[iter].c = 0.0;
             pscheme_data[iter].m = (h_i_plus + h_i) / (2.0 * dt);
             pscheme_data[iter].b = 1.0;
         }
-     
+      
         current_point = current_point->next;
     }
 

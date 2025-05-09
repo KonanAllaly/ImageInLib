@@ -7,8 +7,8 @@
 #include "segmentation2D_lagrangean.h"
 #include "segmentation3D_lagrangean.h"
 
-void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterParameters,
-	const SegmentationMethod model, unsigned char* outputPathPtr, void* resultSegment)
+void segmentImage(void* pInputImageData, void* pSegParameters, void* pfilterParameters,
+    const SegmentationMethod model, unsigned char* outputPathPtr, void* resultSegment)
 {
 	switch (model)
 	{
@@ -68,14 +68,14 @@ void segmentImage(void * pInputImageData, void * pSegParameters, void * pfilterP
 }
 
 void segment2dImage(Image_Data2D inputImageData, dataType* initialSegment, Segmentation_Parameters segParameters, FilterParameters filteringParameters,
-	point2d* centers, const char* outputPathPtr, const SegmentationMethod model) 
+    point2d* centers, const char* outputPathPtr, const SegmentationMethod model)
 {
-	switch (model) 
-	{
-	case SUBSURF_MODEL:
-		subsurf(inputImageData, initialSegment, outputPathPtr, filteringParameters, segParameters);
-		break;
-	case GSUBSURF_MODEL:
-		gsubsurf(inputImageData, initialSegment, outputPathPtr, filteringParameters, segParameters);
-	}
+    switch (model)
+    {
+    case SUBSURF_MODEL:
+        subsurf(inputImageData, initialSegment, outputPathPtr, filteringParameters, segParameters);
+        break;
+    case GSUBSURF_MODEL:
+        gsubsurf(inputImageData, initialSegment, outputPathPtr, filteringParameters, segParameters);
+    }
 }

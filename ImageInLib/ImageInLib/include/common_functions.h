@@ -37,7 +37,7 @@ extern "C" {
 // STRUCTs
 
 	// Common 2D Points - {x,y}
-	typedef struct ptstruct{
+	typedef struct ptstruct {
 		dataType x;
 		dataType y;
 	} Point2D;
@@ -49,8 +49,8 @@ extern "C" {
 			Point2D pt;
 		};
 		bool isEndPoint;
-		void * prev_point;
-		void * next_point;
+		void* prev_point;
+		void* next_point;
 	} CurvePoint2D;
 
 	// 2D Curve - list of CurvePoint2D
@@ -80,7 +80,7 @@ extern "C" {
 	} LinkedCurve;
 
 	// Common 3D Points - {x,y,z}
-	typedef struct ptsstruct { 
+	typedef struct ptsstruct {
 		dataType x;
 		dataType y;
 		dataType z;
@@ -223,7 +223,7 @@ extern "C" {
 	*/
 	dataType edgeDetector(dataType value, dataType coef);
 	//==============================================================================
-	
+
 	/// <summary>
 	/// Evaluates the similar density detector (how much is the current value similar to reference value)
 	/// </summary>
@@ -232,7 +232,7 @@ extern "C" {
 	/// <param name="coef">coeficient</param>
 	/// <returns></returns>
 	dataType similarIntensityDetector(dataType currValue, dataType refValue, dataType coef);
-	
+
 	/*
 	void copyDataToExtendedArea(const dataType ** originalDataPtr, dataType ** extendedDataPtr, const size_t originalHeight, const size_t originalLength, const size_t originalWidth);
 
@@ -269,21 +269,21 @@ extern "C" {
 	void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
 	double getPoint2DDistance(const Point2D a, const Point2D b);
-	
+
 	/// <summary>
 	/// The points of pCurve are copied to pArray. The function expects same length of the particular objects (curve and array)
 	/// </summary>
 	/// <param name="pCurve">Pointer to the curve to be copied</param>
 	/// <param name="array">Alocated array of expected size length (same as the curve) * 2</param>
 	/// <returns></returns>
-	bool copyCurve2DPointsToArray(const Curve2D * pCurve, dataType ** pArray);
+	bool copyCurve2DPointsToArray(const Curve2D* pCurve, dataType** pArray);
 
 	/// <summary>
 	/// The function check, if the given curve is closed or not
 	/// </summary>
 	/// <param name="pcurve">Input curve to be checked</param>
 	/// <returns>Returns true, if the curve is closed, otherwise false.</returns>
-	bool isCurveClosed(const Curve2D * pcurve);
+	bool isCurveClosed(const Curve2D* pcurve);
 
 	/// <summary>
 	/// The function is implemented according to https://en.wikipedia.org/wiki/Polygon
@@ -312,7 +312,7 @@ extern "C" {
 	/// <param name="sz">size of finite volumes</param>
 	/// <param name="grad">output - calculated gradient</param>
 	/// <returns>True, if it was possible to estimate gradient</returns>
-	bool getGradient2D(dataType * pbase_data, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const FiniteVolumeSize2D sz, Point2D * grad);
+	bool getGradient2D(dataType* pbase_data, const size_t width, const size_t height, const size_t ind_x, const size_t ind_y, const FiniteVolumeSize2D sz, Point2D* grad);
 
 	/// <summary>
 	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 
@@ -372,7 +372,7 @@ extern "C" {
 	/// <param name="point_y">y coordinate of the point to be pushed after linked_point</param>
 	/// <returns>the pointer to newlu pushed LinkedPoint</returns>
 	LinkedPoint* pushAfterPoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double point_x, const double point_y);
-	
+
 	/// <summary>
 	/// Releases memory reserved for the points of given linked_curve 
 	/// </summary>
@@ -396,14 +396,14 @@ extern "C" {
 	/// <param name="linked_point">pointer to given LinkedPoint</param>
 	/// <returns>returns the new length </returns>
 	double updateDistanceToNext(LinkedCurve* linked_curve, LinkedPoint* linked_point);
-	
+
 	/// <summary>
 	/// update all local and global lengths of the given curve
 	/// </summary>
 	/// <param name="linked_curve">pointer to given curve</param>
 	/// <returns>returns true, if the lenghts were upadted successfully, false otherwise</returns>
 	bool updateLinkedCurveLengths(LinkedCurve* linked_curve);
-	
+  
 	/// <summary>
 	/// Updates thegiven LinkedPoint and corresponding lenths
 	/// </summary>
@@ -413,7 +413,7 @@ extern "C" {
 	/// <param name="y">input new y coordinate value</param>
 	/// <returns></returns>
 	bool updatePoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y);
-	
+
 	//id generator	
 	void resetIDGenerator();
 	unsigned long long getNextID();
@@ -488,7 +488,7 @@ extern "C" {
 		double distance_to_next_z;
 		unsigned long long id;
 		//extend the 3D points structure with the normal velocity vector
-		double nvx; 
+		double nvx;
 		double nvy;
 		double nvz;
 		double average_distance_to_next; //use to observe the average distance after evolution
