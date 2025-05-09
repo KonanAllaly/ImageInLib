@@ -13,6 +13,7 @@
 #include <string.h>
 #include "endianity_bl.h"
 #include <stdlib.h>
+#include "imageInterpolation.h"
 
 
 bool load3dDataArrayVTK(unsigned char ** imageDataPtr, const size_t imageLength, const size_t imageWidth,
@@ -156,14 +157,13 @@ bool load3dDataArrayRAW(dataType ** imageDataPtr, const size_t imageLength, cons
 		}
 	}
   
-	//change from little endian to big endian
-	for (k = 0; k < imageHeight; k++)
-	{
-		for (i = 0; i < imageLength * imageWidth; i++)
-		{
-			revertBytes(&imageDataPtr[k][i], sizeof(dataType));
-		}
-	}
+	//for (k = 0; k < imageHeight; k++)
+	//{
+	//	for (i = 0; i < imageLength * imageWidth; i++)
+	//	{
+	//		revertBytes(&imageDataPtr[k][i], sizeof(dataType));
+	//	}
+	//}
   
 	fclose(file);
 	return true;
@@ -288,20 +288,54 @@ bool load2dArrayRAW(dataType* imageDataPtr, const size_t length, const size_t wi
 		}
 	}
 
-	//const size_t dataSize = sizeof(dataType);
-	//char* swapBuf = (char*)malloc(dataSize);
-	//revert byte
-	//if (revert == true) {
-	//	for (i = 0; i < pointsInSlice; i++) {
-	//		revertBytesEx(&imageDataPtr[i], dataSize, swapBuf);
-	//	}
-	//}
-
-	//for (size_t i = 0; i < pointsInSlice; i++) {
-	//	revertBytesEx(&imageDataPtr[i], dataSize, swapBuf);
-	//}
-	//free(swapBuf);
-
 	fclose(file);
+	return true;
+}
+
+//==================================
+
+bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath, CoordinateSystem cSystem)
+{
+	
+	FILE* file;
+	if (fopen_s(&file, filePath, "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	Point3D previous_point;
+	double dist = 0;
+	
+	dataType x = 0, y = 0, z = 0;
+
+	for (size_t i = 0; i < pCurve->numPoints; i++) {
+		
+		fscanf_s(file, "%f", &x);
+		fscanf_s(file, ",");
+		fscanf_s(file, "%f", &y);
+		fscanf_s(file, ",");
+		fscanf_s(file, "%f", &z);
+		fscanf_s(file, "\n");
+
+		Point3D current_point = { x , y , z };
+
+		if (cSystem == REAL) {
+			//Get image coordinate
+			current_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
+			pCurve->pPoints[i].x = current_point.x;
+			pCurve->pPoints[i].y = current_point.y;
+			pCurve->pPoints[i].z = current_point.z;
+		}
+		else {
+			pCurve->pPoints[i].x = x;
+			pCurve->pPoints[i].y = y;
+			pCurve->pPoints[i].z = z;
+		}
+
+		previous_point = current_point;
+
+	}
+	fclose(file);
+
 	return true;
 }

@@ -377,7 +377,7 @@ extern "C" {
 	/// Releases memory reserved for the points of given linked_curve 
 	/// </summary>
 	/// <param name="linked_curve">pointer to given LinkedCurve to be released</param>
-	void releaseLinkedCurve(LinkedCurve* linked_curve);
+	void releaseLinkedCurve(LinkedCurve* linked_curve);		
 
 	/// <summary>
 	/// Initializes plinked_curve by data given by pcurve 
@@ -388,7 +388,7 @@ extern "C" {
 	/// <param name="close_curve">flag indicating, if the curve should be cloesed or open</param>
 	/// <returns>Returns true, if the initialisation succeeds, false otherwide</returns>
 	bool initializeLinkedCurve(Curve2D* pcurve, LinkedCurve* plinked_curve, const bool reverse, const bool close_curve);
-
+	
 	/// <summary>
 	/// Updates the distance to the next linked point and the lenght of the whole curve as well
 	/// </summary>
@@ -403,7 +403,7 @@ extern "C" {
 	/// <param name="linked_curve">pointer to given curve</param>
 	/// <returns>returns true, if the lenghts were upadted successfully, false otherwise</returns>
 	bool updateLinkedCurveLengths(LinkedCurve* linked_curve);
-
+  
 	/// <summary>
 	/// Updates thegiven LinkedPoint and corresponding lenths
 	/// </summary>
@@ -440,7 +440,7 @@ extern "C" {
 	/// <param name="fVolume">size of finite volume</param>
 	/// <param name="grad">output - calculated gradient</param>
 	/// <returns>True, if it was possible to estimate gradient</returns>
-	bool getGradient3D(dataType** pbase_data, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D* grad);
+	bool getGradient3D(dataType ** pbase_data, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const FiniteVolumeSize3D fVolume, Point3D * grad);
 
 	/// <summary>
 	/// The function returns the distance to given point from orgin (0,0) - in other words, calculated a norm of the given vector 

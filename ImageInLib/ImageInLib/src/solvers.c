@@ -195,7 +195,7 @@ bool sherman_morris3D(SchemeData3D* pscheme_data, const size_t number_of_points)
 	const double beta = pscheme_data[1].a;
 	const double alpha = pscheme_data[number_of_points].c;
 
-	gamma = -pscheme_data[1].b;
+	gamma = -pscheme_data[1].b; 
 	pscheme_data[1].b -= gamma;
 	pscheme_data[number_of_points].b -= alpha * beta / gamma;
 

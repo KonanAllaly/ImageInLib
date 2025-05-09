@@ -71,7 +71,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 
     CurvePoint3D* pOldCurve = (CurvePoint3D*)malloc(sizeof(CurvePoint3D) * pResultSegmentation->numPoints);
     Curve3D oldSegmentation = { pOldCurve, pResultSegmentation->numPoints };
-
+    
     const size_t sizeHeight = sizeof(dataType*) * inputImage3D.height;
     const size_t sliceDimension = inputImage3D.length * inputImage3D.width;
     const size_t sliceSize = sliceDimension * sizeof(dataType);
@@ -189,7 +189,7 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
     dataType mu = pSegmentationParams->mu;
     dataType eps = pSegmentationParams->eps;
 
-    if (!pSegmentationParams->open_curve)
+    if (!pSegmentationParams->open_curve) 
     {
         for (size_t t = 0; t < pSegmentationParams->num_time_steps; t++)
         {
@@ -372,7 +372,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
             length_of_data = linked_curve.number_of_points + 2;
             pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
         }
-
+        
         //evolve curve
         evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
 
@@ -424,7 +424,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     LinkedPoint3D* current_point = plinked_curve->first_point;
 
     //////////////////////    X component ///////////////////////////////////////////////////////////
-
+  
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
 
@@ -558,7 +558,7 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
     double h_i = -1, h_i_plus = -1;            // distance between two neighboring points
     double vx = 0, vy = 0, vz = 0;             // external velocity field components 
     double tx = 0, ty = 0, tz = 0;             //tangential vector components
-    double som_dist = 0, dot = 0, norm_nv = 1.0;
+    double som_dist = 0, dot = 0, norm_nv = 1.0; 
     double nvx = 0, nvy = 0, nvz = 0;          //normal velocity vector components
     double n1_x = 0, n1_y = 0, n1_z = 0;       //normal plan vector components
     double n2_x = 0, n2_y = 0, n2_z = 0;       //normal plan vector components
@@ -643,7 +643,7 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
 void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega)
 {
-
+    
     double mean = 0.0;
     const size_t number_of_points = plinked_curve->number_of_points;
     const double curve_length = plinked_curve->length;
@@ -659,7 +659,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
     else {
         avg_length = curve_length / (double)(number_of_points - 1);
     }
-
+    
 
     for (size_t i = 1; i <= number_of_points; i++)
     {
@@ -693,7 +693,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
         {
             h_i = current_point->previous->distance_to_next;
         }
-
+        
         pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
         current_point = current_point->next;
     }
@@ -762,13 +762,13 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
                 h_i = current_point->previous->distance_to_next;
                 h_i_plus = h_i;
             }
-
+          
             pscheme_data[iter].a = 0.0;
             pscheme_data[iter].c = 0.0;
             pscheme_data[iter].m = (h_i_plus + h_i) / (2.0 * dt);
             pscheme_data[iter].b = 1.0;
         }
-
+      
         current_point = current_point->next;
     }
 
