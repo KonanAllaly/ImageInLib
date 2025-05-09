@@ -96,8 +96,3 @@ using namespace std;
 
 	bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, point3d* seedPoints);
 
-	//===========================
-
-	dataType min0(dataType x, dataType y);
-
-	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau);
