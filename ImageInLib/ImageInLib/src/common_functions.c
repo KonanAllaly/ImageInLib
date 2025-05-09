@@ -962,13 +962,11 @@ bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, con
 	if (linked_point->next != NULL)
 	{	
 		updateDistance3dToNext(linked_curve, linked_point);
-		//linked_point->distance_to_next = updateDistance3dToNext(linked_curve, linked_point);
 	}
 
 	if (linked_point->previous != NULL)
 	{
 		updateDistance3dToNext(linked_curve, linked_point->previous);
-		//linked_point->previous->distance_to_next = updateDistance3dToNext(linked_curve, linked_point->previous);
 	}
 
 	return true;
@@ -1060,6 +1058,7 @@ LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* link
 
 bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve)
 {
+	//check that the pointers are well allocated
 	if (pcurve == NULL || plinked_curve == NULL)
 	{
 		return false;
