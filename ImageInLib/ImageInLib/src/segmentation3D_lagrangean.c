@@ -7,15 +7,56 @@
 #include "segmentation3D_lagrangean.h"
 #include "solvers.h"
 
+/// <summary>
+/// This function evolve by one time step a given curve in vector field
+/// </summary>
+/// <param name="pDistanceMap">distance map used to construct the vector field</param>
+/// <param name="plinked_curve">linked curve (curve points)</param>
+/// <param name="pscheme_data">coefficients of the linear system</param>
+/// <param name="pparams">function parameters</param>
+/// <returns></returns>
 bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
+/// <summary>
+/// Function to get the velocity field from the distance map
+/// It computes the 3D gradient in given point
+/// </summary>
+/// <param name="pDistanceMap">distance map</param>
+/// <param name="x">x component of the point</param>
+/// <param name="y">y component of the point</param>
+/// <param name="z">z component of the point</param>
+/// <param name="vx">gradient x component of the point</param>
+/// <param name="vy">gradient y component of the point</param>
+/// <param name="vz">gradient z component of the point</param>
 void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, const double z, double* vx, double* vy, double* vz);
 
+/// <summary>
+/// This function compute the normal velocity from the distance map
+/// </summary>
+/// <param name="pDistanceMap">distance map</param>
+/// <param name="plinked_curve">linked curve, each point will be allocated with the corresponding velocity</param>
+/// <param name="pscheme_data">scheme data</param>
+/// <param name="eps">parameter epsilon</param>
+/// <param name="mu">parameter mu</param>
 void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
     const double eps, const double mu);
 
+/// <summary>
+/// This function compute the tangential velocity
+/// </summary>
+/// <param name="plinked_curve">linked curve, each point will be allocated with the corresponding velocity</param>
+/// <param name="pscheme_data">scheme data</param>
+/// <param name="omega">parameter omega</param>
 void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega);
 
+/// <summary>
+/// This function set the coefficients needed to solve the linear system
+/// </summary>
+/// <param name="plinked_curve">linked curve</param>
+/// <param name="pscheme_data">scheme data</param>
+/// <param name="eps">parameter epsilon</param>
+/// <param name="dt">parameter of time step</param>
+/// <returns></returns>
 bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt);
 
 //===========================================================
@@ -289,16 +330,21 @@ bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagran
 bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation)
 {
+    //check if the pointers a well allocated
     if (pSegmentationParams == NULL || pResultSegmentation == NULL) {
         return false;
     }
 
+    //check that we have at least three points at the biginning
     if (pSegmentationParams->num_points < 3) {
         return false;
     }
 
-    resetIDGenerator();
+    //pOutputPathPtr : can be used to save the path during the motion
+    //In the current implemention, just the final curve can be exported
+
     //let us consider single curve without topological changes
+    resetIDGenerator();
 
     bool isOrientedPositively = true; //does not matter for open curves
 
@@ -307,46 +353,14 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         isOrientedPositively = is3dCurveOrientedPositively(pSegmentationParams->pinitial_condition);
     }
 
+    //create initial linked curve
     LinkedCurve3D linked_curve = create3dLinkedCurve();
+
+    //Initialize the linked curve
     initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
 
     size_t length_of_data = linked_curve.number_of_points + 2;
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
-
-    unsigned char curve_path[500];
-    unsigned char ending[100];
-    size_t start_ind = 0;
-
-    size_t numberOfPoints = linked_curve.number_of_points;
-    dataType** previous_curve = (dataType**)malloc(sizeof(dataType*) * numberOfPoints);
-    for (size_t i = 0; i < numberOfPoints; i++) {
-        previous_curve[i] = (dataType*)malloc(sizeof(dataType) * 3);
-        if (previous_curve[i] == NULL)
-            return false;
-    }
-    if (previous_curve == NULL)
-        return false;
-
-    //Save the current curve
-    strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-    sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", start_ind);
-    strcat_s(curve_path, sizeof(curve_path), ending);
-    FILE* file_initial_curve;
-    if (fopen_s(&file_initial_curve, curve_path, "w") != 0) {
-        printf("Enable to open");
-        return false;
-    }
-    fprintf(file_initial_curve, "x,y,z\n");
-
-    LinkedPoint3D* iPoint = linked_curve.first_point;
-    
-    for (size_t n = 0; n < linked_curve.number_of_points - 1; n++) {
-        Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
-        //point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
-        fprintf(file_initial_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
-        iPoint = iPoint->next;
-    }
-    fclose(file_initial_curve);
 
     size_t it = 1;
     double motion = 0.0;
@@ -363,55 +377,19 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         //evolve curve
         evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
 
-        strcpy_s(curve_path, sizeof curve_path, pOutputPathPtr);
-        sprintf_s(ending, sizeof(ending), "path/_curve_step_%03zd.csv", it);
-        strcat_s(curve_path, sizeof(curve_path), ending);
-        FILE* file_current_curve;
-        if (fopen_s(&file_current_curve, curve_path, "w") != 0) {
-            printf("Enable to open");
-            return false;
-        }
-        fprintf(file_current_curve, "x,y,z\n");
-
-        iPoint = linked_curve.first_point;
-        for (size_t m = 0; m < linked_curve.number_of_points; m++) {
-
-            Point3D point_save = { iPoint->x, iPoint->y, iPoint->z };
-            //point_save = getRealCoordFromImageCoord3D(point_save, inputImage3D.origin, inputImage3D.spacing, inputImage3D.orientation);
-            iPoint->average_distance_to_next += iPoint->distance_to_next;
-            fprintf(file_current_curve, "%f,%f,%f\n", point_save.x, point_save.y, point_save.z);
-            iPoint = iPoint->next;
-        }
-        fclose(file_current_curve);
-
         it++;
 
     } while (it < pSegmentationParams->num_time_steps);
 
-    //Store the final curve
-    iPoint = linked_curve.first_point;
-    for (size_t i = 0; i < linked_curve.number_of_points; i++)
-    {
-        pResultSegmentation->pPoints[i].x = (dataType)iPoint->x;
-        pResultSegmentation->pPoints[i].y = (dataType)iPoint->y;
-        pResultSegmentation->pPoints[i].z = (dataType)iPoint->z;
-
-        iPoint = iPoint->next;
-    }
-    //fclose(local_distance);
-
     free(pscheme_data);
     release3dLinkedCurve(&linked_curve);
-    for (size_t i = 0; i < numberOfPoints; i++) {
-        free(previous_curve[i]);
-    }
-    free(previous_curve);
 
     return true;
 }
 
 bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
 {
+    //check if the pointers a well allocated
     if (plinked_curve == NULL || pscheme_data == NULL || pparams == NULL ||
         pDistanceMap->imageDataPtr == NULL)
     {
@@ -423,7 +401,10 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     const double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
+    //function to compute the normal velocity
     normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, eps, mu);
+
+    //function to compute the tangential velocity
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
     if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
@@ -543,8 +524,7 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t z_dis = (size_t)z;
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
     Point3D current_grad;
-    //const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
-    const FiniteVolumeSize3D finite_volume = { 1.0, 1.0, 1.0 };
+    const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
 
     getGradient3D(pDistanceMap->imageDataPtr, pDistanceMap->length, pDistanceMap->width, pDistanceMap->height, x_dis, y_dis, z_dis, finite_volume, &current_grad);
 
@@ -558,6 +538,7 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
     const double eps, const double mu)
 {
     
+    //check if the pointers a well allocated
     if (plinked_curve == NULL || pscheme_data == NULL)
     {
         return;
