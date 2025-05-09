@@ -335,6 +335,9 @@
     <ClCompile Include="src\segmentation3D_lagrangean.c">
       <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
+    <ClCompile Include="src\generate_3d_curves.c">
+      <Filter>Source Files\Shape Generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -507,6 +510,9 @@
     </ClInclude>
     <ClInclude Include="src\segmentation3D_lagrangean.h">
       <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\generate_3d_curves.h">
+      <Filter>Header Files\Shape Generation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -31,6 +31,7 @@
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\filtering.c" />
     <ClCompile Include="src\generate_2d_curves.c" />
+    <ClCompile Include="src\generate_3d_curves.c" />
     <ClCompile Include="src\generate_3d_shapes.c" />
     <ClCompile Include="src\geodesic_mean_curvature_equation.c" />
     <ClCompile Include="src\heat_equation.c" />
@@ -99,6 +100,7 @@
     <ClInclude Include="src\fast_marching.h" />
     <ClInclude Include="src\filter_params.h" />
     <ClInclude Include="src\generate_2d_curves.h" />
+    <ClInclude Include="src\generate_3d_curves.h" />
     <ClInclude Include="src\generate_3d_shapes.h" />
     <ClInclude Include="src\heat_equation.h" />
     <ClInclude Include="src\imageInterpolation.h" />

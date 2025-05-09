@@ -30,6 +30,23 @@ extern "C" {
 
 	bool load2dArrayRAW(dataType* imageDataPtr, const size_t length, const size_t width, const char* pathPtr, LoadDataType dType);
 
+	//==================================
+
+	typedef enum {
+		REAL = 1,
+		IMAGE
+	} CoordinateSystem;
+
+	/// <summary>
+	/// Function to load a list of 3D points in real or image coordinate system
+	/// </summary>
+	/// <param name="image">Stuture holding the image</param>
+	/// <param name="pCurve">curve to hold the 3D points</param>
+	/// <param name="filePath">path to the file</param>
+	/// <param name="cSystem">coordinate system</param>
+	/// <returns>return true the loading succed, false otherwise</returns>
+	bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath, CoordinateSystem cSystem);
+
 #ifdef __cplusplus
 }
 #endif

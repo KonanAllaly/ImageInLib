@@ -861,7 +861,7 @@ dataType getReferenceIntensity3D(Image_Data pimage, Point3D point, double radius
 	}
 	else {
 		y_min = (size_t)ind_y_min;
-	}
+	}	
 
 	double ind_z_min = point.z - (radius + 0.5);
 	if (ind_z_min <= 0) {
@@ -960,7 +960,7 @@ bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, con
 	linked_point->z = z;
 
 	if (linked_point->next != NULL)
-	{
+	{	
 		updateDistance3dToNext(linked_curve, linked_point);
 	}
 
@@ -1010,8 +1010,8 @@ bool is3dCurveOrientedPositively(const Curve3D* pcurve)
 			y_i_plus = pcurve->pPoints[i + 1].y;
 			z_i_plus = pcurve->pPoints[i + 1].z;
 		}
-
-		Point3D cross_product = { y_i * z_i_plus - z_i * y_i_plus , z_i * x_i_plus - x_i * z_i_plus, x_i * y_i_plus - y_i * x_i_plus };
+    
+		Point3D cross_product = {y_i * z_i_plus - z_i * y_i_plus , z_i * x_i_plus - x_i * z_i_plus, x_i * y_i_plus - y_i * x_i_plus };
 		signed_area += norm3D(cross_product);
 	}
 
@@ -1123,7 +1123,7 @@ void release3dLinkedCurve(LinkedCurve3D* linked_curve)
 }
 
 BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius) {
-
+  
 	size_t x_min, x_max, y_min, y_max, z_min, z_max;
 
 	double ind_x_min = point.x - (radius + 0.5);
