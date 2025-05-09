@@ -116,6 +116,7 @@
     <ClInclude Include="src\segmentation3D_atlas.h" />
     <ClInclude Include="src\segmentation3D_common.h" />
     <ClInclude Include="src\segmentation3d_gsubsurf.h" />
+    <ClInclude Include="src\segmentation3D_lagrangean.h" />
     <ClInclude Include="src\segmentation3D_subsurf.h" />
     <ClInclude Include="src\setting_boundary_values.h" />
     <ClInclude Include="src\shapeAnalysis_params.h" />

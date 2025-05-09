@@ -502,5 +502,8 @@
     <ClInclude Include="src\solvers.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="src\segmentation3D_lagrangean.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
