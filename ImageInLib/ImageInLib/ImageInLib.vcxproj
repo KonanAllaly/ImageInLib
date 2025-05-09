@@ -58,6 +58,7 @@
     <ClCompile Include="src\segmentation3D_atlas.c" />
     <ClCompile Include="src\segmentation3D_common.c" />
     <ClCompile Include="src\segmentation3d_gsubsurf.c" />
+    <ClCompile Include="src\segmentation3D_lagrangean.c" />
     <ClCompile Include="src\segmentation3D_subsurf.c" />
     <ClCompile Include="src\setting_boundary_values.c" />
     <ClCompile Include="src\shapeGeneration.c" />
