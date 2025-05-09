@@ -50,7 +50,8 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	//loading_path = inputPath + "vtk/petct/ct/Patient3_ct.vtk";
+	loading_path = inputPath + "vtk/petct/aorta/AortaPatient3.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -66,21 +67,24 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
-	//Find the minimum and maximum values to perform shiftting
-	dataType minData = ctContainer->dataPointer[0][0];
-	dataType maxData = ctContainer->dataPointer[0][0];
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (ctContainer->dataPointer[k][i] > maxData) {
-				maxData = ctContainer->dataPointer[k][i];
-			}
-			if (ctContainer->dataPointer[k][i] < minData) {
-				minData = ctContainer->dataPointer[k][i];
-			}
-		}
-	}
-	std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
+	////Find the minimum and maximum values to perform shiftting
+	//dataType minData = ctContainer->dataPointer[0][0];
+	//dataType maxData = ctContainer->dataPointer[0][0];
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (ctContainer->dataPointer[k][i] > maxData) {
+	//			maxData = ctContainer->dataPointer[k][i];
+	//		}
+	//		if (ctContainer->dataPointer[k][i] < minData) {
+	//			minData = ctContainer->dataPointer[k][i];
+	//		}
+	//	}
+	//}
+	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
 	
+	storing_path = outputPath + "aorta_p3.raw";
+	manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	free(ctContainer);
 
 	//========================= Detect Heart region ==================================
 	
@@ -6179,7 +6183,7 @@ int main() {
 
 	//==================== Hough Transform with optimization =====================
 
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -6269,6 +6273,7 @@ int main() {
 	delete[] imageData;
 
 	free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }
