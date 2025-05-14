@@ -50,8 +50,8 @@ int main() {
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	//loading_path = inputPath + "vtk/petct/ct/Patient3_ct.vtk";
-	loading_path = inputPath + "vtk/petct/aorta/AortaPatient3.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	//loading_path = inputPath + "vtk/petct/aorta/AortaPatient3.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -82,9 +82,9 @@ int main() {
 	//}
 	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
 	
-	storing_path = outputPath + "aorta_p3.raw";
-	manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	free(ctContainer);
+	//storing_path = outputPath + "aorta_p3.raw";
+	//manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//free(ctContainer);
 
 	//========================= Detect Heart region ==================================
 	
@@ -4743,7 +4743,7 @@ int main() {
 
 	//==================== Path finding and circle detection ====================
 
-	/*
+	
 	dataType** imageData = new dataType * [Height];	
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -4768,7 +4768,8 @@ int main() {
 
 	Image_Data interpolateImageData = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
 
-	imageInterpolation3D(inputImageData, interpolateImageData, NEAREST_NEIGHBOR);
+	//imageInterpolation3D(inputImageData, interpolateImageData, NEAREST_NEIGHBOR);
+	imageInterpolation3D(inputImageData, interpolateImageData, TRILINEAR);
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
@@ -4802,7 +4803,7 @@ int main() {
 	}
 	delete[] interpolate;
 	free(ctContainer);
-	*/
+	
 
 	/*
 	/////filtering parameters ---> Hough Transform
