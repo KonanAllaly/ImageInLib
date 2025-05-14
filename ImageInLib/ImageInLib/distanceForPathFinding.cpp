@@ -1405,7 +1405,6 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType norm_of_gradient = 0.0;;
 	dataType ux = 0.0, uy = 0.0, uz = 0.0;
 	
-	
 	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
@@ -1604,12 +1603,12 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
 	string saving_name, extension, slice_number;
 
-	saving_name = path_name + "path_points.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	//saving_name = path_name + "path_points.csv";
+	//FILE* file;
+	//if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
 
 	dataType** actionPtr = new dataType * [height];
 	dataType** maskAction = new dataType * [height];
@@ -1624,12 +1623,13 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	if (actionPtr == NULL || maskAction == NULL || potentialPtr == NULL)
 		return false;
 
-	//compute3DPotential(ctImageData, potentialPtr, seedPoints, parameters);
+	compute3DPotential(ctImageData, potentialPtr, seedPoints, parameters);
 	saving_name = path_name + "potential.raw";
-	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
+	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
 
 	const double step = 70.0;
 
+	/*
 	//================ find next point inside the aorta ============
 
 	Point3D* seeds = new Point3D[2];
@@ -1716,6 +1716,8 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	}
 
 	fclose(file);
+
+	*/
 
 	////Update the mask
 	//copyDataToAnotherArray(actionPtr, maskAction, height, length, width);
@@ -2036,7 +2038,7 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//delete[] houghSpace;
 	//delete[] voteArray;
 
-	delete[] seeds;
+	//delete[] seeds;
 	for (k = 0; k < height; k++) {
 		delete[] actionPtr[k];
 		delete[] maskAction[k];
