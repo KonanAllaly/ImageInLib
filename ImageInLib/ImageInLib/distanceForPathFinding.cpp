@@ -1408,15 +1408,14 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			
 			ux = gradientVectorX[k][i];
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
 			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
+			edgeDetector[k][i] = norm_of_gradient;//gradientFunction(norm_of_gradient, parameters.K);
 			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-			
 			//threshold
-			if (edgeDetector[k][i] < parameters.thres) {
+			if (edgeDetector[k][i] > 0 && edgeDetector[k][i] < parameters.thres) {
 				maskThreshold[k][i] = 0.0;
 			}
 			else {
@@ -1424,16 +1423,23 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			}
 		}
 	}
+
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	//dataType value_second_pt = seedStats.mean_data;
+	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	dataType value_second_pt = seedStats.mean_data;
 
-	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	dataType seedValCT = value_first_pt;
+	dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	//dataType seedValCT = value_first_pt;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -1444,6 +1450,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 
 	//Find the max of each potential for normalization
 	dataType maxImage = 0.0;
+	dataType maxDistance = 0.0;
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			if (potential[k][i] > maxImage) {
@@ -4914,13 +4921,13 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		std::cout << "Point " << nb + 1 << " : " << key_points[nb].x << " " << key_points[nb].y << " " << key_points[nb].z << std::endl;
 	}
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
-	//			actionMapStr.imageDataPtr[k][i] = max_weighted_distance + 1;
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+				actionMapStr.imageDataPtr[k][i] = 0;
+			}
+		}
+	}
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
