@@ -48,6 +48,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
+	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -67,6 +68,7 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
+
 	////Find the minimum and maximum values to perform shiftting
 	//dataType minData = ctContainer->dataPointer[0][0];
 	//dataType maxData = ctContainer->dataPointer[0][0];
@@ -81,10 +83,7 @@ int main() {
 	//	}
 	//}
 	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-	
-	//storing_path = outputPath + "aorta_p3.raw";
-	//manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	//free(ctContainer);
+	*/
 
 	//========================= Detect Heart region ==================================
 	
@@ -3723,161 +3722,6 @@ int main() {
 	//delete[] imageData;
 	//delete[] maskAorta;
 	//free(ctContainer);
-	
-	//============== Test penalized front propagation ====================================
-	
-	/*
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-
-	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-
-	dataType** interpolate = new dataType * [hauteur];
-	dataType** potential = new dataType * [hauteur];
-	dataType** actionMap = new dataType * [hauteur];
-	for (k = 0; k < hauteur; k++) {
-		interpolate[k] = new dataType[dim2D]{ 0 };
-		potential[k] = new dataType[dim2D]{ 0 };
-		actionMap[k] = new dataType[dim2D]{ 0 };
-	}
-
-	Image_Data interpolateImageData = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
-
-	imageInterpolation3D(inputImageData, interpolateImageData, NEAREST_NEIGHBOR);
-
-	double radius = 3.0;
-	Potential_Parameters parameters{
-		1000, //edge detector coefficient
-		0.15, //threshold
-		0.001,//epsilon
-		radius
-	};
-
-	Point3D* seedPoints = new Point3D[2];
-	
-	////Patient1
-	//Point3D seed1 = { 262, 255, 147 };//current
-	Point3D seed1 = { 260, 256, 143 };//old
-	//Point3D seed2 = { 263, 252, 245 };
-
-	//From centered path
-	//Point3D seed1 = { 4.314575, 70.278534, -663.998901 };
-	Point3D seed2 = { 10.198334, 67.558167, -411.635254 };
-
-	////Patient 2
-	//Point3D seed1 = { 259, 255, 244 };
-	////Point3D seed2 = { 258, 252, 344 }; //Sure inside ---> lead to good result
-	//Point3D seed2 = { 258, 252, 348 };// not sure ---> lead to wrong result
-
-	////Patient 3
-	//Point3D seed1 = { 268, 231, 112 };
-	//Point3D seed2 = { 272, 226, 213 };
-
-	////Patient 4
-	//Point3D seed1 = { 281, 229, 133 };
-	//Point3D seed2 = { 287, 234, 222 };
-
-	////Patient 5
-	//Point3D seed1 = { 266, 245, 471 };
-	//Point3D seed2 = { 239, 221, 616 };
-
-	////Patient 6
-	//Point3D seed1 = { 251, 298, 253 };
-	//Point3D seed2 = { 258, 285, 438 };
-
-	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
-	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
-	seed1.x = (size_t)seed1.x;
-	seed1.y = (size_t)seed1.y;
-	seed1.z = (size_t)seed1.z;
-
-	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
-	seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
-	seed2.x = (size_t)seed2.x;
-	seed2.y = (size_t)seed2.y;
-	seed2.z = (size_t)seed2.z;
-
-	seedPoints[0] = seed1;
-	seedPoints[1] = seed2;
-
-	//compute3DPotential(interpolateImageData, potential, seedPoints, parameters);
-	
-	loading_path = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, hauteur, loading_path.c_str(), LOAD_DATA, false);
-
-	size_t iStart = (size_t)seedPoints[0].x;
-	size_t jStart = (size_t)seedPoints[0].y;
-	size_t kStart = (size_t)seedPoints[0].z;
-
-	size_t iEnd = (size_t)seedPoints[1].x;
-	size_t jEnd = (size_t)seedPoints[1].y;
-	size_t kEnd = (size_t)seedPoints[1].z;
-
-	std::cout << "Start potential : " << potential[kStart][x_new(iStart, jStart, Length)] << std::endl;
-	std::cout << "End potential : " << potential[kEnd][x_new(iEnd, jEnd, Length)] << std::endl;
-
-	vector<Point3D> key_points;
-
-	const double LengthKeyPoints = 40;
-	Image_Data actionDataStr = { hauteur, Length, Width, actionMap, ctOrigin, intSpacing, orientation };
-	frontPropagationWithKeyPointDetection(actionDataStr, potential, seedPoints, LengthKeyPoints, key_points);
-
-	vector<Point3D> path_points;
-	dataType tau = 0.95 * ctSpacing.sx;
-	dataType tolerance = ctSpacing.sx;
-
-	//copy points to file
-	string saving_csv = outputPath + "path_new_key_points_p1.csv";
-	FILE* file_penalized;
-	if (fopen_s(&file_penalized, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	
-	for (int nb = 0; nb < key_points.size() - 1; nb++) {
-		
-		seedPoints[0] = key_points[nb];
-		seedPoints[1] = key_points[nb + 1];
-		partialFrontPropagation(actionMap, potential, Length, Width, hauteur, seedPoints);
-		shortestPath3D(actionDataStr, seedPoints, tau, tolerance, path_points);
-	
-		for (int n = path_points.size() - 1; n > -1; n--) {
-			path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctOrigin, intSpacing, orientation);
-			fprintf(file_penalized, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-		}
-		while (path_points.size() > 0) {
-			path_points.pop_back();
-		}
-	
-	}
-	fclose(file_penalized);
-
-	delete[] seedPoints;
-	
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-	}
-	delete[] imageData;
-
-	for (k = 0; k < Height; k++) {
-		delete[] interpolate[k];
-		delete[] potential[k];
-		delete[] actionMap[k];
-	}
-	delete[] interpolate;
-	delete[] potential;
-	delete[] actionMap;
-
-	free(ctContainer);
-	*/
 
 	//==================== Compute Hausdoff distance and Ratio ===========================
 	
@@ -4168,9 +4012,66 @@ int main() {
 	fclose(file_hausdoff);
 	*/
 
-	//==================== Test new fast marching ========================================
-
+	//==================== Test Potential function ========================================
+	
 	/*
+	dataType** inputImageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		inputImageData[k] = new dataType[dim2D]{ 0 };
+	}
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	const size_t height = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
+	dataType** imageData = new dataType * [height];
+	dataType** action = new dataType * [height];
+	dataType** potential = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+	}
+
+	Image_Data inputImageStr = { Height, Length, Width, inputImageData, ctOrigin, ctSpacing, orientation };
+	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data imageStr = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
+	imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
+	storing_path = outputPath + "interpolated_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
+
+	//real image p1
+	Point3D seed1 = { 261, 257, 311 };
+	Point3D seed2 = { 257, 250, 535 };
+
+	Point3D* endPoints = new Point3D[2];
+	endPoints[0] = seed1;
+	endPoints[1] = seed2;
+
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1000, //edge detector coefficient
+		0.15, //threshold
+		0.000001,//epsilon
+		radius
+	};
+	compute3DPotential(imageStr, potential, endPoints, parameters);
+
+	storing_path = outputPath + "potential_p1.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
+
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 50;
+	
+	Image_Data actionMapStr = { height, Length, Width, action, ctOrigin, intSpacing, orientation };
+	storing_path = outputPath + "test action 16-05/action_";
+	frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
+	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	*/
+
+	
+	//Artificial image
+	const size_t Height = 100, Width = 100, Length = 100;
+	const size_t dim2D = Length * Width;
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
@@ -4179,29 +4080,52 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
+	loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	
+	Point3D seed1 = { 82, 54, 8 };
+	Point3D seed2 = { 81, 45, 85 };
+	Point3D* endPoints = new Point3D[2];
+	endPoints[0] = seed1;
+	endPoints[1] = seed2;
 
-	////Patient1
-	//Point3D seed1 = { 262, 255, 147 };
-	//Point3D seed2 = { 263, 252, 245 };
-	//imageData[147][x_new(262, 255, Length)] = 1.0;
-	//imageData[245][x_new(263, 252, Length)] = 1.0;
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1,//1000, //edge detector coefficient
+		1,//0.15, //threshold
+		0.01,//epsilon
+		radius
+	};
+	Point3D iOrigin = { 0.0, 0.0, 0.0 };
+	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
+	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
+	compute3DPotential(imageStr, potential, endPoints, parameters);
 
-	dataType foregroundValue = 0;
+	storing_path = outputPath + "potential_artificial_2.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-	thresholding3dFunctionN(imageData, Length, Width, Height, -900, -200, 0.0, 1.0);
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 10;
 
-	//storing_path = outputPath + "threshold.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "test action 16-05/action_";
+	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
+	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
+	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	
+	////Save the keys points in files
+	//string saving_csv = outputPath + "key_points_artificial_2.csv";
+	//FILE* f_key_point;
+	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//for (int n = 0; n < key_points.size(); n++) {
+	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
+	//}
+	//fclose(f_key_point);
+	//key_points.clear();
 
-	Image_Data toActionMap = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	//fastMarching3dForDistanceMap(toActionMap, action, potential, foregroundValue);
-
-	rouyTourinDistanceMap(toActionMap, action, foregroundValue, 0.5, 0.4);
-
-	storing_path = outputPath + "distance_map_RT.raw";
-	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
+	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
 		delete[] action[k];
@@ -4211,7 +4135,20 @@ int main() {
 	delete[] action;
 	delete[] potential;
 
-	*/
+	//delete[] endPoints;
+	//for (k = 0; k < height; k++) {
+	//	if (k < Height) {
+	//		delete[] inputImageData[k];
+	//	}
+	//	delete[] imageData[k];
+	//	delete[] action[k];
+	//	delete[] potential[k];
+	//}
+	//delete[] inputImageData;
+	//delete[] imageData;
+	//delete[] action;
+	//delete[] potential;
+	//free(ctContainer);
 
 	//==================== Aorta bifurcation detection ===================================
 	
@@ -4379,439 +4316,6 @@ int main() {
 	delete[] imageData;
 	delete[] inputImageData;
 	free(ctContainer);
-	*/
-
-	//==================== Test filtering by Hessian  ====================================
-
-    /*
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	//loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
-	////loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-	rescaleNewRange(imageData, Length, Width, Height, 0.0, maxData - minData, minData, maxData);
-
-	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-
-	size_t hauteur = (size_t)(Height * (ctSpacing.sz / ctSpacing.sx));
-	dataType** vesselnessImage = new dataType * [hauteur];
-	dataType** interpolate = new dataType*[hauteur]{ 0 };
-	for (k = 0; k < hauteur; k++) {
-		vesselnessImage[k] = new dataType[dim2D]{ 0 };
-		interpolate[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data toVesselNess = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
-
-	imageInterpolation3D(inputImageData, toVesselNess, NEAREST_NEIGHBOR);
-
-	dataType sigma = 1.0;
-	gaussianFiltering(interpolate, vesselnessImage, Length, Width, hauteur, sigma);
-
-	size_t k_interest = 268;
-	size_t i_interest = 275;
-	size_t j_interest = 195;
-	
-
-	dataType** hessian_matrix = new dataType * [3];
-	dataType** eigen_vectors = new dataType * [3];
-	for (k = 0; k < 3; k++) {
-		hessian_matrix[k] = new dataType[3]{ 0 };
-		eigen_vectors[k] = new dataType[3]{ 0 };
-	}
-	
-	dataType* d = new dataType[3]{0};
-	size_t max_sweeps = 0;
-	size_t dim = 3;
-
-	//getHessianMatrix3D(vesselnessImage, hessian_matrix, Length, Width, hauteur, i_interest, j_interest, k_interest, intSpacing);
-
-	hessian_matrix[0][0] = 4.0;
-	hessian_matrix[0][1] = 2.0;
-	hessian_matrix[0][2] = 0.0;
-	hessian_matrix[1][0] = 2.0;
-	hessian_matrix[1][1] = 3.0;
-	hessian_matrix[1][2] = 0.0;
-	hessian_matrix[2][0] = 0.0;
-	hessian_matrix[2][1] = 0.0;
-	hessian_matrix[2][2] = 1.0;
-
-	std::cout << std::endl;
-	std::cout << "Hessian matrix : " << std::endl;
-	std::cout << hessian_matrix[0][0] << " " << hessian_matrix[0][1] << " " << hessian_matrix[0][2] << std::endl;
-	std::cout << hessian_matrix[1][0] << " " << hessian_matrix[1][1] << " " << hessian_matrix[1][2] << std::endl;
-	std::cout << hessian_matrix[2][0] << " " << hessian_matrix[2][1] << " " << hessian_matrix[2][2] << std::endl;
-
-	eigenSystems(hessian_matrix, dim, d, eigen_vectors, &max_sweeps);
-
-	//d[0] = 5.561;
-	//d[1] = 1.439;
-	//d[2] = 1.0;
-
-	std::cout << std::endl;
-	std::cout << "Eigen values : " << std::endl;
-	for (size_t i = 0; i < dim; i++) {
-		std::cout << d[i] << " ";
-	}
-
-	//eigen_vectors[0][0] = 0.8507;
-	//eigen_vectors[0][1] = 0.5257;
-	//eigen_vectors[0][2] = 0.0;
-	//eigen_vectors[1][0] = -0.5257;
-	//eigen_vectors[1][1] = 0.8507;
-	//eigen_vectors[1][2] = 0.0;
-	//eigen_vectors[2][0] = 0.0;
-	//eigen_vectors[2][1] = 0.0;
-	//eigen_vectors[2][2] = 1.0;
-
-	std::cout << std::endl;
-	std::cout << std::endl;
-	std::cout << "Eigen vectors : " << std::endl;
-	std::cout << eigen_vectors[0][0] << " " << eigen_vectors[0][1] << " " << eigen_vectors[0][2] << std::endl;
-	std::cout << eigen_vectors[1][0] << " " << eigen_vectors[1][1] << " " << eigen_vectors[1][2] << std::endl;
-	std::cout << eigen_vectors[2][0] << " " << eigen_vectors[2][1] << " " << eigen_vectors[2][2] << std::endl;
-	std::cout << std::endl;
-
-	//Compute the residual for eigen values
-	dataType* residual = new dataType[dim];
-	for (i = 0; i < dim; i++) {
-		residual[i] = 0.0;
-		for (j = 0; j < dim; j++) {
-			residual[i] += hessian_matrix[i][j] * eigen_vectors[1][j];
-		}
-	}
-	for (i = 0; i < dim; i++) {
-		residual[i] -= d[i] * eigen_vectors[1][i];
-	}
-	dataType norm = 0.0;
-	std::cout << "Residual : " << std::endl;
-	for (i = 0; i < dim; i++) {
-		norm += residual[i] * residual[i];
-	}
-	std::cout << sqrt(norm) << std::endl;
-	delete[] residual;
-
-	//sortEigenValues(d, dim);
-	//std::cout << "Sorted eigen values : " << std::endl;
-	//for (size_t i = 0; i < dim; i++) {
-	//	std::cout << d[i] << " ";
-	//}
-
-	for (k = 0; k < 3; k++) {
-		delete[] hessian_matrix[k];
-		delete[] eigen_vectors[k];
-	}
-	delete[] hessian_matrix;
-	delete[] eigen_vectors;
-	delete[] d;
-	
-	
-	
-	//const dataType sigma = 1.0;
-	//const size_t kernelSize = 2 * (size_t)sigma + 1;
-	//dataType** kernel = new dataType * [kernelSize];
-	//for (k = 0; k < kernelSize; k++) {
-	//	kernel[k] = new dataType[kernelSize * kernelSize]{ 0 };
-	//}
-	//generateGaussianKernel(kernel, kernelSize, sigma);
-
-	////Print kernel
-	//std::cout << "Gaussian kernel : " << std::endl;
-	//for (k = 0; k < kernelSize; k++) {
-	//	for (i = 0; i < kernelSize; i++) {
-	//		for (j = 0; j < kernelSize; j++) {
-	//			std::cout << kernel[k][x_new(i, j, kernelSize)] << " ";
-	//		}
-	//		std::cout << std::endl;
-	//	}
-	//	std::cout << std::endl;
-	//}
-
-	//dataType sum_point = 0.0;
-	//for (k = 0; k < kernelSize; k++) {
-	//	for (i = 0; i < kernelSize * kernelSize; i++) {
-	//		sum_point += kernel[k][i];
-	//	}
-	//}
-	//std::cout << "Sum of the kernel : " << sum_point << std::endl;
-	//
-
-	//for (k = 0; k < kernelSize; k++) {
-	//	delete[] kernel[k];
-	//}
-	//delete[] kernel;
-	
-
-    
-	//const dataType sigma = 1.0;
-	//multiscaleFiltering(toVesselNess, vesselnessImage, sigma);
-	//storing_path = outputPath + "vesselness2.raw";
-	//manageRAWFile3D<dataType>(vesselnessImage, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
-	
-
-    
-	//dataType sigma = 4.0;
-	//const size_t p = (size_t)sigma;
-	//const size_t pLength = Length + 2 * p;
-	//const size_t pWidth = Width + 2 * p;
-	//const size_t pHeight = Height + 2 * p;
-	//dataType** imageDataExt = new dataType * [pHeight];
-	//for (k = 0; k < pHeight; k++) {
-	//	imageDataExt[k] = new dataType[pLength * pWidth]{ 0 };
-	//}
-
-	////Initilization
-	//for (k = 0; k < pHeight; k++) {
-	//	for (i = 0; i < pLength * pWidth; i++) {
-	//		imageDataExt[k][i] = minData;
-	//	}
-	//}
-
-	////Copy to extended area
-	//size_t i_ext, j_ext, k_ext, xd_ext;
-	//for (k = 0, k_ext = p; k < Height; k++, k_ext++) {
-	//	for (i = 0, i_ext = p; i < Length; i++, i_ext++) {
-	//		for (j = 0, j_ext = p; j < Width; j++, j_ext++) {
-	//			xd = x_new(i, j, Length);
-	//			xd_ext = x_new(i_ext, j_ext, pLength);
-	//			imageDataExt[k_ext][xd_ext] = imageData[k][xd];
-	//		}
-	//	}
-	//}
-
-	//reflection3DB(imageDataExt, Height, Length, Width, p);
-
-	//storing_path = outputPath + "reflectedCtImage.raw";
-	//manageRAWFile3D<dataType>(imageDataExt, pLength, pWidth, pHeight, storing_path.c_str(), STORE_DATA, false);
-
-	//for (k = 0; k < pHeight; k++) {
-	//	delete[] imageDataExt[k];
-	//}
-	//delete[] imageDataExt;
-	
-
-	
-	//for (k = 0; k < hauteur; k++) {
-	//	delete[] interpolate[k];
-	//	delete[] vesselnessImage[k];
-	//}
-	//delete[] interpolate;
-	//delete[] vesselnessImage;
-
-	//for (k = 0; k < Height; k++) {
-	//	delete[] imageData[k];
-	//}
-	//delete[] imageData;
-	//free(ctContainer);
-	*/
-
-	//==================== Test edge detector ==================================
-
-	/*
-	size_t Height = 406, Length = 512, Width = 512;
-	size_t dim2D = Length * Width;
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	//loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* edgeImage = new dataType[dim2D]{ 0 };
-
-	//copyDataToAnother2dArray(imageData[142], imageSlice, Length, Width);
-
-	//Point2D grad;
-	//PixelSpacing sliceSpacing = { ctSpacing.sx, ctSpacing.sy };
-	//
-	//for (i = 0; i < Length; i++) {
-	//	for (j = 0; j < Width; j++) {
-	//		getGradient2D(imageSlice, Length, Width, i, j, sliceSpacing, &grad);
-	//		dataType norm = sqrt(grad.x * grad.x + grad.y * grad.y);
-	//		if (norm >= 0.003) {
-	//			edgeImage[x_new(i, j, Length)] = 1.0;
-	//		}
-	//		else {
-	//			edgeImage[x_new(i, j, Length)] = 0.0;
-	//		}
-	//	}
-	//}
-
-	Point2D seed = { 256, 256 };
-	Point2D origin = { 0.0, 0.0 };
-	PixelSpacing spacing = { 0.976562, 0.976562 };
-	OrientationMatrix2D orientation = { {1.0, 0.0}, { 0.0, 1.0 } };
-	//seed = getRealCoordFromImageCoord2D(seed, origin, spacing, orientation);
-	double radius = 16.0;
-	dataType perimeter = 2 * M_PI * radius;
-	size_t number_of_circle_points = (size_t)(perimeter / 1.0 + 0.5);
-	double step = 2 * M_PI / (double)number_of_circle_points;
-	size_t quad1 = 0, quad2 = 0, quad3 = 0, quad4 = 0;
-	
-	for (k = 0; k < number_of_circle_points; k++) {
-		
-		double angle = k * step;
-		double x = seed.x + radius * cos(angle);
-		double y = seed.y + radius * sin(angle);
-		//Point2D p = { x, y };
-		//Point2D pImage = getImageCoordFromRealCoord2D(p, origin, spacing, orientation);
-		
-		size_t indx = 0;//pImage.x;
-		if (x < 0) {
-			indx = 0;
-		}
-		else {
-			if (x > Length - 1) {
-				indx = Length - 1;
-			}
-			else {
-				indx = (size_t)(x + 0.5);
-			}
-		}
-
-		size_t indy = 0;//pImage.y;
-		if (y < 0) {
-			indy = 0;
-		}
-		else {
-			if (y > Width - 1) {
-				indy = Width - 1;
-			}
-			else {
-				indy = (size_t)(y + 0.5);
-			}
-		}
-		
-		//if (angle <= M_PI / 2.0) 
-		//{
-		//	imageSlice[x_new(indx, indy, Length)] = 1.0;
-		//}
-		//else {
-		//	if (angle <= M_PI) {
-		//		imageSlice[x_new(indx, indy, Length)] = 1.0;
-		//	}
-		//	else {
-		//		if(angle <= 3 * M_PI / 2.0){
-		//			imageSlice[x_new(indx, indy, Length)] = 1.0;
-		//		}
-		//		else {
-		//			imageSlice[x_new(indx, indy, Length)] = 1.0;
-		//		}
-		//	}
-		//}
-		imageSlice[x_new(indx, indy, Length)] = 1.0;
-	}
-
-	HoughParameters hParameters =
-	{
-		5.0,   //minimal radius
-		19.0,  //maximal radius
-		0.5,   //radius step
-		0.5,   //epsilon
-		50,   //offset 
-		1000,  //K edge detector coefficient
-		0.25,  //threshold edge detector
-	};
-
-	Image_Data2D imageDataPtr = { Length, Width, imageSlice, origin, spacing, orientation };
-	localCircleDetection(imageDataPtr, edgeImage, seed, hParameters, storing_path);
-
-	storing_path = outputPath + "edge_slice_127.raw";
-	manageRAWFile2D<dataType>(imageSlice, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-	storing_path = outputPath + "find_circle.raw";
-	manageRAWFile2D<dataType>(edgeImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-
-	delete[] imageSlice;
-	delete[] edgeImage;
-	for (k = 0; k < Height; k++) {
-		delete imageData[k];
-	}
-	delete[] imageData;
-	
-	//free(ctContainer);
-	*/
-
-	//==================== Path finding and circle detection ====================
-
-	
-	dataType** imageData = new dataType * [Height];	
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-
-	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-
-	dataType** interpolate = new dataType * [hauteur];
-	dataType** potential = new dataType * [hauteur];
-	dataType** actionMap = new dataType * [hauteur];
-	for (k = 0; k < hauteur; k++) {
-		interpolate[k] = new dataType[dim2D]{ 0 };
-		potential[k] = new dataType[dim2D]{ 0 };
-		actionMap[k] = new dataType[dim2D]{ 0 };
-	}
-
-	Image_Data interpolateImageData = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
-
-	//imageInterpolation3D(inputImageData, interpolateImageData, NEAREST_NEIGHBOR);
-	imageInterpolation3D(inputImageData, interpolateImageData, TRILINEAR);
-
-	double radius = 3.0;
-	Potential_Parameters parameters{
-		1000, //edge detector coefficient
-		0.15, //threshold
-		0.001,//epsilon
-		radius
-	};
-
-	Point3D* seedPoints = new Point3D[2];
-
-	Point3D seed1 = { 262, 255, 147 };//current
-	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
-	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
-	seed1.x = (size_t)seed1.x;
-	seed1.y = (size_t)seed1.y;
-	seed1.z = (size_t)seed1.z;
-
-	Point3D seed2 = { 0.0, 0.0, 0.0 };//current
-
-	seedPoints[0] = seed1;
-	seedPoints[1] = seed2;
-
-	findPathFromOneGivenPointWithCircleDetection(interpolateImageData, seedPoints, parameters);
-
-	delete[] seedPoints;
-	for (k = 0; k < hauteur; k++) {
-		delete[] interpolate[k];
-		delete[] potential[k];
-		delete[] actionMap[k];
-	}
-	delete[] interpolate;
-	free(ctContainer);
-	
-
-	/*
-	/////filtering parameters ---> Hough Transform
-	////Filter_Parameters filter_parameters;
-	////filter_parameters.h = 1.0; filter_parameters.timeStepSize = 0.25; filter_parameters.eps2 = 1e-6;
-	////filter_parameters.omega_c = 1.5; filter_parameters.tolerance = 1e-3; filter_parameters.maxNumberOfSolverIteration = 100;
-	////filter_parameters.timeStepsNum = 5; filter_parameters.coef = 1e-6;
-	//HoughParameters hParameters = { 6.0, 19.0, 0.5, 5.0, 1000, 1.0, 0.2, 0.5, spacing };
 	*/
 
 	//==================== Filter out points with no neighbors in previous and next slice ==============
@@ -5805,235 +5309,6 @@ int main() {
 		
 
 	}
-	*/
-
-	//=================== Segment the pelvis =========================
-
-	/*
-	dataType** imageData = new dataType * [Height];
-	dataType** maskThreshold = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-		maskThreshold[k] = new dataType[dim2D]{ 0 };
-	}
-	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-	copyDataToAnotherArray(ctContainer->dataPointer, maskThreshold, Height, Length, Width);
-
-	////Crop the volume from the lungs
-	//size_t lungs_last_slice = 201; //p1
-	//size_t lungs_last_slice = 292; //p2
-	//size_t lungs_last_slice = 171; //p3
-	size_t lungs_last_slice = 158; //p4
-	//size_t lungs_last_slice = 565; //p5
-	//size_t lungs_last_slice = 355; //p6
-	for (k = lungs_last_slice; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			maskThreshold[k][i] = minData;//imageData[k][i];
-		}
-	}
-
-	thresholding3dFunctionN(maskThreshold, Length, Width, Height, 500, maxData, 0.0, 1.0);
-
-	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-
-	storing_path = outputPath + "bones_p4.raw";
-	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//erosion3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-	//dilatation3dHeighteenNeigbours(maskThreshold, Length, Width, Height, 1.0, 0.0);
-
-	int** labelArray = new int* [Height];
-	bool** status = new bool* [Height];
-	for (k = 0; k < Height; k++) {
-		labelArray[k] = new int[dim2D] { 0 };
-		status[k] = new bool[dim2D];
-	}
-	if (labelArray == NULL || status == NULL)
-		return false;
-
-	//Initialization
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			status[k][i] = false;
-		}
-	}
-
-	int numberOfRegionCells = countNumberOfRegionsCells(maskThreshold, Length, Width, Height, 1.0);
-
-	labelling3D(maskThreshold, labelArray, status, Length, Width, Height, 1.0);
-
-	//Counting
-	int* countingArray = new int[numberOfRegionCells] {0};
-	if (countingArray == NULL)
-		return false;
-
-	//Get regions sizes
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (labelArray[k][i] > 0) {
-				countingArray[labelArray[k][i]]++;
-			}
-		}
-	}
-
-	//Number of regions
-	int numberOfRegions = 0;
-	for (i = 0; i < numberOfRegionCells; i++) {
-		if (countingArray[i] > 0) {
-			numberOfRegions++;
-		}
-	}
-
-	//Find the largest region
-	size_t regionSize = 0;
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (countingArray[labelArray[k][i]] > regionSize) {
-				regionSize = countingArray[labelArray[k][i]];
-			}
-		}
-	}
-
-	//Keep and save the largest region
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (countingArray[labelArray[k][i]] == regionSize) {
-				maskThreshold[k][i] = 1.0;
-			}
-			else {
-				maskThreshold[k][i] = 0.0;
-			}
-		}
-	}
-
-	storing_path = outputPath + "pelvis_p4.raw";
-	store3dRawData<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str());
-
-	delete[] countingArray;
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] maskThreshold[k];
-		delete[] labelArray[k];
-		delete[] status[k];
-	}
-	delete[] imageData;
-	delete[] maskThreshold;
-	delete[] labelArray;
-	delete[] status;
-	free(ctContainer);
-	*/
-
-	//==================== Distance map to improve Hough transform =========================
-	
-    /*
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-	
-	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-
-	const size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	dataType** imgInterpolated = new dataType * [hauteur];
-	for (k = 0; k < hauteur; k++) {
-		imgInterpolated[k] = new dataType[dim2D]{ 0 };
-	}
-
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data interpolate = { hauteur, Length, Width, imgInterpolated, ctOrigin, intSpacing, orientation };
-	//imageInterpolation3D(inputImage, interpolate, TRILINEAR);
-
-	storing_path = outputPath + "interpolate_trilinear.raw";
-	manageRAWFile3D<dataType>(imgInterpolated, Length, Width, hauteur, storing_path.c_str(), LOAD_DATA, false);
-
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* maskThreshold = new dataType[dim2D]{ 0 };
-	dataType* distanceMap = new dataType[dim2D]{ 0 };
-
-	//double radius = 15.0;
-	PixelSpacing sliceSpacing = { ctSpacing.sx, ctSpacing.sy };
-	Point2D origin = { 0.0, 0.0 };
-	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0 } };
-	Image_Data2D IMAGE
-	{
-		Length,
-		Width,
-		imageSlice,
-		origin,
-		sliceSpacing,
-		orientation2D
-	};
-	HoughParameters hParameters =
-	{
-		7.0,   //minimal radius
-		20.0,  //maximal radius
-		0.5,   //radius step
-		0.5,   //epsilon
-		50,   //offset 
-		1000,  //K edge detector coefficient
-		0.15,  //threshold edge detector
-	};
-	Image_Data2D imageDataToHoughTransform =
-	{
-		Length,
-		Width,
-		imageSlice,
-		origin,
-		sliceSpacing,
-		orientation2D
-	};
-	Point2D seed = { 256.0, 256.0 };
-
-	
-	//save all the found circles
-	FILE* found_points;
-	storing_path = outputPath + "tests hough 28-04/found_centers_V2.csv";
-	if (fopen_s(&found_points, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
-	for (k = 357; k <= 457; k++) {
-		
-		extension = to_string(k);
-		copyDataToAnother2dArray(imgInterpolated[k], imageSlice, Length, Width);
-		initialize2dArray(distanceMap, Length, Width);
-
-		storing_path = outputPath + "tests hough 28-04/potential_center_" + extension + ".csv";
-		//Point2D found_point = localCircleDetection(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
-		Point2D found_point = localCircleDetectionWithOptimization(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
-
-		if (found_point.x != -1 && found_point.y != -1) {
-			Point3D pCenter = { found_point.x, found_point.y, k };
-			pCenter = getRealCoordFromImageCoord3D(pCenter, ctOrigin, intSpacing, orientation);
-			fprintf(found_points, "%f,%f,%f\n", pCenter.x, pCenter.y, pCenter.z);
-		}
-		//storing_path = outputPath + "tests hough 28-04/found_circle_" + extension + ".raw";
-		//manageRAWFile2D<dataType>(distanceMap, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-	}
-	fclose(found_points);
-	
-
-	size_t slice_of_interest = 519;
-	copyDataToAnother2dArray(imgInterpolated[slice_of_interest], imageSlice, Length, Width);
-	storing_path = outputPath + "threshold.raw";
-	Point2D found_point = localCircleDetection(imageDataToHoughTransform, distanceMap, seed, hParameters, storing_path);
-
-	delete[] imageSlice;
-	delete[] distanceMap;
-	for (k = 0; k < hauteur; k++) {
-		if (k < Height){
-			delete[] imageData[k];
-		}
-		delete[] imgInterpolated[k];
-	}
-	delete[] imageData;
-	delete[] imgInterpolated;
 	*/
 
 	//==================== Hough Transform in Lung region =========================
