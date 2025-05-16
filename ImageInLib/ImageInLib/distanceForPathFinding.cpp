@@ -109,21 +109,22 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	if (imageDataStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
 		return false;
 
-
 	const size_t height = imageDataStr.height;
 	const size_t width = imageDataStr.width;
 	size_t i, dim2D = height * width;
-	size_t i1 = (size_t)seedPoints[0].x, j1 = (size_t)seedPoints[0].y;
-	size_t i2 = (size_t)seedPoints[1].x, j2 = (size_t)seedPoints[1].y;
+	
+	//size_t i1 = (size_t)seedPoints[0].x, j1 = (size_t)seedPoints[0].y;
+	//size_t i2 = (size_t)seedPoints[1].x, j2 = (size_t)seedPoints[1].y;
 
-	dataType seedVal = (dataType)((imageDataStr.imageDataPtr[x_new(i1, j1, height)] + imageDataStr.imageDataPtr[x_new(i2, j2, height)]) / 2.0);
-	dataType epsilon = 0.01;
+	dataType seedVal = 1.0; //(dataType)((imageDataStr.imageDataPtr[x_new(i1, j1, height)] + imageDataStr.imageDataPtr[x_new(i2, j2, height)]) / 2.0);
+	dataType epsilon = 0.00001;
 	dataType K = 0.00005;
-	dataType coef_dist = 1000, coef = 0.0;
+	dataType coef_dist = 1;
 
 	dataType* gradientVectorX = new dataType[dim2D]{ 0 };
 	dataType* gradientVectorY = new dataType[dim2D]{ 0 };
 	dataType* edgeDetector = new dataType[dim2D]{ 0 };
+	dataType* distanceMap = new dataType[dim2D]{ 0 };
 
 	computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
 
@@ -132,17 +133,45 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		ux = gradientVectorX[i];
 		uy = gradientVectorY[i];
 		norm_of_gradient_square = ux * ux + uy * uy;
-		edgeDetector[i] = 0.01 + sqrt(norm_of_gradient_square);
+		edgeDetector[i] = 1 / (1 + coef_dist * norm_of_gradient_square);
+		if (edgeDetector[i] > 0 && edgeDetector[i] < 1) {
+			edgeDetector[i] = 0.0;
+		}
+		else {
+			edgeDetector[i] = 1.0;
+		}
+	}
+
+	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image2D.raw";
+	//manageRAWFile2D<dataType>(edgeDetector, height, width, path_file.c_str(), STORE_DATA, false);
+
+	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 0.0);
+
+	//path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map2D.raw";
+	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
+
+	for (i = 0; i < dim2D; i++) {
+		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
+	}
+
+	//Find max difference
+	dataType maxDiff = 0.0;
+	for (i = 0; i < dim2D; i++) {
+		if (potentialFuncPtr[i] > maxDiff) {
+			maxDiff = potentialFuncPtr[i];
+		}
+		//distanceMap[i] = 1.0;
 	}
 	
 	//Normalization
 	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = edgeDetector[i];
+		potentialFuncPtr[i] = epsilon + (potentialFuncPtr[i] / maxDiff) * (1.0 / (1 + distanceMap[i]));
 	}
 
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
+	delete[] edgeDetector;
 
 	return true;
 }
@@ -550,6 +579,10 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 	pointFastMarching2D current;
 	short label = 0;
 
+	//Save points for visualization
+	vector<Point2D> savingList;
+	size_t id_save = 0;
+
 	size_t seedI = seedPoints[1].x, seedJ = seedPoints[1].y, seedIndex = x_new(seedI, seedJ, height);
 	while (labelArray[seedIndex] != 1) {
 
@@ -559,6 +592,26 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 		currentIndx = x_new(i, j, height);
 		labelArray[currentIndx] = 1;
 		distancePtr[currentIndx] = current.arrival;
+
+		//Save points for visualization
+		Point2D point = { (dataType)i, (dataType)j };
+		savingList.push_back(point);
+		if (savingList.size() % 50 == 0) {
+			id_save++;
+			string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 16-05/action_" + to_string(id_save) + ".csv";
+			FILE* frontPoint;
+			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+				printf("Enable to open");
+				return false;
+			}
+			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+				fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+			}
+			//savingList.clear();
+			fclose(frontPoint);
+		}
+
+
 		deleteRootHeap2D(inProcess);
 
 		//East
@@ -666,6 +719,10 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 				}
 			}
 		}
+
+		
+		
+		
 
 	}
 
@@ -1434,12 +1491,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 		}
 	}
 
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
@@ -1471,7 +1528,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0;// / (1.0 + distance[k][i]);
+			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 		}
 	}

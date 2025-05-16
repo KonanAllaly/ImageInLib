@@ -4068,7 +4068,7 @@ int main() {
 	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	*/
 
-	
+	/*
 	//Artificial image
 	const size_t Height = 100, Width = 100, Length = 100;
 	const size_t dim2D = Length * Width;
@@ -4080,11 +4080,16 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	loading_path = inputPath + "shape/spiral/spiral.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
-	Point3D seed1 = { 82, 54, 8 };
-	Point3D seed2 = { 81, 45, 85 };
+	////input 1
+	//Point3D seed1 = { 82, 54, 8 };
+	//Point3D seed2 = { 81, 45, 85 };
+
+	//input 2
+	Point3D seed1 = { 81, 51, 9 };
+	Point3D seed2 = { 81, 47, 88 };
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
@@ -4099,18 +4104,18 @@ int main() {
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
 	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-	compute3DPotential(imageStr, potential, endPoints, parameters);
+	//compute3DPotential(imageStr, potential, endPoints, parameters);
 
-	storing_path = outputPath + "potential_artificial_2.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential_artificial_img2.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
-	const double LengthKeyPoints = 10;
+	const double LengthKeyPoints = 15;
 
 	storing_path = outputPath + "test action 16-05/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
 	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
-	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
 	////Save the keys points in files
 	//string saving_csv = outputPath + "key_points_artificial_2.csv";
@@ -4131,6 +4136,53 @@ int main() {
 		delete[] action[k];
 		delete[] potential[k];
 	}
+	delete[] imageData;
+	delete[] action;
+	delete[] potential;
+	*/
+
+	//2D experiments
+	const size_t Length = 100, Width = 100;
+	dataType* imageData = new dataType[Length * Width] { 0 };
+	dataType* action = new dataType[Length * Width] { 0 };
+	dataType* potential = new dataType[Length * Width] { 0 };
+
+	Point2D center = { 50.0, 50.0 };
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			Point2D current_point = { i, j };
+			double pDistance = getPoint2DDistance(current_point, center);
+			if (pDistance <= 15) {
+				imageData[x_new(i, j, Length)] = 1.0;
+			}
+		}
+	}
+
+	Point2D* endPoints = new Point2D[2];
+	endPoints[0] = { 39.0, 50.0 };
+	endPoints[1] = { 61.0, 29.0 };
+	PixelSpacing pSpacing = { 1.0, 1.0 };
+	Point2D origin = { 0.0, 0.0 };
+	Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
+
+	//Save the end points in files
+	FILE* p_end;
+	string end_points = outputPath + "end_points2D.csv";
+	if (fopen_s(&p_end, end_points.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(p_end, "%f,%f\n", endPoints[0].x, endPoints[0].y);
+	fprintf(p_end, "%f,%f\n", endPoints[1].x, endPoints[1].y);
+	fclose(p_end);
+
+	//computePotential(imageDataStr, potential, endPoints);
+	//partialFrontPropagation2D(imageData, action, potential, Length, Width, endPoints);
+
+	storing_path = outputPath + "action_circle_v1.raw";
+	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	delete[] endPoints;
 	delete[] imageData;
 	delete[] action;
 	delete[] potential;
