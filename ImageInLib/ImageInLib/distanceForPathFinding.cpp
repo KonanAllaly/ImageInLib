@@ -142,12 +142,11 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		}
 	}
 
-	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image2D.raw";
+	//fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 0.0);
+
+	string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image2D.raw";
 	//manageRAWFile2D<dataType>(edgeDetector, height, width, path_file.c_str(), STORE_DATA, false);
-
-	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 0.0);
-
-	//path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map2D.raw";
+	path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map2D.raw";
 	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
 
 	for (i = 0; i < dim2D; i++) {
@@ -160,7 +159,7 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		if (potentialFuncPtr[i] > maxDiff) {
 			maxDiff = potentialFuncPtr[i];
 		}
-		//distanceMap[i] = 1.0;
+		distanceMap[i] = 1.0;
 	}
 	
 	//Normalization
@@ -598,7 +597,7 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 		savingList.push_back(point);
 		if (savingList.size() % 50 == 0) {
 			id_save++;
-			string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 16-05/action_" + to_string(id_save) + ".csv";
+			string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/leakage_four_pixels_" + to_string(id_save) + ".csv";
 			FILE* frontPoint;
 			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
 				printf("Enable to open");
@@ -610,7 +609,6 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 			//savingList.clear();
 			fclose(frontPoint);
 		}
-
 
 		deleteRootHeap2D(inProcess);
 
@@ -719,11 +717,22 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 				}
 			}
 		}
+	}
 
-		
-		
-		
-
+	//Save points for visualization
+	if (savingList.size() != 0) {
+		id_save++;
+		string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/leakage_four_pixels_" + to_string(id_save) + ".csv";
+		FILE* frontPoint;
+		if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+			printf("Enable to open");
+			return false;
+		}
+		for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+			fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+		}
+		//savingList.clear();
+		fclose(frontPoint);
 	}
 
 	for (i = 0; i < dim2D; i++) {

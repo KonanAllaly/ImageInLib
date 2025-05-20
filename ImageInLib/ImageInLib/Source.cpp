@@ -4147,50 +4147,68 @@ int main() {
 	dataType* action = new dataType[Length * Width] { 0 };
 	dataType* potential = new dataType[Length * Width] { 0 };
 
-	Point2D center = { 30.0, 50.0 };
-	
-	//for (i = 0; i < Length; i++) {
-	//	for (j = 0; j < Width; j++) {
-	//		Point2D current_point = { i, j };
-	//		double pDistance = getPoint2DDistance(current_point, center);
-	//		if (pDistance <= 15) {
-	//			imageData[x_new(i, j, Length)] = 1.0;
-	//		}
-	//	}
-	//}
+	Point2D center = { 50.0, 50.0 };
 
-	size_t turns = 1;
-	size_t total_segment = turns * 50;
-	dataType step;
-	double phi, radius = 20;
-	dataType x, y;
-	for (size_t n = 0; n < total_segment; n++)
-	{
-		step = (dataType)n / (dataType)total_segment;
-		phi = step * turns * 2 * M_PI;
-		x = center.x + radius * cos(phi);
-		y = center.y + radius * sin(phi);
-
-		Point2D current_center = { x, y };
-		double radius_tube = 5.0;
-		for (i = 0; i < Length; i++)
-		{
-			for (j = 0; j < Width; j++)
+	//Tube
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			Point2D pPoint = { i, j };
+			if (i == j) 
 			{
-				Point2D current_point = { i, j };
-				double dist = getPoint2DDistance(current_center, current_point);
-				if (dist <= radius_tube) {
-					imageData[x_new(i, j, Length)] = 1.0;
+				for (size_t in = 0; in < Length; in++) {
+					for (size_t jn = 0; jn < Width; jn++) {
+						Point2D current_point = { in, jn };
+						double pDistance = getPoint2DDistance(current_point, pPoint);
+						if (pDistance < 8) {
+							imageData[x_new(in, jn, Length)] = 1.0;
+						}
+					}
 				}
 			}
 		}
 	}
-	storing_path = outputPath + "spiral2D.raw";
+
+	//create one pixel missing edges in tube
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			if (j >= 50 && j <= 53) {
+				imageData[x_new(i, j, Length)] = 0.0;
+			}
+		}
+	}
+	
+	//for (i = 0; i < Length; i++) {
+	//	for (j = (Width / 2); j < Width; j++) {
+	//		Point2D current_point = { i, j };
+	//		double pDistance = getPoint2DDistance(current_point, center);
+	//		if (pDistance > 25.0 && pDistance < 35) {
+	//			imageData[x_new(i, j - 15, Length)] = 1.0;
+	//		}
+	//	}
+	//}
+
+	//for (i = 0; i < Length; i++) {
+	//	for (j = 0; j < Width; j++) {
+	//		if (i >= 50 && i <= 53) {
+	//			imageData[x_new(i, j, Length)] = 0.0;
+	//		}
+	//	}
+	//}
+
+	storing_path = outputPath + "object.raw";
 	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
+	//Point2D* endPoints = new Point2D[2];
+	//endPoints[0] = { 20.0, 40.0 };
+	//endPoints[1] = { 82.0, 41.0 };
+	//PixelSpacing pSpacing = { 1.0, 1.0 };
+	//Point2D origin = { 0.0, 0.0 };
+	//Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
+
+	//Tube
 	Point2D* endPoints = new Point2D[2];
-	endPoints[0] = { 39.0, 50.0 };
-	endPoints[1] = { 61.0, 29.0 };
+	endPoints[0] = { 5.0, 5.0 };
+	endPoints[1] = { 99.0, 94.0 };
 	PixelSpacing pSpacing = { 1.0, 1.0 };
 	Point2D origin = { 0.0, 0.0 };
 	Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
@@ -4206,10 +4224,10 @@ int main() {
 	//fprintf(p_end, "%f,%f\n", endPoints[1].x, endPoints[1].y);
 	//fclose(p_end);
 
-	//computePotential(imageDataStr, potential, endPoints);
-	//partialFrontPropagation2D(imageData, action, potential, Length, Width, endPoints);
-	//storing_path = outputPath + "action_circle_v1.raw";
-	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	computePotential(imageDataStr, potential, endPoints);
+	partialFrontPropagation2D(imageData, action, potential, Length, Width, endPoints);
+	////storing_path = outputPath + "action_tube_v1.raw";
+	////manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	delete[] endPoints;
 	delete[] imageData;
