@@ -142,11 +142,11 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		}
 	}
 
-	//fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 0.0);
+	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 0.0);
 
-	string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image2D.raw";
+	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image2D.raw";
 	//manageRAWFile2D<dataType>(edgeDetector, height, width, path_file.c_str(), STORE_DATA, false);
-	path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map2D.raw";
+	//path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map2D.raw";
 	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
 
 	for (i = 0; i < dim2D; i++) {
@@ -159,7 +159,7 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		if (potentialFuncPtr[i] > maxDiff) {
 			maxDiff = potentialFuncPtr[i];
 		}
-		distanceMap[i] = 1.0;
+		//distanceMap[i] = 1.0;
 	}
 	
 	//Normalization
@@ -597,7 +597,7 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 		savingList.push_back(point);
 		if (savingList.size() % 50 == 0) {
 			id_save++;
-			string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/leakage_four_pixels_" + to_string(id_save) + ".csv";
+			string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/circle/holes four pixels/pot1/action_" + to_string(id_save) + ".csv";
 			FILE* frontPoint;
 			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
 				printf("Enable to open");
@@ -722,7 +722,7 @@ bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, da
 	//Save points for visualization
 	if (savingList.size() != 0) {
 		id_save++;
-		string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/leakage_four_pixels_" + to_string(id_save) + ".csv";
+		string saving_csv = "C:/Users/Konan Allaly/Documents/Tests/output/action 2D 20-05/circle/holes four pixels/pot1/action_" + to_string(id_save) + ".csv";
 		FILE* frontPoint;
 		if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
 			printf("Enable to open");
@@ -1479,33 +1479,33 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			uz = gradientVectorZ[k][i];
 			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
 
-			//edgeDetector[k][i] = norm_of_gradient;//gradientFunction(norm_of_gradient, parameters.K);
-			//edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-			////threshold
-			//if (edgeDetector[k][i] > 0 && edgeDetector[k][i] < parameters.thres) {
-			//	maskThreshold[k][i] = 0.0;
-			//}
-			//else {
-			//	maskThreshold[k][i] = 1.0;
-			//}
-
+			edgeDetector[k][i] = norm_of_gradient;//gradientFunction(norm_of_gradient, parameters.K);
 			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
 			//threshold
-			if (edgeDetector[k][i] < parameters.thres) {
+			if (edgeDetector[k][i] > 0 && edgeDetector[k][i] < parameters.thres) {
 				maskThreshold[k][i] = 0.0;
 			}
 			else {
 				maskThreshold[k][i] = 1.0;
 			}
+
+			//edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
+			////threshold
+			//if (edgeDetector[k][i] < parameters.thres) {
+			//	maskThreshold[k][i] = 0.0;
+			//}
+			//else {
+			//	maskThreshold[k][i] = 1.0;
+			//}
 		}
 	}
 
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
@@ -1514,7 +1514,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType value_second_pt = seedStats.mean_data;
 
 	dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	//dataType seedValCT = value_first_pt;
+	//dataType seedValCT = 1.0;//value_first_pt;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -1540,7 +1540,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 		}
-	}
+	} 
 
 	for (k = 0; k < height; k++) {
 		delete[] gradientVectorX[k];
@@ -4805,7 +4805,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	//Visualize the front propagation
 	size_t id_keyPoint = 1;
-	std::string root_path = "C:/Users/Konan Allaly/Documents/Tests/output/test action 16-05/action_";
+	//std::string root_path = "C:/Users/Konan Allaly/Documents/Tests/output/action 3D 20-05/long spiral/key points/pot1/action_";
+	std::string root_path = "C:/Users/Konan Allaly/Documents/Tests/output/action 3D 20-05/real/keypoints_p1/action_";
 	std::string storing_path;
 	vector<Point3D> savingList;
 	

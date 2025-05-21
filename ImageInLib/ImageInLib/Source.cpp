@@ -48,7 +48,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	/*
+	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -83,7 +83,7 @@ int main() {
 	//	}
 	//}
 	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-	*/
+	
 
 	//========================= Detect Heart region ==================================
 	
@@ -4014,13 +4014,12 @@ int main() {
 
 	//==================== Test Potential function ========================================
 	
-	/*
 	dataType** inputImageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		inputImageData[k] = new dataType[dim2D]{ 0 };
 	}
 	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	//manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	const size_t height = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
 	dataType** imageData = new dataType * [height];
@@ -4035,7 +4034,7 @@ int main() {
 	Image_Data inputImageStr = { Height, Length, Width, inputImageData, ctOrigin, ctSpacing, orientation };
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
 	Image_Data imageStr = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
-	imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
+	//imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
 	storing_path = outputPath + "interpolated_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
 
@@ -4057,16 +4056,47 @@ int main() {
 	compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	storing_path = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
+	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
+	//key_points.push_back(seed1);
+	//key_points.push_back(seed2);
 	const double LengthKeyPoints = 50;
 	
 	Image_Data actionMapStr = { height, Length, Width, action, ctOrigin, intSpacing, orientation };
-	storing_path = outputPath + "test action 16-05/action_";
+	storing_path = outputPath + "action 3D 20-05/real/potential2/action_";
 	frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
 	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	*/
+
+	//Save the keys points in files
+	string saving_csv = outputPath + "key_points_p1.csv";
+	FILE* f_key_point;
+	if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	for (int n = 0; n < key_points.size(); n++) {
+		key_points[n] = getRealCoordFromImageCoord3D(key_points[n], ctOrigin, intSpacing, orientation);
+		fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
+	}
+	fclose(f_key_point);
+	key_points.clear();
+	
+	delete[] endPoints;
+	for (k = 0; k < height; k++) {
+		if (k < Height) {
+			delete[] inputImageData[k];
+		}
+		delete[] imageData[k];
+		delete[] action[k];
+		delete[] potential[k];
+	}
+	delete[] inputImageData;
+	delete[] imageData;
+	delete[] action;
+	delete[] potential;
+	free(ctContainer);
+	
 
 	/*
 	//Artificial image
@@ -4080,16 +4110,17 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "shape/spiral/spiral.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
+	//loading_path = inputPath + "shape/spiral/spiral.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
-	////input 1
-	//Point3D seed1 = { 82, 54, 8 };
-	//Point3D seed2 = { 81, 45, 85 };
+	//input 1
+	Point3D seed1 = { 82, 54, 8 };
+	Point3D seed2 = { 81, 45, 85 };
 
-	//input 2
-	Point3D seed1 = { 81, 51, 9 };
-	Point3D seed2 = { 81, 47, 88 };
+	////input 2
+	//Point3D seed1 = { 81, 51, 15 };
+	//Point3D seed2 = { 81, 47, 88 };
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
@@ -4104,21 +4135,23 @@ int main() {
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
 	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-	//compute3DPotential(imageStr, potential, endPoints, parameters);
+	compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	storing_path = outputPath + "potential_artificial_img2.raw";
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
-	const double LengthKeyPoints = 15;
+	//key_points.push_back(seed1);
+	//key_points.push_back(seed2);
+	const double LengthKeyPoints = 10;
 
-	storing_path = outputPath + "test action 16-05/action_";
+	storing_path = outputPath + "action 3D 20-05/long spiral/key points/pot1/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
-	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
+	frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
 	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
 	////Save the keys points in files
-	//string saving_csv = outputPath + "key_points_artificial_2.csv";
+	//string saving_csv = outputPath + "key_points_p1.csv";
 	//FILE* f_key_point;
 	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
 	//	printf("Enable to open");
@@ -4128,7 +4161,7 @@ int main() {
 	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
 	//}
 	//fclose(f_key_point);
-	//key_points.clear();
+	key_points.clear();
 
 	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
@@ -4141,6 +4174,7 @@ int main() {
 	delete[] potential;
 	*/
 
+    /*
 	//2D experiments
 	const size_t Length = 100, Width = 100;
 	dataType* imageData = new dataType[Length * Width] { 0 };
@@ -4149,73 +4183,74 @@ int main() {
 
 	Point2D center = { 50.0, 50.0 };
 
-	//Tube
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			Point2D pPoint = { i, j };
-			if (i == j) 
-			{
-				for (size_t in = 0; in < Length; in++) {
-					for (size_t jn = 0; jn < Width; jn++) {
-						Point2D current_point = { in, jn };
-						double pDistance = getPoint2DDistance(current_point, pPoint);
-						if (pDistance < 8) {
-							imageData[x_new(in, jn, Length)] = 1.0;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//create one pixel missing edges in tube
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			if (j >= 50 && j <= 53) {
-				imageData[x_new(i, j, Length)] = 0.0;
-			}
-		}
-	}
-	
+	////Tube
 	//for (i = 0; i < Length; i++) {
-	//	for (j = (Width / 2); j < Width; j++) {
-	//		Point2D current_point = { i, j };
-	//		double pDistance = getPoint2DDistance(current_point, center);
-	//		if (pDistance > 25.0 && pDistance < 35) {
-	//			imageData[x_new(i, j - 15, Length)] = 1.0;
+	//	for (j = 0; j < Width; j++) {
+	//		Point2D pPoint = { i, j };
+	//		if (i == j) 
+	//		{
+	//			for (size_t in = 0; in < Length; in++) {
+	//				for (size_t jn = 0; jn < Width; jn++) {
+	//					Point2D current_point = { in, jn };
+	//					double pDistance = getPoint2DDistance(current_point, pPoint);
+	//					if (pDistance < 8) {
+	//						imageData[x_new(in, jn, Length)] = 1.0;
+	//					}
+	//				}
+	//			}
 	//		}
 	//	}
 	//}
 
+	////create one pixel missing edges in tube
 	//for (i = 0; i < Length; i++) {
 	//	for (j = 0; j < Width; j++) {
-	//		if (i >= 50 && i <= 53) {
+	//		if (j >= 50 && j <= 50) {
 	//			imageData[x_new(i, j, Length)] = 0.0;
 	//		}
 	//	}
 	//}
+	
+	for (i = 0; i < Length; i++) {
+		for (j = (Width / 2); j < Width; j++) {
+			Point2D current_point = { i, j };
+			double pDistance = getPoint2DDistance(current_point, center);
+			if (pDistance > 25.0 && pDistance < 35) {
+				imageData[x_new(i, j - 15, Length)] = 1.0;
+			}
+		}
+	}
 
-	storing_path = outputPath + "object.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			if (i >= 50 && i <= 53) {
+				imageData[x_new(i, j, Length)] = 0.0;
+			}
+		}
+	}
 
-	//Point2D* endPoints = new Point2D[2];
-	//endPoints[0] = { 20.0, 40.0 };
-	//endPoints[1] = { 82.0, 41.0 };
-	//PixelSpacing pSpacing = { 1.0, 1.0 };
-	//Point2D origin = { 0.0, 0.0 };
-	//Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
+	////storing_path = outputPath + "object_with_holes_four_pixels.raw";
+	//storing_path = outputPath + "semi_circle_with_four_pixels_holes.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-	//Tube
 	Point2D* endPoints = new Point2D[2];
-	endPoints[0] = { 5.0, 5.0 };
-	endPoints[1] = { 99.0, 94.0 };
+	endPoints[0] = { 20.0, 40.0 };
+	endPoints[1] = { 82.0, 41.0 };
 	PixelSpacing pSpacing = { 1.0, 1.0 };
 	Point2D origin = { 0.0, 0.0 };
 	Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
 
+	////Tube
+	//Point2D* endPoints = new Point2D[2];
+	//endPoints[0] = { 5.0, 7.0 };
+	//endPoints[1] = {97.0, 90.0};// { 99.0, 94.0 };
+	//PixelSpacing pSpacing = { 1.0, 1.0 };
+	//Point2D origin = { 0.0, 0.0 };
+	//Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
+
 	////Save the end points in files
 	//FILE* p_end;
-	//string end_points = outputPath + "end_points2D.csv";
+	//string end_points = outputPath + "end_points_semi_circle.csv";
 	//if (fopen_s(&p_end, end_points.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
@@ -4226,28 +4261,15 @@ int main() {
 
 	computePotential(imageDataStr, potential, endPoints);
 	partialFrontPropagation2D(imageData, action, potential, Length, Width, endPoints);
+	
 	////storing_path = outputPath + "action_tube_v1.raw";
 	////manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-	delete[] endPoints;
+	//delete[] endPoints;
 	delete[] imageData;
 	delete[] action;
 	delete[] potential;
-
-	//delete[] endPoints;
-	//for (k = 0; k < height; k++) {
-	//	if (k < Height) {
-	//		delete[] inputImageData[k];
-	//	}
-	//	delete[] imageData[k];
-	//	delete[] action[k];
-	//	delete[] potential[k];
-	//}
-	//delete[] inputImageData;
-	//delete[] imageData;
-	//delete[] action;
-	//delete[] potential;
-	//free(ctContainer);
+	*/
 
 	//==================== Aorta bifurcation detection ===================================
 	
