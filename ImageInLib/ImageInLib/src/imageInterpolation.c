@@ -317,7 +317,7 @@ bool imageInterpolation3D(Image_Data src_image, Image_Data dest_image, interpola
     if (src_image.imageDataPtr == NULL || dest_image.imageDataPtr == NULL)
         return false;
 
-    int i, j, k;
+    size_t i, j, k;
 
     const size_t src_length = src_image.length, src_width = src_image.width, src_height = src_image.height;
     const size_t dest_length = dest_image.length, dest_width = dest_image.width, dest_height = dest_image.height;
