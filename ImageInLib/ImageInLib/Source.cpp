@@ -68,23 +68,6 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
-
-	////Find the minimum and maximum values to perform shiftting
-	//dataType minData = ctContainer->dataPointer[0][0];
-	//dataType maxData = ctContainer->dataPointer[0][0];
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (ctContainer->dataPointer[k][i] > maxData) {
-	//			maxData = ctContainer->dataPointer[k][i];
-	//		}
-	//		if (ctContainer->dataPointer[k][i] < minData) {
-	//			minData = ctContainer->dataPointer[k][i];
-	//		}
-	//	}
-	//}
-	//std::cout << "Min = " << minData << ", Max = " << maxData << std::endl;
-	
-
 	//========================= Detect Heart region ==================================
 	
 	/*
@@ -4035,12 +4018,61 @@ int main() {
 	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
 	Image_Data imageStr = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
 	//imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
+	////imageInterpolation3D(inputImageStr, imageStr, NEAREST_NEIGHBOR);
 	storing_path = outputPath + "interpolated_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
+	//manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
 
-	//real image p1
-	Point3D seed1 = { 261, 257, 311 };
-	Point3D seed2 = { 257, 250, 535 };
+	////real image p1
+	//Point3D seed1 = { 261, 257, 311 };
+	//Point3D seed2 = { 257, 250, 535 };
+
+	//Patient 1
+	Point3D seed1 = { 262, 258, 146 };
+	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	Point3D seed2 = { 266, 256, 245 };
+	seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+
+	////Patient 2
+	//Point3D seed1 = { 257, 254, 249 };
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//Point3D seed2 = { 257, 243, 350 };
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+
+	////Patient 3
+	//Point3D seed1 = { 268, 230, 116 };
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//Point3D seed2 = { 266, 221, 218 };
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+	
+	////Patient 4
+	//Point3D seed1 = { 280, 229, 135 };
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//Point3D seed2 = { 285, 234, 220 };
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+
+	////Patient 5
+	//Point3D seed1 = { 265, 243, 471 };
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//Point3D seed2 = { 239, 225, 612 };
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+
+	////Patient 6
+	//Point3D seed1 = { 250, 298, 258 };
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//Point3D seed2 = { 268, 288, 433 };
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
 
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
@@ -4053,23 +4085,25 @@ int main() {
 		0.000001,//epsilon
 		radius
 	};
-	compute3DPotential(imageStr, potential, endPoints, parameters);
+	//compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	storing_path = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	vector<Point3D> key_points;
-	//key_points.push_back(seed1);
-	//key_points.push_back(seed2);
 	const double LengthKeyPoints = 50;
 	
 	Image_Data actionMapStr = { height, Length, Width, action, ctOrigin, intSpacing, orientation };
-	storing_path = outputPath + "action 3D 20-05/real/potential2/action_";
-	frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points);
-	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	storing_path = outputPath + "partial front/p1/action_";
+	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	//storing_path = outputPath + "key points/p1/action_";
+	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 
-	//Save the keys points in files
-	string saving_csv = outputPath + "key_points_p1.csv";
+	////Save the keys points in files
+	string saving_csv = outputPath + "seed_p6.csv";
+	key_points.push_back(seed1);
+	key_points.push_back(seed2);
+	//string saving_csv = outputPath + "key_points_p1.csv";
 	FILE* f_key_point;
 	if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -4097,7 +4131,6 @@ int main() {
 	delete[] potential;
 	free(ctContainer);
 	
-
 	/*
 	//Artificial image
 	const size_t Height = 100, Width = 100, Length = 100;
