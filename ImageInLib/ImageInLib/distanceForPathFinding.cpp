@@ -1478,33 +1478,30 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			uy = gradientVectorY[k][i];
 			uz = gradientVectorZ[k][i];
 			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-
-			edgeDetector[k][i] = norm_of_gradient;//gradientFunction(norm_of_gradient, parameters.K);
-			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-			//threshold
-			if (edgeDetector[k][i] > 0 && edgeDetector[k][i] < parameters.thres) {
-				maskThreshold[k][i] = 0.0;
-			}
-			else {
-				maskThreshold[k][i] = 1.0;
-			}
-
+			////edgeDetector[k][i] = norm_of_gradient;//gradientFunction(norm_of_gradient, parameters.K);
 			//edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
 			////threshold
-			//if (edgeDetector[k][i] < parameters.thres) {
+			//if (edgeDetector[k][i] > 0 && edgeDetector[k][i] < parameters.thres) {
 			//	maskThreshold[k][i] = 0.0;
 			//}
 			//else {
 			//	maskThreshold[k][i] = 1.0;
 			//}
+			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
+			//threshold
+			if (edgeDetector[k][i] < parameters.thres) {
+				maskThreshold[k][i] = 0.0;
+			}
+			else {
+				maskThreshold[k][i] = 1.0;
+			}
 		}
 	}
-
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p4.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p4.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
@@ -2506,10 +2503,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	size_t i = 0, j = 0, k = 0, dim2D = length * width;
 
 	short** labelArray = new short *[height];
-	dataType** weightedDistance = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		labelArray[k] = new short[dim2D]{0};
-		weightedDistance[k] = new dataType[dim2D]{ 0 };
 	}
 	if (labelArray == NULL)
 		return false;
@@ -2654,16 +2649,20 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		return false;
 	}
 
-	while (labelArray[seedK][seedIndex] != 1) {
+	dataType max_action = 0;
+	while (labelArray[seedK][seedIndex] != 1 && inProcess.size() > 0) {
 
 		//processed the point with minimum distance
-		current = inProcess[0]; // index 0 exist because, if not we will be out of the while loop
+		current = inProcess[0];
 		i = current.x;
 		j = current.y;
 		k = current.z;
 		currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
 		actionPtr.imageDataPtr[k][currentIndx] = current.arrival;
+		if (max_action < current.arrival) {
+			max_action = current.arrival;
+		}
 
 		//Visualize the front propagation
 		Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
@@ -2856,12 +2855,19 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	}
 
+	//std::cout << "we saved " << id_save << " files" << std::endl;
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (actionPtr.imageDataPtr[k][i] == INFINITY) {
+	//			actionPtr.imageDataPtr[k][i] = max_action + 1;
+	//		}
+	//	}
+	//}
+
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
-		delete[] weightedDistance[k];
 	}
 	delete[] labelArray;
-	delete[] weightedDistance;
 
 	return true;
 }
@@ -4640,7 +4646,7 @@ bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPt
 
 //=======================================
 
-bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points) {
+bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving) {
 
 	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL) {
 		return false;
@@ -4805,8 +4811,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	//Visualize the front propagation
 	size_t id_keyPoint = 1;
-	//std::string root_path = "C:/Users/Konan Allaly/Documents/Tests/output/action 3D 20-05/long spiral/key points/pot1/action_";
-	std::string root_path = "C:/Users/Konan Allaly/Documents/Tests/output/action 3D 20-05/real/keypoints_p1/action_";
 	std::string storing_path;
 	vector<Point3D> savingList;
 	
@@ -4829,22 +4833,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		//For vizualization
 		savingList.push_back(pSourceReal);
 		if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
-			
-			////save the weighted distance for animation
-			//for (size_t ik = 0; ik < height; ik++) {
-			//	for (size_t il = 0; il < dim2D; il++) {
-			//		if (actionMapStr.imageDataPtr[ik][il] == INFINITY) {
-			//			weighted_distance_saving[ik][il] = 0.0;
-			//		}
-			//		else {
-			//			weighted_distance_saving[ik][il] = actionMapStr.imageDataPtr[ik][il];
-			//		}
-			//	}
-			//}
-			//storing_path = root_path + "weighted distance/diff/action_" + std::to_string(id_keyPoint) + ".raw";
-			//manageRAWFile3D<dataType>(weighted_distance_saving, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-			string saving_csv = root_path + to_string(id_keyPoint) + ".csv";
+			string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
 			FILE* frontPoint;
 			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
 				printf("Enable to open");
@@ -4913,10 +4903,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				labelArray[kplus][currentIndx] = 3;
 			}
 			
-			while (inProcess.size() != 0) {
-				inProcess.pop_back();
-			}
-
+			inProcess.clear();
 			id_keyPoint++;
 
 		}
@@ -5109,7 +5096,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	}
 
 	//id_keyPoint++;
-	string saving_csv = root_path + to_string(id_keyPoint) + ".csv";
+	string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
 	FILE* frontPoint;
 	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
 		printf("Enable to open");
