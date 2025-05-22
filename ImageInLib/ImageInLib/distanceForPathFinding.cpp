@@ -1226,14 +1226,14 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
-	//dataType value_first_pt = seedStats.mean_data;
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	//dataType value_second_pt = seedStats.mean_data;
+	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	dataType value_first_pt = seedStats.mean_data;
+	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	dataType value_second_pt = seedStats.mean_data;
 
-	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	dataType seedValCT = 1.0;//value_first_pt;
+	dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	//dataType seedValCT = 1.0;//value_first_pt;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -1256,7 +1256,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0;// / (1.0 + distance[k][i]);
+			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			potential[k][i] = parameters.eps + weight_dist * potential[k][i] / maxImage;
 		}
 	}
@@ -3402,12 +3402,10 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	short** labelArray = new short * [height];
 	for (k = 0; k < height; k++) {
-		labelArray[k] = new short[dim2D]{ 0 };
+		labelArray[k] = new short[dim2D];
 	}
 	if (labelArray == NULL)
 		return false;
-
-	size_t currentIndx = 0;
 
 	//Initialization
 	//All the points are notProcessed ---> label = 3
@@ -3422,14 +3420,9 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	i = (size_t)seedPoint[0].x;
 	j = (size_t)seedPoint[0].y;
 	k = (size_t)seedPoint[0].z;
-	currentIndx = x_new(i, j, length);
+	size_t currentIndx = x_new(i, j, length);
 	actionMapStr.imageDataPtr[k][currentIndx] = 0.0;
 	labelArray[k][currentIndx] = 1;
-
-	double distanceToCurrentSourcePoint = 0.0;
-	//Set the starting point as initial source point
-	Point3D currentSourcePoint = { (dataType)i, (dataType)j, (dataType)k };
-	key_points.push_back(currentSourcePoint);
 
 	//find the neighbours of the initial point add add them to inProcess
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
@@ -3537,6 +3530,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	size_t id_keyPoint = 1;
 	std::string storing_path;
 	vector<Point3D> savingList;
+
+	double distanceToCurrentSourcePoint = 0.0;
+	//Set the starting point as initial source point
+	Point3D currentSourcePoint = { (dataType)i, (dataType)j, (dataType)k };
+	key_points.push_back(currentSourcePoint);
 	
 	while (inProcess.size() > 0) {
 
@@ -3571,7 +3569,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 			}
-			savingList.clear();
+			//savingList.clear();
 			fclose(frontPoint);
 
 			//If the condition is true ---> new key point is found so we need to initilize it neighbors
