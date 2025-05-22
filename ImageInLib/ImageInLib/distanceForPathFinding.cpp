@@ -1499,19 +1499,19 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	}
 	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p4.raw";
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p4.raw";
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
-	dataType value_first_pt = seedStats.mean_data;
-	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	dataType value_second_pt = seedStats.mean_data;
+	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	//dataType value_first_pt = seedStats.mean_data;
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	//dataType value_second_pt = seedStats.mean_data;
 
-	dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	//dataType seedValCT = 1.0;//value_first_pt;
+	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	dataType seedValCT = 1.0;//value_first_pt;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
