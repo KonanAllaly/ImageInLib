@@ -1219,7 +1219,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			}
 		}
 	}
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
+	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
 
 	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
@@ -1828,13 +1828,10 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	short** labelArray = new short* [height];
 	for (k = 0; k < height; k++) {
-		labelArray[k] = new short[dim2D] {0};
+		labelArray[k] = new short[dim2D];
 	}
 	if (labelArray == NULL)
 		return false;
-
-	dataType x = 0.0, y = 0.0, z = 0.0;
-	size_t currentIndx = 0;
 
 	//Initialization
 	//All the points are notProcessed ---> label = 3
@@ -1845,34 +1842,30 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		}
 	}
 
-	//Processed the initial point
-	i = (size_t)endPoints[0].x;
-	j = (size_t)endPoints[0].y;
-	k = (size_t)endPoints[0].z;
-	if (i < 0 || i > length || j < 0 || j > width || k < 0 || k > height) {
+	//Processed the starting point
+	if (endPoints[0].x < 0 || endPoints[0].x > length || endPoints[0].y < 0 || endPoints[0].y > width || endPoints[0].z < 0 || endPoints[0].z > height) {
 		std::cout << "Error in the input seed point" << std::endl;
 		return false;
 	}
-	currentIndx = x_new(i, j, length);
+	i = (size_t)endPoints[0].x;
+	j = (size_t)endPoints[0].y;
+	k = (size_t)endPoints[0].z;
+	size_t currentIndx = x_new(i, j, length);
 	actionPtr.imageDataPtr[k][currentIndx] = 0.0;
 	labelArray[k][currentIndx] = 1;
 	pointFastMarching3D current = { i, j, k, 0.0 };
 
 	//find the neighbours of the initial point add add them to inProcess
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
-	size_t kminus = 0, kplus = 0, iminus = 0, iplus = 0, jminus = 0, jplus = 0;
-	size_t indxNorth = 0, indxSouth = 0, indxWest = 0, indxEast = 0;
-	dataType dTop = 0.0, dBottom = 0.0, dNorth = 0.0, dSouth = 0.0, dWest = 0.0, dEast = 0.0, coefSpeed = 0.0;
 
 	//Top
 	if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
-		kminus = k - 1;
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-		coefSpeed = potentialFuncPtr[kminus][currentIndx];
-		//dTop = solve3dQuadratic(x, y, z, coefSpeed);
-		dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t kminus = k - 1;
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
+		dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
 		actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
 		inProcess.push_back(TopNeighbor);
@@ -1881,14 +1874,13 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	//East
 	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
-		iplus = i + 1;
-		indxEast = x_new(iplus, j, length);
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-		coefSpeed = potentialFuncPtr[k][indxEast];
-		//dEast = solve3dQuadratic(x, y, z, coefSpeed);
-		dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t iplus = i + 1;
+		size_t indxEast = x_new(iplus, j, length);
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxEast];
+		dataType dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
 		actionPtr.imageDataPtr[k][indxEast] = dEast;
 		inProcess.push_back(EastNeighbor);
@@ -1897,14 +1889,13 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	//North
 	if (k >= 0 && k < height && j > 0 && i >= 0 && i < length) {
-		jminus = j - 1;
-		indxNorth = x_new(i, jminus, length);
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-		coefSpeed = potentialFuncPtr[k][indxNorth];
-		//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
-		dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t jminus = j - 1;
+		size_t indxNorth = x_new(i, jminus, length);
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxNorth];
+		dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
 		actionPtr.imageDataPtr[k][indxNorth] = dNorth;
 		inProcess.push_back(NorthNeighbor);
@@ -1913,14 +1904,13 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	//West
 	if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
-		iminus = i - 1;
-		indxWest = x_new(iminus, j, length);
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-		coefSpeed = potentialFuncPtr[k][indxWest];
-		//dWest = solve3dQuadratic(x, y, z, coefSpeed);
-		dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t iminus = i - 1;
+		size_t indxWest = x_new(iminus, j, length);
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxWest];
+		dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
 		actionPtr.imageDataPtr[k][indxWest] = dWest;
 		inProcess.push_back(WestNeighbor);
@@ -1929,14 +1919,13 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	//South
 	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
-		jplus = j + 1;
-		indxSouth = x_new(i, jplus, length);
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-		coefSpeed = potentialFuncPtr[k][indxSouth];
-		//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
-		dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t jplus = j + 1;
+		size_t indxSouth = x_new(i, jplus, length);
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxSouth];
+		dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
 		actionPtr.imageDataPtr[k][indxSouth] = dSouth;
 		inProcess.push_back(SouthNeighbor);
@@ -1945,13 +1934,12 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	//Bottom
 	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
-		kplus = k + 1;
-		x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-		y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-		z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-		coefSpeed = potentialFuncPtr[kplus][currentIndx];
-		//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-		dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t kplus = k + 1;
+		dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
+		dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
 		actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
 		inProcess.push_back(BottomNeighbor);
@@ -1959,19 +1947,18 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	}
 
 	heapifyVector3D(inProcess);
-	size_t label = 0;
 
 	size_t id_save = 0;
 	vector <Point3D> savingList;
 
+	if (endPoints[1].x < 0 || endPoints[1].x > length || endPoints[1].y < 0 || endPoints[1].y > width || endPoints[1].z < 0 || endPoints[1].z > height) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
 	size_t seedI = (size_t)endPoints[1].x;
 	size_t seedJ = (size_t)endPoints[1].y;
 	size_t seedK = (size_t)endPoints[1].z;
 	size_t seedIndex = x_new(seedI, seedJ, length);
-	if (seedI < 0 || seedI > length || seedJ < 0 || seedJ > width || seedK < 0 || seedK > height) {
-		std::cout << "Error in the input seed point" << std::endl;
-		return false;
-	}
 
 	dataType max_action = 0;
 	while (labelArray[seedK][seedIndex] != 1 && inProcess.size() > 0) {
@@ -2013,15 +2000,14 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//Top
 		if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
-			kminus = k - 1;
-			label = labelArray[kminus][currentIndx];
+			size_t kminus = k - 1;
+			size_t label = labelArray[kminus][currentIndx];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
-				coefSpeed = potentialFuncPtr[kminus][currentIndx];
-				//dTop = solve3dQuadratic(x, y, z, coefSpeed);
-				dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
+				dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
 					labelArray[kminus][currentIndx] = 2;
@@ -2029,10 +2015,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, TopNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dTop < actionPtr.imageDataPtr[kminus][currentIndx]) {
-							actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
-						}
+					if (dTop < actionPtr.imageDataPtr[kminus][currentIndx]) {
+						actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
 					}
 				}
 			}
@@ -2040,16 +2024,15 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//East
 		if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
-			iplus = i + 1;
-			indxEast = x_new(iplus, j, length);
-			label = labelArray[k][indxEast];
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			size_t label = labelArray[k][indxEast];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
-				coefSpeed = potentialFuncPtr[k][indxEast];
-				//dEast = solve3dQuadratic(x, y, z, coefSpeed);
-				dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxEast];
+				dataType dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxEast] = dEast;
 					labelArray[k][indxEast] = 2;
@@ -2057,10 +2040,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, EastNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dEast < actionPtr.imageDataPtr[k][indxEast]) {
-							actionPtr.imageDataPtr[k][indxEast] = dEast;
-						}
+					if (dEast < actionPtr.imageDataPtr[k][indxEast]) {
+						actionPtr.imageDataPtr[k][indxEast] = dEast;
 					}
 				}
 			}
@@ -2068,16 +2049,15 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//North
 		if (j > 0 && i >= 0 && i < length && k >= 0 && k < height) {
-			jminus = j - 1;
-			indxNorth = x_new(i, jminus, length);
-			label = labelArray[k][indxNorth];
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			size_t label = labelArray[k][indxNorth];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
-				coefSpeed = potentialFuncPtr[k][indxNorth];
-				//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
-				dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxNorth];
+				dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxNorth] = dNorth;
 					labelArray[k][indxNorth] = 2;
@@ -2085,10 +2065,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, NorthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dNorth < actionPtr.imageDataPtr[k][indxNorth]) {
-							actionPtr.imageDataPtr[k][indxNorth] = dNorth;
-						}
+					if (dNorth < actionPtr.imageDataPtr[k][indxNorth]) {
+						actionPtr.imageDataPtr[k][indxNorth] = dNorth;
 					}
 				}
 			}
@@ -2096,16 +2074,15 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//West
 		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
-			iminus = i - 1;
-			indxWest = x_new(iminus, j, length);
-			label = labelArray[k][indxWest];
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			size_t label = labelArray[k][indxWest];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
-				coefSpeed = potentialFuncPtr[k][indxWest];
-				//dWest = solve3dQuadratic(x, y, z, coefSpeed);
-				dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxWest];
+				dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxWest] = dWest;
 					labelArray[k][indxWest] = 2;
@@ -2113,10 +2090,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, WestNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dWest < actionPtr.imageDataPtr[k][indxWest]) {
-							actionPtr.imageDataPtr[k][indxWest] = dWest;
-						}
+					if (dWest < actionPtr.imageDataPtr[k][indxWest]) {
+						actionPtr.imageDataPtr[k][indxWest] = dWest;
 					}
 				}
 			}
@@ -2124,16 +2099,15 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//South
 		if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
-			jplus = j + 1;
-			indxSouth = x_new(i, jplus, length);
-			label = labelArray[k][indxSouth];
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			size_t label = labelArray[k][indxSouth];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
-				coefSpeed = potentialFuncPtr[k][indxSouth];
-				//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
-				dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxSouth];
+				dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxSouth] = dSouth;
 					labelArray[k][indxSouth] = 2;
@@ -2141,10 +2115,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, SouthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dSouth < actionPtr.imageDataPtr[k][indxSouth]) {
-							actionPtr.imageDataPtr[k][indxSouth] = dSouth;
-						}
+					if (dSouth < actionPtr.imageDataPtr[k][indxSouth]) {
+						actionPtr.imageDataPtr[k][indxSouth] = dSouth;
 					}
 				}
 			}
@@ -2152,15 +2124,14 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		//Bottom
 		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
-			kplus = k + 1;
-			label = labelArray[kplus][currentIndx];
+			size_t kplus = k + 1;
+			size_t label = labelArray[kplus][currentIndx];
 			if (label != 1) {
-				x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-				y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-				z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
-				coefSpeed = potentialFuncPtr[kplus][currentIndx];
-				//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-				dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType y = select3dY(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
+				dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
 					labelArray[kplus][currentIndx] = 2;
@@ -2168,10 +2139,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 					addPointHeap3D(inProcess, BottomNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dBottom < actionPtr.imageDataPtr[kplus][currentIndx]) {
-							actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
-						}
+					if (dBottom < actionPtr.imageDataPtr[kplus][currentIndx]) {
+						actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
 					}
 				}
 			}
@@ -2180,20 +2149,29 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	}
 
 	//Visualize the front propagation
+	id_save++;
+	string saving_csv = path_saving + to_string(id_save) + ".csv";
+	FILE* frontPoint;
+	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
 	if (savingList.size() > 0) {
-		id_save++;
-		string saving_csv = path_saving + to_string(id_save) + ".csv";
-		FILE* frontPoint;
-		if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-			printf("Enable to open");
-			return false;
-		}
 		for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 			fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 		}
 		savingList.clear();
-		fclose(frontPoint);
 	}
+	fclose(frontPoint);
+
+	////Print the points in the narrow band
+	//if (inProcess.size() > 0) {
+	//	for (size_t i_n = 0; i_n < inProcess.size(); i_n++) {
+	//		fprintf(frontPoint, "%f,%f,%f\n", (dataType)inProcess[i_n].x, (dataType)inProcess[i_n].y, (dataType)inProcess[i_n].z);
+	//	}
+	//}
+	//inProcess.clear();
+	//fclose(frontPoint);
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
@@ -3402,28 +3380,33 @@ Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncP
 
 bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving) {
 
-	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL) {
+	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
 		return false;
 	}
-
+	
 	const size_t length = actionMapStr.length;
 	const size_t width = actionMapStr.width;
 	const size_t height = actionMapStr.height;
 	VoxelSpacing spacing = actionMapStr.spacing;
+	if (seedPoint[0].x < 0 || seedPoint[0].x > length || seedPoint[0].y < 0 || seedPoint[0].y > width || seedPoint[0].z < 0 || seedPoint[0].z > height) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+	if (seedPoint[1].x < 0 || seedPoint[1].x > length || seedPoint[1].y < 0 || seedPoint[1].y > width || seedPoint[1].z < 0 || seedPoint[1].z > height) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
 
 	vector <pointFastMarching3D> inProcess;
 	size_t i = 0, j = 0, k = 0, dim2D = length * width;
 
-	size_t** labelArray = new size_t * [height];
-	dataType** weighted_distance_saving = new dataType * [height];
+	short** labelArray = new short * [height];
 	for (k = 0; k < height; k++) {
-		labelArray[k] = new size_t[dim2D]{ 0 };
-		weighted_distance_saving[k] = new dataType[dim2D]{ 0 };
+		labelArray[k] = new short[dim2D]{ 0 };
 	}
 	if (labelArray == NULL)
 		return false;
 
-	dataType x = 0.0, y = 0.0, z = 0.0;
 	size_t currentIndx = 0;
 
 	//Initialization
@@ -3435,54 +3418,59 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		}
 	}
 
-	//Processed the initial point
 	pointFastMarching3D current;
 	i = (size_t)seedPoint[0].x;
 	j = (size_t)seedPoint[0].y;
 	k = (size_t)seedPoint[0].z;
-	if (i < 0 || i > length || j < 0 || j > width || k < 0 || k > height) {
-		std::cout << "Error in the input seed point" << std::endl;
-		return false;
-	}
 	currentIndx = x_new(i, j, length);
 	actionMapStr.imageDataPtr[k][currentIndx] = 0.0;
 	labelArray[k][currentIndx] = 1;
 
 	double distanceToCurrentSourcePoint = 0.0;
-	Point3D currentSourcePoint = { i, j, k };
+	//Set the starting point as initial source point
+	Point3D currentSourcePoint = { (dataType)i, (dataType)j, (dataType)k };
 	key_points.push_back(currentSourcePoint);
 
 	//find the neighbours of the initial point add add them to inProcess
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
-	size_t kminus = 0, kplus = 0, iminus = 0, iplus = 0, jminus = 0, jplus = 0;
-	size_t indxNorth = 0, indxSouth = 0, indxWest = 0, indxEast = 0;
-	dataType dTop = 0.0, dBottom = 0.0, dNorth = 0.0, dSouth = 0.0, dWest = 0.0, dEast = 0.0, coefSpeed = 0.0;
 
 	//Top
 	if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
-		kminus = k - 1;
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-		coefSpeed = potentialFuncPtr[kminus][currentIndx];
-		//dTop = solve3dQuadratic(x, y, z, coefSpeed);
-		dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t kminus = k - 1;
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+		dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
+		dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D TopNeighbor = { i, j, kminus, dTop };
 		actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
 		inProcess.push_back(TopNeighbor);
 		labelArray[kminus][currentIndx] = 2;
 	}
 
+	//Bottom
+	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
+		size_t kplus = k + 1;
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+		dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
+		dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+		actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+		inProcess.push_back(BottomNeighbor);
+		labelArray[kplus][currentIndx] = 2;
+	}
+
 	//East
 	if (k >= 0 && k < height && j >= 0 && j < width && i < length_minus) {
-		iplus = i + 1;
-		indxEast = x_new(iplus, j, length);
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-		coefSpeed = potentialFuncPtr[k][indxEast];
-		//dEast = solve3dQuadratic(x, y, z, coefSpeed);
-		dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t iplus = i + 1;
+		size_t indxEast = x_new(iplus, j, length);
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxEast];
+		dataType dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D EastNeighbor = { iplus, j, k, dEast };
 		actionMapStr.imageDataPtr[k][indxEast] = dEast;
 		inProcess.push_back(EastNeighbor);
@@ -3491,14 +3479,13 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	//North
 	if (k >= 0 && k < height && j > 0 && i >= 0 && i < length) {
-		jminus = j - 1;
-		indxNorth = x_new(i, jminus, length);
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-		coefSpeed = potentialFuncPtr[k][indxNorth];
-		//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
-		dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t jminus = j - 1;
+		size_t indxNorth = x_new(i, jminus, length);
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxNorth];
+		dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth };
 		actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
 		inProcess.push_back(NorthNeighbor);
@@ -3507,14 +3494,13 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	//West
 	if (k >= 0 && k < height && j >= 0 && j < width && i > 0) {
-		iminus = i - 1;
-		indxWest = x_new(iminus, j, length);
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-		coefSpeed = potentialFuncPtr[k][indxWest];
-		//dWest = solve3dQuadratic(x, y, z, coefSpeed);
-		dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t iminus = i - 1;
+		size_t indxWest = x_new(iminus, j, length);
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxWest];
+		dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D WestNeighbor = { iminus, j, k, dWest };
 		actionMapStr.imageDataPtr[k][indxWest] = dWest;
 		inProcess.push_back(WestNeighbor);
@@ -3523,33 +3509,17 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	//South
 	if (k >= 0 && k < height && j < width_minus && i >= 0 && i < length) {
-		jplus = j + 1;
-		indxSouth = x_new(i, jplus, length);
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-		coefSpeed = potentialFuncPtr[k][indxSouth];
-		//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
-		dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+		size_t jplus = j + 1;
+		size_t indxSouth = x_new(i, jplus, length);
+		dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+		dataType coefSpeed = potentialFuncPtr[k][indxSouth];
+		dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 		pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
 		actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
 		inProcess.push_back(SouthNeighbor);
 		labelArray[k][indxSouth] = 2;
-	}
-
-	//Bottom
-	if (k < height_minus && j >= 0 && j < width && i >= 0 && i < length) {
-		kplus = k + 1;
-		x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-		y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-		z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-		coefSpeed = potentialFuncPtr[kplus][currentIndx];
-		//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-		dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
-		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
-		actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
-		inProcess.push_back(BottomNeighbor);
-		labelArray[kplus][currentIndx] = 2;
 	}
 
 	heapifyVector3D(inProcess);
@@ -3568,7 +3538,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	std::string storing_path;
 	vector<Point3D> savingList;
 	
-	while (inProcess.size() != 0 && labelArray[kEnd][x_new(iEnd, jEnd, length)] != 1) {
+	while (inProcess.size() > 0) {
 
 		//processed the point with minimum distance
 		current = inProcess[0];
@@ -3577,7 +3547,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		k = current.z;
 		currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
-		dataType arrival_for_max = current.arrival;
+
+		//Exit of the while loop if the end point is reached
+		if(currentIndx == x_new(iEnd, jEnd, length) && k == kEnd) {
+			break;
+		}
 		
 		//check if the current point is a key point
 		Point3D pSource = { i, j, k };
@@ -3597,10 +3571,10 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 			}
-			//savingList.clear();
+			savingList.clear();
 			fclose(frontPoint);
 
-			//If the condtion is true ---> new key point is found so we need to initilize it neighbors
+			//If the condition is true ---> new key point is found so we need to initilize it neighbors
 			currentSourcePoint = pSource;
 			key_points.push_back(currentSourcePoint);
 			actionMapStr.imageDataPtr[k][currentIndx] = 0;
@@ -3608,16 +3582,24 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			//Top
 			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) 
 			{
-				kminus = k - 1;
+				size_t kminus = k - 1;
 				actionMapStr.imageDataPtr[kminus][currentIndx] = INFINITY;
 				labelArray[kminus][currentIndx] = 3;
+			}
+
+			//Bottom
+			if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width)
+			{
+				size_t kplus = k + 1;
+				actionMapStr.imageDataPtr[kplus][currentIndx] = INFINITY;
+				labelArray[kplus][currentIndx] = 3;
 			}
 
 			//East
 			if(i < length_minus && j >= 0 && j < width && k >= 0 && k < height)
 			{
-				iplus = i + 1;
-				indxEast = x_new(iplus, j, length);
+				size_t iplus = i + 1;
+				size_t indxEast = x_new(iplus, j, length);
 				actionMapStr.imageDataPtr[k][indxEast] = INFINITY;
 				labelArray[k][indxEast] = 3;
 			}
@@ -3625,8 +3607,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			//North
 			if (j > 0 && i >= 0 && i < length && k >= 0 && k < height)
 			{
-				jminus = j - 1;
-				indxNorth = x_new(i, jminus, length);
+				size_t jminus = j - 1;
+				size_t indxNorth = x_new(i, jminus, length);
 				actionMapStr.imageDataPtr[k][indxNorth] = INFINITY;
 				labelArray[k][indxNorth] = 3;
 			}
@@ -3634,8 +3616,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			//West
 			if (i > 0 && j >= 0 && j < width && k >= 0 && k < height)
 			{
-				iminus = i - 1;
-				indxWest = x_new(iminus, j, length);
+				size_t iminus = i - 1;
+				size_t indxWest = x_new(iminus, j, length);
 				actionMapStr.imageDataPtr[k][indxWest] = INFINITY;
 				labelArray[k][indxWest] = 3;
 			}
@@ -3643,20 +3625,12 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			//South
 			if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height)
 			{
-				jplus = j + 1;
-				indxSouth = x_new(i, jplus, length);
+				size_t jplus = j + 1;
+				size_t indxSouth = x_new(i, jplus, length);
 				actionMapStr.imageDataPtr[k][indxSouth] = INFINITY;
 				labelArray[k][indxSouth] = 3;
 			}
 
-			//Bottom
-			if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width)
-			{
-				kplus = k + 1;
-				actionMapStr.imageDataPtr[kplus][currentIndx] = INFINITY;
-				labelArray[kplus][currentIndx] = 3;
-			}
-			
 			inProcess.clear();
 			id_keyPoint++;
 
@@ -3666,24 +3640,18 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			deleteRootHeap3D(inProcess);
 		}
 
-		if (arrival_for_max > max_weighted_distance) {
-			max_weighted_distance = arrival_for_max;
-		}
-		
-
 		//====================
 		//processed neighbors of the minimum in the narrow band
 		//Top
 		if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) {
-			kminus = k - 1;
-			label = labelArray[kminus][currentIndx];
+			size_t kminus = k - 1;
+			size_t label = labelArray[kminus][currentIndx];
 			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
-				coefSpeed = potentialFuncPtr[kminus][currentIndx];
-				//dTop = solve3dQuadratic(x, y, z, coefSpeed);
-				dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kminus);
+				dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
+				dataType dTop = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					labelArray[kminus][currentIndx] = 2;
 					actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
@@ -3691,10 +3659,32 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 					addPointHeap3D(inProcess, TopNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dTop < actionMapStr.imageDataPtr[kminus][currentIndx]) {
-							actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
-						}
+					if (dTop < actionMapStr.imageDataPtr[kminus][currentIndx]) {
+						actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+					}
+				}
+			}
+		}
+
+		//Bottom
+		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
+			size_t kplus = k + 1;
+			size_t label = labelArray[kplus][currentIndx];
+			if (label != 1) {
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
+				dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
+				dataType dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				if (label == 3) {
+					labelArray[kplus][currentIndx] = 2;
+					actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+					pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
+					addPointHeap3D(inProcess, BottomNeighbor);
+				}
+				else {
+					if (dBottom < actionMapStr.imageDataPtr[kplus][currentIndx]) {
+						actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
 					}
 				}
 			}
@@ -3702,16 +3692,15 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 		//East
 		if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
-			iplus = i + 1;
-			indxEast = x_new(iplus, j, length);
-			label = labelArray[k][indxEast];
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			size_t label = labelArray[k][indxEast];
 			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
-				coefSpeed = potentialFuncPtr[k][indxEast];
-				//dEast = solve3dQuadratic(x, y, z, coefSpeed);
-				dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iplus, j, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxEast];
+				dataType dEast = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					labelArray[k][indxEast] = 2;
 					actionMapStr.imageDataPtr[k][indxEast] = dEast;
@@ -3720,10 +3709,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 				}
 				else {
-					if (label == 2) {
-						if (dEast < actionMapStr.imageDataPtr[k][indxEast]) {
-							actionMapStr.imageDataPtr[k][indxEast] = dEast;
-						}
+					if (dEast < actionMapStr.imageDataPtr[k][indxEast]) {
+						actionMapStr.imageDataPtr[k][indxEast] = dEast;
 					}
 				}
 			}
@@ -3731,16 +3718,15 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 		//North
 		if (j > 0 && i >= 0 && i < length && k >= 0 && k < height) {
-			jminus = j - 1;
-			indxNorth = x_new(i, jminus, length);
-			label = labelArray[k][indxNorth];
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			size_t label = labelArray[k][indxNorth];
 			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
-				coefSpeed = potentialFuncPtr[k][indxNorth];
-				//dNorth = solve3dQuadratic(x, y, z, coefSpeed);
-				dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jminus, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxNorth];
+				dataType dNorth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					labelArray[k][indxNorth] = 2;
 					actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
@@ -3748,10 +3734,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 					addPointHeap3D(inProcess, NorthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dNorth < actionMapStr.imageDataPtr[k][indxNorth]) {
-							actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
-						}
+					if (dNorth < actionMapStr.imageDataPtr[k][indxNorth]) {
+						actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
 					}
 				}
 			}
@@ -3759,16 +3743,15 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 		//West
 		if (i > 0 && j >= 0 && j < width && k >= 0 && k < height) {
-			iminus = i - 1;
-			indxWest = x_new(iminus, j, length);
-			label = labelArray[k][indxWest];
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			size_t label = labelArray[k][indxWest];
 			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
-				coefSpeed = potentialFuncPtr[k][indxWest];
-				//dWest = solve3dQuadratic(x, y, z, coefSpeed);
-				dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, iminus, j, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxWest];
+				dataType dWest = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					labelArray[k][indxWest] = 2;
 					actionMapStr.imageDataPtr[k][indxWest] = dWest;
@@ -3776,10 +3759,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 					addPointHeap3D(inProcess, WestNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dWest < actionMapStr.imageDataPtr[k][indxWest]) {
-							actionMapStr.imageDataPtr[k][indxWest] = dWest;
-						}
+					if (dWest < actionMapStr.imageDataPtr[k][indxWest]) {
+						actionMapStr.imageDataPtr[k][indxWest] = dWest;
 					}
 				}
 			}
@@ -3787,16 +3768,15 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 		//South
 		if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
-			jplus = j + 1;
-			indxSouth = x_new(i, jplus, length);
-			label = labelArray[k][indxSouth];
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			size_t label = labelArray[k][indxSouth];
 			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				coefSpeed = potentialFuncPtr[k][indxSouth];
-				//dSouth = solve3dQuadratic(x, y, z, coefSpeed);
-				dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
+				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+				dataType coefSpeed = potentialFuncPtr[k][indxSouth];
+				dataType dSouth = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
 				if (label == 3) {
 					labelArray[k][indxSouth] = 2;
 					actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
@@ -3804,37 +3784,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 					addPointHeap3D(inProcess, SouthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
-							actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
-						}
-					}
-				}
-			}
-		}
-
-		//Bottom
-		if (k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
-			kplus = k + 1;
-			label = labelArray[kplus][currentIndx];
-			if (label != 1) {
-				x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-				y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-				z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, j, kplus);
-				coefSpeed = potentialFuncPtr[kplus][currentIndx];
-				//dBottom = solve3dQuadratic(x, y, z, coefSpeed);
-				dBottom = solve3dQuadraticFastMarching(x, y, z, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[kplus][currentIndx] = 2;
-					actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
-					pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom };
-					addPointHeap3D(inProcess, BottomNeighbor);					
-				}
-				else {
-					if (label == 2) {
-						if (dBottom < actionMapStr.imageDataPtr[kplus][currentIndx]) {
-							actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
-						}
+					if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
+						actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
 					}
 				}
 			}
@@ -3879,10 +3830,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
-		delete[] weighted_distance_saving[k];
 	}
 	delete[] labelArray;
-	delete[] weighted_distance_saving;
 
 	return true;
 }
