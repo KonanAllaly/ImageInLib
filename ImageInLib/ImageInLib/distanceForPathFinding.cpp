@@ -3813,21 +3813,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	savingList.clear();
 	fclose(frontPoint);
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
-	//			actionMapStr.imageDataPtr[k][i] = 0;
-	//			weighted_distance_saving[k][i] = 0;
-	//		}
-	//		else {
-	//			weighted_distance_saving[k][i] = actionMapStr.imageDataPtr[k][i];
-	//		}
-	//	}
-	//}
-	//id_keyPoint++;
-	//storing_path = root_path + "weighted distance/diff/action_" + std::to_string(id_keyPoint) + ".raw";
-	//manageRAWFile3D<dataType>(weighted_distance_saving, length, width, height, storing_path.c_str(), STORE_DATA, false);
-
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
 	}
