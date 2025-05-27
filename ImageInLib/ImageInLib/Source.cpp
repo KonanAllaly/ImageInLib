@@ -52,7 +52,6 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
-	//loading_path = inputPath + "vtk/petct/aorta/AortaPatient3.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -4000,11 +3999,13 @@ int main() {
 	
 	/*
 	dataType** inputImageData = new dataType * [Height];
+	dataType** maskThreshold = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		inputImageData[k] = new dataType[dim2D]{ 0 };
+		maskThreshold[k] = new dataType[dim2D]{ 0 };
 	}
 	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	const size_t height = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
 	dataType** imageData = new dataType * [height];
@@ -4016,13 +4017,13 @@ int main() {
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
 
-	Image_Data inputImageStr = { Height, Length, Width, inputImageData, ctOrigin, ctSpacing, orientation };
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	Image_Data imageStr = { height, Length, Width, imageData, ctOrigin, intSpacing, orientation };
-	//imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
-	////imageInterpolation3D(inputImageStr, imageStr, NEAREST_NEIGHBOR);
-	storing_path = outputPath + "interpolated_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
+	//Image_Data inputImageStr = { Height, Length, Width, inputImageData, ctOrigin, ctSpacing, orientation };
+	//VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	Image_Data imageStr = { Height, Length, Width, inputImageData, ctOrigin, ctSpacing, orientation };
+	////imageInterpolation3D(inputImageStr, imageStr, TRILINEAR);
+	//////imageInterpolation3D(inputImageStr, imageStr, NEAREST_NEIGHBOR);
+	//storing_path = outputPath + "interpolated_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	////real image p1
 	//Point3D seed1 = { 261, 257, 311 };
@@ -4030,11 +4031,11 @@ int main() {
 
 	//Patient 1
 	Point3D seed1 = { 262, 258, 146 };
-	seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
-	seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
+	//seed1 = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//seed1 = getImageCoordFromRealCoord3D(seed1, ctOrigin, intSpacing, orientation);
 	Point3D seed2 = { 266, 256, 245 };
-	seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
-	seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
+	//seed2 = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//seed2 = getImageCoordFromRealCoord3D(seed2, ctOrigin, intSpacing, orientation);
 
 	////Patient 2
 	//Point3D seed1 = { 257, 254, 249 };
@@ -4079,7 +4080,6 @@ int main() {
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
-
 	double radius = 3.0;
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
@@ -4088,155 +4088,441 @@ int main() {
 		radius
 	};
 	//compute3DPotential(imageStr, potential, endPoints, parameters);
-
-	storing_path = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, height, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	vector<Point3D> key_points;
-	const double LengthKeyPoints = 50;
+	const double LengthKeyPoints = 35;
 	
-	Image_Data actionMapStr = { height, Length, Width, action, ctOrigin, intSpacing, orientation };
-	storing_path = outputPath + "partial front/p1/action_";
-	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	//storing_path = outputPath + "key points/p1/action_";
-	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
+	Image_Data actionMapStr = { height, Length, Width, action, ctOrigin, ctSpacing, orientation };
+	//storing_path = outputPath + "partial action/p1/action_";
+	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	storing_path = outputPath + "partial action/key points/p1/action_";
+	frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 
-	////Save the keys points in files
-	string saving_csv = outputPath + "seed_p6.csv";
-	key_points.push_back(seed1);
-	key_points.push_back(seed2);
-	//string saving_csv = outputPath + "key_points_p1.csv";
-	FILE* f_key_point;
-	if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	for (int n = 0; n < key_points.size(); n++) {
-		key_points[n] = getRealCoordFromImageCoord3D(key_points[n], ctOrigin, intSpacing, orientation);
-		fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
-	}
-	fclose(f_key_point);
+	//////Save the keys points in files
+	//string saving_csv = outputPath + "seed_p4.csv";
+	//key_points.push_back(seed1);
+	//key_points.push_back(seed2);
+	////string saving_csv = outputPath + "key_points_p1.csv";
+	//FILE* f_key_point;
+	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//for (int n = 0; n < key_points.size(); n++) {
+	//	key_points[n] = getRealCoordFromImageCoord3D(key_points[n], ctOrigin, intSpacing, orientation);
+	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
+	//}
+	//fclose(f_key_point);
 	key_points.clear();
+
+	//copyDataToAnotherArray(ctContainer->dataPointer, maskThreshold, Height, Length, Width);
+	//thresholding3dFunctionN(maskThreshold, Length, Width, Height, -50, 200, 0.0, 1.0);
+	//Image_Data toDistanceMap = { Height, Length, Width, maskThreshold, ctOrigin, ctSpacing, orientation };
+	//fastMarching3dForDistanceMap(toDistanceMap, inputImageData, 0.0);
+	//storing_path = outputPath + "distance_map.raw";
+	//manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	
 	delete[] endPoints;
 	for (k = 0; k < height; k++) {
 		if (k < Height) {
 			delete[] inputImageData[k];
+			delete[] maskThreshold[k];
 		}
 		delete[] imageData[k];
 		delete[] action[k];
 		delete[] potential[k];
 	}
 	delete[] inputImageData;
+	delete[] maskThreshold;
 	delete[] imageData;
 	delete[] action;
 	delete[] potential;
 	free(ctContainer);
 	*/
-	
-	
+
+	/*
 	//Artificial image
 	const size_t Height = 40, Width = 100, Length = 100;
 	const size_t dim2D = Length * Width;
 	dataType** imageData = new dataType * [Height];
+	dataType** imageDataNew = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
+		imageDataNew[k] = new dataType[dim2D]{ 0 };
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
 	//loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
 	//loading_path = inputPath + "shape/spiral/spiral.raw";
-	loading_path = inputPath + "shape/tube3D.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	////create 3D tubular tube
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			Point3D pCenter = { i, j, k };
-	//			if (i == j) {
-	//				for(size_t in = 0; in < Length; in++) {
-	//					for (size_t jn = 0; jn < Width; jn++) {
-	//						Point3D current_point = { in, jn, k };
-	//						double pDistance = getPoint3DDistance(current_point, pCenter);
-	//						if (pDistance < 8) {
-	//							imageData[k][x_new(in, jn, Length)] = 1.0;
-	//						}
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//storing_path = outputPath + "tube.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//loading_path = inputPath + "shape/tube3D.raw";
+	//loading_path = inputPath + "shape/empty_tube_with_holes.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 	
-	////input 1
+	//Generate 3D tube
+	double radius = 9.0;
+	double sRadius = 5.0;
+	double step = 2 * M_PI / 1000;
+	double phi, theta;
+	dataType coord_x, coord_y, coord_z;
+	size_t ind_x, ind_y, ind_z;
+	size_t k_center = 20;
+	for (i = 11; i < Length - 11; i++) {
+		for (j = 11; j < Width - 11; j++) {
+			if (i == j) {
+				Point3D pCenter = { i, j, k_center };
+				for (size_t it = 0; it < 1000; it++) {
+					for (size_t jt = 0; jt < 1000; jt++) {
+						phi = it * step;
+						theta = jt * step;
+						coord_x = pCenter.x + radius * cos(phi) * sin(theta);
+						coord_y = pCenter.y + radius * sin(phi) * sin(theta);
+						coord_z = pCenter.z + radius * cos(theta);
+						if(coord_x < 0) {
+							ind_x = 0;
+						}
+						else {
+							if (coord_x > Length) {
+								ind_x = Length - 1;
+							}
+							else {
+								ind_x = (size_t)coord_x;
+							}
+						}
+						if (coord_y < 0) {
+							ind_y = 0;
+						}
+						else {
+							if (coord_y > Width) {
+								ind_y = Width - 1;
+							}
+							else {
+								ind_y = (size_t)coord_y;
+							}
+						}
+						if (coord_z < 0) {
+							ind_z = 0;
+						}
+						else {
+							if (coord_z > Height) {
+								ind_z = Height - 1;
+							}
+							else {
+								ind_z = (size_t)coord_z;
+							}
+						}
+						imageData[ind_z][x_new(ind_x, ind_y, Length)] = 1.0;
+					}
+				}
+			}
+		}
+	}
+
+	//Empty the tube using gradient
+	dataType gradx, grady, gradz;
+	for (k = 0; k < Height; k++) {
+		for(i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				xd = x_new(i, j, Length);
+				if (i == 0) {
+					gradx = (imageData[k][x_new(i + 1, j, Length)] - imageData[k][x_new(i, j, Length)]) / 2.0;
+				}
+				else {
+					if(i == Length - 1) {
+						gradx = (imageData[k][x_new(i, j, Length)] - imageData[k][x_new(i - 1, j, Length)]) / 2.0;
+					}
+					else {
+						gradx = (imageData[k][x_new(i + 1, j, Length)] - imageData[k][x_new(i - 1, j, Length)]) / 2.0;
+					}
+				}
+				if (j == 0) {
+					grady = (imageData[k][x_new(i, j + 1, Length)] - imageData[k][x_new(i, j, Length)]) / 2.0;
+				}
+				else {
+					if(j == Width - 1) {
+						grady = (imageData[k][x_new(i, j, Length)] - imageData[k][x_new(i, j - 1, Length)]) / 2.0;
+					}
+					else {
+						grady = (imageData[k][x_new(i, j + 1, Length)] - imageData[k][x_new(i, j - 1, Length)]) / 2.0;
+					}
+				}
+				if (k == 0) {
+					gradz = (imageData[k + 1][xd] - imageData[k][xd]) / 2.0;
+				}
+				else {
+					if (k == Height - 1) {
+						gradz = (imageData[k][xd] - imageData[k - 1][xd]) / 2.0;
+					}
+					else {
+						gradz = (imageData[k + 1][xd] - imageData[k - 1][xd]) / 2.0;
+					}
+				}
+				double norm_gradient = sqrt(gradx * gradx + grady * grady + gradz * gradz);
+				if(norm_gradient != 0.0 ) {
+					imageDataNew[k][xd] = 1.0;
+				}
+				else {
+					imageDataNew[k][xd] = 0.0;
+				}
+			}
+		}
+	}
+	
+	//Generate holes in the empty tube
+	Point3D pCenter = { 50, 50, k_center };
+	for (size_t it = 0; it < 1000; it++) {
+		for (size_t jt = 0; jt < 1000; jt++) {
+			phi = it * step;
+			theta = jt * step;
+			//first holes
+			coord_x = pCenter.x + radius * cos(phi) * sin(theta);
+			coord_y = pCenter.y + radius * sin(phi) * sin(theta);
+			coord_z = pCenter.z + radius * cos(theta);
+			double X = sqrt(((coord_x - pCenter.x) * (coord_x - pCenter.x) + (coord_y - pCenter.y) * (coord_y - pCenter.y)));
+			//double Y = sqrt(((coord_x - pCenter.x) * (coord_x - pCenter.x) + (coord_z - pCenter.z) * (coord_z - pCenter.z)));
+			//double Z = sqrt(((coord_z - pCenter.z) * (coord_z - pCenter.z) + (coord_y - pCenter.y) * (coord_y - pCenter.y)));
+			if (X <= sRadius) {
+				if (coord_x < 0) {
+					ind_x = 0;
+				}
+				else {
+					if (coord_x > Length) {
+						ind_x = Length - 1;
+					}
+					else {
+						ind_x = (size_t)coord_x;
+					}
+				}
+				if (coord_y < 0) {
+					ind_y = 0;
+				}
+				else {
+					if (coord_y > Width) {
+						ind_y = Width - 1;
+					}
+					else {
+						ind_y = (size_t)coord_y;
+					}
+				}
+				if (coord_z < 0) {
+					ind_z = 0;
+				}
+				else {
+					if (coord_z > Height) {
+						ind_z = Height - 1;
+					}
+					else {
+						ind_z = (size_t)coord_z;
+					}
+				}
+				imageDataNew[ind_z][x_new(ind_x, ind_y, Length)] = 0.0;
+			}
+			pCenter.x = 50;
+			pCenter.y = 50;
+			pCenter.z = 21;
+			coord_x = pCenter.x + radius * cos(phi) * sin(theta);
+			coord_y = pCenter.y + radius * sin(phi) * sin(theta);
+			coord_z = pCenter.z + radius * cos(theta);
+			X = sqrt(((coord_x - pCenter.x) * (coord_x - pCenter.x) + (coord_y - pCenter.y) * (coord_y - pCenter.y)));
+			if (X <= sRadius) {
+				if (coord_x < 0) {
+					ind_x = 0;
+				}
+				else {
+					if (coord_x > Length) {
+						ind_x = Length - 1;
+					}
+					else {
+						ind_x = (size_t)coord_x;
+					}
+				}
+				if (coord_y < 0) {
+					ind_y = 0;
+				}
+				else {
+					if (coord_y > Width) {
+						ind_y = Width - 1;
+					}
+					else {
+						ind_y = (size_t)coord_y;
+					}
+				}
+				if (coord_z < 0) {
+					ind_z = 0;
+				}
+				else {
+					if (coord_z > Height) {
+						ind_z = Height - 1;
+					}
+					else {
+						ind_z = (size_t)coord_z;
+					}
+				}
+				imageDataNew[ind_z][x_new(ind_x, ind_y, Length)] = 0.0;
+			}
+			pCenter.x = 50;
+			pCenter.y = 50;
+			pCenter.z = 19;
+			coord_x = pCenter.x + radius * cos(phi) * sin(theta);
+			coord_y = pCenter.y + radius * sin(phi) * sin(theta);
+			coord_z = pCenter.z + radius * cos(theta);
+			X = sqrt(((coord_x - pCenter.x) * (coord_x - pCenter.x) + (coord_y - pCenter.y) * (coord_y - pCenter.y)));
+			if (X <= sRadius) {
+				if (coord_x < 0) {
+					ind_x = 0;
+				}
+				else {
+					if (coord_x > Length) {
+						ind_x = Length - 1;
+					}
+					else {
+						ind_x = (size_t)coord_x;
+					}
+				}
+				if (coord_y < 0) {
+					ind_y = 0;
+				}
+				else {
+					if (coord_y > Width) {
+						ind_y = Width - 1;
+					}
+					else {
+						ind_y = (size_t)coord_y;
+					}
+				}
+				if (coord_z < 0) {
+					ind_z = 0;
+				}
+				else {
+					if (coord_z > Height) {
+						ind_z = Height - 1;
+					}
+					else {
+						ind_z = (size_t)coord_z;
+					}
+				}
+				imageDataNew[ind_z][x_new(ind_x, ind_y, Length)] = 0.0;
+			}
+			//third holes
+			pCenter.x = 49;
+			pCenter.y = 50;
+			pCenter.z = 20;
+			coord_x = pCenter.x + radius * cos(phi) * sin(theta);
+			coord_y = pCenter.y + radius * sin(phi) * sin(theta);
+			coord_z = pCenter.z + radius * cos(theta);
+			X = sqrt(((coord_x - pCenter.x) * (coord_x - pCenter.x) + (coord_y - pCenter.y) * (coord_y - pCenter.y)));
+			if (X <= sRadius) {
+				if (coord_x < 0) {
+					ind_x = 0;
+				}
+				else {
+					if (coord_x > Length) {
+						ind_x = Length - 1;
+					}
+					else {
+						ind_x = (size_t)coord_x;
+					}
+				}
+				if (coord_y < 0) {
+					ind_y = 0;
+				}
+				else {
+					if (coord_y > Width) {
+						ind_y = Width - 1;
+					}
+					else {
+						ind_y = (size_t)coord_y;
+					}
+				}
+				if (coord_z < 0) {
+					ind_z = 0;
+				}
+				else {
+					if (coord_z > Height) {
+						ind_z = Height - 1;
+					}
+					else {
+						ind_z = (size_t)coord_z;
+					}
+				}
+				imageDataNew[ind_z][x_new(ind_x, ind_y, Length)] = 0.0;
+			}
+		}
+	}
+
+	storing_path = outputPath + "tube.raw";
+	manageRAWFile3D<dataType>(imageDataNew, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	////spiral 2 turns
 	//Point3D seed1 = { 82, 54, 8 };
 	//Point3D seed2 = { 81, 45, 85 };
 
-	////input 2
+	////spiral one turn
 	//Point3D seed1 = { 81, 51, 15 };
 	//Point3D seed2 = { 81, 47, 88 };
 
 	//diagonal tube
-	Point3D seed1 = { 89, 90, 24 };
-	Point3D seed2 = { 9, 9, 16 };
+	Point3D seed1 = { 90, 89, 19 };
+	Point3D seed2 = { 14, 12, 16 };
 
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
 
-	double radius = 3.0;
+	double radius_potential = 3.0;
 	Potential_Parameters parameters{
 		1,//1000, //edge detector coefficient
 		1,//0.15, //threshold
-		0.01,//epsilon
-		radius
+		0.001,//epsilon
+		radius_potential
 	};
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
-	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
+	Image_Data imageStr = { Height, Length, Width, imageDataNew, iOrigin, iSpacing, orientation };
 	compute3DPotential(imageStr, potential, endPoints, parameters);
 
-	//storing_path = outputPath + "potential_artificial_img2.raw";
-	////manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "potential.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
-	key_points.push_back(seed1);
-	key_points.push_back(seed2);
-	const double LengthKeyPoints = 10;
+	const double LengthKeyPoints = 15;
 
-	storing_path = outputPath + "partial action/N/action_";
+	storing_path = outputPath + "partial action/pot1/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
 	////frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	
-	//Save the keys points in files
-	string saving_csv = outputPath + "endpoints.csv";
-	FILE* f_key_point;
-	if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	for (int n = 0; n < key_points.size(); n++) {
-		fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
-	}
-	fclose(f_key_point);
-	key_points.clear();
+
+	////key_points.clear();
+	//key_points.push_back(seed1);
+	//key_points.push_back(seed2);
+	////Save the keys points in files
+	//string saving_csv = outputPath + "endpoints_spiral.csv";
+	//FILE* f_key_point;
+	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//for (int n = 0; n < key_points.size(); n++) {
+	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
+	//}
+	//fclose(f_key_point);
+	//key_points.clear();
 
 	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
 		delete[] imageData[k];
+		delete[] imageDataNew[k];
 		delete[] action[k];
 		delete[] potential[k];
 	}
 	delete[] imageData;
+	delete[] imageDataNew;
 	delete[] action;
 	delete[] potential;
-	
+	*/
 
     /*
 	//2D experiments
@@ -4334,6 +4620,40 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	*/
+
+	//2D real images
+	const size_t Length = 512;
+	const size_t Width = 512;
+	dataType* imageData = new dataType[Length * Width]{ 0 };
+	dataType* smoothedImage = new dataType[Length * Width]{ 0 };
+	dataType* potential = new dataType[Length * Length]{ 0 };
+	dataType* action = new dataType[Length * Width]{ 0 };
+
+	loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
+	
+	const dataType sigma = 1.0;
+	gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
+	rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
+
+	Point2D* endPoints = new Point2D[2];
+	endPoints[0] = { 172, 32.0 };
+	endPoints[1] = { 357.0 , 456.0 };
+
+	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0} };
+	Point2D iOrigin = { 0.0, 0.0 };
+	PixelSpacing spacing = { 1.0, 1.0 };
+	Image_Data2D imageDataStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
+	computePotential(imageDataStr, potential, endPoints);
+
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	delete[] endPoints;
+	delete[] imageData;
+	delete[] smoothedImage;
+	delete[] potential;
+	delete[] action;
 
 	//==================== Aorta bifurcation detection ===================================
 	

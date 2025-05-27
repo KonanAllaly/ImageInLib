@@ -18,10 +18,6 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y;
-	} point2D;
-
-	typedef struct {
-		size_t x, y;
 		dataType arrival;
 	}pointFastMarching2D;
 
@@ -42,10 +38,6 @@ using namespace std;
 		size_t max_iteration; // maximal iteration to stop descent gradient
 		double tolerance; //minimal distance to stop
 	} Path_Parameters;
-
-	typedef struct {
-		dataType lamba_1, lambda_2, lamba_3;// The values are sorted, lambda_1 >= lambda_2 >= lambda_3
-	} eigenVector3D;
 
 	// 2D functions
 
@@ -90,6 +82,17 @@ using namespace std;
 	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 
 	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="imageData"></param>
+	/// <param name="distancePtr"></param>
+	/// <param name="potentialPtr"></param>
+	/// <param name="endPoints"></param>
+	/// <param name="savingPath"></param>
+	/// <returns></returns>
+	bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints, string savingPath);
+
+	/// <summary>
 	/// compute arrival time for each point in given image, given starting point and given local speed
 	/// </summary>
 	/// <param name="imageDataPtr">input image</param>
@@ -100,8 +103,6 @@ using namespace std;
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
 	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
-
-	bool partialFrontPropagation2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
 
 	//fast marching functions
 
@@ -321,8 +322,7 @@ using namespace std;
 	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
 
 	//bool partialPropagation(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
-
-	bool partialPropagationWithSpacing(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, Point3D* seedPoints, const double maxLength);
+	//bool partialPropagationWithSpacing(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, Point3D* seedPoints, const double maxLength);
 
 	bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
 
@@ -333,7 +333,7 @@ using namespace std;
 //#endif
 
 
-	bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
+	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
 
 	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
 
@@ -355,7 +355,7 @@ using namespace std;
 
 	//==================================
 
-	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr);
+	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D seedPoint, const double LengthKeyPoints);
 
