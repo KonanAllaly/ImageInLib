@@ -1162,70 +1162,63 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 		return false;
 	}
 
-	size_t i = 0, k = 0;
+	size_t i = 0, j = 0, k = 0, xd = 0;
 	const size_t height = ctImageData.height;
 	const size_t length = ctImageData.length;
 	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
 
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	dataType** distance = new dataType * [height];
-	dataType** edgeDetector = new dataType * [height];
 	dataType** maskThreshold = new dataType * [height];
+	dataType** distance = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2D]{ 0 };
-		gradientVectorY[k] = new dataType[dim2D]{ 0 };
-		gradientVectorZ[k] = new dataType[dim2D]{ 0 };
 		distance[k] = new dataType[dim2D]{ 0 };
-		edgeDetector[k] = new dataType[dim2D]{ 0 };
 		maskThreshold[k] = new dataType[dim2D]{ 0 };
 	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL || distance == NULL || edgeDetector == NULL || maskThreshold == NULL)
+	if (distance == NULL || maskThreshold == NULL)
 		return false;
 
-	dataType norm_of_gradient = 0.0;;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0;
+	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
+	bool isGradientComputed = false;
+	Point3D grad_vector;
 
-	compute3dImageGradient(ctImageData.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, ctImageData.spacing);
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			ux = gradientVectorX[k][i];
-			uy = gradientVectorY[k][i];
-			uz = gradientVectorZ[k][i];
-			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-			edgeDetector[k][i] = gradientFunction(norm_of_gradient, parameters.K);
-			//threshold : real image
-			if (edgeDetector[k][i] < parameters.thres) {
-				maskThreshold[k][i] = 0.0;
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				//Threshold
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 0.0;
+				}
+				else {
+					maskThreshold[k][xd] = 1.0;
+				}
+				////threshold artificial image
+				//if (norm_of_gradient != 0.0) {
+				//	maskThreshold[k][xd] = 1.0;
+				//}
+				//else {
+				//	maskThreshold[k][xd] = 0.0;
+				//}
 			}
-			else {
-				maskThreshold[k][i] = 1.0;
-			}
-			////threshold artificial image
-			//if (norm_of_gradient != 0.0) {
-			//	maskThreshold[k][i] = 1.0;
-			//}
-			//else {
-			//	maskThreshold[k][i] = 0.0;
-			//}
 		}
 	}
-	//fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-	//////Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, NULL };
-	//////rouyTourinDistanceMap(toDistanceMap, distance, 1.0, 0.4, 0.5);
-	//////fastSweepingFunction_3D(distance, ctImageData.imageDataPtr, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-	////rouyTourinDistanceMap(ctImageData, distance, 0.0, 0.4, 0.5);
 
-	fastSweepingFunction_3D(distance, maskThreshold, length, width, height, ctImageData.spacing.sx, 10000000.0, 0.0);
-	//Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_rt.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
@@ -1257,25 +1250,15 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
+			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
 			potential[k][i] = (parameters.eps + potential[k][i] / maxImage) * weight_dist;
-			//potential[k][i] = weight_dist * (parameters.eps + potential[k][i] / maxImage);
-			//potential[k][i] = weight_dist * potential[k][i];
 		}
 	}
 
 	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-		delete[] edgeDetector[k];
 		delete[] maskThreshold[k];
 		delete[] distance[k];
 	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
-	delete[] edgeDetector;
 	delete[] maskThreshold;
 	delete[] distance;
 
@@ -1606,7 +1589,7 @@ bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, c
 	return true;
 }
 
-bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, dataType tolerance, vector<Point3D>& path_points) {
+bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
 
 	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
 		return false;
@@ -1616,49 +1599,7 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, 
 	const size_t height = actionMapStr.height;
 	VoxelSpacing spacing = actionMapStr.spacing;
 
-	size_t i = 0, j = 0, k = 0, xd = 0, dim2D = length * width;
-
-	//estimate the max number of iterations
-	Point3D pEnd = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
-	Point3D pStart = getRealCoordFromImageCoord3D(seedPoints[1], actionMapStr.origin, spacing, actionMapStr.orientation);
-	double totalLenght = getPoint3DDistance(pEnd, pStart);
-	size_t max_iter = 1000;
-
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType[dim2D];
-		gradientVectorY[k] = new dataType[dim2D];
-		gradientVectorZ[k] = new dataType[dim2D];
-		if (gradientVectorX[k] == NULL || gradientVectorY[k] == NULL || gradientVectorZ[k] == NULL)
-			return false;
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-
-	//Normalization of the gradient
-	compute3dImageGradient(actionMapStr.imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, spacing);
-
-	dataType ux = 0.0, uy = 0.0, uz = 0.0, norm_of_gradient = 0.0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			ux = gradientVectorX[k][i];
-			uy = gradientVectorY[k][i];
-			uz = gradientVectorZ[k][i];
-			norm_of_gradient = sqrt(ux * ux + uy * uy + uz * uz);
-			if (norm_of_gradient != 0) {
-				gradientVectorX[k][i] = (dataType)(ux / norm_of_gradient);
-				gradientVectorY[k][i] = (dataType)(uy / norm_of_gradient);
-				gradientVectorZ[k][i] = (dataType)(uz / norm_of_gradient);
-			}
-			else {
-				gradientVectorX[k][i] = 0;
-				gradientVectorY[k][i] = 0;
-				gradientVectorZ[k][i] = 0;
-			}
-		}
-	}
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
 
 	//Find the closest point till the last point
 	i = (size_t)seedPoints[1].x;
@@ -1666,46 +1607,53 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, 
 	k = (size_t)seedPoints[1].z;
 	size_t currentIndx = x_new(i, j, length);
 
-	dataType iNew = seedPoints[1].x;
-	dataType jNew = seedPoints[1].y;
-	dataType kNew = seedPoints[1].z;
+	dataType x = seedPoints[1].x;
+	dataType y = seedPoints[1].y;
+	dataType z = seedPoints[1].z;
 	double dist_to_end = 0.0;
 
 	size_t count_iter = 1;
-
 	Point3D final_point = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
 
+	bool isGradientComputed = false;
+	Point3D grad_vector;
+	dataType norm_of_gradient = 0.0;
 	do {
 
-		currentIndx = x_new(i, j, length);
+		isGradientComputed = getGradient3D(actionMapStr, i, j, k, &grad_vector);
+		if (isGradientComputed == true) {
+			norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+		}
+		else {
+			std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+			return false;
+		}
 
-		iNew = iNew - tau * gradientVectorX[k][currentIndx];
-		jNew = jNew - tau * gradientVectorY[k][currentIndx];
-		kNew = kNew - tau * gradientVectorZ[k][currentIndx];
+		x -= parameters.tau * (grad_vector.x / norm_of_gradient);
+		y -= parameters.tau * (grad_vector.y / norm_of_gradient);
+		z -= parameters.tau * (grad_vector.z / norm_of_gradient);
+
+		if(x < 0.0 || x >= length || y < 0.0 || y >= width || z < 0.0 || z >= height) {
+			std::cout << "Error: Point out of bounds (" << x << ", " << y << ", " << z << ")" << std::endl;
+			return false;
+		}
 		
-		Point3D point_current = { iNew, jNew, kNew };
+		Point3D point_current = { x, y, z };
 		Point3D pDistance = getRealCoordFromImageCoord3D(point_current, actionMapStr.origin, spacing, actionMapStr.orientation);
-		path_points.push_back(point_current);
 		
 		//compute distance current Point - last point
 		dist_to_end = getPoint3DDistance(pDistance, final_point);
 		
-		i = (size_t)(round(iNew));
-		j = (size_t)(round(jNew));
-		k = (size_t)(round(kNew));
+		i = (size_t)(round(x));
+		j = (size_t)(round(y));
+		k = (size_t)(round(z));
+		currentIndx = x_new(i, j, length);
+		Point3D point_save = { i, j, k };
+		path_points.push_back(point_current);
 		
 		count_iter++;
 
-	} while (dist_to_end > tolerance && count_iter < max_iter);
-
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
+	} while (dist_to_end > parameters.tolerance && count_iter < parameters.max_iteration);
 
 	return true;
 }
@@ -4501,6 +4449,52 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	return true;
 }
 
+bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue) {
+	
+	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL) {
+		return false;
+	}
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
+	const size_t height = ctImageData.height;
+	VoxelSpacing spacing = ctImageData.spacing;
+	
+	double min_distance = 0.0;
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < length; i++) {
+			for (size_t j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, length);
+				Point3D cPoint = { i, j, k };
+				cPoint = getRealCoordFromImageCoord3D(cPoint, ctImageData.origin, spacing, ctImageData.orientation);
+				
+				min_distance = INFINITY;
+				for(size_t tk = 0; tk < height; tk++) {
+					for (size_t ti = 0; ti < length; ti++) {
+						for (size_t tj = 0; tj < width; tj++) {
+							size_t txd = x_new(ti, tj, length);
+							if (ctImageData.imageDataPtr[tk][txd] == foregroundValue) {
+								Point3D tPoint = { ti, tj, tk };
+								tPoint = getRealCoordFromImageCoord3D(tPoint, ctImageData.origin, spacing, ctImageData.orientation);
+								double pDistance = getPoint3DDistance(cPoint, tPoint);
+								if (pDistance < min_distance) {
+									min_distance = pDistance;
+								}
+							}
+						}
+					}
+				}
+				if (min_distance == INFINITY) {
+					distancePtr[k][xd] = 0.0;
+				}
+				else {
+					distancePtr[k][xd] = min_distance;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 //========================================================================================================
 //================================= Front propagation and Path Extraction =================================
 //========================================================================================================
@@ -5016,7 +5010,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 
 	Image_Data actionDataStr = { height, length, width, action_field, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 
 	//copy points to file
 	int n = 0;
@@ -5064,7 +5058,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	seedsPath[0] = seedPoints[1];
 	seedsPath[1] = temporary_point;
 	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 
 	for (n = path_points.size() - 1; n > -1; n--) {
 		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -5082,7 +5076,7 @@ bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Par
 	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
 
 	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
 
 	for (n = path_points.size() - 1; n > -1; n--) {
 		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
@@ -5206,7 +5200,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seedPoints, Pote
 
 	dataType tau = 0.95 * ctImageData.spacing.sx;
 	dataType tolerance = ctImageData.spacing.sx;
-	shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
+	//shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
 
 	//write just path points coordinates to file
 	int i_n = 0, k_n = 0, k_center = 0;
@@ -5295,7 +5289,7 @@ bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seedPoints, Pote
 		//std::cout << "The step is : " << step << std::endl;
 
 		actionDataStr.imageDataPtr = newActionPtr;
-		shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
+		//shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
 
 		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
 

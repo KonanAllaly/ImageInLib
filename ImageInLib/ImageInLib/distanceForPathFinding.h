@@ -305,7 +305,7 @@ using namespace std;
 	/// <param name="seedPoints">seed points</param>
 	/// <param name="path_points">vector to keep all the path points coordinates</param>
 	/// <returns></returns>
-	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, dataType tau, dataType tolerance, vector<Point3D>& path_points);
+	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);
 
 	/// <summary>
 	/// find a path inside the aorta from given one point
@@ -360,3 +360,5 @@ using namespace std;
 	Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D seedPoint, const double LengthKeyPoints);
 
 	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
+
+	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
