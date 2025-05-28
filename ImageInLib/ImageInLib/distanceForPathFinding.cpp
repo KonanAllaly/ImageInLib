@@ -4499,23 +4499,20 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 //================================= Front propagation and Path Extraction =================================
 //========================================================================================================
 
+/*
 bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
-	if (ctImageData.imageDataPtr == NULL)
-		return false;
-
-	size_t k = 0, i = 0, j = 0, x = 0;
-
-	const size_t height = ctImageData.height;
-	const size_t length = ctImageData.length;
-	const size_t width = ctImageData.width;
-	const size_t dim2D = length * width;
-
-	double offset = 5.0;
-	BoundingBox2D box = { 0, 0, 0, 0 };
-
-	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, extension, slice_number;
+	//if (ctImageData.imageDataPtr == NULL)
+	//	return false;
+	//size_t k = 0, i = 0, j = 0, x = 0;
+	//const size_t height = ctImageData.height;
+	//const size_t length = ctImageData.length;
+	//const size_t width = ctImageData.width;
+	//const size_t dim2D = length * width;
+	//double offset = 5.0;
+	//BoundingBox2D box = { 0, 0, 0, 0 };
+	//string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	//string saving_name, extension, slice_number;
 
 	//saving_name = path_name + "path_points.csv";
 	//FILE* file;
@@ -4524,114 +4521,99 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//	return false;
 	//}
 
-	dataType** actionPtr = new dataType * [height];
-	dataType** maskAction = new dataType * [height];
-	dataType** potentialPtr = new dataType * [height];
-	dataType** edgeImage = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		actionPtr[k] = new dataType[dim2D]{ 0 };
-		maskAction[k] = new dataType[dim2D]{ 0 };
-		potentialPtr[k] = new dataType[dim2D]{ 0 };
-		edgeImage[k] = new dataType[dim2D]{ 0 };
-	}
-	if (actionPtr == NULL || maskAction == NULL || potentialPtr == NULL)
-		return false;
+	//dataType** actionPtr = new dataType * [height];
+	//dataType** maskAction = new dataType * [height];
+	//dataType** potentialPtr = new dataType * [height];
+	//dataType** edgeImage = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	actionPtr[k] = new dataType[dim2D]{ 0 };
+	//	maskAction[k] = new dataType[dim2D]{ 0 };
+	//	potentialPtr[k] = new dataType[dim2D]{ 0 };
+	//	edgeImage[k] = new dataType[dim2D]{ 0 };
+	//}
+	//if (actionPtr == NULL || maskAction == NULL || potentialPtr == NULL)
+	//	return false;
+	//compute3DPotential(ctImageData, potentialPtr, seedPoints, parameters);
+	//saving_name = path_name + "potential.raw";
+	//manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
+	//const double step = 70.0;
+	
+	////================ find next point inside the aorta ============
+	//Point3D* seeds = new Point3D[2];
+	//seeds[0] = seedPoints[0];
 
-	compute3DPotential(ctImageData, potentialPtr, seedPoints, parameters);
-	saving_name = path_name + "potential.raw";
-	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
+	//Image_Data action
+	//{
+	//	height,
+	//	length,
+	//	width,
+	//	actionPtr,
+	//	ctImageData.origin,
+	//	ctImageData.spacing,
+	//	ctImageData.orientation
+	//};
+	//dataType tau = 0.95 * ctImageData.spacing.sx;
+	//dataType tolerance = ctImageData.spacing.sx;
 
-	const double step = 70.0;
+	////During the first propagation the mask is empty
+	////partialPropagation(action, potentialPtr, maskAction, length, width, height, seeds, step);
+	////fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point_img_coord);
+	//seeds[1] = nextKeyPointDetection(action, potentialPtr, seeds[0], step);
+	//partialFrontPropagation(actionPtr, potentialPtr, length, width, height, seeds);
+	//saving_name = path_name + "action_initial.raw";
+	//manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
+	////vector for path points
+	//vector<Point3D> path_points;
+	////path between initial point and second point (found point)
+	//shortestPath3D(action, seeds, tau, tolerance, path_points);
+	////======================= Circle detection ==========================
+	////Search for circle around the found points
+	//dataType* imageSlice = new dataType[dim2D]{ 0 };
+	//dataType* houghSpace = new dataType[dim2D]{ 0 };
 
-	/*
-	//================ find next point inside the aorta ============
+	//Point2D seed2D = { 0.0, 0.0 };
+	//Point2D center2D = { 0.0, 0.0 };
+	//PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
+	//Image_Data2D IMAGE = {length, width, imageSlice, center2D, spacing};
+	//HoughParameters hParameters = {
+	//	5.0,   //minimal radius
+	//	19.0,  //maximal radius
+	//	0.5,   //radius step
+	//	0.5,   //epsilon
+	//	3,   //offset, 50 without defined seed
+	//	1000,  //K edge detector coefficient
+	//	0.25,  //threshold edge detector
+	//};
+	//string loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/edge image/edge_image_p1.raw";
+	//string hough_path = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
+	//bool detected = false;
+	//size_t count_detected = 0;
 
-	Point3D* seeds = new Point3D[2];
-	seeds[0] = seedPoints[0];
+	//for (int n = 0; n < path_points.size() - 1; n--) {
+	//	k = (size_t)path_points[n].z;
+	//	Point2D seed_circle = { path_points[n].x, path_points[n].y };
+	//	copyDataToAnother2dArray(edgeImage[k], imageSlice, length, width);
+	//	//detected = isCircleDetected(IMAGE, houghSpace, seed_circle, hParameters, hough_path);// Add new path !!!
+	//	if (detected == false) {
+	//		count_detected++;
+	//	}
+	//}
+	//std::cout << count_detected << " circles not detected" << std::endl;
+	////===================================================================
 
-	Image_Data action
-	{
-		height,
-		length,
-		width,
-		actionPtr,
-		ctImageData.origin,
-		ctImageData.spacing,
-		ctImageData.orientation
-	};
-
-	dataType tau = 0.95 * ctImageData.spacing.sx;
-	dataType tolerance = ctImageData.spacing.sx;
-
-	//During the first propagation the mask is empty
-	//partialPropagation(action, potentialPtr, maskAction, length, width, height, seeds, step);
-	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, initial_point_img_coord);
-
-	seeds[1] = nextKeyPointDetection(action, potentialPtr, seeds[0], step);
-	partialFrontPropagation(actionPtr, potentialPtr, length, width, height, seeds);
-
-	saving_name = path_name + "action_initial.raw";
-	manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), STORE_DATA, false);
-
-	//vector for path points
-	vector<Point3D> path_points;
-
-	//path between initial point and second point (found point)
-	shortestPath3D(action, seeds, tau, tolerance, path_points);
-
-	//======================= Circle detection ==========================
-	//Search for circle around the found points
-	dataType* imageSlice = new dataType[dim2D]{ 0 };
-	dataType* houghSpace = new dataType[dim2D]{ 0 };
-
-	Point2D seed2D = { 0.0, 0.0 };
-	Point2D center2D = { 0.0, 0.0 };
-	PixelSpacing spacing = { ctImageData.spacing.sx, ctImageData.spacing.sy };
-	Image_Data2D IMAGE = {length, width, imageSlice, center2D, spacing};
-	HoughParameters hParameters = {
-		5.0,   //minimal radius
-		19.0,  //maximal radius
-		0.5,   //radius step
-		0.5,   //epsilon
-		3,   //offset, 50 without defined seed
-		1000,  //K edge detector coefficient
-		0.25,  //threshold edge detector
-	};
-
-	string loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/edge image/edge_image_p1.raw";
-	string hough_path = "C:/Users/Konan Allaly/Documents/Tests/output/threshold.raw";
-	bool detected = false;
-	size_t count_detected = 0;
-
-	for (int n = 0; n < path_points.size() - 1; n--) {
-		k = (size_t)path_points[n].z;
-		Point2D seed_circle = { path_points[n].x, path_points[n].y };
-		copyDataToAnother2dArray(edgeImage[k], imageSlice, length, width);
-		//detected = isCircleDetected(IMAGE, houghSpace, seed_circle, hParameters, hough_path);// Add new path !!!
-		if (detected == false) {
-			count_detected++;
-		}
-	}
-	std::cout << count_detected << " circles not detected" << std::endl;
-
-	//===================================================================
-
-	//write path points coordinates to file
-	//int n = 0;
-	Point3D point_file = { 0.0, 0.0, 0.0 };
-	for (int n = path_points.size() - 1; n > -1; n--) {
-		point_file = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
-	}
-
-	//empty the vector contaning path points
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	fclose(file);
-
-	*/
+	////write path points coordinates to file
+	////int n = 0;
+	//Point3D point_file = { 0.0, 0.0, 0.0 };
+	//for (int n = path_points.size() - 1; n > -1; n--) {
+	//	point_file = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+	//}
+	//
+	////empty the vector contaning path points
+	//while (path_points.size() > 0) {
+	//	path_points.pop_back();
+	//}
+	//fclose(file);
 
 	////Update the mask
 	//copyDataToAnotherArray(actionPtr, maskAction, height, length, width);
@@ -4758,7 +4740,6 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//double verif_dist = getPoint3DDistance(last_point, verif_point);
 
 	//std::cout << "distance to end point : " << verif_dist << std::endl;
-
 	//while ((stop_k != verif_k && verif_dist < 12.5) || count_step < max_steps) {
 	//	//max_ratio != 0.0 && count_step < max_steps //--> old condition
 	//	std::cout << "STEP " << count_step << " : " << std::endl;
@@ -4952,376 +4933,325 @@ bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3
 	//delete[] houghSpace;
 	//delete[] voteArray;
 
-	//delete[] seeds;
-	for (k = 0; k < height; k++) {
-		delete[] actionPtr[k];
-		delete[] maskAction[k];
-		delete[] potentialPtr[k];
-		delete[] edgeImage[k];
-	}
-	delete[] actionPtr;
-	delete[] maskAction;
-	delete[] potentialPtr;
-	delete[] edgeImage;
+	////delete[] seeds;
+	//for (k = 0; k < height; k++) {
+	//	delete[] actionPtr[k];
+	//	delete[] maskAction[k];
+	//	delete[] potentialPtr[k];
+	//	delete[] edgeImage[k];
+	//}
+	//delete[] actionPtr;
+	//delete[] maskAction;
+	//delete[] potentialPtr;
+	//delete[] edgeImage;
 
 	return true;
 }
 
 bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
-	size_t i, j, k, xd;
-	size_t length = ctImageData.length, width = ctImageData.width, height = ctImageData.height;
-	size_t dim2D = length * width;
+	//size_t i, j, k, xd;
+	//size_t length = ctImageData.length, width = ctImageData.width, height = ctImageData.height;
+	//size_t dim2D = length * width;
+	//dataType** potential = new dataType * [height];
+	//dataType** action_field = new dataType * [height];
+	//dataType** mask_action = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	potential[k] = new dataType[dim2D]{ 0 };
+	//	action_field[k] = new dataType[dim2D]{ 0 };
+	//	mask_action[k] = new dataType[dim2D]{ 0 };
+	//}
+	//string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	//string saving_name, saving_csv = outputPath + "path_point.csv";
+	//FILE* file;
+	//if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//Point3D temporary_point = { 0.0, 0.0, 0.0 };
+	//Point3D* seedsPath = new Point3D[2];
+	//seedsPath[0] = seedPoints[0];
+	//seedsPath[1] = seedPoints[1];
+	//vector<Point3D> path_points;
+	//dataType tau = 0.95 * ctImageData.spacing.sx;
+	//dataType tolerance = ctImageData.spacing.sx;
 
-	dataType** potential = new dataType * [height];
-	dataType** action_field = new dataType * [height];
-	dataType** mask_action = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		potential[k] = new dataType[dim2D]{ 0 };
-		action_field[k] = new dataType[dim2D]{ 0 };
-		mask_action[k] = new dataType[dim2D]{ 0 };
-	}
-
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, saving_csv = outputPath + "path_point.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-
-	Point3D temporary_point = { 0.0, 0.0, 0.0 };
-	Point3D* seedsPath = new Point3D[2];
-	seedsPath[0] = seedPoints[0];
-	seedsPath[1] = seedPoints[1];
-	vector<Point3D> path_points;
-
-	dataType tau = 0.95 * ctImageData.spacing.sx;
-	dataType tolerance = ctImageData.spacing.sx;
-
-	//======== First step ===========//
-	//compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
-
-	saving_name = outputPath + "potential.raw";
-	manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), LOAD_DATA, false);
-
-	//partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
-	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
-
-	Image_Data actionDataStr = { height, length, width, action_field, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
-
-	//copy points to file
-	int n = 0;
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() != 0) {
-		path_points.pop_back();
-	}
+	////======== First step ===========//
+	////compute3DPotential(ctImageData, potential, seedsPath[0], parameters);
+	//saving_name = outputPath + "potential.raw";
+	//manageRAWFile3D<dataType>(potential, length, width, height, saving_name.c_str(), LOAD_DATA, false);
+	////partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
+	////fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
+	//Image_Data actionDataStr = { height, length, width, action_field, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	////shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	////shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	////copy points to file
+	//int n = 0;
+	//for (n = path_points.size() - 1; n > -1; n--) {
+	//	path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	//}
+	//while (path_points.size() != 0) {
+	//	path_points.pop_back();
+	//}
 
 	//================================//
+	//Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//double step = 0.5 * getPoint3DDistance(seed1, seed2), dist = 0.0;
+	//cout << "Step : " << step << endl;
 
-	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[2], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	double step = 0.5 * getPoint3DDistance(seed1, seed2), dist = 0.0;
-	cout << "Step : " << step << endl;
+	//////======== Second step ===========//
+	////compute3DPotential(ctImageData, potential, seedsPath[1], parameters);
+	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[1]);
+	//dataType min_action = BIG_VALUE, value_temp = 0.0;
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length; i++) {
+	//		for (j = 0; j < width; j++) {
+	//			xd = x_new(i, j, length);
+	//			Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//			dist = getPoint3DDistance(seed1, current_point);
+	//			if (dist >= (step - 0.01) && dist <= (step + 0.01) && k >= seedPoints[1].z) {
+	//				if (action_field[k][xd] < min_action) {
+	//					min_action = action_field[k][xd];
+	//					temporary_point.x = (dataType)i;
+	//					temporary_point.y = (dataType)j;
+	//					temporary_point.z = (dataType)k;
+	//					value_temp = action_field[k][xd];
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//cout << "found point : (" << temporary_point.x << " ," << temporary_point.y << " , " << temporary_point.z << ")" << endl;
+	//seedsPath[0] = seedPoints[1];
+	//seedsPath[1] = temporary_point;
+	////shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	////shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	//for (n = path_points.size() - 1; n > -1; n--) {
+	//	path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	//}
+	//while (path_points.size() > 0) {
+	//	path_points.pop_back();
+	//}
 
-	////======== Second step ===========//
-	//compute3DPotential(ctImageData, potential, seedsPath[1], parameters);
-	fastMarching3D_N(action_field, potential, length, width, height, seedsPath[1]);
+	////======= Last step ===============//
+	//seedsPath[0] = temporary_point;
+	//seedsPath[1] = seedPoints[2];
+	////partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
+	////fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
+	////shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
+	////shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
+	//for (n = path_points.size() - 1; n > -1; n--) {
+	//	path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
+	//}
+	//while (path_points.size() > 0) {
+	//	path_points.pop_back();
+	//}
+	////=====================================
 
-	dataType min_action = BIG_VALUE, value_temp = 0.0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(i, j, length);
-				Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-				dist = getPoint3DDistance(seed1, current_point);
-				if (dist >= (step - 0.01) && dist <= (step + 0.01) && k >= seedPoints[1].z) {
-					if (action_field[k][xd] < min_action) {
-						min_action = action_field[k][xd];
-						temporary_point.x = (dataType)i;
-						temporary_point.y = (dataType)j;
-						temporary_point.z = (dataType)k;
-						value_temp = action_field[k][xd];
-					}
-				}
-			}
-		}
-	}
-	cout << "found point : (" << temporary_point.x << " ," << temporary_point.y << " , " << temporary_point.z << ")" << endl;
-
-	seedsPath[0] = seedPoints[1];
-	seedsPath[1] = temporary_point;
-	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-
-	//======= Last step ===============//
-	seedsPath[0] = temporary_point;
-	seedsPath[1] = seedPoints[2];
-
-	//partialFrontPropagation(action_field, potential, length, width, height, seedsPath);
-	//fastMarching3D_N(action_field, potential, length, width, height, seedsPath[0]);
-
-	//shortestPath3D(action_field, length, width, height, ctImageData.spacing, seedsPath, path_points);
-	//shortestPath3D(actionDataStr, seedsPath, tau, tolerance, path_points);
-
-	for (n = path_points.size() - 1; n > -1; n--) {
-		path_points[n] = getRealCoordFromImageCoord3D(path_points[n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", path_points[n].x, path_points[n].y, path_points[n].z);
-	}
-	while (path_points.size() > 0) {
-		path_points.pop_back();
-	}
-	//=====================================
-
-	fclose(file);
-	delete[] seedsPath;
-	for (k = 0; k < height; k++) {
-		delete[] potential[k];
-		delete[] action_field[k];
-		delete[] mask_action[k];
-	}
-	delete[] potential;
-	delete[] action_field;
-	delete[] mask_action;
+	//fclose(file);
+	//delete[] seedsPath;
+	//for (k = 0; k < height; k++) {
+	//	delete[] potential[k];
+	//	delete[] action_field[k];
+	//	delete[] mask_action[k];
+	//}
+	//delete[] potential;
+	//delete[] action_field;
+	//delete[] mask_action;
 
 	return true;
 }
 
 bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters) {
 
-	if (ctImageData.imageDataPtr == NULL)
-		return false;
+	//if (ctImageData.imageDataPtr == NULL)
+	//	return false;
+	//size_t k = 0, i = 0, j = 0, x = 0;
+	//const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
+	//const size_t dim2D = length * width;
+	//double epsilon = 0.01;
+	//string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	//string saving_name, extension;
+	//saving_name = path_name + "path_points_v2.csv";
+	//FILE* file;
+	//if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//dataType** actionPtr = new dataType * [height];
+	//dataType** newActionPtr = new dataType * [height];
+	//dataType** maskDistance = new dataType * [height];
+	//dataType** potentialPtr = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	actionPtr[k] = new dataType[dim2D]{ 0 };
+	//	newActionPtr[k] = new dataType[dim2D]{ 0 };
+	//	maskDistance[k] = new dataType[dim2D]{ 0 };
+	//	potentialPtr[k] = new dataType[dim2D]{ 0 };
+	//}
+	//if (actionPtr == NULL || newActionPtr == NULL || maskDistance == NULL || potentialPtr == NULL)
+	//	return false;
 
-	size_t k = 0, i = 0, j = 0, x = 0;
-	const size_t height = ctImageData.height, length = ctImageData.length, width = ctImageData.width;
-	const size_t dim2D = length * width;
+	//Point3D* seeds = new Point3D[2];
+	//seeds[0] = seedPoints[0];
+	//Point3D initial_point = seedPoints[0];
+	//Point3D temporary_point = { 0.0, 0.0, 0.0 };
+	//dataType min_distance = BIG_VALUE, value_temp = 0.0, h = 1.0;
+	//Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[0], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//double distance_point = getPoint3DDistance(seed1, seed2);
+	//double step = 50;//0.5 * distance_point;
+	//std::cout << "First step : " << step << std::endl;
 
-	double epsilon = 0.01;
+	////================ find next point inside the aorta 
+	//Image_Data actionDataStr = { height, length, width, actionPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	//double radius_to_find_mean = 3.0;
+	////compute3DPotential(ctImageData, potentialPtr, seedPoints[0], parameters);
+	//saving_name = path_name + "potential.raw";
+	////store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
+	//manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
+	////fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seeds[0]);
+	//fastMarching3dWithSpacing(ctImageData, actionPtr, potentialPtr, seeds[0], ctImageData.spacing);
+	////saving_name = path_name + "first_action.raw";
+	////manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
 
-	string path_name = "C:/Users/Konan Allaly/Documents/Tests/output/";
-	string saving_name, extension;
+	//min_distance = BIG_VALUE;
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length; i++) {
+	//		for (j = 0; j < width; j++) {
+	//			x = x_new(i, j, length);
+	//			Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+	//			current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//			double distanceP = getPoint3DDistance(seed1, current_point);
+	//			if (distanceP >= (step - epsilon) && distanceP <= (step + epsilon)) {
+	//				if (actionPtr[k][x] < min_distance) {
+	//					min_distance = actionPtr[k][x];
+	//					temporary_point.x = (dataType)i;
+	//					temporary_point.y = (dataType)j;
+	//					temporary_point.z = (dataType)k;
+	//					value_temp = actionPtr[k][x];
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//seed1 = getRealCoordFromImageCoord3D(temporary_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	////distance_point = getPoint3DDistance(seed1, seed2);
+	////step = 0.5 * distance_point;
+	////std::cout << "Second step: " << step << std::endl;
+	//std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
+	////vector for path points
+	//vector<Point3D> path_points;
+	////path between initial point and second point
+	//seeds[1] = temporary_point;
+	//dataType tau = 0.95 * ctImageData.spacing.sx;
+	//dataType tolerance = ctImageData.spacing.sx;
+	////shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
+	////write just path points coordinates to file
+	//int i_n = 0, k_n = 0, k_center = 0;
+	//Point3D point_file = { 0.0, 0.0, 0.0 };
+	//for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+	//	point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+	//}
+	//while (path_points.size() != 0) {
+	//	path_points.pop_back();
+	//}
 
-	saving_name = path_name + "path_points_v2.csv";
-	FILE* file;
-	if (fopen_s(&file, saving_name.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	////============================================
+	//double distance_to_stop = 0.1 * distance_point;
+	//size_t count_step = 0;
+	//while (count_step < 3) {
+	//	count_step++;
+	//	std::cout << "count step = " << count_step << std::endl;
+	//	//mask
+	//	for (k = 0; k < height; k++) {
+	//		for (i = 0; i < length; i++) {
+	//			for (j = 0; j < width; j++) {
+	//				x = x_new(i, j, length);
+	//				Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
+	//				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//				double distanceP = getPoint3DDistance(seed1, current_point);
+	//				if (distanceP <= (step + 0.01) && actionPtr[k][x] <= value_temp) {
+	//					maskDistance[k][x] = 10000.0;
+	//				}
+	//				else {
+	//					if (maskDistance[k][x] != 10000.0) {
+	//						maskDistance[k][x] = newActionPtr[k][x];
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//	seeds[0] = seeds[1];
+	//	initial_point = seeds[1];
+	//	//fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, seeds[0]);
+	//	fastMarching3dWithSpacing(ctImageData, newActionPtr, potentialPtr, seeds[0], ctImageData.spacing);
+	//	//saving_name = path_name + "action_field" + extension + ".raw";
+	//	//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
+	//	//Find the temporary point
+	//	min_distance = BIG_VALUE;
+	//	//get real world coordinate of the initial point
+	//	seed1 = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	for (k = 0; k < height; k++) {
+	//		for (i = 0; i < length; i++) {
+	//			for (j = 0; j < width; j++) {
+	//				x = x_new(i, j, length);
+	//				Point3D current_point = { (dataType)i, (dataType)j, current_point.z = (dataType)k };
+	//				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//				double distanceP = getPoint3DDistance(seed1, current_point);
+	//				if (distanceP >= (step - 0.01) && distanceP <= (step + 0.01) && maskDistance[k][x] != 10000.0) {
+	//					if (newActionPtr[k][x] < min_distance) {
+	//						min_distance = newActionPtr[k][x];
+	//						temporary_point.x = (dataType)i;
+	//						temporary_point.y = (dataType)j;
+	//						temporary_point.z = (dataType)k;
+	//						value_temp = newActionPtr[k][x];
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
+	//	seeds[1] = temporary_point;
+	//	//seed2 = getRealCoordFromImageCoord3D(seeds[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//	//distance_point = getPoint3DDistance(seed1, seed2);
+	//	//step = 0.5 * distance_point;
+	//	//std::cout << "The step is : " << step << std::endl;
+	//	actionDataStr.imageDataPtr = newActionPtr;
+	//	//shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
+	//	copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
+	//	//write just path points coordinates to file
+	//	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
+	//		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
+	//		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
+	//	}
+	//	while (path_points.size() != 0) {
+	//		path_points.pop_back();
+	//	}
+	//}
 
-	dataType** actionPtr = new dataType * [height];
-	dataType** newActionPtr = new dataType * [height];
-	dataType** maskDistance = new dataType * [height];
-	dataType** potentialPtr = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		actionPtr[k] = new dataType[dim2D]{ 0 };
-		newActionPtr[k] = new dataType[dim2D]{ 0 };
-		maskDistance[k] = new dataType[dim2D]{ 0 };
-		potentialPtr[k] = new dataType[dim2D]{ 0 };
-	}
-	if (actionPtr == NULL || newActionPtr == NULL || maskDistance == NULL || potentialPtr == NULL)
-		return false;
-
-	Point3D* seeds = new Point3D[2];
-	seeds[0] = seedPoints[0];
-	Point3D initial_point = seedPoints[0];
-	Point3D temporary_point = { 0.0, 0.0, 0.0 };
-
-	dataType min_distance = BIG_VALUE, value_temp = 0.0, h = 1.0;
-
-	Point3D seed1 = getRealCoordFromImageCoord3D(seedPoints[0], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	Point3D seed2 = getRealCoordFromImageCoord3D(seedPoints[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-
-	double distance_point = getPoint3DDistance(seed1, seed2);
-	double step = 50;//0.5 * distance_point;
-	std::cout << "First step : " << step << std::endl;
-
-	//================ find next point inside the aorta 
-
-	Image_Data actionDataStr = { height, length, width, actionPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-
-	double radius_to_find_mean = 3.0;
-	//compute3DPotential(ctImageData, potentialPtr, seedPoints[0], parameters);
-
-	saving_name = path_name + "potential.raw";
-	//store3dRawData<dataType>(potentialPtr, length, width, height, saving_name.c_str());
-	manageRAWFile3D<dataType>(potentialPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
-
-	//fastMarching3D_N(actionPtr, potentialPtr, length, width, height, seeds[0]);
-	fastMarching3dWithSpacing(ctImageData, actionPtr, potentialPtr, seeds[0], ctImageData.spacing);
-	//saving_name = path_name + "first_action.raw";
-	//manageRAWFile3D<dataType>(actionPtr, length, width, height, saving_name.c_str(), LOAD_DATA, false);
-
-	min_distance = BIG_VALUE;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				x = x_new(i, j, length);
-				Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-				current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-				double distanceP = getPoint3DDistance(seed1, current_point);
-				if (distanceP >= (step - epsilon) && distanceP <= (step + epsilon)) {
-					if (actionPtr[k][x] < min_distance) {
-						min_distance = actionPtr[k][x];
-						temporary_point.x = (dataType)i;
-						temporary_point.y = (dataType)j;
-						temporary_point.z = (dataType)k;
-						value_temp = actionPtr[k][x];
-					}
-				}
-			}
-		}
-	}
-
-	seed1 = getRealCoordFromImageCoord3D(temporary_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-	//distance_point = getPoint3DDistance(seed1, seed2);
-	//step = 0.5 * distance_point;
-	//std::cout << "Second step: " << step << std::endl;
-	std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
-
-	//vector for path points
-	vector<Point3D> path_points;
-
-	//path between initial point and second point
-	seeds[1] = temporary_point;
-
-	dataType tau = 0.95 * ctImageData.spacing.sx;
-	dataType tolerance = ctImageData.spacing.sx;
-	//shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
-
-	//write just path points coordinates to file
-	int i_n = 0, k_n = 0, k_center = 0;
-	Point3D point_file = { 0.0, 0.0, 0.0 };
-
-	for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-		point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
-	}
-	while (path_points.size() != 0) {
-		path_points.pop_back();
-	}
-
-	//============================================
-
-	double distance_to_stop = 0.1 * distance_point;
-
-	size_t count_step = 0;
-
-
-	while (count_step < 3) {
-
-		count_step++;
-		std::cout << "count step = " << count_step << std::endl;
-
-		//mask
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < length; i++) {
-				for (j = 0; j < width; j++) {
-					x = x_new(i, j, length);
-					Point3D current_point = { (dataType)i, (dataType)j, (dataType)k };
-					current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-					double distanceP = getPoint3DDistance(seed1, current_point);
-					if (distanceP <= (step + 0.01) && actionPtr[k][x] <= value_temp) {
-						maskDistance[k][x] = 10000.0;
-					}
-					else {
-						if (maskDistance[k][x] != 10000.0) {
-							maskDistance[k][x] = newActionPtr[k][x];
-						}
-					}
-				}
-			}
-		}
-		seeds[0] = seeds[1];
-		initial_point = seeds[1];
-
-		//fastMarching3D_N(newActionPtr, potentialPtr, length, width, height, seeds[0]);
-		fastMarching3dWithSpacing(ctImageData, newActionPtr, potentialPtr, seeds[0], ctImageData.spacing);
-
-		//saving_name = path_name + "action_field" + extension + ".raw";
-		//store3dRawData<dataType>(newActionPtr, length, width, height, saving_name.c_str());
-
-		//Find the temporary point
-		min_distance = BIG_VALUE;
-
-		//get real world coordinate of the initial point
-		seed1 = getRealCoordFromImageCoord3D(initial_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < length; i++) {
-				for (j = 0; j < width; j++) {
-					x = x_new(i, j, length);
-					Point3D current_point = { (dataType)i, (dataType)j, current_point.z = (dataType)k };
-					current_point = getRealCoordFromImageCoord3D(current_point, ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-					double distanceP = getPoint3DDistance(seed1, current_point);
-					if (distanceP >= (step - 0.01) && distanceP <= (step + 0.01) && maskDistance[k][x] != 10000.0) {
-						if (newActionPtr[k][x] < min_distance) {
-							min_distance = newActionPtr[k][x];
-							temporary_point.x = (dataType)i;
-							temporary_point.y = (dataType)j;
-							temporary_point.z = (dataType)k;
-							value_temp = newActionPtr[k][x];
-						}
-					}
-				}
-			}
-		}
-
-		std::cout << "found point : (" << temporary_point.x << ", " << temporary_point.y << ", " << temporary_point.z << ")" << std::endl;
-
-		seeds[1] = temporary_point;
-		//seed2 = getRealCoordFromImageCoord3D(seeds[1], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-		//distance_point = getPoint3DDistance(seed1, seed2);
-		//step = 0.5 * distance_point;
-		//std::cout << "The step is : " << step << std::endl;
-
-		actionDataStr.imageDataPtr = newActionPtr;
-		//shortestPath3D(actionDataStr, seeds, tau, tolerance, path_points);
-
-		copyDataToAnotherArray(newActionPtr, actionPtr, height, length, width);
-
-		//write just path points coordinates to file
-		for (i_n = path_points.size() - 1; i_n > -1; i_n--) {
-			point_file = getRealCoordFromImageCoord3D(path_points[i_n], ctImageData.origin, ctImageData.spacing, ctImageData.orientation);
-			fprintf(file, "%f,%f,%f\n", point_file.x, point_file.y, point_file.z);
-		}
-		while (path_points.size() != 0) {
-			path_points.pop_back();
-		}
-
-	}
-
-
-	fclose(file);
-
-	delete[] seeds;
-
-	for (k = 0; k < height; k++) {
-		delete[] actionPtr[k];
-		delete[] newActionPtr[k];
-		delete[] maskDistance[k];
-		delete[] potentialPtr[k];
-	}
-	delete[] actionPtr;
-	delete[] newActionPtr;
-	delete[] maskDistance;
-	delete[] potentialPtr;
+	//fclose(file);
+	//delete[] seeds;
+	//for (k = 0; k < height; k++) {
+	//	delete[] actionPtr[k];
+	//	delete[] newActionPtr[k];
+	//	delete[] maskDistance[k];
+	//	delete[] potentialPtr[k];
+	//}
+	//delete[] actionPtr;
+	//delete[] newActionPtr;
+	//delete[] maskDistance;
+	//delete[] potentialPtr;
 
 	return true;
 }
+
+*/
 
 /*
 bool partialPropagation(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength) {
