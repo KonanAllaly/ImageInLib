@@ -572,74 +572,75 @@ bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t leng
 	return true;
 }
 //==============================================================================
-bool getGradient3D(dataType** imageDataPtr, const size_t width, const size_t length, const size_t height, const size_t ind_x, const size_t ind_y, const size_t ind_z, const VoxelSpacing fVolume, Point3D* grad)
+bool getGradient3D(Image_Data imageDataStr, const size_t ind_x, const size_t ind_y, const size_t ind_z, Point3D* grad)
 {
+	const size_t length = imageDataStr.length;
+	const size_t width = imageDataStr.width;
+	const size_t height = imageDataStr.height;
+	VoxelSpacing fVolume = imageDataStr.spacing;
 
-	if (imageDataPtr == NULL || width < 2 || length < 2 || height < 2 ||
+	if (imageDataStr.imageDataPtr == NULL || width < 2 || length < 2 || height < 2 ||
 		fVolume.sx == 0 || fVolume.sy == 0 || fVolume.sz == 0)
 	{
 		return false;
 	}
 
-	size_t x = ind_x, y = ind_y, z = ind_z;
-	if (x >= width)
+	size_t i = ind_x, j = ind_y, k = ind_z;
+	if (i >= length)
 	{
-		x = width - 1;
+		i = length - 1;
 	}
 
-	if (y >= length)
+	if (j >= width)
 	{
-		y = length - 1;
+		j = width - 1;
 	}
 
-	if (z >= height)
+	if (k >= height)
 	{
-		z = height - 1;
+		k = height - 1;
 	}
 
 	dataType dx = 0.0, dy = 0.0, dz = 0.0;
-	dataType hx_c = 2 * fVolume.sx;
-	dataType hy_c = 2 * fVolume.sy;
-	dataType hz_c = 2 * fVolume.sz;
+	size_t xd = x_new(i, j, length);
 
-	if (x == 0)
+	if (i == 0)
 	{
-		dx = (imageDataPtr[z][x_new(x + 1, y, width)] - imageDataPtr[z][x_new(x, y, width)]) / fVolume.sx;
+		dx = (imageDataStr.imageDataPtr[k][x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[k][xd]) / fVolume.sx;
 	}
-	else if (x == width - 1)
+	else if (i == length - 1)
 	{
-		dx = (imageDataPtr[z][x_new(x, y, width)] - imageDataPtr[z][x_new(x - 1, y, width)]) / fVolume.sx;
+		dx = (imageDataStr.imageDataPtr[k][xd] - imageDataStr.imageDataPtr[k][x_new(i - 1, j, length)]) / fVolume.sx;
 	}
 	else
 	{
-		dx = (imageDataPtr[z][x_new(x + 1, y, width)] - imageDataPtr[z][x_new(x - 1, y, width)]) / hx_c;
+		dx = (imageDataStr.imageDataPtr[k][x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[k][x_new(i - 1, j, length)]) / (2 * fVolume.sx);
 	}
 
-	if (y == 0)
+	if (j == 0)
 	{
-		dy = (imageDataPtr[z][x_new(x, y + 1, width)] - imageDataPtr[z][x_new(x, y, width)]) / fVolume.sy;
+		dy = (imageDataStr.imageDataPtr[k][x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[k][xd]) / fVolume.sy;
 	}
-	else if (y == length - 1)
+	else if (j == width - 1)
 	{
-		dy = (imageDataPtr[z][x_new(x, y, width)] - imageDataPtr[z][x_new(x, y - 1, width)]) / fVolume.sy;
+		dy = (imageDataStr.imageDataPtr[k][xd] - imageDataStr.imageDataPtr[k][x_new(i, j - 1, length)]) / fVolume.sy;
 	}
 	else
 	{
-		dy = (imageDataPtr[z][x_new(x, y + 1, width)] - imageDataPtr[z][x_new(x, y - 1, width)]) / hy_c;
+		dy = (imageDataStr.imageDataPtr[k][x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[k][x_new(i, j - 1, length)]) / (2 * fVolume.sy);
 	}
 
-	size_t xd = x_new(x, y, width);
-	if (z == 0)
+	if (k == 0)
 	{
-		dz = (imageDataPtr[z + 1][xd] - imageDataPtr[z][xd]) / fVolume.sz;
+		dz = (imageDataStr.imageDataPtr[k + 1][xd] - imageDataStr.imageDataPtr[k][xd]) / fVolume.sz;
 	}
-	else if (z == height - 1)
+	else if (k == height - 1)
 	{
-		dz = (imageDataPtr[z][xd] - imageDataPtr[z - 1][xd]) / fVolume.sz;
+		dz = (imageDataStr.imageDataPtr[k][xd] - imageDataStr.imageDataPtr[k - 1][xd]) / fVolume.sz;
 	}
 	else
 	{
-		dz = (imageDataPtr[z + 1][xd] - imageDataPtr[z - 1][xd]) / hz_c;
+		dz = (imageDataStr.imageDataPtr[k + 1][xd] - imageDataStr.imageDataPtr[k - 1][xd]) / (2 * fVolume.sz);
 	}
 
 	grad->x = dx;
