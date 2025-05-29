@@ -127,24 +127,24 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	dataType* edgeDetector = new dataType[dim2D]{ 0 };
 	dataType* distanceMap = new dataType[dim2D]{ 0 };
 
-	computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
-	dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
-	for (i = 0; i < dim2D; i++) {
-		ux = gradientVectorX[i];
-		uy = gradientVectorY[i];
-		norm_of_gradient_square = ux * ux + uy * uy;
-		edgeDetector[i] = 1.0 / (1.0 + K * norm_of_gradient_square);
-		if (edgeDetector[i] <= 0.35) {
-			edgeDetector[i] = 0.0;
-		}
-		else {
-			edgeDetector[i] = 1.0;
-		}
-	}
+	//computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
+	//dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
+	//for (i = 0; i < dim2D; i++) {
+	//	ux = gradientVectorX[i];
+	//	uy = gradientVectorY[i];
+	//	norm_of_gradient_square = ux * ux + uy * uy;
+	//	edgeDetector[i] = 1.0 / (1.0 + K * norm_of_gradient_square);
+	//	if (edgeDetector[i] <= 0.35) {
+	//		edgeDetector[i] = 0.0;
+	//	}
+	//	else {
+	//		edgeDetector[i] = 1.0;
+	//	}
+	//}
 
-	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 1.0);
-	string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	manageRAWFile2D<dataType>(edgeDetector, height, width, path_file.c_str(), STORE_DATA, false);
+	fastSweepingFunction_2D(distanceMap, imageDataStr.imageDataPtr, height, width, 1.0, 1000000.0, 1.0);
+	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_2d.raw";
+	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
 
 	for (i = 0; i < dim2D; i++) {
 		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
@@ -161,7 +161,7 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	//Normalization
 	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = (epsilon + potentialFuncPtr[i] / maxDiff) * (1.0 / (1 + distanceMap[i]));
+		potentialFuncPtr[i] = (epsilon + potentialFuncPtr[i] / maxDiff);// *(1.0 / (1 + 1.0 * distanceMap[i]));
 	}
 
 	delete[] gradientVectorX;
@@ -1214,11 +1214,11 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	}
 
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
+	//fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_rt.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brtf.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
