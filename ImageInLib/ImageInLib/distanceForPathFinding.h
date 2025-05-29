@@ -143,16 +143,14 @@ using namespace std;
 	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints);
 
 	/// <summary>
-	/// find the shortest path between two given points
+	/// Finds the shortest path in a 2D image using a action map and a set of seed points.
 	/// </summary>
-	/// <param name="distanceFuncPtr">action map</param>
-	/// <param name="resultedPath">found points</param>
-	/// <param name="height">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="h">space step</param>
-	/// <param name="seedPoints">initial and final points</param>
-	/// <returns></returns>
-	bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2D* seedPoints);
+	/// <param name="distanceFuncPtr">A 2D image or function representing the distance or cost map.</param>
+	/// <param name="seedPoints">Pointer to an array of seed points from which the path search begins.</param>
+	/// <param name="path_points">Reference to a vector where the computed shortest path points will be stored.</param>
+	/// <param name="parameters">Additional parameters controlling the pathfinding algorithm.</param>
+	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
+	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
 
 	/// <summary>
 	/// solve quadratic equation

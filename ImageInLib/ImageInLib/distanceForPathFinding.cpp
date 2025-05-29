@@ -785,15 +785,15 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	delete[] labelArray;
 }
 
-bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2D* seedPoints) {
+bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters) {
 
-	if (distanceFuncPtr.imageDataPtr == NULL || resultedPath == NULL || seedPoints == NULL)
+	if (distanceFuncPtr.imageDataPtr == NULL || seedPoints == NULL)
 		return false;
 
 	const size_t height = distanceFuncPtr.height;
 	const size_t width = distanceFuncPtr.width;
-	size_t i, j, dim2D = height * width, maxIter = 10000;
-	dataType tau = 0.8, dist_min = 0.0, tol = 1.0;
+	size_t i, j, dim2D = height * width;
+	dataType dist_min = 0.0;
 
 	dataType* gradientVectorX = new dataType[dim2D]{0};
 	dataType* gradientVectorY = new dataType[dim2D]{0};
@@ -823,11 +823,12 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2
 
 	do{
 
-		iNew = iNew - tau * gradientVectorX[currentIndex];
-		jNew = jNew - tau * gradientVectorY[currentIndex];
+		iNew -= parameters.tau * gradientVectorX[currentIndex];
+		jNew -= parameters.tau * gradientVectorY[currentIndex];
 		
 		Point2D current_point = { iNew, jNew };
 		dist_min = getPoint2DDistance(current_point, seedPoints[0]);
+		path_points.push_back(current_point);
 
 		i = (size_t)round(iNew); 
 		j = (size_t)round(jNew);
@@ -835,7 +836,7 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, dataType* resultedPath, Point2
 
 		count_iter++;
 	}
-	while(dist_min > tol && count_iter < maxIter);
+	while(dist_min > parameters.tolerance && count_iter < parameters.max_iteration);
 
 	delete[] gradientVectorX;
 	delete[] gradientVectorY;
