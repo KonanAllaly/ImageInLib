@@ -48,7 +48,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	
+	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -66,7 +66,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	
+	*/
 
 	//========================= Detect Heart region ==================================
 	
@@ -3997,7 +3997,7 @@ int main() {
 
 	//==================== Test Potential function ========================================
 	
-
+	/*
 	dataType** maskThreshold = new dataType * [Height];
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -4050,7 +4050,7 @@ int main() {
 		radius
 	};
 	compute3DPotential(inputImageStr, potential, endPoints, parameters);
-	storing_path = outputPath + "potential_p1.raw";
+	storing_path = outputPath + "potential_brt_p1.raw";
 	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
@@ -4122,6 +4122,7 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	free(ctContainer);
+	*/
 
 	/*
 	//Artificial image
@@ -4505,7 +4506,7 @@ int main() {
 	delete[] potential;
 	*/
 
-    /*
+    
 	//2D experiments
 	const size_t Length = 100, Width = 100;
 	dataType* imageData = new dataType[Length * Width] { 0 };
@@ -4542,31 +4543,66 @@ int main() {
 	//	}
 	//}
 	
-	for (i = 0; i < Length; i++) {
-		for (j = (Width / 2); j < Width; j++) {
-			Point2D current_point = { i, j };
-			double pDistance = getPoint2DDistance(current_point, center);
-			if (pDistance > 25.0 && pDistance < 35) {
-				imageData[x_new(i, j - 15, Length)] = 1.0;
-			}
-		}
-	}
-
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			if (i >= 50 && i <= 53) {
-				imageData[x_new(i, j, Length)] = 0.0;
-			}
-		}
-	}
+	//for (i = 0; i < Length; i++) {
+	//	for (j = (Width / 2); j < Width; j++) {
+	//		Point2D current_point = { i, j };
+	//		double pDistance = getPoint2DDistance(current_point, center);
+	//		if (pDistance > 25.0 && pDistance < 35) {
+	//			imageData[x_new(i, j - 15, Length)] = 1.0;
+	//		}
+	//	}
+	//}
+	//for (i = 0; i < Length; i++) {
+	//	for (j = 0; j < Width; j++) {
+	//		if (i >= 50 && i <= 53) {
+	//			imageData[x_new(i, j, Length)] = 0.0;
+	//		}
+	//	}
+	//}
 
 	////storing_path = outputPath + "object_with_holes_four_pixels.raw";
 	//storing_path = outputPath + "semi_circle_with_four_pixels_holes.raw";
 	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
+	//generate 2D empty tube
+	size_t offset = 10;
+	for (i = 0; i < Length; i++) {
+		for (j = offset; j < Width - offset; j++) {
+			if (i == j) {
+				imageData[x_new(i, j - offset, Length)] = 1.0;
+				imageData[x_new(i, j + offset, Length)] = 1.0;
+			}
+		}
+	}
+	for (i = offset; i < Length - offset; i++) {
+		for (j = 0; j < Width; j++) {
+			if (i == j) {
+				imageData[x_new(i - offset, j, Length)] = 1.0;
+				imageData[x_new(i + offset, j, Length)] = 1.0;
+			}
+		}
+	}
+	//generate holes in the empty tube
+	for (i = 0; i < Length; i++) {
+		for (j = 0; j < Width; j++) {
+			if (i == j) {
+				if(imageData[x_new(50, j, Length)] == 1.0) {
+					imageData[x_new(50, j, Length)] = 0.0;
+				}
+			}
+		}
+	}
+	storing_path = outputPath + "empty_2D_tube_with_hole.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	//Point2D* endPoints = new Point2D[2];
+	//endPoints[0] = { 20.0, 40.0 };
+	//endPoints[1] = { 82.0, 41.0 };
+	
+	//Empty tube
 	Point2D* endPoints = new Point2D[2];
-	endPoints[0] = { 20.0, 40.0 };
-	endPoints[1] = { 82.0, 41.0 };
+	endPoints[0] = {2.0, 5.0};
+	endPoints[1] = {97.0, 91.0};
 	PixelSpacing pSpacing = { 1.0, 1.0 };
 	Point2D origin = { 0.0, 0.0 };
 	Image_Data2D imageDataStr = { Length, Width, imageData, origin, pSpacing, NULL };
@@ -4581,7 +4617,7 @@ int main() {
 
 	////Save the end points in files
 	//FILE* p_end;
-	//string end_points = outputPath + "end_points_semi_circle.csv";
+	//string end_points = outputPath + "end_points_empty_tube.csv";
 	//if (fopen_s(&p_end, end_points.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
@@ -4591,17 +4627,18 @@ int main() {
 	//fclose(p_end);
 
 	computePotential(imageDataStr, potential, endPoints);
-	partialFrontPropagation2D(imageData, action, potential, Length, Width, endPoints);
+	//storing_path = outputPath + "action empty tube/pot1_2/action_";
+	storing_path = outputPath + "action empty tube with holes/pot2/action_";
+	partialFrontPropagation2D(imageDataStr, action, potential, endPoints, storing_path);
 	
 	////storing_path = outputPath + "action_tube_v1.raw";
 	////manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-	//delete[] endPoints;
+	delete[] endPoints;
 	delete[] imageData;
 	delete[] action;
 	delete[] potential;
-	*/
-
+	
 	/*
 	//2D real images
 	const size_t Length = 512;
