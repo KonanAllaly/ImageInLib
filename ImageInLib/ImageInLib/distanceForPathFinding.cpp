@@ -118,31 +118,33 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 
 	//dataType seedVal = (dataType)((imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, height)] + imageDataStr.imageDataPtr[x_new((size_t)seedPoints[1].x, (size_t)seedPoints[1].y, height)]) / 2.0);
 	dataType seedVal = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, height)]);
-	dataType epsilon = 0.0001;
+	dataType epsilon = 0.000001;
 	dataType K = 100000.0;
-	dataType coef_dist = 1;
 
 	dataType* gradientVectorX = new dataType[dim2D]{ 0 };
 	dataType* gradientVectorY = new dataType[dim2D]{ 0 };
 	dataType* edgeDetector = new dataType[dim2D]{ 0 };
 	dataType* distanceMap = new dataType[dim2D]{ 0 };
 
-	//computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
-	//dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
-	//for (i = 0; i < dim2D; i++) {
-	//	ux = gradientVectorX[i];
-	//	uy = gradientVectorY[i];
-	//	norm_of_gradient_square = ux * ux + uy * uy;
-	//	edgeDetector[i] = 1.0 / (1.0 + K * norm_of_gradient_square);
-	//	if (edgeDetector[i] <= 0.35) {
-	//		edgeDetector[i] = 0.0;
-	//	}
-	//	else {
-	//		edgeDetector[i] = 1.0;
-	//	}
-	//}
+	computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
+	dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
+	for (i = 0; i < dim2D; i++) {
+		ux = gradientVectorX[i];
+		uy = gradientVectorY[i];
+		norm_of_gradient_square = ux * ux + uy * uy;
+		//edgeDetector[i] = 1.0 / (1.0 + K * norm_of_gradient_square);
+		//if (edgeDetector[i] <= 0.35) {
+		//	edgeDetector[i] = 0.0;
+		//}
+		//else {
+		//	edgeDetector[i] = 1.0;
+		//}
+		if (norm_of_gradient_square > 0.0) {
+			edgeDetector[i] = 1.0;
+		}
+	}
 
-	fastSweepingFunction_2D(distanceMap, imageDataStr.imageDataPtr, height, width, 1.0, 1000000.0, 1.0);
+	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 1.0);
 	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_2d.raw";
 	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
 
@@ -161,7 +163,7 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	//Normalization
 	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = (epsilon + potentialFuncPtr[i] / maxDiff);// *(1.0 / (1 + 1.0 * distanceMap[i]));
+		potentialFuncPtr[i] = (epsilon + potentialFuncPtr[i] / maxDiff) * (1.0 / (1 + 1.0 * distanceMap[i]));
 	}
 
 	delete[] gradientVectorX;
@@ -239,7 +241,7 @@ void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos) {
 
 	if (left_child < length_array) {
 		val_left = in_Process[left_child].arrival;
-		if (val_left < val_current) {
+		if (val_left <= val_current) {
 			current = left_child;
 			val_current = in_Process[current].arrival;
 		}
@@ -247,7 +249,7 @@ void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos) {
 
 	if (right_child < length_array) {
 		val_right = in_Process[right_child].arrival;
-		if (val_right < val_current) {
+		if (val_right <= val_current) {
 			current = right_child;
 		}
 	}
@@ -266,7 +268,7 @@ void heapifyUp2D(vector<pointFastMarching2D>& in_Process, int i) {
 		int parent = (i - 1) / 2;
 		dataType val_current = in_Process[current].arrival;
 		dataType val_parent = in_Process[parent].arrival;
-		if (val_current < val_parent) {
+		if (val_current <= val_parent) {
 			current = parent;
 		}
 	}
@@ -618,7 +620,6 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	heapifyVector2D(inProcess);
 
 	pointFastMarching2D current;
-	short label = 0;
 
 	//Save points for visualization
 	vector<Point2D> savingList;
@@ -655,14 +656,14 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 			//savingList.clear();
 			fclose(frontPoint);
 		}
-
+		
 		deleteRootHeap2D(inProcess);
 
 		//East
 		if (j < width - 1 && i >= 0 && i < length) {
 			size_t jplus = j + 1;
 			size_t indxEast = x_new(i, jplus, length);
-			label = labelArray[indxEast];
+			short label = labelArray[indxEast];
 			if (label != 1) {
 				x = selectX(distancePtr, length, width, i, jplus);
 				y = selectY(distancePtr, length, width, i, jplus);
@@ -675,10 +676,8 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 					addPointHeap2D(inProcess, EastNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dEast < distancePtr[indxEast]) {
-							distancePtr[indxEast] = dEast;
-						}
+					if (dEast < distancePtr[indxEast]) {
+						distancePtr[indxEast] = dEast;
 					}
 				}
 			}
@@ -688,7 +687,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		if (j > 0 && i >= 0 && i < length) {
 			size_t jminus = j - 1;
 			size_t indxWest = x_new(i, jminus, length);
-			label = labelArray[indxWest];
+			short label = labelArray[indxWest];
 			if (label != 1) {
 				x = selectX(distancePtr, length, width, i, jminus);
 				y = selectY(distancePtr, length, width, i, jminus);
@@ -701,10 +700,8 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 					addPointHeap2D(inProcess, WestNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dWest < distancePtr[indxWest]) {
-							distancePtr[indxWest] = dWest;
-						}
+					if (dWest < distancePtr[indxWest]) {
+						distancePtr[indxWest] = dWest;
 					}
 				}
 			}
@@ -714,7 +711,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		if (j >= 0 && j < width && i > 0) {
 			size_t iminus = i - 1;
 			size_t indxNorth = x_new(iminus, j, length);
-			label = labelArray[indxNorth];
+			short label = labelArray[indxNorth];
 			if (label != 1) {
 				x = selectX(distancePtr, length, width, iminus, j);
 				y = selectY(distancePtr, length, width, iminus, j);
@@ -727,10 +724,8 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 					addPointHeap2D(inProcess, NorthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dNorth < distancePtr[indxNorth]) {
-							distancePtr[indxNorth] = dNorth;
-						}
+					if (dNorth < distancePtr[indxNorth]) {
+						distancePtr[indxNorth] = dNorth;
 					}
 				}
 			}
@@ -742,7 +737,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		if (j >= 0 && j < width && i < length - 1) {
 			size_t iplus = i + 1;
 			size_t indxSouth = x_new(iplus, j, length);
-			label = labelArray[indxSouth];
+			short label = labelArray[indxSouth];
 			if (label != 1) {
 				x = selectX(distancePtr, length, width, iplus, j);
 				y = selectY(distancePtr, length, width, iplus, j);
@@ -755,16 +750,15 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 					addPointHeap2D(inProcess, SouthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dSouth < distancePtr[indxSouth]) {
-							distancePtr[indxSouth] = dSouth;
-						}
+					if (dSouth < distancePtr[indxSouth]) {
+						distancePtr[indxSouth] = dSouth;
 					}
 				}
 			}
 		}
 	}
 
+	
 	//Save points for visualization
 	if (savingList.size() != 0) {
 		id_save++;
@@ -781,6 +775,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		savingList.clear();
 		fclose(frontPoint);
 	}
+	
 
 	delete[] labelArray;
 }
@@ -1182,53 +1177,56 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(i, j, length);
-				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-				if (isGradientComputed == true) {
-					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-				}
-				else {
-					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-					return false;
-				}
-				//Threshold
-				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-				//threshold : real image
-				if (edgeValue <= parameters.thres) {
-					maskThreshold[k][xd] = 0.0;
-				}
-				else {
-					maskThreshold[k][xd] = 1.0;
-				}
-				////threshold artificial image
-				//if (norm_of_gradient != 0.0) {
-				//	maskThreshold[k][xd] = 1.0;
-				//}
-				//else {
-				//	maskThreshold[k][xd] = 0.0;
-				//}
-			}
-		}
-	}
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length; i++) {
+	//		for (j = 0; j < width; j++) {
+	//			xd = x_new(i, j, length);
+	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+	//			if (isGradientComputed == true) {
+	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+	//			}
+	//			else {
+	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+	//				return false;
+	//			}
+	//			////Threshold
+	//			//dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+	//			////threshold : real image
+	//			//if (edgeValue <= parameters.thres) {
+	//			//	maskThreshold[k][xd] = 0.0;
+	//			//}
+	//			//else {
+	//			//	maskThreshold[k][xd] = 1.0;
+	//			//}
+	//			
+	//			//threshold artificial image
+	//			if (norm_of_gradient > 0.0) {
+	//				maskThreshold[k][xd] = 0.0;
+	//			}
+	//			else {
+	//				maskThreshold[k][xd] = 1.0;
+	//			}
+	//		}
+	//	}
+	//}
 
-	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
+	Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brtf.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
-	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
-	dataType value_first_pt = seedStats.mean_data;
+	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	//dataType value_first_pt = seedStats.mean_data;
 	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
 	//dataType value_second_pt = seedStats.mean_data;
 
 	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	dataType seedValCT = value_first_pt;
+	//dataType seedValCT = value_first_pt;
+	dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -1251,8 +1249,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0 / (1.0 + distance[k][i]);
-			potential[k][i] = (parameters.eps + potential[k][i] / maxImage) * weight_dist;
+			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
+			potential[k][i] = (parameters.eps + potential[k][i] / maxImage);// *weight_dist;
 		}
 	}
 
@@ -1939,12 +1937,12 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			break;
 		}
 
-		/*
+		
 		//Visualize the front propagation
 		Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
 		sPoint = getRealCoordFromImageCoord3D(sPoint, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
 		savingList.push_back(sPoint);
-		if (processed_point == 20000) {
+		if (processed_point == 5000) {
 			id_save++;
 			string saving_csv = path_saving + to_string(id_save) + ".csv";
 			FILE* frontPoint;
@@ -1952,6 +1950,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				printf("Enable to open");
 				return false;
 			}
+			fprintf(frontPoint, "x,y,z\n");
 			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 			}
@@ -1959,7 +1958,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			fclose(frontPoint);
 			processed_point = 0;
 		}
-		*/
+		
 
 		deleteRootHeap3D(inProcess);
 
@@ -2120,7 +2119,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	}
 
-	/*
+	
 	//Visualize the front propagation
 	id_save++;
 	string saving_csv = path_saving + to_string(id_save) + ".csv";
@@ -2129,6 +2128,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		printf("Enable to open");
 		return false;
 	}
+	fprintf(frontPoint, "x,y,z\n");
 	if (savingList.size() > 0) {
 		for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 			fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
@@ -2136,7 +2136,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		savingList.clear();
 	}
 	fclose(frontPoint);
-	*/
+	
 
 	for (k = 0; k < height; k++) {
 		for(i = 0; i < dim2D; i++) {
