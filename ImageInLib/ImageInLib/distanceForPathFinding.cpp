@@ -1177,46 +1177,46 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			////Threshold
-	//			//dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			////threshold : real image
-	//			//if (edgeValue <= parameters.thres) {
-	//			//	maskThreshold[k][xd] = 0.0;
-	//			//}
-	//			//else {
-	//			//	maskThreshold[k][xd] = 1.0;
-	//			//}
-	//			
-	//			//threshold artificial image
-	//			if (norm_of_gradient > 0.0) {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				//Threshold
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
+				}
+				
+				////threshold artificial image
+				//if (norm_of_gradient > 0.0) {
+				//	maskThreshold[k][xd] = 0.0;
+				//}
+				//else {
+				//	maskThreshold[k][xd] = 1.0;
+				//}
+			}
+		}
+	}
 
-	Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
 	
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
 	//bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p1.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
@@ -1250,7 +1250,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
-			potential[k][i] = (parameters.eps + potential[k][i] / maxImage);// *weight_dist;
+			potential[k][i] = (parameters.eps + potential[k][i] / maxImage) * weight_dist;
 		}
 	}
 
@@ -1942,7 +1942,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
 		sPoint = getRealCoordFromImageCoord3D(sPoint, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
 		savingList.push_back(sPoint);
-		if (processed_point == 5000) {
+		if (processed_point == 1000) {
 			id_save++;
 			string saving_csv = path_saving + to_string(id_save) + ".csv";
 			FILE* frontPoint;
