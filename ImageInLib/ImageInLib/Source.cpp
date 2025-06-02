@@ -48,7 +48,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	/*
+	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -66,7 +66,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	*/
+	
 
 	//========================= Detect Heart region ==================================
 	
@@ -3997,7 +3997,7 @@ int main() {
 
 	//==================== Test Potential function ========================================
 	
-	/*
+	
 	dataType** maskThreshold = new dataType * [Height];
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -4049,17 +4049,17 @@ int main() {
 		0.000001,//epsilon
 		radius
 	};
-	compute3DPotential(inputImageStr, potential, endPoints, parameters);
-	storing_path = outputPath + "potential_brt_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//compute3DPotential(inputImageStr, potential, endPoints, parameters);
+	storing_path = outputPath + "potential_p1.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 35;
 	
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "partial action/p1/action_";
+	storing_path = outputPath + "p1/action_";
 	//fastMarching3dWithSpacing(imageStr, action, potential, seed1, intSpacing);
-	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
 	//storing_path = outputPath + "partial action/potential_1/action_";
 	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
@@ -4122,11 +4122,11 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	free(ctContainer);
-	*/
-
 	
+
+	/*
 	//Artificial image
-	const size_t Height = 100, Width = 100, Length = 100;
+	const size_t Height = 100, Width = 60, Length = 60;
 	const size_t dim2D = Length * Width;
 	dataType** imageData = new dataType * [Height];
 	dataType** imageDataNew = new dataType * [Height];
@@ -4142,11 +4142,14 @@ int main() {
 	////loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
 	////loading_path = inputPath + "shape/tube3D.raw";
 	////loading_path = inputPath + "shape/empty_tube_with_holes.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	//loading_path = inputPath + "shape/spiral.raw";
+	//loading_path = inputPath + "shape/Action/empty_spiral.raw";
+	loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
-	//Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
+	Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 
 	////Empty the spiral using gradient
 	//Point3D gradImage;
@@ -4172,8 +4175,67 @@ int main() {
 	//		}
 	//	}
 	//}
-	storing_path = outputPath + "empty_spiral.raw";
-	manageRAWFile3D<dataType>(imageDataNew, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "empty_spiral.raw";
+	//manageRAWFile3D<dataType>(imageDataNew, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	////create hole in the empty spiral
+	//imageDataNew[39][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(47, 67, Length)] = 0.0;
+	////
+	//imageDataNew[40][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(47, 67, Length)] = 0.0;
+	////
+	//imageDataNew[41][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(47, 67, Length)] = 0.0;
+
+	//storing_path = outputPath + "empty_spiral.raw";
+	////storing_path = outputPath + "empty_spiral_with_hole.raw";
+	//manageRAWFile3D<dataType>(imageDataNew, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	//dataType** croppedImage = new dataType * [Height];
+	//for(k = 0; k < Height; k++) {
+	//	croppedImage[k] = new dataType[60 * 60]{ 0 };
+	//}
+
+	//size_t it, jt, kt;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0, it = 20; i < 60; i++, it++) {
+	//		for (j = 0, jt = 20; j < 60; j++, jt++) {
+	//			croppedImage[k][x_new(i, j, 60)] = imageDataNew[k][x_new(it, jt, Length)];
+	//		}
+	//	}
+	//}
+	//storing_path = outputPath + "croped.raw";
+	//manageRAWFile3D<dataType>(croppedImage, 60, 60, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//for (k = 0; k < Height; k++) {
+	//	delete[] croppedImage[k];
+	//}
+	//delete[] croppedImage;
 	
 	////Generate 3D tube
 	//double radius = 9.0;
@@ -4473,37 +4535,45 @@ int main() {
 	//Point3D seed1 = { 82, 54, 8 };
 	//Point3D seed2 = { 81, 45, 85 };
 
-	//spiral one turn
-	Point3D seed1 = { 81, 51, 15 };
-	Point3D seed2 = { 81, 47, 88 };
+	////spiral one turn
+	//Point3D seed1 = { 81, 51, 15 };
+	//Point3D seed2 = { 81, 47, 88 };
 
 	////diagonal tube
 	//Point3D seed1 = { 90, 89, 19 };
 	//Point3D seed2 = { 14, 12, 16 };
 
+	////second spiral
+	//Point3D seed1 = { 61, 50, 12 };
+	//Point3D seed2 = { 61, 48, 86 };
+
+	//second spiral
+	Point3D seed1 = { 41, 30, 12 };
+	Point3D seed2 = { 41, 28, 86 };
+
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
+
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 15;
 
 	double radius_potential = 3.0;
 	Potential_Parameters parameters{
 		1,//1000, //edge detector coefficient
 		1,//0.15, //threshold
-		0.00001,//epsilon
+		0.0001,//epsilon
 		radius_potential
 	};
-	Image_Data imageStr = { Height, Length, Width, imageDataNew, iOrigin, iSpacing, orientation };
+	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 	compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	//storing_path = outputPath + "potential_spiral.raw";
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	vector<Point3D> key_points;
-	const double LengthKeyPoints = 15;
-
-	storing_path = outputPath + "action spiral/pot2/action_";
+	storing_path = outputPath + "Action Spiral/hole2/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
-	////frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
+	//////frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 
 	////key_points.clear();
@@ -4529,7 +4599,8 @@ int main() {
 	vector<Point3D> path_points;
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_spiral_pot2.csv";
+	storing_path = outputPath + "path_points_spiral_with_holes2.csv";
+	//storing_path = outputPath + "path_points_spiral_pot2.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -4553,7 +4624,7 @@ int main() {
 	delete[] imageDataNew;
 	delete[] action;
 	delete[] potential;
-	
+	*/
 	
     /*
 	const size_t Height = 100, Length = 100;
