@@ -1745,15 +1745,18 @@ dataType solve3dQuadraticFastMarching(dataType X, dataType Y, dataType Z, dataTy
 	}
 
 	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 1.0 / pow(h.sx, 2) + 1.0 / pow(h.sy, 2) + 1.0 / pow(h.sz, 2);
+		a = (dataType)( 1.0 / pow(h.sx, 2) + 1.0 / pow(h.sy, 2) + 1.0 / pow(h.sz, 2) );
 		b = (dataType)( -2 * (X / pow(h.sx, 2) + Y / pow(h.sy, 2) + Z / pow(h.sz, 2)) );
-		c = (dataType)(pow(X / h.sx, 2) + pow(Y / h.sy, 2) + pow(Z / h.sz, 2) - W);
+		c = (dataType)( pow(X / h.sx, 2) + pow(Y / h.sy, 2) + pow(Z / h.sz, 2) - W);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
 			return (dataType)(min(X, min(Y, Z)) + R);
+			//return (dataType)(min((X + h.sx / R), min((Y + h.sy / R), (Z + h.sz / R)))); // TODO: check this
+			//return (dataType)(min(X, min(Y, Z)) + min(h.sx, min(h.sy, h.sz)) * R); wrong
+			
 		}
 	}
 
@@ -4493,6 +4496,277 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 			}
 		}
 	}
+	return true;
+}
+
+bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType fgroundValue)
+{
+	//i, j and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
+
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
+	const size_t height = ctImageData.height;
+	VoxelSpacing spacing = ctImageData.spacing;
+
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
+	size_t height_minus = height - 1;
+
+	int j, i, k, xd;
+
+	size_t sweepNumber = 0, sweepDirection;
+	const size_t dim2D = length * width;
+
+	dataType** temp3dPtr = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		temp3dPtr[k] = new dataType[dim2D]{ 0 };
+		if (temp3dPtr[k] == NULL)
+			return false;
+	}
+	if (temp3dPtr == NULL)
+	{
+		return false;
+	}
+
+	dataType h = 1.0;
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < length; i++)
+		{
+			for (j = 0; j < width; j++)
+			{
+				xd = x_new(i, j, length);
+
+				if (ctImageData.imageDataPtr[k][xd] =  fgroundValue)
+				{
+					temp3dPtr[k][xd] = 0.0;
+					distancePtr[k][xd] = 0.0;
+				}
+				else
+				{
+					temp3dPtr[k][xd] = INFINITY;
+					distancePtr[k][xd] = INFINITY;
+				}
+			}
+		}
+	}
+
+	//Main loop for height sweeps
+	dataType x, y, z;
+	dataType a_1, a_2, a_3;
+	while (sweepNumber < 8)
+	{
+		sweepDirection = sweepNumber;
+		switch (sweepDirection)
+		{
+		case 0:
+			for (k = 0; k < height; k++)
+			{
+				for (i = 0; i < length; i++)
+				{
+					for (j = width_minus; j >= 0; j--)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							a_1 = -max(-x, max(-y, -z)); // min
+							a_3 = max(x, max(y, z)); // max
+							a_2 = (x + y + z) - (a_3 + a_1);//mid
+							temp3dPtr[k][xd] = a_1 + h;
+							//TODO : complete the implementation 
+						}
+						if (j == 0)
+							break;
+					}
+				}
+			}
+			sweepNumber++;
+			break;
+
+		case 1:
+			for (k = 0; k < height; k++)
+			{
+				for (i = length_minus; i >= 0; i--)
+				{
+					for (j = width_minus; j >= 0; j--)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+						if (j == 0)
+							break;
+					}
+					if (i == 0)
+						break;
+				}
+			}
+			sweepNumber++;
+			break;
+
+		case 2:
+			for (k = 0; k < height; k++)
+			{
+				for (i = length_minus; i >= 0; i--)
+				{
+					for (j = 0; j < width; j++)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+					}
+					if (i == 0)
+						break;
+				}
+			}
+			sweepNumber++;
+			break;
+
+		case 3:
+			for (k = height_minus; k >= 0; k--)
+			{
+				for (i = 0; i < length; i++)
+				{
+					for (j = 0; j < width; j++)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+					}
+				}
+				if (k == 0)
+					break;
+			}
+			sweepNumber++;
+			break;
+		case 4:
+			for (k = height_minus; k >= 0; k--)
+			{
+				for (i = 0; i < length; i++)
+				{
+					for (j = width_minus; j >= 0; j--)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+						if (j == 0)
+							break;
+					}
+				}
+				if (k == 0)
+					break;
+			}
+			sweepNumber++;
+			break;
+		case 5:
+			for (k = height_minus; k >= 0; k--)
+			{
+				for (i = length_minus; i >= 0; i--)
+				{
+					for (j = 0; j < width; j++)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+					}
+					if (i == 0)
+						break;
+				}
+				if (k == 0)
+					break;
+			}
+			sweepNumber++;
+			break;
+		case 6:
+			for (k = height_minus; k >= 0; k--)
+			{
+				for (i = length_minus; i >= 0; i--)
+				{
+					for (j = width_minus; j >= 0; j--)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+						if (j == 0)
+							break;
+					}
+					if (i == 0)
+						break;
+				}
+				if (k == 0)
+					break;
+			}
+			sweepNumber++;
+			break;
+		default:
+			for (k = 0; k < height; k++)
+			{
+				for (i = 0; i < length; i++)
+				{
+					for (j = 0; j < width; j++)
+					{
+						xd = x_new(i, j, length);
+						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
+						{
+							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
+							x = select3dX(distancePtr, length, width, height, i, j, k);
+							y = select3dY(distancePtr, length, width, height, i, j, k);
+							z = select3dZ(distancePtr, length, width, height, i, j, k);
+							//TODO : complete the implementation 
+						}
+					}
+				}
+			}
+			sweepNumber++;
+			break;
+		}
+	}
+
+	for (k = 0; k < height; k++)
+	{
+		delete[] temp3dPtr[k];
+	}
+	delete[] temp3dPtr;
+
 	return true;
 }
 
