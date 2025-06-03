@@ -51,7 +51,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient3_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -4008,22 +4008,22 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 
-	//Patient 1
-	Point3D seed1 = { 262, 258, 146 };
-	Point3D seed2 = { 266, 256, 245 };
+	////Patient 1
+	//Point3D seed1 = { 262, 258, 146 };
+	//Point3D seed2 = { 266, 256, 245 };
 
 	////Patient 2
 	//Point3D seed1 = { 257, 254, 249 };
 	//Point3D seed2 = { 257, 243, 350 };
 
-	////Patient 3
-	//Point3D seed1 = { 268, 230, 116 };
-	//Point3D seed2 = { 266, 221, 218 };
+	//Patient 3
+	Point3D seed1 = { 268, 230, 116 };
+	Point3D seed2 = { 266, 221, 218 };
 	
 	////Patient 4
 	//Point3D seed1 = { 280, 229, 135 };
@@ -4046,26 +4046,26 @@ int main() {
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
 		0.15, //threshold
-		0.000001,//epsilon
+		0.001,//epsilon
 		radius
 	};
-	//compute3DPotential(inputImageStr, potential, endPoints, parameters);
-	storing_path = outputPath + "potential_p1.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	compute3DPotential(inputImageStr, potential, endPoints, parameters);
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 35;
 	
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "p1/action_";
-	//fastMarching3dWithSpacing(imageStr, action, potential, seed1, intSpacing);
-	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	storing_path = outputPath + "update path finding/p3/test 3/action_";
+	////partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
+	fastMarching3dWithSpacing(inputImageStr, action, potential, seed1, ctSpacing);
 	
-	//storing_path = outputPath + "partial action/potential_1/action_";
+	storing_path = outputPath + "action_map.raw";
 	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
-
-	//storing_path = outputPath + "action_map.raw";
-	//manageRAWFile3D<dataType>(action, Length, Width, height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "update path finding/action_map_p6_test2.raw";
+	////storing_path = outputPath + "update path finding/action_map_test2.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//////Save the keys points in files
 	//string saving_csv = outputPath + "seed_p1.csv";
@@ -4091,24 +4091,24 @@ int main() {
 	//storing_path = outputPath + "distance_map.raw";
 	//manageRAWFile3D<dataType>(inputImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	////Extract and save the path points
-	//dataType tau = 0.8, tolerance = 1.0;
-	//Path_Parameters pathParameters = { tau, 1000, tolerance };
-	//vector<Point3D> path_points;
-	//shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
-	//FILE* path_file;
-	//storing_path = outputPath + "path_points_p1.csv";
-	//if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(path_file, "x,y,z\n");
-	//for(int it = 0; it < path_points.size(); it++) {
-	//	Point3D current_point = path_points[it];
-	//	current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
-	//	fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
-	//}
-	//fclose(path_file);
+	//Extract and save the path points
+	dataType tau = 0.8, tolerance = 1.0;
+	Path_Parameters pathParameters = { tau, 1000, tolerance };
+	vector<Point3D> path_points;
+	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
+	FILE* path_file;
+	storing_path = outputPath + "path_points_p3_v1.csv";
+	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(path_file, "x,y,z\n");
+	for(int it = 0; it < path_points.size(); it++) {
+		Point3D current_point = path_points[it];
+		current_point = getRealCoordFromImageCoord3D(current_point, ctOrigin, ctSpacing, orientation);
+		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
+	}
+	fclose(path_file);
 
 	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
