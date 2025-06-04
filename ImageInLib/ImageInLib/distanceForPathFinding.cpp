@@ -23,6 +23,7 @@
 //=================== Functions for the 2D Fast Marching and Path Tracking ==============================
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 dataType solve2dQuadratic(dataType X, dataType Y, dataType W) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
@@ -838,6 +839,7 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Po
 
 	return true;
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //=================== Functions for the 3D Fast Marching and Path Tracking ==============================

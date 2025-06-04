@@ -36,6 +36,7 @@ using namespace std;
 		double tolerance; //minimal distance to stop
 	} Path_Parameters;
 
+	/*
 	/// <summary>
 	/// swap two given points 
 	/// </summary>
@@ -152,6 +153,18 @@ using namespace std;
 	/// <param name="parameters">Additional parameters controlling the pathfinding algorithm.</param>
 	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
 	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
+
+		/// <summary>
+	/// Computes the mean and variance of potential values in a 2D image within circular regions of increasing radius around a seed point.
+	/// </summary>
+	/// <param name="ctImageData">The 2D image data to process.</param>
+	/// <param name="potentialPtr">Pointer to the output buffer where computed potential values will be stored.</param>
+	/// <param name="seedPoint">The center point in the image from which circular regions are expanded.</param>
+	/// <param name="radiusInitial">The initial radius of the circular region.</param>
+	/// <param name="radiusMax">The maximum radius to consider for the circular region.</param>
+	/// <param name="radiusStep">The increment by which the radius increases for each computation.</param>
+	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
+	*/
 
 	/// <summary>
 	/// solve quadratic equation
@@ -305,17 +318,6 @@ using namespace std;
 	/// <param name="path_saving">A string specifying the file path where the resulting path should be saved.</param>
 	/// <returns>Returns true if the partial front propagation and path saving were successful; otherwise, returns false.</returns>
 	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
-
-	/// <summary>
-	/// Computes the mean and variance of potential values in a 2D image within circular regions of increasing radius around a seed point.
-	/// </summary>
-	/// <param name="ctImageData">The 2D image data to process.</param>
-	/// <param name="potentialPtr">Pointer to the output buffer where computed potential values will be stored.</param>
-	/// <param name="seedPoint">The center point in the image from which circular regions are expanded.</param>
-	/// <param name="radiusInitial">The initial radius of the circular region.</param>
-	/// <param name="radiusMax">The maximum radius to consider for the circular region.</param>
-	/// <param name="radiusStep">The increment by which the radius increases for each computation.</param>
-	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
 
 	//=================================
 
