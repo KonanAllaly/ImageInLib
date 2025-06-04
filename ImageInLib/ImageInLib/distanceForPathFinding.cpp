@@ -1177,45 +1177,45 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			//threshold : real image
-	//			if (edgeValue <= parameters.thres) {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//			////threshold artificial image
-	//			//if (norm_of_gradient > 0.0) {
-	//			//	maskThreshold[k][xd] = 0.0;
-	//			//}
-	//			//else {
-	//			//	maskThreshold[k][xd] = 1.0;
-	//			//}
-	//		}
-	//	}
-	//}
-
-	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
 	
-	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	//bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
+				}
+				////threshold artificial image
+				//if (norm_of_gradient > 0.0) {
+				//	maskThreshold[k][xd] = 0.0;
+				//}
+				//else {
+				//	maskThreshold[k][xd] = 1.0;
+				//}
+			}
+		}
+	}
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	////rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
+	////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	
+	 
 	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
@@ -1237,19 +1237,19 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	}
 
 	//Find the max of the difference
-	dataType maxImage = 1.0;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (potential[k][i] > maxImage) {
-	//			maxImage = potential[k][i];
-	//		}
-	//	}
-	//}
+	dataType maxImage = 0.0;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (potential[k][i] > maxImage) {
+				maxImage = potential[k][i];
+			}
+		}
+	}
 
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0;// / (1.0 + 1.0 * distance[k][i]);
+			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
 			potential[k][i] = (parameters.eps + potential[k][i] / maxImage) * weight_dist;
 		}
 	}
@@ -1923,6 +1923,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	dataType max_action = 0;
 	size_t processed_point = 0;
+	size_t count_mistakes = 0;
 	while (inProcess.size() > 0) {
 
 		//processed the point with minimum distance
@@ -1933,12 +1934,15 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
 		processed_point++;
-		actionPtr.imageDataPtr[k][currentIndx] = current.arrival;
+		//actionPtr.imageDataPtr[k][currentIndx] = current.arrival;
 
 		//Find the maximum action value
-		if (current.arrival > max_action) {
-			max_action = current.arrival;
+		if (actionPtr.imageDataPtr[k][currentIndx] > max_action) {
+			max_action = actionPtr.imageDataPtr[k][currentIndx];
 		}
+		//else {
+		//	count_mistakes++;
+		//}
 		
 		//Exit the while loop when the final point is reached/computed
 		if (labelArray[seedK][seedIndex] == 1) {
@@ -2126,7 +2130,9 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		}
 
 	}
-
+	//std::cout << processed_point << " points have been processed " << std::endl;
+	//std::cout << "The mistake happens : " << count_mistakes << " times" << std::endl;
+	
 	
 	//Visualize the front propagation
 	id_save++;
@@ -4264,7 +4270,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		size_t k = current.z;
 		size_t currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
-		distanceFuncPtr[k][currentIndx] = current.arrival;
+		//distanceFuncPtr[k][currentIndx] = current.arrival;
 		deleteRootHeap3D(inProcess);
 
 		//Top
