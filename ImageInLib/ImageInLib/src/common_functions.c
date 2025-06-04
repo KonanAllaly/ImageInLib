@@ -512,6 +512,71 @@ void computeImageGradient(Image_Data2D imageDataStr, dataType* gradientVectorX, 
 	}
 }
 //==============================================================================
+bool compute3dImageGradient(Image_Data imageDataStr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ) {
+
+	if (imageDataStr.imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL) {
+		return false;
+	}
+
+	size_t i = 0, j = 0, k = 0, currentInd = 0;
+	dataType ux = 0.0, uy = 0.0, uz = 0.0;
+	const size_t length = imageDataStr.length;
+	const size_t width = imageDataStr.width;
+	const size_t height = imageDataStr.height;
+
+	dataType sx = imageDataStr.spacing.sx, sy = imageDataStr.spacing.sy, sz = imageDataStr.spacing.sz;
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+
+				currentInd = x_new(i, j, length);
+
+				if (k == 0) {
+					uz = (imageDataStr.imageDataPtr[k + 1][currentInd] - imageDataStr.imageDataPtr[k][currentInd]) / sz;
+				}
+				else {
+					if (k == (height - 1)) {
+						uz = (imageDataStr.imageDataPtr[k][currentInd] - imageDataStr.imageDataPtr[k - 1][currentInd]) / sz;
+					}
+					else {
+						uz = (imageDataStr.imageDataPtr[k + 1][currentInd] - imageDataStr.imageDataPtr[k - 1][currentInd]) / (2 * sz);
+					}
+				}
+
+				if (i == 0) {
+					ux = (imageDataStr.imageDataPtr[k][x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[k][x_new(i, j, length)]) / sx;
+				}
+				else {
+					if (i == (length - 1)) {
+						ux = (imageDataStr.imageDataPtr[k][x_new(i, j, length)] - imageDataStr.imageDataPtr[k][x_new(i - 1, j, length)]) / sx;
+					}
+					else {
+						ux = (imageDataStr.imageDataPtr[k][x_new(i + 1, j, length)] - imageDataStr.imageDataPtr[k][x_new(i - 1, j, length)]) / (2 * sx);
+					}
+				}
+
+				if (j == 0) {
+					uy = (imageDataStr.imageDataPtr[k][x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[k][x_new(i, j, length)]) / sy;
+				}
+				else {
+					if (j == (width - 1)) {
+						uy = (imageDataStr.imageDataPtr[k][x_new(i, j, length)] - imageDataStr.imageDataPtr[k][x_new(i, j - 1, length)]) / sy;
+					}
+					else {
+						uy = (imageDataStr.imageDataPtr[k][x_new(i, j + 1, length)] - imageDataStr.imageDataPtr[k][x_new(i, j - 1, length)]) / (2 * sy);
+					}
+				}
+
+				gradientVectorX[k][currentInd] = (dataType)ux;
+				gradientVectorY[k][currentInd] = (dataType)uy;
+				gradientVectorZ[k][currentInd] = (dataType)uz;
+			}
+		}
+	}
+	return true;
+}
+//==============================================================================
 bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad)
 {
 	

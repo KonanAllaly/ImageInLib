@@ -190,7 +190,10 @@ extern "C" {
 	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
+	bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad);
 	void computeImageGradient(Image_Data2D imageDataStr, dataType* gradientVectorX, dataType* gradientVectorY);
+	bool getGradient3D(Image_Data imageDataStr, const size_t ind_x, const size_t ind_y, const size_t ind_z, Point3D* grad);
+	bool compute3dImageGradient(Image_Data imageDataStr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ);
 	//==============================================================================
 	typedef struct {
 		size_t i_min, i_max, j_min, j_max;
@@ -222,16 +225,6 @@ extern "C" {
 	/// <param name="offset">extend</param>
 	/// <returns></returns>
 	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
-
-	//================================================================================
-	//void computeHistogram(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t bins);
-	//================================================================================
-	//void maximumIntensityProjection(dataType** imageData, dataType** resultImage, const size_t length, const size_t width, const size_t height);
-	//===============
-
-	bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad);
-
-	bool getGradient3D(Image_Data imageDataStr, const size_t ind_x, const size_t ind_y, const size_t ind_z, Point3D* grad);
 
 #endif // !COMMON_FUNCTIONS
 
