@@ -51,7 +51,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient3_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -3998,20 +3998,17 @@ int main() {
 	//==================== Test Potential function ========================================
 	
 	
-	dataType** maskThreshold = new dataType * [Height];
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
-		maskThreshold[k] = new dataType[dim2D]{ 0 };
 		imageData[k] = new dataType[dim2D]{ 0 };
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "raw/filtered/New/filtered_p3.raw";
+	//loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p6.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 
 	////Patient 1
 	//Point3D seed1 = { 262, 258, 146 };
@@ -4021,9 +4018,9 @@ int main() {
 	//Point3D seed1 = { 257, 254, 249 };
 	//Point3D seed2 = { 257, 243, 350 };
 
-	//Patient 3
-	Point3D seed1 = { 268, 230, 116 };
-	Point3D seed2 = { 266, 221, 218 };
+	////Patient 3
+	//Point3D seed1 = { 268, 230, 116 };
+	//Point3D seed2 = { 266, 221, 218 };
 	
 	////Patient 4
 	//Point3D seed1 = { 280, 229, 135 };
@@ -4034,10 +4031,10 @@ int main() {
 	////Point3D seed2 = { 239, 225, 612 };
 	//Point3D seed2 = { 239, 225, 625 };
 
-	////Patient 6
-	//Point3D seed1 = { 250, 298, 258 };
-	////Point3D seed2 = { 268, 288, 433 };
-	//Point3D seed2 = { 268, 288, 443 };
+	//Patient 6
+	Point3D seed1 = { 250, 298, 258 };
+	//Point3D seed2 = { 268, 288, 433 };
+	Point3D seed2 = { 268, 288, 443 };
 
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
@@ -4049,23 +4046,23 @@ int main() {
 		0.001,//epsilon
 		radius
 	};
+	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 	compute3DPotential(inputImageStr, potential, endPoints, parameters);
-	storing_path = outputPath + "potential.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	
+	//storing_path = outputPath + "potential.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	vector<Point3D> key_points;
-	const double LengthKeyPoints = 35;
-	
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "update path finding/p3/test 3/action_";
-	////partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	fastMarching3dWithSpacing(inputImageStr, action, potential, seed1, ctSpacing);
+	storing_path = outputPath + "update path finding/p6/action_";
+	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
-	storing_path = outputPath + "action_map.raw";
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 35;
+	//storing_path = outputPath + "action_map.raw";
 	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 	//storing_path = outputPath + "update path finding/action_map_p6_test2.raw";
 	////storing_path = outputPath + "update path finding/action_map_test2.raw";
-	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//////Save the keys points in files
 	//string saving_csv = outputPath + "seed_p1.csv";
@@ -4097,7 +4094,7 @@ int main() {
 	vector<Point3D> path_points;
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_p3_v1.csv";
+	storing_path = outputPath + "path_points_p6.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -4112,12 +4109,10 @@ int main() {
 
 	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
-		delete[] maskThreshold[k];
 		delete[] imageData[k];
 		delete[] action[k];
 		delete[] potential[k];
 	}
-	delete[] maskThreshold;
 	delete[] imageData;
 	delete[] action;
 	delete[] potential;
