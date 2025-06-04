@@ -51,7 +51,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient4_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -4007,7 +4007,7 @@ int main() {
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
 	//loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
-	loading_path = inputPath + "raw/filtered/filteredGMC_p6.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p4.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	////Patient 1
@@ -4022,19 +4022,19 @@ int main() {
 	//Point3D seed1 = { 268, 230, 116 };
 	//Point3D seed2 = { 266, 221, 218 };
 	
-	////Patient 4
-	//Point3D seed1 = { 280, 229, 135 };
-	//Point3D seed2 = { 285, 234, 220 };
+	//Patient 4
+	Point3D seed1 = { 280, 229, 135 };
+	Point3D seed2 = { 285, 234, 220 };
 
 	////Patient 5
 	//Point3D seed1 = { 265, 243, 471 };
 	////Point3D seed2 = { 239, 225, 612 };
 	//Point3D seed2 = { 239, 225, 625 };
 
-	//Patient 6
-	Point3D seed1 = { 250, 298, 258 };
-	//Point3D seed2 = { 268, 288, 433 };
-	Point3D seed2 = { 268, 288, 443 };
+	////Patient 6
+	//Point3D seed1 = { 250, 298, 258 };
+	////Point3D seed2 = { 268, 288, 433 };
+	//Point3D seed2 = { 268, 288, 443 };
 
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
@@ -4053,7 +4053,7 @@ int main() {
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "update path finding/p6/action_";
+	storing_path = outputPath + "update path finding/p4/action_";
 	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
 	//vector<Point3D> key_points;
@@ -4094,7 +4094,7 @@ int main() {
 	vector<Point3D> path_points;
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_p6.csv";
+	storing_path = outputPath + "path_points_p4.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;

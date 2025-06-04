@@ -20,6 +20,7 @@ using namespace std;
 	typedef struct {
 		size_t x, y, z;
 		dataType arrival;
+		short index;
 	} pointFastMarching3D;
 
 	typedef struct {
@@ -254,6 +255,8 @@ using namespace std;
 	/// <param name="in_Process">vector containing all the elements</param>
 	/// <param name="point">element to be added</param>
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
+
+	void updateHeapPriority(vector<pointFastMarching3D>& in_Process, pointFastMarching3D pPoint);
 
 	/// <summary>
 	/// 3D fast marching (front propagation), starting by one seed point
