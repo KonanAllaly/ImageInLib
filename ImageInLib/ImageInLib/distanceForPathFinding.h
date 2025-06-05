@@ -20,7 +20,7 @@ using namespace std;
 	typedef struct {
 		size_t x, y, z;
 		dataType arrival;
-		short index;
+		size_t index;
 	} pointFastMarching3D;
 
 	typedef struct {
@@ -213,21 +213,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
-
-	/// <summary>
-	/// Compute 3D image gradient
-	/// </summary>
-	/// <param name="imageDataPtr">input image</param>
-	/// <param name="gradientVectorX">gradient X component</param>
-	/// <param name="gradientVectorY">gradient Y component</param>
-	/// <param name="gradientVectorZ">gradient Z component</param>
-	/// <param name="lenght">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="height">image height</param>
-	/// <param name="h">space discretization</param>
-	/// <returns>return true after succes</returns>
-	bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, VoxelSpacing spacing);
+	dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);	
 
 	/// <summary>
 	/// swap 3D variables
@@ -415,6 +401,15 @@ using namespace std;
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
 	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
+
+	/// <summary>
+	/// Computes a distance map from the given image data using the fast sweeping method.
+	/// </summary>
+	/// <param name="ctImageData">The input image data to process.</param>
+	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
+	/// <param name="backgroundValue">The value in the image that represents the background.</param>
+	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
+	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/*
 	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);

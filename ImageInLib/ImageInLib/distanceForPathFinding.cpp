@@ -1008,68 +1008,6 @@ dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width
 	return min(k_minus, k_plus);
 }
 
-bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height, VoxelSpacing spacing) {
-
-	if (imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL) {
-		return false;
-	}
-
-	size_t i = 0, j = 0, k = 0, currentInd = 0;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0;
-
-	dataType sx = spacing.sx, sy = spacing.sy, sz = spacing.sz;
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-
-				currentInd = x_new(i, j, length);
-
-				if (k == 0) {
-					uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k][currentInd]) / sz;
-				}
-				else {
-					if (k == (height - 1)) {
-						uz = (imageDataPtr[k][currentInd] - imageDataPtr[k - 1][currentInd]) / sz;
-					}
-					else {
-						uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k - 1][currentInd]) / (2 * sz);
-					}
-				}
-
-				if (i == 0) {
-					ux = (imageDataPtr[k][x_new(i + 1, j, length)] - imageDataPtr[k][x_new(i, j, length)]) / sx;
-				}
-				else {
-					if (i == (length - 1)) {
-						ux = (imageDataPtr[k][x_new(i, j, length)] - imageDataPtr[k][x_new(i - 1, j, length)]) / sx;
-					}
-					else {
-						ux = (imageDataPtr[k][x_new(i + 1, j, length)] - imageDataPtr[k][x_new(i - 1, j, length)]) / (2 * sx);
-					}
-				}
-
-				if (j == 0) {
-					uy = (imageDataPtr[k][x_new(i, j + 1, length)] - imageDataPtr[k][x_new(i, j, length)]) / sy;
-				}
-				else {
-					if (j == (width - 1)) {
-						uy = (imageDataPtr[k][x_new(i, j, length)] - imageDataPtr[k][x_new(i, j - 1, length)]) / sy;
-					}
-					else {
-						uy = (imageDataPtr[k][x_new(i, j + 1, length)] - imageDataPtr[k][x_new(i, j - 1, length)]) / (2 * sy);
-					}
-				}
-
-				gradientVectorX[k][currentInd] = (dataType)ux;
-				gradientVectorY[k][currentInd] = (dataType)uy;
-				gradientVectorZ[k][currentInd] = (dataType)uz;
-			}
-		}
-	}
-	return true;
-}
-
 void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
 	pointFastMarching3D temp = *a;
 	*a = *b;
@@ -1190,7 +1128,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 
-	
+	/*
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < length; i++) {
 			for (j = 0; j < width; j++) {
@@ -1222,15 +1160,16 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 		}
 	}
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
+	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
 	////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
 	
-	 
 	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	*/
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
@@ -1238,6 +1177,19 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
 	//dataType value_second_pt = seedStats.mean_data;
 
+	std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
+	std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
+	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
+	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
+	
+	dataType var_epsilon = 0.0;
+	if (seedStats.sd_data != 0) {
+		var_epsilon = seedStats.sd_data;
+	}
+	else {
+		var_epsilon = parameters.eps;
+	}
+	
 	dataType seedValCT = value_first_pt;
 	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
 	//dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
@@ -1251,19 +1203,25 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 
 	//Find the max of the difference
 	dataType maxImage = 0.0;
+	dataType minImage = INFINITY;
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			if (potential[k][i] > maxImage) {
 				maxImage = potential[k][i];
 			}
+			if (potential[k][i] < maxImage) {
+				minImage = potential[k][i];
+			}
 		}
 	}
+	std::cout << "difference min : " << minImage << std::endl;
+	std::cout << "difference max : " << maxImage << std::endl;
 
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
-			potential[k][i] = (parameters.eps + potential[k][i] / maxImage) * weight_dist;
+			dataType weight_dist = 1.0;// / (1.0 + 1.0 * distance[k][i]);
+			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * weight_dist;
 		}
 	}
 
@@ -4352,274 +4310,200 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 	return true;
 }
 
-bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType fgroundValue)
+bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue)
 {
-	//i, j and k are loop counters. i_n is also a loop counter given by i_n = i + j * xDim
 
 	const size_t length = ctImageData.length;
 	const size_t width = ctImageData.width;
 	const size_t height = ctImageData.height;
 	VoxelSpacing spacing = ctImageData.spacing;
+	const size_t dim2D = length * width;
 
 	size_t length_minus = length - 1;
 	size_t width_minus = width - 1;
 	size_t height_minus = height - 1;
 
-	int j, i, k, xd;
-
-	size_t sweepNumber = 0, sweepDirection;
-	const size_t dim2D = length * width;
-
-	dataType** temp3dPtr = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		temp3dPtr[k] = new dataType[dim2D]{ 0 };
-		if (temp3dPtr[k] == NULL)
-			return false;
-	}
-	if (temp3dPtr == NULL)
+	//Initialization
+	for (size_t ik = 0; ik < height; ik++)
 	{
-		return false;
-	}
-
-	dataType h = 1.0;
-	for (k = 0; k < height; k++)
-	{
-		for (i = 0; i < length; i++)
+		for (size_t ij = 0; ij < dim2D; ij++) 
 		{
-			for (j = 0; j < width; j++)
+			if(ctImageData.imageDataPtr[ik][ij] == backgroundValue)
 			{
-				xd = x_new(i, j, length);
+				distancePtr[ik][ij] = 0.0;
+			}
+			else 
+			{
+				distancePtr[ik][ij] = INFINITY;
+			}
+		}
+	}
 
-				if (ctImageData.imageDataPtr[k][xd] =  fgroundValue)
+	//sweep 1
+	for (int k = 0; k < height; k++) 
+	{
+		for (int i = 0; i < length; i++) 
+		{
+			for (int j = 0; j < width; j++) 
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if(pDistance < distancePtr[k][x_new(i, j, length)]) 
 				{
-					temp3dPtr[k][xd] = 0.0;
-					distancePtr[k][xd] = 0.0;
-				}
-				else
-				{
-					temp3dPtr[k][xd] = INFINITY;
-					distancePtr[k][xd] = INFINITY;
+					distancePtr[k][x_new(i, j, length)] = pDistance;
 				}
 			}
 		}
 	}
 
-	//Main loop for height sweeps
-	dataType x, y, z;
-	dataType a_1, a_2, a_3;
-	while (sweepNumber < 8)
+	//sweep 2
+	for (int k = height_minus; k > -1; k--)
 	{
-		sweepDirection = sweepNumber;
-		switch (sweepDirection)
+		for (int i = 0; i < length; i++)
 		{
-		case 0:
-			for (k = 0; k < height; k++)
+			for (int j = 0; j < width; j++)
 			{
-				for (i = 0; i < length; i++)
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
 				{
-					for (j = width_minus; j >= 0; j--)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							a_1 = -max(-x, max(-y, -z)); // min
-							a_3 = max(x, max(y, z)); // max
-							a_2 = (x + y + z) - (a_3 + a_1);//mid
-							temp3dPtr[k][xd] = a_1 + h;
-							//TODO : complete the implementation 
-						}
-						if (j == 0)
-							break;
-					}
+					distancePtr[k][x_new(i, j, length)] = pDistance;
 				}
 			}
-			sweepNumber++;
-			break;
-
-		case 1:
-			for (k = 0; k < height; k++)
-			{
-				for (i = length_minus; i >= 0; i--)
-				{
-					for (j = width_minus; j >= 0; j--)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-						if (j == 0)
-							break;
-					}
-					if (i == 0)
-						break;
-				}
-			}
-			sweepNumber++;
-			break;
-
-		case 2:
-			for (k = 0; k < height; k++)
-			{
-				for (i = length_minus; i >= 0; i--)
-				{
-					for (j = 0; j < width; j++)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-					}
-					if (i == 0)
-						break;
-				}
-			}
-			sweepNumber++;
-			break;
-
-		case 3:
-			for (k = height_minus; k >= 0; k--)
-			{
-				for (i = 0; i < length; i++)
-				{
-					for (j = 0; j < width; j++)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-					}
-				}
-				if (k == 0)
-					break;
-			}
-			sweepNumber++;
-			break;
-		case 4:
-			for (k = height_minus; k >= 0; k--)
-			{
-				for (i = 0; i < length; i++)
-				{
-					for (j = width_minus; j >= 0; j--)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-						if (j == 0)
-							break;
-					}
-				}
-				if (k == 0)
-					break;
-			}
-			sweepNumber++;
-			break;
-		case 5:
-			for (k = height_minus; k >= 0; k--)
-			{
-				for (i = length_minus; i >= 0; i--)
-				{
-					for (j = 0; j < width; j++)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-					}
-					if (i == 0)
-						break;
-				}
-				if (k == 0)
-					break;
-			}
-			sweepNumber++;
-			break;
-		case 6:
-			for (k = height_minus; k >= 0; k--)
-			{
-				for (i = length_minus; i >= 0; i--)
-				{
-					for (j = width_minus; j >= 0; j--)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-						if (j == 0)
-							break;
-					}
-					if (i == 0)
-						break;
-				}
-				if (k == 0)
-					break;
-			}
-			sweepNumber++;
-			break;
-		default:
-			for (k = 0; k < height; k++)
-			{
-				for (i = 0; i < length; i++)
-				{
-					for (j = 0; j < width; j++)
-					{
-						xd = x_new(i, j, length);
-						if (ctImageData.imageDataPtr[k][xd] != fgroundValue)
-						{
-							compute3dDistance(xd, k, length, width, height, distancePtr, temp3dPtr, dim2D, h);
-							x = select3dX(distancePtr, length, width, height, i, j, k);
-							y = select3dY(distancePtr, length, width, height, i, j, k);
-							z = select3dZ(distancePtr, length, width, height, i, j, k);
-							//TODO : complete the implementation 
-						}
-					}
-				}
-			}
-			sweepNumber++;
-			break;
 		}
 	}
 
-	for (k = 0; k < height; k++)
+	//sweep 3
+	for (int k = 0; k < height; k++)
 	{
-		delete[] temp3dPtr[k];
-	}
-	delete[] temp3dPtr;
+		for (int i = length_minus; i > -1; i--)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
 
+			}
+		}
+	}
+
+	//sweep 4
+	for (int k = 0; k < height; k++)
+	{
+		for (int i = 0; i < length; i++)
+		{
+			for (int j = width_minus; j > -1; j--)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
+
+			}
+		}
+	}
+
+	//sweep 5
+	for (int k = height_minus; k > -1; k--)
+	{
+		for (int i = length_minus; i > -1; i--)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
+
+			}
+		}
+	}
+
+	//sweep 6
+	for (int k = height_minus; k > -1; k--)
+	{
+		for (int i = 0; i < length; i++)
+		{
+			for (int j = width_minus; j > -1; j--)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
+
+			}
+		}
+	}
+
+	//sweep 7
+	for (int k = 0; k < height; k++)
+	{
+		for (int i = length_minus; i > -1; i--)
+		{
+			for (int j = width_minus; j > -1; j--)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
+			}
+		}
+	}
+
+	//sweep 8
+	for (int k = height_minus; k > -1; k--)
+	{
+		for (int i = length_minus; i > -1; i--)
+		{
+			for (int j = width_minus; j > -1; j--)
+			{
+				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType coefSpeed = 1.0;
+				dataType pDistance = solve3dQuadraticFastMarching(x, y, z, coefSpeed * coefSpeed, spacing);
+				if (pDistance < distancePtr[k][x_new(i, j, length)])
+				{
+					distancePtr[k][x_new(i, j, length)] = pDistance;
+				}
+
+			}
+		}
+	}
+	
 	return true;
 }
 
