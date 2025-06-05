@@ -1656,62 +1656,23 @@ dataType solve3dQuadraticFastMarching(dataType X, dataType Y, dataType Z, dataTy
 	dataType hy_2 = 1.0 / (h.sy * h.sy);
 	dataType hz_2 = 1.0 / (h.sz * h.sz);
 
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = (dataType)( hy_2 + hz_2 );
-		b = (dataType)( -2 * (Y * hy_2 + Z * hz_2) );
-		c = (dataType)( Y * Y * hy_2 + Z * Z * hz_2 - W );
+	if (X != INFINITY) {
+		a = hx_2;
+		b = (dataType)(-2 * X * hx_2);
+		c = (dataType)(X * X * hx_2 - W);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return (dataType)(min(Y, Z) + R);
+			return (dataType)(X + R);
 		}
 	}
 
-	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
-		a = (dataType)( hx_2 + hz_2 );
-		b = (dataType)( -2 * (X * hx_2 + Z * hz_2) );
-		c = (dataType)( X * X * hx_2 + Z * Z * hz_2 - W );
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			return (dataType)((-b + sqrt(delta)) / (2 * a));
-		}
-		else {
-			return (dataType)(min(X, Z) + R);
-		}
-	}
-
-	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
-		a = (dataType)( hx_2 + hy_2 );
-		b = (dataType)( -2 * (X * hx_2 + Y * hy_2) );
-		c = (dataType)( X * X * hx_2 + Y * Y * hy_2 - W );
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			return (dataType)((-b + sqrt(delta)) / (2 * a));
-		}
-		else {
-			return (dataType)(min(X, Y) + R);
-		}
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
-		a = hz_2;
-		b = (dataType)( -2 * Z * hz_2);
-		c = (dataType)( Z * Z * hz_2 - W );
-		delta = (dataType)(b * b - 4 * a * c);
-		if (delta >= 0) {
-			return (dataType)((-b + sqrt(delta)) / (2 * a));
-		}
-		else {
-			return (dataType)(Z + R);
-		}
-	}
-
-	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
+	if (Y != INFINITY) {
 		a = hy_2;
-		b = (dataType)( -2 * Y * hy_2 );
-		c = (dataType)( Y * Y * hy_2 - W );
+		b = (dataType)(-2 * Y * hy_2);
+		c = (dataType)(Y * Y * hy_2 - W);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			return (dataType)((-b + sqrt(delta)) / (2 * a));
@@ -1721,16 +1682,55 @@ dataType solve3dQuadraticFastMarching(dataType X, dataType Y, dataType Z, dataTy
 		}
 	}
 
-	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
-		a = hx_2;
-		b = (dataType)(-2 * X * hx_2);
-		c = (dataType)( X * X * hx_2 - W );
+	if (Z != INFINITY) {
+		a = hz_2;
+		b = (dataType)(-2 * Z * hz_2);
+		c = (dataType)(Z * Z * hz_2 - W);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			return (dataType)((-b + sqrt(delta)) / (2 * a));
 		}
 		else {
-			return (dataType)(X + R);
+			return (dataType)(Z + R);
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY) {
+		a = (dataType)(hx_2 + hy_2);
+		b = (dataType)(-2 * (X * hx_2 + Y * hy_2));
+		c = (dataType)(X * X * hx_2 + Y * Y * hy_2 - W);
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0) {
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			return (dataType)(min(X, Y) + R);
+		}
+	}
+
+	if (X != INFINITY && Z != INFINITY) {
+		a = (dataType)(hx_2 + hz_2);
+		b = (dataType)(-2 * (X * hx_2 + Z * hz_2));
+		c = (dataType)(X * X * hx_2 + Z * Z * hz_2 - W);
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0) {
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			return (dataType)(min(X, Z) + R);
+		}
+	}
+
+	if (Y != INFINITY && Z != INFINITY) {
+		a = (dataType)( hy_2 + hz_2 );
+		b = (dataType)( -2 * (Y * hy_2 + Z * hz_2) );
+		c = (dataType)( Y * Y * hy_2 + Z * Z * hz_2 - W );
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0) {
+			return (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			return (dataType)(min(Y, Z) + R);
 		}
 	}
 
