@@ -1159,69 +1159,80 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			}
 		}
 	}
-	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	*/
 
-	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
-	dataType value_first_pt = seedStats.mean_data;
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	//dataType value_second_pt = seedStats.mean_data;
+	//Real image
+	//Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	////rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
+	//////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
-	std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
-	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
-	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
+	//Artificial image : no need to compute the edge image when empty inside
+	Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
+	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	//bruteForceDistanceMap(toDistanceMap, distance, 1.0);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_FM.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	//dataType value_first_pt = seedStats.mean_data;
+	////seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	////dataType value_second_pt = seedStats.mean_data;
+
+	//std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
+	//std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
+	//std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
+	//std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	
 	dataType var_epsilon = 0.0;
-	if (seedStats.sd_data != 0) {
-		var_epsilon = seedStats.sd_data;
-	}
-	else {
-		var_epsilon = parameters.eps;
-	}
+	//if (seedStats.sd_data != 0) {
+	//	var_epsilon = seedStats.sd_data;
+	//}
+	//else {
+	//	var_epsilon = parameters.eps;
+	//}
 	
-	dataType seedValCT = value_first_pt;
-	//dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	//dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
+	//dataType seedValCT = value_first_pt;
+	////dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	////dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
 
-	//Computation of potential function
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
-		}
-	}
+	////Computation of potential function
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
+	//	}
+	//}
 
-	//Find the max of the difference
-	dataType maxImage = 0.0;
-	dataType minImage = INFINITY;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (potential[k][i] > maxImage) {
-				maxImage = potential[k][i];
-			}
-			if (potential[k][i] < maxImage) {
-				minImage = potential[k][i];
-			}
-		}
-	}
-	std::cout << "difference min : " << minImage << std::endl;
-	std::cout << "difference max : " << maxImage << std::endl;
+	////Find the max of the difference
+	//dataType maxImage = 0.0;
+	//dataType minImage = INFINITY;
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		if (potential[k][i] > maxImage) {
+	//			maxImage = potential[k][i];
+	//		}
+	//		if (potential[k][i] < maxImage) {
+	//			minImage = potential[k][i];
+	//		}
+	//	}
+	//}
+	//std::cout << "difference min : " << minImage << std::endl;
+	//std::cout << "difference max : " << maxImage << std::endl;
 
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0;// / (1.0 + 1.0 * distance[k][i]);
-			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * weight_dist;
+			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
+			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * weight_dist;
+			potential[k][i] = weight_dist;
 		}
 	}
 
@@ -1926,7 +1937,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
 		sPoint = getRealCoordFromImageCoord3D(sPoint, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
 		savingList.push_back(sPoint);
-		if (processed_point == 10000) {
+		//in real image save after every 10000 points
+		if (processed_point == 1000) {
 			id_save++;
 			string saving_csv = path_saving + to_string(id_save) + ".csv";
 			FILE* frontPoint;
@@ -1938,7 +1950,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 			}
-			savingList.clear();
+			//savingList.clear();
 			fclose(frontPoint);
 			processed_point = 0;
 		}
