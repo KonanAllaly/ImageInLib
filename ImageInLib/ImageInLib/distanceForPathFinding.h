@@ -315,6 +315,10 @@ using namespace std;
 	/// <returns>The lesser of x and y.</returns>
 	dataType min0(dataType x, dataType y);
 
+	bool sortThreeElements(dataType* x, dataType* y, dataType* z);
+
+	dataType solve3dQuadraticFastSweeping(dataType X, dataType Y, dataType Z, dataType W, VoxelSpacing h);
+
 	/// <summary>
 	/// Computes a distance map using the Rouy-Tourin algorithm on the given image data.
 	/// </summary>
