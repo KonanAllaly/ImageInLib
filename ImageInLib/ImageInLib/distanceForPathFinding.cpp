@@ -1170,40 +1170,39 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	//Artificial image : no need to compute the edge image when empty inside
+	////Artificial image : no need to compute the edge image when empty inside
 	Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	//rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	////rouyTourinDistanceMap(toDistanceMap, distance, 1.0, 0.4, 0.5);
+	////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
 	//bruteForceDistanceMap(toDistanceMap, distance, 1.0);
 	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_FM.raw";
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fstswp.raw";
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_RT.raw";
+	////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fstswp.raw";
+	////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_RT.raw";
 	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brtforce.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	//dataType value_second_pt = seedStats.mean_data;
-
+	////seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	////dataType value_second_pt = seedStats.mean_data;
 	std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
 	std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
 	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
 	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	
-	dataType var_epsilon = 0.0;
-	if (seedStats.sd_data != 0) {
-		var_epsilon = seedStats.sd_data;
-	}
-	else {
-		var_epsilon = parameters.eps;
-	}
+	//dataType var_epsilon = 0.0;
+	//if (seedStats.sd_data != 0) {
+	//	var_epsilon = seedStats.sd_data;
+	//}
+	//else {
+	//	var_epsilon = parameters.eps;
+	//}
 	
-	dataType seedValCT = value_first_pt;
-	////dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	////dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
+	//dataType seedValCT = value_first_pt;
+	//////dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
+	//////dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
 
 	////Computation of potential function
 	//for (k = 0; k < height; k++) {
@@ -1231,9 +1230,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			dataType weight_dist = 1.0 / (1.0 + 1.0 * distance[k][i]);
-			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * weight_dist;
-			potential[k][i] = weight_dist;
+			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * 1.0 / (1.0 + 1.0 * distance[k][i]);
+			potential[k][i] = 1.0 / (1.0 + 1.0 * distance[k][i]);
 			//potential[k][i] = var_epsilon + potential[k][i] / maxImage;
 		}
 	}
@@ -2000,7 +1998,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
 				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
 			}
-			savingList.clear();
+			//savingList.clear();
 			fclose(frontPoint);
 			processed_point = 0;
 		}
@@ -2172,7 +2170,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	//std::cout << processed_point << " points have been processed " << std::endl;
 	//std::cout << "The mistake happens : " << count_mistakes << " times" << std::endl;
 	
-	
 	//Visualize the front propagation
 	id_save++;
 	string saving_csv = path_saving + to_string(id_save) + ".csv";
@@ -2190,7 +2187,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	}
 	fclose(frontPoint);
 	
-
 	for (k = 0; k < height; k++) {
 		for(i = 0; i < dim2D; i++) {
 			if (actionPtr.imageDataPtr[k][i] == INFINITY) {
@@ -3026,7 +3022,7 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 			for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-					if (ctImageData.imageDataPtr[k][x_new(i, j, length)] == foregroundValue) {
+					if (ctImageData.imageDataPtr[k][x_new(i, j, length)] != foregroundValue) {
 						value = previousSolution[k_ext][x_new(i_ext, j_ext, length_ext)];
 						distancePtr[k][x_new(i, j, length)] = value + tau - tau * sqrt((1.0 / pow(hx, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext + 1, j_ext, length_ext)], value))
 							+ (1.0 / pow(hy, 2)) * max(min0(previousSolution[k_ext][x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[k_ext][x_new(i_ext, j_ext + 1, length_ext)], value))
