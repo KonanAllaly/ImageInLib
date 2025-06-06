@@ -295,40 +295,7 @@ using namespace std;
 	/// <returns></returns>
 	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);
 
-	/// <summary>
-	/// Performs partial front propagation on image data and optionally saves the resulting path.
-	/// </summary>
-	/// <param name="actionPtr">The image data on which to perform the front propagation.</param>
-	/// <param name="potentialFuncPtr">A pointer to a 2D array representing the potential function used during propagation.</param>
-	/// <param name="endPoints">A pointer to an array of 3D points specifying the endpoints for the propagation.</param>
-	/// <param name="path_saving">A string specifying the file path where the resulting path should be saved.</param>
-	/// <returns>Returns true if the partial front propagation and path saving were successful; otherwise, returns false.</returns>
-	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
-
 	//=================================
-
-	/// <summary>
-	/// Returns the smaller of two values.
-	/// </summary>
-	/// <param name="x">The first value to compare.</param>
-	/// <param name="y">The second value to compare.</param>
-	/// <returns>The lesser of x and y.</returns>
-	dataType min0(dataType x, dataType y);
-
-	bool sortThreeElements(dataType* x, dataType* y, dataType* z);
-
-	dataType solve3dQuadraticFastSweeping(dataType X, dataType Y, dataType Z, dataType W, VoxelSpacing h);
-
-	/// <summary>
-	/// Computes a distance map using the Rouy-Tourin algorithm on the given image data.
-	/// </summary>
-	/// <param name="ctImageData">The input image data to process.</param>
-	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
-	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
-	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
-	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
-	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau);
 
 	/// <summary>
 	/// Solves a 3D quadratic equation using the fast marching method.
@@ -339,7 +306,17 @@ using namespace std;
 	/// <param name="W">The right-hand side or source term for the equation.</param>
 	/// <param name="h">The spacing between voxels in each dimension.</param>
 	/// <returns>The computed solution for the 3D quadratic equation at the current voxel.</returns>
-	dataType solve3dQuadraticFastMarching(dataType X, dataType Y, dataType Z, dataType W, VoxelSpacing h);
+	dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h);
+
+	/// <summary>
+	/// Performs partial front propagation on image data and optionally saves the resulting path.
+	/// </summary>
+	/// <param name="actionPtr">The image data on which to perform the front propagation.</param>
+	/// <param name="potentialFuncPtr">A pointer to a 2D array representing the potential function used during propagation.</param>
+	/// <param name="endPoints">A pointer to an array of 3D points specifying the endpoints for the propagation.</param>
+	/// <param name="path_saving">A string specifying the file path where the resulting path should be saved.</param>
+	/// <returns>Returns true if the partial front propagation and path saving were successful; otherwise, returns false.</returns>
+	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method on a CT image with specified voxel spacing.
@@ -351,18 +328,6 @@ using namespace std;
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
 	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing);
-
-	//==================================
-
-	/// <summary>
-	/// Performs penalized front propagation on an input image using specified seed points.
-	/// </summary>
-	/// <param name="inputImageData">The image data on which to perform front propagation.</param>
-	/// <param name="actionMapPtr">A pointer to a 2D array where the computed action map will be stored.</param>
-	/// <param name="potentialFuncPtr">A pointer to a 2D array where the computed potential function will be stored.</param>
-	/// <param name="seedPoints">An array of 3D points representing the initial seed locations for propagation.</param>
-	/// <returns>True if the front propagation completes successfully; otherwise, false.</returns>
-	bool penalizedFrontPropagation(Image_Data inputImageData, dataType** actionMapPtr, dataType** potentialFuncPtr, Point3D* seedPoints);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
@@ -379,6 +344,25 @@ using namespace std;
 	//==================================
 
 	/// <summary>
+	/// Returns the smaller of two values.
+	/// </summary>
+	/// <param name="x">The first value to compare.</param>
+	/// <param name="y">The second value to compare.</param>
+	/// <returns>The lesser of x and y.</returns>
+	dataType min0(dataType x, dataType y);
+
+	/// <summary>
+	/// Computes a distance map using the Rouy-Tourin algorithm on the given image data.
+	/// </summary>
+	/// <param name="ctImageData">The input image data to process.</param>
+	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
+	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
+	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
+	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
+	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
+	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau);
+
+	/// <summary>
 	/// Performs the 3D Fast Marching Method to compute a distance map from a given image.
 	/// </summary>
 	/// <param name="ctImageData">The input image data to process.</param>
@@ -388,14 +372,13 @@ using namespace std;
 	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	/// <summary>
-	/// Finds the next key point in a 3D space based on an action map, a potential function, a seed point, and a specified key point length.
+	/// Computes a distance map from the given image data using the fast sweeping method.
 	/// </summary>
-	/// <param name="actionMapStr">The action map data used for key point detection.</param>
-	/// <param name="potentialFuncPtr">A pointer to a 2D array representing the potential function values.</param>
-	/// <param name="seedPoint">The starting 3D point from which to begin key point detection.</param>
-	/// <param name="LengthKeyPoints">The distance or length parameter used to determine the spacing between key points.</param>
-	/// <returns>A Point3D structure representing the next detected key point.</returns>
-	Point3D nextKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D seedPoint, const double LengthKeyPoints);
+	/// <param name="ctImageData">The input image data to process.</param>
+	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
+	/// <param name="backgroundValue">The value in the image that represents the background.</param>
+	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
+	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.
@@ -405,15 +388,6 @@ using namespace std;
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
 	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
-
-	/// <summary>
-	/// Computes a distance map from the given image data using the fast sweeping method.
-	/// </summary>
-	/// <param name="ctImageData">The input image data to process.</param>
-	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
-	/// <param name="backgroundValue">The value in the image that represents the background.</param>
-	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/*
 	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
