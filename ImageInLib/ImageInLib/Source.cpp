@@ -14,7 +14,6 @@
 #include "filtering.h"
 #include "../src/segmentation3D_subsurf.h"
 #include "../src/segmentation3d_gsubsurf.h"
-#include "segmentation2d.h"
 #include "../src/thresholding.h"
 #include "../src/distance_function.h"
 #include "morphological_change.h"
@@ -46,12 +45,12 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	/*
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient4_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -66,7 +65,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	
+	*/
 
 	//========================= Detect Heart region ==================================
 	
@@ -3997,7 +3996,7 @@ int main() {
 
 	//==================== Test Potential function ========================================
 	
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
@@ -4007,12 +4006,12 @@ int main() {
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
 	//loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
-	loading_path = inputPath + "raw/filtered/filteredGMC_p4.raw";
+	loading_path = inputPath + "raw/filtered/filteredGMC_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
-	////Patient 1
-	//Point3D seed1 = { 262, 258, 146 };
-	//Point3D seed2 = { 266, 256, 245 };
+	//Patient 1
+	Point3D seed1 = { 262, 258, 146 };
+	Point3D seed2 = { 266, 256, 245 };
 
 	////Patient 2
 	//Point3D seed1 = { 257, 254, 249 };
@@ -4022,9 +4021,9 @@ int main() {
 	//Point3D seed1 = { 268, 230, 116 };
 	//Point3D seed2 = { 266, 221, 218 };
 	
-	//Patient 4
-	Point3D seed1 = { 280, 229, 135 };
-	Point3D seed2 = { 285, 234, 220 };
+	////Patient 4
+	//Point3D seed1 = { 280, 229, 135 };
+	//Point3D seed2 = { 285, 234, 220 };
 
 	////Patient 5
 	//Point3D seed1 = { 265, 243, 471 };
@@ -4043,7 +4042,7 @@ int main() {
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
 		0.15, //threshold
-		0.001,//epsilon
+		0.008,//epsilon
 		radius
 	};
 	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
@@ -4053,7 +4052,7 @@ int main() {
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "update path finding/p4/action_";
+	storing_path = outputPath + "update path finding/p1/action_";
 	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
 	
 	//vector<Point3D> key_points;
@@ -4094,7 +4093,7 @@ int main() {
 	vector<Point3D> path_points;
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_p4.csv";
+	storing_path = outputPath + "path_points_p1.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -4117,9 +4116,9 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	free(ctContainer);
-	
+	*/
 
-	/*
+	
 	//Artificial image
 	const size_t Height = 100, Width = 60, Length = 60;
 	const size_t dim2D = Length * Width;
@@ -4133,17 +4132,14 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	//loading_path = inputPath + "shape/spiral/spiral.raw";
-	////loading_path = inputPath + "shape/spiral/spiral_radius5.raw";
-	////loading_path = inputPath + "shape/tube3D.raw";
-	////loading_path = inputPath + "shape/empty_tube_with_holes.raw";
 	//loading_path = inputPath + "shape/spiral.raw";
-	//loading_path = inputPath + "shape/Action/empty_spiral.raw";
-	loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
+	loading_path = inputPath + "shape/Action/empty_spiral.raw";
+	//loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
+	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 
 	////Empty the spiral using gradient
@@ -4545,11 +4541,9 @@ int main() {
 	//second spiral
 	Point3D seed1 = { 41, 30, 12 };
 	Point3D seed2 = { 41, 28, 86 };
-
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
-
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 15;
 
@@ -4557,20 +4551,23 @@ int main() {
 	Potential_Parameters parameters{
 		1,//1000, //edge detector coefficient
 		1,//0.15, //threshold
-		0.0001,//epsilon
+		0.1,//epsilon
 		radius_potential
 	};
 	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 	compute3DPotential(imageStr, potential, endPoints, parameters);
 
-	//storing_path = outputPath + "potential_spiral.raw";
+	//storing_path = outputPath + "potential.raw";
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	storing_path = outputPath + "Action Spiral/hole2/action_";
+	////storing_path = outputPath + "Action Spiral/FM/action_";
+	////storing_path = outputPath + "Action Spiral/RT/action_";
+	////storing_path = outputPath + "Action Spiral/FS/action_";
+	////storing_path = outputPath + "Action Spiral/BF/action_";
+	storing_path = outputPath + "Action Spiral/hole/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
-	//////frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
 	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-
+	
 	////key_points.clear();
 	//key_points.push_back(seed1);
 	//key_points.push_back(seed2);
@@ -4587,15 +4584,16 @@ int main() {
 	//}
 	//fclose(f_key_point);
 	//key_points.clear();
-
+	
 	//Extract and save the path points
 	dataType tau = 0.8, tolerance = 1.0;
 	Path_Parameters pathParameters = { tau, 1000, tolerance };
 	vector<Point3D> path_points;
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_spiral_with_holes2.csv";
-	//storing_path = outputPath + "path_points_spiral_pot2.csv";
+	//storing_path = outputPath + "path_points_spiral_first_term.csv";
+	//storing_path = outputPath + "path_points_spiral_combined_eps_01.csv";
+	storing_path = outputPath + "path_points_spiral.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -4603,10 +4601,71 @@ int main() {
 	fprintf(path_file, "x,y,z\n");
 	for(int it = 0; it < path_points.size(); it++) {
 		Point3D current_point = path_points[it];
-		//current_point = getRealCoordFromImageCoord3D(current_point, iOrigin, iSpacing, orientation);
 		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
 	}
 	fclose(path_file);
+
+	/*
+	//Compare the distance for different methods
+	dataType** distanceMapBruteForce = new dataType * [Height];
+	dataType** distanceMapFastMarching = new dataType * [Height];
+	dataType** distanceMapFastSweeping = new dataType * [Height];
+	dataType** distanceMapRouyTourin = new dataType * [Height];
+	dataType** compare = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		distanceMapBruteForce[k] = new dataType[dim2D]{ 0 };
+		distanceMapFastMarching[k] = new dataType[dim2D]{ 0 };
+		distanceMapFastSweeping[k] = new dataType[dim2D]{ 0 };
+		distanceMapRouyTourin[k] = new dataType[dim2D]{ 0 };
+		compare[k] = new dataType[dim2D]{ 0 };
+	}
+	
+	//bruteForceFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1000000000000.0, 0.0);
+	bruteForceDistanceMap(inputImageStr, distanceMapBruteForce, 0.0);
+	//loading_path = outputPath + "distance_map_brtforce.raw";
+	////loading_path = outputPath + "distance_map.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//fastMarching(distanceMapFastMarching, imageData, Height, Length, Width, 0.0);
+	fastMarching3dForDistanceMap(inputImageStr, distanceMapFastMarching, 0.0);
+	//loading_path = outputPath + "distance_map_FM.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//fastSweepingFunction_3D(distanceMapFastSweeping, imageData, Length, Width, Height, 1.0, 10000000000.0, 0.0);
+	fastSweepingDistanceMap(inputImageStr, distanceMapFastSweeping, 0.0);
+	//loading_path = outputPath + "distance_map_fstswp.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//rouyTourinFunction_3D(distanceMapRouyTourin, imageData, 0.5, Length, Width, Height, 0.4, 1.0);
+	rouyTourinDistanceMap(inputImageStr, distanceMapRouyTourin, 0.0, 0.4, 0.5);
+	//loading_path = outputPath + "distance_map_RT.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	dataType norm_fm = 0.0, norm_fstswp = 0.0, norm_rt = 0, norm_compare = 0.0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
+			norm_fstswp += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
+			norm_rt += pow(distanceMapBruteForce[k][i] - distanceMapRouyTourin[k][i], 2);
+			//norm_compare += pow(distanceMapRouyTourin[k][i] - compare[k][i], 2);
+		}
+	}
+	std::cout << "Residual Fast Marching: " << sqrt(norm_fm) << std::endl;
+	std::cout << "Residual Fast Sweeping: " << sqrt(norm_fstswp) << std::endl;
+	std::cout << "Residual Rouy Tourin: " << sqrt(norm_rt) << std::endl;
+	//std::cout << "Residual Compare: " << sqrt(norm_compare) << std::endl;
+
+	for (k = 0; k < Height; k++) {
+		delete[] distanceMapBruteForce[k];
+		delete[] distanceMapFastMarching[k];
+		delete[] distanceMapFastSweeping[k];
+		delete[] distanceMapRouyTourin[k];
+	}
+	delete[] distanceMapBruteForce;
+	delete[] distanceMapFastMarching;
+	delete[] distanceMapFastSweeping;
+	delete[] distanceMapRouyTourin;
+	*/
 
 	delete[] endPoints;
 	for (k = 0; k < Height; k++) {
@@ -4619,7 +4678,6 @@ int main() {
 	delete[] imageDataNew;
 	delete[] action;
 	delete[] potential;
-	*/
 	
     /*
 	const size_t Height = 100, Length = 100;
