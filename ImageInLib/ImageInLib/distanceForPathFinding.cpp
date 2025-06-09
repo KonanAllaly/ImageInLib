@@ -3062,10 +3062,11 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 
 	//Initialization : Proceed the sources points
 	//All the points are notProcessed ---> label = 3
-	for (size_t k = 0; k < height; k++) {
-		for (size_t i = 0; i < length; i++) {
-			for (size_t j = 0; j < width; j++) {
-				size_t xd = x_new(i, j, length);
+	size_t k, i, j, xd;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
 				if (ctImageData.imageDataPtr[k][xd] == foregroundValue) {
 					distanceFuncPtr[k][xd] = 0.0;
 					labelArray[k][xd] = 1;
@@ -3086,11 +3087,11 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	size_t kminus = 0, kplus = 0;
 	
 	//Initialize the narrow band
-	for (size_t k = 0; k < height; k++) {
-		for (size_t i = 0; i < length; i++) {
-			for (size_t j = 0; j < width; j++) {
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
 				
-				size_t xd = x_new(i, j, length);
+				xd = x_new(i, j, length);
 
 				if (ctImageData.imageDataPtr[k][xd] == foregroundValue) {
 					
@@ -3258,17 +3259,17 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 
 		//processed the point with minimum distance
 		pointFastMarching3D current = inProcess[0];
-		size_t i = current.x;
-		size_t j = current.y;
-		size_t k = current.z;
-		size_t currentIndx = x_new(i, j, length);
-		labelArray[k][currentIndx] = 1;
+		i = current.x;
+		j = current.y;
+		k = current.z;
+		xd = x_new(i, j, length);
+		labelArray[k][xd] = 1;
 		deleteRootHeap3D(inProcess);
 
 		//Top
 		if (k > 0) {
 			kminus = k - 1;
-			label = labelArray[kminus][currentIndx];
+			label = labelArray[kminus][xd];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
@@ -3278,13 +3279,13 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 				size_t posTop = x_flat(i, j, kminus, length, width);
 				pointFastMarching3D TopNeighbor = { i, j, kminus, dTop, posTop };
 				if (label == 3) {
-					distanceFuncPtr[kminus][currentIndx] = dTop;
-					labelArray[kminus][currentIndx] = 2;
+					distanceFuncPtr[kminus][xd] = dTop;
+					labelArray[kminus][xd] = 2;
 					addPointHeap3D(inProcess, TopNeighbor);
 				}
 				else {
-					if (dTop < distanceFuncPtr[kminus][currentIndx]) {
-						distanceFuncPtr[kminus][currentIndx] = dTop;
+					if (dTop < distanceFuncPtr[kminus][xd]) {
+						distanceFuncPtr[kminus][xd] = dTop;
 						updateHeapPriority(inProcess, TopNeighbor);
 					}
 				}
@@ -3294,7 +3295,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		//Bottom
 		if (k < height_minus) {
 			kplus = k + 1;
-			label = labelArray[kplus][currentIndx];
+			label = labelArray[kplus][xd];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
@@ -3304,13 +3305,13 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 				size_t posBottom = x_flat(i, j, kplus, length, width);
 				pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom, posBottom };
 				if (label == 3) {
-					distanceFuncPtr[kplus][currentIndx] = dBottom;
-					labelArray[kplus][currentIndx] = 2;
+					distanceFuncPtr[kplus][xd] = dBottom;
+					labelArray[kplus][xd] = 2;
 					addPointHeap3D(inProcess, BottomNeighbor);
 				}
 				else {
-					if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
-						distanceFuncPtr[kplus][currentIndx] = dBottom;
+					if (dBottom < distanceFuncPtr[kplus][xd]) {
+						distanceFuncPtr[kplus][xd] = dBottom;
 						updateHeapPriority(inProcess, BottomNeighbor);
 					}
 				}
