@@ -23,6 +23,12 @@
 //=================== Functions for the 2D Fast Marching and Path Tracking ==============================
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+dataType min0(dataType x, dataType y) {
+	if (y - x > 0)
+		return pow(x - y, 2);
+	else
+		return 0;
+}
 
 dataType selectX(dataType* actionPtr, const size_t length, const size_t width, const size_t i, const size_t j) {
 	
@@ -3478,13 +3484,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 //========================================================================================================
 //================================== Distance Map ========================================================
 //========================================================================================================
-
-dataType min0(dataType x, dataType y) {
-	if (y - x > 0)
-		return pow(x - y, 2);
-	else
-		return 0;
-}
 
 bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau) {
 
