@@ -15,6 +15,7 @@ using namespace std;
 	typedef struct {
 		size_t x, y;
 		dataType arrival;
+		size_t index;
 	} pointFastMarching2D;
 
 	typedef struct {
@@ -36,7 +37,39 @@ using namespace std;
 		double tolerance; //minimal distance to stop
 	} Path_Parameters;
 
-	/*
+	/// <summary>
+	/// selection of neighboring pixels in x direction
+	/// </summary>
+	/// <param name="distanceFuncPtr">action map</param>
+	/// <param name="dimI">image length</param>
+	/// <param name="dimJ">image width</param>
+	/// <param name="I">y coordinate</param>
+	/// <param name="J">x coordinate</param>
+	/// <returns></returns>
+	dataType selectX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
+
+	/// <summary>
+	/// selection of neighboring pixels in y direction
+	/// </summary>
+	/// <param name="distanceFuncPtr">action map</param>
+	/// <param name="dimI">image length</param>
+	/// <param name="dimJ">image width</param>
+	/// <param name="I">y coordinate</param>
+	/// <param name="J">x coordinate</param>
+	/// <returns></returns>
+	dataType selectY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
+
+	/// <summary>
+	/// solve quadratic equation : 	This fuction is used the solve the following quadratic coming the discretization 
+	/// by upwind principle in the implementation of the fast marching method 
+	/// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
+	/// </summary>
+	/// <param name="X">coefficient related to the first variable</param>
+	/// <param name="Y">coefficient related to the second variable</param>
+	/// <param name="W">additional coefficient</param>
+	/// <returns></returns>
+	dataType solve2dQuadratic(dataType X, dataType Y, dataType P);
+
 	/// <summary>
 	/// swap two given points 
 	/// </summary>
@@ -77,6 +110,9 @@ using namespace std;
 	/// <param name="point"></param>
 	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 
+	void updateHeapPriority2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D pPoint);
+
+	/*
 	/// <summary>
 	/// 
 	/// </summary>
@@ -99,40 +135,6 @@ using namespace std;
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
 	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
-
-	/// <summary>
-	/// solve quadratic equation : 	This fuction is used the solve the following quadratic coming the discretization 
-	/// by upwind principle in the implementation of the fast marching method 
-	/// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
-	/// </summary>
-	/// <param name="X">coefficient related to the first variable</param>
-	/// <param name="Y">coefficient related to the second variable</param>
-	/// <param name="W">additional coefficient</param>
-	/// <returns></returns>
-	dataType solve2dQuadratic(dataType X, dataType Y, dataType W);
-
-	/// <summary>
-	/// selection of neighboring pixels in x direction
-	/// </summary>
-	/// <param name="distanceFuncPtr">action map</param>
-	/// <param name="dimI">image length</param>
-	/// <param name="dimJ">image width</param>
-	/// <param name="I">y coordinate</param>
-	/// <param name="J">x coordinate</param>
-	/// <returns></returns>
-	dataType selectX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
-
-	/// <summary>
-	/// selection of neighboring pixels in y direction
-	/// </summary>
-	/// <param name="distanceFuncPtr">action map</param>
-	/// <param name="dimI">image length</param>
-	/// <param name="dimJ">image width</param>
-	/// <param name="I">y coordinate</param>
-	/// <param name="J">x coordinate</param>
-	/// <returns></returns>
-	dataType selectY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
-
 	/// <summary>
 	/// compute speed for each pixel for the fast marching
 	/// </summary>
@@ -165,6 +167,14 @@ using namespace std;
 	/// <param name="radiusStep">The increment by which the radius increases for each computation.</param>
 	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
 	*/
+
+	bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
+
+	bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFuncPtr, dataType foregroundValue);
+
+	bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
+
+	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, dataType tau, dataType foregroundValue);
 
 	/// <summary>
 	/// solve quadratic equation
