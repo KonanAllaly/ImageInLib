@@ -1321,8 +1321,9 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 	size_t length_ext = length + 2;
 	size_t width_ext = length + 2;
 	size_t i_ext, j_ext, x_ext;
+	size_t dim2D = length_ext * width_ext;
 
-	dataType* previousSolution = new dataType[length_ext * width_ext]{ 0 };
+	dataType* previousSolution = new dataType[dim2D]{ 0 };
 	if (previousSolution == NULL) {
 		return false;
 	}
@@ -1337,8 +1338,8 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 
 	while (mass > tolerance && count_iteration < max_iteration) {
 
-		copyDataToAnother2dArray(distancePtr, previousSolution, length, width);
-		reflection2D(previousSolution, length, width);
+		copyDataTo2dExtendedArea(distancePtr, previousSolution, width, length);
+		reflection2D(previousSolution, length_ext, width_ext);
 
 		count_iteration++;
 		mass = 0.0;
