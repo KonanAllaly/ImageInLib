@@ -3083,7 +3083,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	size_t width_minus = width - 1;
 
 	short label = 0;
-	size_t kminus = 0;
+	size_t kminus = 0, kplus = 0;
 	
 	//Initialize the narrow band
 	for (size_t k = 0; k < height; k++) {
@@ -3097,8 +3097,8 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					//Top
 					if (k > 0) {
 						kminus = k - 1;
-						//label = labelArray[kminus][xd];
-						if (labelArray[kminus][xd] != 1) {
+						label = labelArray[kminus][xd];
+						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
 							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kminus);
@@ -3106,7 +3106,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 							dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t posTop = x_flat(i, j, kminus, length, width);
 							pointFastMarching3D TopNeighbor = { i, j, kminus, dTop, posTop };
-							if (labelArray[kminus][xd] == 3) { //this condition is necessary because source point can be neighbors
+							if (label == 3) { //this condition is necessary because source point can be neighbors
 								inProcess.push_back(TopNeighbor);
 								distanceFuncPtr[kminus][xd] = dTop;
 								labelArray[kminus][xd] = 2;
@@ -3121,7 +3121,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 
 					//Bottom
 					if (k < height_minus) {
-						size_t kplus = k + 1;
+						kplus = k + 1;
 						label = labelArray[kplus][xd];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
@@ -3293,7 +3293,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 
 		//Bottom
 		if (k < height_minus) {
-			size_t kplus = k + 1;
+			kplus = k + 1;
 			label = labelArray[kplus][currentIndx];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
