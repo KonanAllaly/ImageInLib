@@ -3053,7 +3053,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 
 	short** labelArray = new short * [height];
 	for (size_t k = 0; k < height; k++) {
-		labelArray[k] = new short[length * width];
+		labelArray[k] = new short[length * width] {0};
 		if (labelArray[k] == NULL)
 			return false;
 	}
@@ -3081,6 +3081,8 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	size_t height_minus = height - 1;
 	size_t length_minus = length - 1;
 	size_t width_minus = width - 1;
+
+	short label = 0;
 	
 	//Initialize the narrow band
 	for (size_t k = 0; k < height; k++) {
@@ -3094,7 +3096,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					//Top
 					if (k > 0) {
 						size_t kminus = k - 1;
-						short label = labelArray[kminus][xd];
+						label = labelArray[kminus][xd];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
@@ -3119,7 +3121,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					//Bottom
 					if (k < height_minus) {
 						size_t kplus = k + 1;
-						short label = labelArray[kplus][xd];
+						label = labelArray[kplus][xd];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
@@ -3145,7 +3147,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					if (i > 0) {
 						size_t iminus = i - 1;
 						size_t indxWest = x_new(iminus, j, length);
-						short label = labelArray[k][indxWest];
+						label = labelArray[k][indxWest];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
@@ -3171,7 +3173,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					if (i < length_minus) {
 						size_t iplus = i + 1;
 						size_t indxEast = x_new(iplus, j, length);
-						short label = labelArray[k][indxEast];
+						label = labelArray[k][indxEast];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
@@ -3197,7 +3199,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					if (j > 0) {
 						size_t jminus = j - 1;
 						size_t indxNorth = x_new(i, jminus, length);
-						short label = labelArray[k][indxNorth];
+						label = labelArray[k][indxNorth];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
@@ -3223,7 +3225,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					if (j < width_minus) {
 						size_t jplus = j + 1;
 						size_t indxSouth = x_new(i, jplus, length);
-						short label = labelArray[k][indxSouth];
+						label = labelArray[k][indxSouth];
 						if (label != 1) {
 							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
 							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
@@ -3265,7 +3267,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		//Top
 		if (k > 0) {
 			size_t kminus = k - 1;
-			short label = labelArray[kminus][currentIndx];
+			label = labelArray[kminus][currentIndx];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
@@ -3291,7 +3293,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		//Bottom
 		if (k < height_minus) {
 			size_t kplus = k + 1;
-			short label = labelArray[kplus][currentIndx];
+			label = labelArray[kplus][currentIndx];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
@@ -3318,7 +3320,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		if (i > 0) {
 			size_t iminus = i - 1;
 			size_t indxWest = x_new(iminus, j, length);
-			short label = labelArray[k][indxWest];
+			label = labelArray[k][indxWest];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
@@ -3345,7 +3347,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		if (i < length_minus) {
 			size_t iplus = i + 1;
 			size_t indxEast = x_new(iplus, j, length);
-			short label = labelArray[k][indxEast];
+			label = labelArray[k][indxEast];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
@@ -3372,7 +3374,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		if (j > 0) {
 			size_t jminus = j - 1;
 			size_t indxNorth = x_new(i, jminus, length);
-			short label = labelArray[k][indxNorth];
+			label = labelArray[k][indxNorth];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
@@ -3399,7 +3401,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		if (j < width_minus) {
 			size_t jplus = j + 1;
 			size_t indxSouth = x_new(i, jplus, length);
-			short label = labelArray[k][indxSouth];
+			label = labelArray[k][indxSouth];
 			if (label != 1) {
 				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
 				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
