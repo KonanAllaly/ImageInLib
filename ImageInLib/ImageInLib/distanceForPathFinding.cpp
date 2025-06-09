@@ -3102,7 +3102,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 				if (ctImageData.imageDataPtr[k][xd] == foregroundValue) {
 					
 					//Top
-					if (k > 0) {
+					if (k > 0 && k < height && i >= 0 && i < length && j >= 0 && j < width) {
 						kminus = k - 1;
 						label = labelArray[kminus][xd];
 						if (label != 1) {
@@ -3127,7 +3127,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					}
 
 					//Bottom
-					if (k < height_minus) {
+					if (k >= 0 && k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
 						kplus = k + 1;
 						label = labelArray[kplus][xd];
 						if (label != 1) {
@@ -3152,7 +3152,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					}
 
 					//West
-					if (i > 0) {
+					if (i > 0 && i < length && j >= 0 && j < width && k >= 0 && k < height) {
 						iminus = i - 1;
 						indxWest = x_new(iminus, j, length);
 						label = labelArray[k][indxWest];
@@ -3178,7 +3178,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					}
 
 					//East
-					if (i < length_minus) {
+					if (i >= 0 && i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
 						iplus = i + 1;
 						indxEast = x_new(iplus, j, length);
 						label = labelArray[k][indxEast];
@@ -3204,7 +3204,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					}
 
 					//North
-					if (j > 0) {
+					if (j > 0 && j < width && i >= 0 && i < length && k >= 0 && k < height) {
 						jminus = j - 1;
 						indxNorth = x_new(i, jminus, length);
 						label = labelArray[k][indxNorth];
@@ -3230,7 +3230,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 					}
 
 					//South
-					if (j < width_minus) {
+					if (j >= 0 && j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
 						jplus = j + 1;
 						indxSouth = x_new(i, jplus, length);
 						label = labelArray[k][indxSouth];
@@ -3269,11 +3269,17 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		j = current.y;
 		k = current.z;
 		xd = x_new(i, j, length);
-		labelArray[k][xd] = 1;
+		if(i >= 0 && i < length && j >= 0 && j < width && k >= 0 && k < height) {
+			labelArray[k][xd] = 1;
+		}
+		else {
+			return false; //out of bounds check
+		}
+		
 		deleteRootHeap3D(inProcess);
 
 		//Top
-		if (k > 0) {
+		if (k > 0 && k < height && i >= 0 && i < length && j >= 0 && j < width) {
 			kminus = k - 1;
 			label = labelArray[kminus][xd];
 			if (label != 1) {
@@ -3299,7 +3305,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		}
 
 		//Bottom
-		if (k < height_minus) {
+		if (k >= 0 && k < height_minus && i >= 0 && i < length && j >= 0 && j < width) {
 			kplus = k + 1;
 			label = labelArray[kplus][xd];
 			if (label != 1) {
@@ -3325,7 +3331,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		}
 
 		//West
-		if (i > 0) {
+		if (i > 0 && i < length && j >= 0 && j < width && k >= 0 && k < height) {
 			iminus = i - 1;
 			indxWest = x_new(iminus, j, length);
 			label = labelArray[k][indxWest];
@@ -3352,7 +3358,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		}
 
 		//East
-		if (i < length_minus) {
+		if (i >= 0 && i < length_minus && j >= 0 && j < width && k >= 0 && k < height) {
 			iplus = i + 1;
 			indxEast = x_new(iplus, j, length);
 			label = labelArray[k][indxEast];
@@ -3379,7 +3385,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		}
 
 		//North
-		if (j > 0) {
+		if (j > 0 && j < width && i >= 0 && i < length && k >= 0 && k < height) {
 			jminus = j - 1;
 			indxNorth = x_new(i, jminus, length);
 			label = labelArray[k][indxNorth];
@@ -3406,7 +3412,7 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 		}
 
 		//South
-		if (j < width_minus) {
+		if (j >= 0 && j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
 			jplus = j + 1;
 			indxSouth = x_new(i, jplus, length);
 			label = labelArray[k][indxSouth];
