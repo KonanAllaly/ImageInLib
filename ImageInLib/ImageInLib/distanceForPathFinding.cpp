@@ -1676,7 +1676,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(X + h.sx * P);
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1696,7 +1695,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(Y + h.sy * P);
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1716,7 +1714,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(Z + h.sz * P);
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1736,7 +1733,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, Y + h.sy * P));
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1756,7 +1752,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, Z + h.sz * P));
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1776,7 +1771,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
@@ -1796,7 +1790,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
-			//return INFINITY; // No real solution, return a large value
 		}
 	}
 
