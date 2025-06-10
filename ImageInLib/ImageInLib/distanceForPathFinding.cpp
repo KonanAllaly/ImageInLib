@@ -1573,6 +1573,26 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 }
 
+void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
+
+	int current = i;
+
+	if (i > 0) {
+		int parent = (i - 1) / 2;
+		dataType val_current = in_Process[current].arrival;
+		dataType val_parent = in_Process[parent].arrival;
+		if (val_current < val_parent) {
+			current = parent;
+		}
+	}
+
+	if (current != i) {
+		swap3dPoints(&in_Process[current], &in_Process[i]);
+		heapifyUp3D(in_Process, current);
+	}
+
+}
+
 void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
 	int length_array = in_Process.size();
 	int ind, start = length_array / 2 - 1;
@@ -1594,26 +1614,6 @@ void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D
 	in_Process.push_back(point);
 	int l = in_Process.size();
 	heapifyUp3D(in_Process, l - 1);
-}
-
-void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
-
-	int current = i;
-
-	if (i > 0) {
-		int parent = (i - 1) / 2;
-		dataType val_current = in_Process[current].arrival;
-		dataType val_parent = in_Process[parent].arrival;
-		if (val_current < val_parent) {
-			current = parent;
-		}
-	}
-
-	if (current != i) {
-		swap3dPoints(&in_Process[current], &in_Process[i]);
-		heapifyUp3D(in_Process, current);
-	}
-
 }
 
 void updateHeapPriority(vector<pointFastMarching3D>& in_Process, pointFastMarching3D pPoint) {
