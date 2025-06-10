@@ -370,7 +370,7 @@ using namespace std;
 	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
 	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue, dataType tolerance, dataType tau);
+	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method to compute a distance map from a given image.
