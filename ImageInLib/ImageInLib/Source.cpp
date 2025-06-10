@@ -4661,56 +4661,56 @@ int main() {
 	dataType foregroundValue = 1.0;
 	Point3D center = { 25.0, 25.0, 25.0 };
 
-	//double step = M_PI / 1000.0;
-	//double phi, theta, r = 19.0, smallRadius = 5.0;
-	//for (phi = 0.0; phi < 2 * M_PI; phi += step) {
-	//	for (theta = 0.0; theta < M_PI; theta += step) {
-	//		
-	//		i = (size_t)(center.x + r * cos(phi) * sin(theta));
-	//		j = (size_t)(center.y + r * sin(phi) * sin(theta));
-	//		k = (size_t)(center.z + r * cos(theta));
-	//		if (i < Length && j < Width && k < Height) 
-	//		{
-	//			imageData[k][x_new(i, j, Length)] = foregroundValue;
-	//		}
-	//		
-	//		// Calculates distance
-	//		dataType point_in_circleX = sqrt(((i - center.x) * (i - center.x) + (j - center.y) * (j - center.y)));
-	//		dataType point_in_circleY = sqrt(((i - center.x) * (i - center.x) + (k - center.z) * (k - center.z)));
-	//		dataType point_in_circleZ = sqrt(((k - center.z) * (k - center.z) + (j - center.y) * (j - center.y)));
-	//		// 2D to 1D representation
-	//		size_t s = x_new(i, j, Length);
-	//		//Create holes in the sphere
-	//		if (((point_in_circleX <= smallRadius) || (point_in_circleY <= smallRadius) || (point_in_circleZ <= smallRadius)))
-	//			imageData[k][s] = 0.0;
-	//		else
-	//			imageData[k][s] = foregroundValue;
-	//	}
-	//}
+	double step = M_PI / 1000.0;
+	double phi, theta, r = 19.0, smallRadius = 5.0;
+	for (phi = 0.0; phi < 2 * M_PI; phi += step) {
+		for (theta = 0.0; theta < M_PI; theta += step) {
+			
+			i = (size_t)(center.x + r * cos(phi) * sin(theta));
+			j = (size_t)(center.y + r * sin(phi) * sin(theta));
+			k = (size_t)(center.z + r * cos(theta));
+			if (i < Length && j < Width && k < Height) 
+			{
+				imageData[k][x_new(i, j, Length)] = foregroundValue;
+			}
+			
+			////Create holes in the sphere
+			//dataType point_in_circleX = sqrt(((i - center.x) * (i - center.x) + (j - center.y) * (j - center.y)));
+			//dataType point_in_circleY = sqrt(((i - center.x) * (i - center.x) + (k - center.z) * (k - center.z)));
+			//dataType point_in_circleZ = sqrt(((k - center.z) * (k - center.z) + (j - center.y) * (j - center.y)));
+			//// 2D to 1D representation
+			//size_t s = x_new(i, j, Length);
+			//
+			//if (((point_in_circleX <= smallRadius) || (point_in_circleY <= smallRadius) || (point_in_circleZ <= smallRadius)))
+			//	imageData[k][s] = 0.0;
+			//else
+			//	imageData[k][s] = foregroundValue;
+		}
+	}
 
-	//storing_path = outputPath + "sphere_with_holes.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "sphere.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	imageData[25][x_new(25, 25, Length)] = 1.0;
+	//imageData[25][x_new(25, 25, Length)] = 1.0;
 
 	Image_Data toDistanceMap = { Height, Length, Width, imageData, {0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}} };
-	//bruteForceDistanceMap(toDistanceMap, distanceMapBruteForce, foregroundValue);
-	//storing_path = outputPath + "distanceMapBrFr.raw";
-	//manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	bruteForceDistanceMap(toDistanceMap, distanceMapBruteForce, foregroundValue);
+	storing_path = outputPath + "distanceMapBrFr.raw";
+	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	
 	////fastMarching(distanceMapBruteForce, imageData, Height, Length, Width, foregroundValue);
-	//fastMarching3dForDistanceMap(toDistanceMap, distanceMapFastMarching, foregroundValue);
-	//storing_path = outputPath + "distanceMapFaMa.raw";
-	//manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	fastMarching3dForDistanceMap(toDistanceMap, distanceMapFastMarching, foregroundValue);
+	storing_path = outputPath + "distanceMapFaMa.raw";
+	manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	////fastSweepingFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1.0, 10000000000.0, 0.0);
-	//fastSweepingDistanceMap(toDistanceMap, distanceMapFastSweeping, foregroundValue);
-	//storing_path = outputPath + "distanceMapFaSw.raw";
-	//manageRAWFile3D<dataType>(distanceMapFastSweeping, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	////fastSweepingFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1.0, 10000000000.0, 1.0);
+	fastSweepingDistanceMap(toDistanceMap, distanceMapFastSweeping, foregroundValue);
+	storing_path = outputPath + "distanceMapFaSw.raw";
+	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	dataType tolerance = 0.001;
 	size_t max_iter = 1000;
-	rouyTourinFunction_3D(distanceMapBruteForce, imageData, tolerance, Length, Width, Height, 0.4, 0.0);
+	////rouyTourinFunction_3D(distanceMapBruteForce, imageData, tolerance, Length, Width, Height, 0.4, 1.0);
 	rouyTourinDistanceMap(toDistanceMap, RTDistanceMap, tolerance, max_iter, foregroundValue);
 	storing_path = outputPath + "distanceMapRT.raw";
 	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
@@ -4720,34 +4720,34 @@ int main() {
 	for (k = 0; k < Height; k++) 
 	{
 		for (i = 0; i < dim2D; i++) {
-			//norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
-			//norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
+			norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
+			norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
 			norm_rt += pow(distanceMapBruteForce[k][i] - RTDistanceMap[k][i], 2);
-			//difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
+			difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
 		}
 	}
 	
-	//std::cout << "Residual Brute Force Vs Fast Marching: " << sqrt(norm_fm) << std::endl;
-	//std::cout << "Residual Brute Force Vs Fast Sweeping: " << sqrt(norm_fs) << std::endl;
+	std::cout << "Residual Brute Force Vs Fast Marching: " << sqrt(norm_fm) << std::endl;
+	std::cout << "Residual Brute Force Vs Fast Sweeping: " << sqrt(norm_fs) << std::endl;
 	std::cout << "Residual Brute Force Vs Rouy-Tourin: " << sqrt(norm_rt) << std::endl;
-	//storing_path = outputPath + "difference.raw";
-	//manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "difference.raw";
+	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	//storing_path = outputPath + "information_test.csv";
-	//FILE* p_info;
-	//if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(p_info, "The test is performed on Tuesday 10th June\n");
-	//fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
-	//fprintf(p_info, "The input image is made of a single point\n");
-	//fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
-	//fprintf(p_info, "The residual is computed as the L2 norm between the distance map com[puted by brute force and the others\n");
-	//fprintf(p_info, "The residual for Brute Vs Fast Marching is: %f\n", sqrt(norm_fm));
-	//fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %f\n", sqrt(norm_fs));
-	//fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %f\n", sqrt(norm_rt));
-	//fclose(p_info);
+	storing_path = outputPath + "information_test.csv";
+	FILE* p_info;
+	if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(p_info, "The test is performed on Tuesday 10th June\n");
+	fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
+	fprintf(p_info, "The input image is made of a single point\n");
+	fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
+	fprintf(p_info, "The residual is computed as the L2 norm between the distance map com[puted by brute force and the others\n");
+	fprintf(p_info, "The residual for Brute Vs Fast Marching is: %f\n", sqrt(norm_fm));
+	fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %f\n", sqrt(norm_fs));
+	fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %f\n", sqrt(norm_rt));
+	fclose(p_info);
 
 	for(k = 0; k < Height; k++) {
 		delete[] imageData[k];

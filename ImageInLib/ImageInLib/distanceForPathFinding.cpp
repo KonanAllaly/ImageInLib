@@ -2185,13 +2185,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if (sol > X) {
-				return sol;
-			}
-			else {
-				return (dataType)(X + h.sx * P);
-			}
+			return sol;
+			//if (sol > X) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(X + h.sx * P);
+			//}
 		}
 		else {
 			return (dataType)(X + h.sx * P);
@@ -2205,13 +2205,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if( sol > Y) {
-				return sol;
-			}
-			else {
-				return (dataType)(Y + h.sy * P);
-			}
+			return sol;
+			//if( sol > Y) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(Y + h.sy * P);
+			//}
 		}
 		else {
 			return (dataType)(Y + h.sy * P);
@@ -2225,13 +2225,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if( sol > Z) {
-				return sol;
-			}
-			else {
-				return (dataType)(Z + h.sz * P);
-			}
+			return sol;
+			//if( sol > Z) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(Z + h.sz * P);
+			//}
 		}
 		else {
 			return (dataType)(Z + h.sz * P);
@@ -2245,13 +2245,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if(sol > max(X, Y)) {
-				return sol;
-			}
-			else {
-				return (dataType)(min(X + h.sx * P, Y + h.sy * P));
-			}
+			return sol;
+			//if(sol > max(X, Y)) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(min(X + h.sx * P, Y + h.sy * P));
+			//}
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, Y + h.sy * P));
@@ -2265,13 +2265,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta > 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if(sol >= max(X, Z)) {
-				return sol;
-			}
-			else {
-				return (dataType)(min(X + h.sx * P, Z + h.sz * P));
-			}
+			return sol;
+			//if(sol >= max(X, Z)) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(min(X + h.sx * P, Z + h.sz * P));
+			//}
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, Z + h.sz * P));
@@ -2285,13 +2285,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if(sol > max(Y, Z)) {
-				return sol;
-			}
-			else {
-				return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
-			}
+			return sol;
+			//if(sol > max(Y, Z)) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
+			//}
 		}
 		else {
 			return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
@@ -2305,13 +2305,13 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return sol;
-			if(sol > max(X, max(Y, Z))) {
-				return sol;
-			}
-			else {
-				return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
-			}
+			return sol;
+			//if(sol > max(X, max(Y, Z))) {
+			//	return sol;
+			//}
+			//else {
+			//	return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
+			//}
 		}
 		else {
 			return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
@@ -2320,7 +2320,7 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 
 }
 
-/*
+
 bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving) {
 
 	if (actionPtr.imageDataPtr == NULL || potentialFuncPtr == NULL || endPoints == NULL) {
@@ -2362,8 +2362,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	size_t currentIndx = x_new(i, j, length);
 	actionPtr.imageDataPtr[k][currentIndx] = 0.0;
 	labelArray[k][currentIndx] = 1;
-	size_t posCurrent = x_flat(i, j, k, length, width);
-	pointFastMarching3D current = { i, j, k, 0.0, posCurrent };
+	pointFastMarching3D current = { i, j, k, &actionPtr.imageDataPtr[k][currentIndx] };
 
 	//find the neighbours of the initial point add add them to inProcess
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
@@ -2377,8 +2376,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
 		dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 		size_t posTop = x_flat(i, j, kminus, length, width);
-		pointFastMarching3D TopNeighbor = { i, j, kminus, dTop, posTop };
-		actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
+		pointFastMarching3D TopNeighbor = { i, j, kminus, &actionPtr.imageDataPtr[kminus][currentIndx]};
+		
 		labelArray[kminus][currentIndx] = 2;
 		inProcess.push_back(TopNeighbor);
 	}
@@ -2391,9 +2390,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
 		dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
 		dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-		size_t posBottom = x_flat(i, j, kplus, length, width);
-		pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom, posBottom };
 		actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
+		pointFastMarching3D BottomNeighbor = { i, j, kplus, &actionPtr.imageDataPtr[kplus][currentIndx]};
 		labelArray[kplus][currentIndx] = 2;
 		inProcess.push_back(BottomNeighbor);
 	}
@@ -2407,9 +2405,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
 		dataType coefSpeed = potentialFuncPtr[k][indxNorth];
 		dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-		size_t posNorth = x_flat(i, jminus, k, length, width);
-		pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth, posNorth };
 		actionPtr.imageDataPtr[k][indxNorth] = dNorth;
+		pointFastMarching3D NorthNeighbor = { i, jminus, k, &actionPtr.imageDataPtr[k][indxNorth]};
 		labelArray[k][indxNorth] = 2;
 		inProcess.push_back(NorthNeighbor);
 	}
@@ -2423,9 +2420,9 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
 		dataType coefSpeed = potentialFuncPtr[k][indxSouth];
 		dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-		size_t posSouth = x_flat(i, jplus, k, length, width);
-		pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth, posSouth };
 		actionPtr.imageDataPtr[k][indxSouth] = dSouth;
+		pointFastMarching3D SouthNeighbor = { i, jplus, k, &actionPtr.imageDataPtr[k][indxSouth]};
+		
 		labelArray[k][indxSouth] = 2;
 		inProcess.push_back(SouthNeighbor);
 	}
@@ -2439,9 +2436,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
 		dataType coefSpeed = potentialFuncPtr[k][indxEast];
 		dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-		size_t posEast = x_flat(iplus, j, k, length, width);
-		pointFastMarching3D EastNeighbor = { iplus, j, k, dEast, posEast };
 		actionPtr.imageDataPtr[k][indxEast] = dEast;
+		pointFastMarching3D EastNeighbor = { iplus, j, k, &actionPtr.imageDataPtr[k][indxEast]};
 		labelArray[k][indxEast] = 2;
 		inProcess.push_back(EastNeighbor);
 	}
@@ -2455,9 +2451,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
 		dataType coefSpeed = potentialFuncPtr[k][indxWest];
 		dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-		size_t posWest = x_flat(iminus, j, k, length, width);
-		pointFastMarching3D WestNeighbor = { iminus, j, k, dWest, posWest };
 		actionPtr.imageDataPtr[k][indxWest] = dWest;
+		pointFastMarching3D WestNeighbor = { iminus, j, k, &actionPtr.imageDataPtr[k][indxWest]};
 		labelArray[k][indxWest] = 2;
 		inProcess.push_back(WestNeighbor);
 	}
@@ -2535,7 +2530,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
 				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t posTop = x_flat(i, j, kminus, length, width);
-				pointFastMarching3D TopNeighbor = { i, j, kminus, dTop, posTop };
+				pointFastMarching3D TopNeighbor = { i, j, kminus, &actionPtr.imageDataPtr[kminus][currentIndx]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
 					labelArray[kminus][currentIndx] = 2;
@@ -2544,7 +2539,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dTop < actionPtr.imageDataPtr[kminus][currentIndx]) {
 						actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
-						updateHeapPriority(inProcess, TopNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, TopNeighbor);
 					}
 				}
 			}
@@ -2561,7 +2557,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
 				dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t posBottom = x_flat(i, j, kplus, length, width);
-				pointFastMarching3D BottomNeighbor = { i, j, kplus, dBottom, posBottom };
+				pointFastMarching3D BottomNeighbor = { i, j, kplus, &actionPtr.imageDataPtr[kplus][currentIndx]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
 					labelArray[kplus][currentIndx] = 2;
@@ -2570,7 +2566,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dBottom < actionPtr.imageDataPtr[kplus][currentIndx]) {
 						actionPtr.imageDataPtr[kplus][currentIndx] = dBottom;
-						updateHeapPriority(inProcess, BottomNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, BottomNeighbor);
 					}
 				}
 			}
@@ -2588,7 +2585,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType coefSpeed = potentialFuncPtr[k][indxEast];
 				dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t posEast = x_flat(iplus, j, k, length, width);
-				pointFastMarching3D EastNeighbor = { iplus, j, k, dEast, posEast };
+				pointFastMarching3D EastNeighbor = { iplus, j, k, &actionPtr.imageDataPtr[k][indxEast]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxEast] = dEast;
 					labelArray[k][indxEast] = 2;
@@ -2597,7 +2594,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dEast < actionPtr.imageDataPtr[k][indxEast]) {
 						actionPtr.imageDataPtr[k][indxEast] = dEast;
-						updateHeapPriority(inProcess, EastNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, EastNeighbor);
 					}
 				}
 			}
@@ -2615,7 +2613,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType coefSpeed = potentialFuncPtr[k][indxWest];
 				dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t posWest = x_flat(iminus, j, k, length, width);
-				pointFastMarching3D WestNeighbor = { iminus, j, k, dWest, posWest };
+				pointFastMarching3D WestNeighbor = { iminus, j, k, &actionPtr.imageDataPtr[k][indxWest]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxWest] = dWest;
 					labelArray[k][indxWest] = 2;
@@ -2624,7 +2622,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dWest < actionPtr.imageDataPtr[k][indxWest]) {
 						actionPtr.imageDataPtr[k][indxWest] = dWest;
-						updateHeapPriority(inProcess, WestNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, WestNeighbor);
 					}
 				}
 			}
@@ -2641,8 +2640,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxNorth];
 				dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				size_t posNorth = x_flat(i, jminus, k, length, width);
-				pointFastMarching3D NorthNeighbor = { i, jminus, k, dNorth, posNorth };
+				pointFastMarching3D NorthNeighbor = { i, jminus, k, &actionPtr.imageDataPtr[k][indxNorth]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxNorth] = dNorth;
 					labelArray[k][indxNorth] = 2;
@@ -2651,7 +2649,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dNorth < actionPtr.imageDataPtr[k][indxNorth]) {
 						actionPtr.imageDataPtr[k][indxNorth] = dNorth;
-						updateHeapPriority(inProcess, NorthNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, NorthNeighbor);
 					}
 				}
 			}
@@ -2668,8 +2667,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxSouth];
 				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				size_t posSouth = x_flat(i, jplus, k, length, width);
-				pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth, posSouth };
+				pointFastMarching3D SouthNeighbor = { i, jplus, k, &actionPtr.imageDataPtr[k][indxSouth]};
 				if (label == 3) {
 					actionPtr.imageDataPtr[k][indxSouth] = dSouth;
 					labelArray[k][indxSouth] = 2;
@@ -2678,7 +2676,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				else {
 					if (dSouth < actionPtr.imageDataPtr[k][indxSouth]) {
 						actionPtr.imageDataPtr[k][indxSouth] = dSouth;
-						updateHeapPriority(inProcess, SouthNeighbor);
+						heapifyVector3D(inProcess);
+						//updateHeapPriority(inProcess, SouthNeighbor);
 					}
 				}
 			}
@@ -2721,6 +2720,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	return true;
 }
 
+/*
 bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing) {
 
 	if (distanceFuncPtr == NULL || potentialFuncPtr == NULL) {
