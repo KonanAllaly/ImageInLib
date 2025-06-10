@@ -4641,53 +4641,137 @@ int main() {
 	*/
 
 	// Test 2D distance map computation
-	const size_t Length = 100, Width = 100;
+	const size_t Length = 50, Width = 50, Height = 50;
 	size_t dim2D = Length * Width;
-	dataType* imageData = new dataType[dim2D]{ 0 };
-	dataType* distanceMapBruteForce = new dataType[dim2D]{ 0 };
-	dataType* distanceMapFastMarching = new dataType[dim2D]{ 0 };
-	dataType* distanceMapFastSweeping = new dataType[dim2D]{ 0 };
-	dataType* rouyTourinDistanceMap = new dataType[dim2D]{ 0 };
-	dataType* difference = new dataType[dim2D]{ 0 };
+	dataType** imageData = new dataType*[Height]{ 0 };
+	dataType** distanceMapBruteForce = new dataType*[Height]{ 0 };
+	dataType** distanceMapFastMarching = new dataType*[Height]{ 0 };
+	dataType** distanceMapFastSweeping = new dataType*[Height]{ 0 };
+	dataType** RTDistanceMap = new dataType*[Height]{ 0 };
+	dataType** difference = new dataType*[Height]{ 0 };
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{0};
+		distanceMapBruteForce[k] = new dataType[dim2D]{0};
+		distanceMapFastMarching[k] = new dataType[dim2D]{0};
+		distanceMapFastSweeping[k] = new dataType[dim2D]{0};
+		RTDistanceMap[k] = new dataType[dim2D]{0};
+		difference[k] = new dataType[dim2D]{0};
+	}
 
 	dataType foregroundValue = 1.0;
-	imageData[x_new(50, 50, Length)] = foregroundValue; // Set a point in the center
+	Point3D center = { 25.0, 25.0, 25.0 };
 
-	Image_Data2D toDistanceMap = { Length, Width, imageData, {0.0, 0.0}, {1.0, 1.0}, {{1.0, 0.0}, {0.0, 1.0}} };
-	bruteForceDistanceMap2D(toDistanceMap, distanceMapBruteForce, foregroundValue);
-	//storing_path = outputPath + "distanceMapBrFr.raw";
-	//manageRAWFile2D<dataType>(distanceMapBruteForce, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	double step = M_PI / 1000.0;
+	double phi, theta, r = 19.0, smallRadius = 5.0;
+	for (phi = 0.0; phi < 2 * M_PI; phi += step) {
+		for (theta = 0.0; theta < M_PI; theta += step) {
+			
+			i = (size_t)(center.x + r * cos(phi) * sin(theta));
+			j = (size_t)(center.y + r * sin(phi) * sin(theta));
+			k = (size_t)(center.z + r * cos(theta));
+			if (i < Length && j < Width && k < Height) 
+			{
+				imageData[k][x_new(i, j, Length)] = foregroundValue;
+			}
+			
+			//// Calculates distance
+			//point_in_circleX = sqrt(((i - center.x) * (i - center.x) + (j - center.y) * (j - center.y)));
+			//point_in_circleY = sqrt(((i - center.x) * (i - center.x) + (k - center.z) * (k - center.z)));
+			//point_in_circleZ = sqrt(((k - center.z) * (k - center.z) + (j - center.y) * (j - center.y)));
+			//// 2D to 1D representation
+			//s = x_new(i, j, length);
+
+			//// Insertion of tube to through the sphere
+			//if (fillValue == 1.0)
+			//{
+			//	if (((point_in_circleX <= smallRadius) || (point_in_circleY <= smallRadius) || (point_in_circleZ <= smallRadius)))
+			//		dataArray3D[k][s] = 0.;
+			//	else
+			//		dataArray3D[k][s] = fillValue;
+			//}
+			//else
+			//{
+			//	if (((point_in_circleX <= smallRadius) || (point_in_circleY <= smallRadius) || (point_in_circleZ <= smallRadius)))
+			//		dataArray3D[k][s] = 1.;
+			//	else
+			//		dataArray3D[k][s] = fillValue;
+			//}
+
+		}
+	}
+
+	//storing_path = outputPath + "sphere.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Image_Data toDistanceMap = { Height, Length, Width, imageData, {0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}} };
+	//bruteForceDistanceMap(toDistanceMap, distanceMapBruteForce, foregroundValue);
+	storing_path = outputPath + "distanceMapBrFr.raw";
+	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 	
-	//fastMarchingForDistanceMap(toDistanceMap, distanceMapFastMarching, foregroundValue);
-	//storing_path = outputPath + "distanceMapFaMa.raw";
-	//manageRAWFile2D<dataType>(distanceMapFastMarching, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	fastMarching3dForDistanceMap(toDistanceMap, distanceMapFastMarching, foregroundValue);
+	storing_path = outputPath + "distanceMapFaMa.raw";
+	manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	//fastSweepingDistanceMap2D(toDistanceMap, distanceMapFastSweeping, foregroundValue);
-	//storing_path = outputPath + "distanceMapFaSw.raw";
-	//manageRAWFile2D<dataType>(distanceMapFastSweeping, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	fastSweepingDistanceMap(toDistanceMap, distanceMapFastSweeping, foregroundValue);
+	storing_path = outputPath + "distanceMapFaSw.raw";
+	manageRAWFile3D<dataType>(distanceMapFastSweeping, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	dataType tolerance = 0.5, tau = 0.4;
-	rouyTourinDistanceMap2D(toDistanceMap, rouyTourinDistanceMap, tolerance, tau, foregroundValue);
-
+	dataType tolerance = 0.001;
+	size_t max_iter = 1000;
+	//rouyTourinDistanceMap(toDistanceMap, RTDistanceMap, tolerance, max_iter, foregroundValue);
 	storing_path = outputPath + "distanceMapRT.raw";
-	manageRAWFile2D<dataType>(rouyTourinDistanceMap, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(RTDistanceMap, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	//Compute the residual
-	dataType norm = 0.0;	
-	for (i = 0; i < dim2D; i++) {
-		//norm += pow(distanceMapBruteForce[i] - distanceMapFastMarching[i], 2);
-		norm += pow(distanceMapBruteForce[i] - rouyTourinDistanceMap[i], 2);
-		difference[i] = distanceMapBruteForce[i] - rouyTourinDistanceMap[i];
+	dataType norm_fm = 0.0, norm_fs = 0.0, norm_rt = 0;	
+	for (k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) {
+			norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
+			norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
+			norm_rt += pow(distanceMapBruteForce[k][i] - RTDistanceMap[k][i], 2);
+
+			difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
+		}
 	}
-	//std::cout << "diagonal length: " << sqrt(Length * Length + Width * Width) << std::endl;
-	std::cout << "Residual Fast Sweeping: " << sqrt(norm) << std::endl;
+	
+	std::cout << "Residual Brute Force Vs Fast Marching: " << sqrt(norm_fm) << std::endl;
+	std::cout << "Residual Brute Force Vs Fast Sweeping: " << sqrt(norm_fs) << std::endl;
+	std::cout << "Residual Brute Force Vs Rouy-Tourin: " << sqrt(norm_rt) << std::endl;
 
-	storing_path = outputPath + "difference.raw";
-	manageRAWFile2D<dataType>(difference, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "difference.raw";
+	//manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
+	storing_path = outputPath + "information_test.csv";
+	FILE* p_info;
+	if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(p_info, "The test is performed on Tuesday 10th June\n");
+	fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
+	fprintf(p_info, "The input image is made of a empty sphere\n");
+	fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
+	fprintf(p_info, "The residual is computed as the L2 norm between the distance map com[puted by brute force and the others\n");
+	fprintf(p_info, "The residual for Brute Vs Fast Marching is: %f\n", sqrt(norm_fm));
+	fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %f\n", sqrt(norm_fs));
+	fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %f\n", sqrt(norm_rt));
+	fclose(p_info);
+
+	for(k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] distanceMapBruteForce[k];
+		delete[] distanceMapFastMarching[k];
+		delete[] distanceMapFastSweeping[k];
+		delete[] RTDistanceMap[k];
+		delete[] difference[k];
+	}
 	delete[] imageData;
 	delete[] distanceMapBruteForce;
 	delete[] distanceMapFastMarching;
+	delete[] distanceMapFastSweeping;
+	delete[] RTDistanceMap;
+	delete[] difference;
 
 	//==================== Aorta bifurcation detection ===================================
 	
