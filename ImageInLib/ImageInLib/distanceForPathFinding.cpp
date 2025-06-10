@@ -1636,17 +1636,6 @@ void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D
 	}
 }
 
-void updateHeapPriority(vector<pointFastMarching3D>& in_Process, pointFastMarching3D pPoint) {
-	//not efficient when in_Process size is large
-	for (size_t i = 0; i < in_Process.size(); i++) {
-		if (pPoint.index == in_Process[i].index) {
-			in_Process[i].arrival = pPoint.arrival;
-			break;
-		}
-	}
-	heapifyVector3D(in_Process);
-}
-
 bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL || potential == NULL) {

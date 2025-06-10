@@ -265,8 +265,6 @@ using namespace std;
 	/// <param name="point">element to be added</param>
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
 
-	void updateHeapPriority(vector<pointFastMarching3D>& in_Process, pointFastMarching3D pPoint);
-
 	/// <summary>
 	/// 3D fast marching (front propagation), starting by one seed point
 	/// </summary>
