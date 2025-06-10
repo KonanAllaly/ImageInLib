@@ -1541,6 +1541,9 @@ void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
 void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	int length_array = in_Process.size();
+	if(length_array == 0) {
+		return; //nothing to heapify
+	}
 	int current = i;
 	int left_child = 2 * i + 1;
 	int right_child = 2 * i + 2;
@@ -1575,6 +1578,9 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
+	if(i <= 0 || i >= in_Process.size()) {
+		return; //nothing to heapify
+	}
 	int current = i;
 
 	if (i > 0) {
@@ -1595,6 +1601,9 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
 	int length_array = in_Process.size();
+	if(length_array == 0) {
+		return; //nothing to heapify
+	}
 	int ind, start = length_array / 2 - 1;
 	for (ind = start; ind >= 0; ind--) {
 		heapifyDown3D(in_Process, ind);
@@ -1604,9 +1613,14 @@ void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
 void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process) {
 	//we use type int for indexes because we do operations like pos--
 	int l = in_Process.size();
-	swap3dPoints(&in_Process[0], &in_Process[l - 1]);
-	in_Process.pop_back();
-	heapifyDown3D(in_Process, 0);
+	if (l > 1) {
+		swap3dPoints(&in_Process[0], &in_Process[l - 1]);
+		in_Process.pop_back();
+		heapifyDown3D(in_Process, 0);
+	}
+	else {
+		in_Process.pop_back();
+	}
 }
 
 void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point) {
@@ -1623,7 +1637,7 @@ void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D
 }
 
 void updateHeapPriority(vector<pointFastMarching3D>& in_Process, pointFastMarching3D pPoint) {
-	//TODO: not efficient when in_Process size is large (!!! to be improved !!!)
+	//not efficient when in_Process size is large
 	for (size_t i = 0; i < in_Process.size(); i++) {
 		if (pPoint.index == in_Process[i].index) {
 			in_Process[i].arrival = pPoint.arrival;
