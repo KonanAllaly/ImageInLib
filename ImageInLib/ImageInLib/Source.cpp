@@ -45,7 +45,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	/*
+	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -65,7 +65,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	*/
+	
 
 	//========================= Detect Heart region ==================================
 	
@@ -3996,7 +3996,7 @@ int main() {
 
 	//==================== Test Potential function ========================================
 	
-	/*
+
 	dataType** imageData = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
@@ -4042,14 +4042,14 @@ int main() {
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
 		0.15, //threshold
-		0.008,//epsilon
+		0.001,//epsilon
 		radius
 	};
 	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	compute3DPotential(inputImageStr, potential, endPoints, parameters);
+	//compute3DPotential(inputImageStr, potential, endPoints, parameters);
 	
-	//storing_path = outputPath + "potential.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
 	storing_path = outputPath + "update path finding/p1/action_";
@@ -4116,7 +4116,7 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	free(ctContainer);
-	*/
+	
 
 	/*
 	//Artificial image
@@ -4640,7 +4640,7 @@ int main() {
 	delete[] action;
 	*/
 
-	
+	/*
 	const size_t Length = 50, Width = 50, Height = 50;
 	size_t dim2D = Length * Width;
 	dataType** imageData = new dataType*[Height]{ 0 };
@@ -4706,48 +4706,55 @@ int main() {
 	////fastSweepingFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1.0, 10000000000.0, 1.0);
 	fastSweepingDistanceMap(toDistanceMap, distanceMapFastSweeping, foregroundValue);
 	storing_path = outputPath + "distanceMapFaSw.raw";
-	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(distanceMapFastSweeping, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	dataType tolerance = 0.001;
 	size_t max_iter = 1000;
 	////rouyTourinFunction_3D(distanceMapBruteForce, imageData, tolerance, Length, Width, Height, 0.4, 1.0);
 	rouyTourinDistanceMap(toDistanceMap, RTDistanceMap, tolerance, max_iter, foregroundValue);
 	storing_path = outputPath + "distanceMapRT.raw";
-	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(RTDistanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	//Compute the residual
-	dataType norm_fm = 0.0, norm_fs = 0.0, norm_rt = 0;	
-	for (k = 0; k < Height; k++) 
-	{
-		for (i = 0; i < dim2D; i++) {
-			norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
-			norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
-			norm_rt += pow(distanceMapBruteForce[k][i] - RTDistanceMap[k][i], 2);
-			difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
-		}
-	}
-	
-	std::cout << "Residual Brute Force Vs Fast Marching: " << sqrt(norm_fm) << std::endl;
-	std::cout << "Residual Brute Force Vs Fast Sweeping: " << sqrt(norm_fs) << std::endl;
-	std::cout << "Residual Brute Force Vs Rouy-Tourin: " << sqrt(norm_rt) << std::endl;
-	storing_path = outputPath + "difference.raw";
-	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	////Compute the residual
+	//dataType norm_fm = 0.0, norm_fs = 0.0, norm_rt = 0;	
+	//dataType nb_grid_points = Length * Width * Height;
+	//for (k = 0; k < Height; k++) 
+	//{
+	//	for (i = 0; i < dim2D; i++) {
+	//		norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
+	//		norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
+	//		norm_rt += pow(distanceMapBruteForce[k][i] - RTDistanceMap[k][i], 2);
+	//		difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
+	//	}
+	//}
+	//std::cout << "Residual Brute Force Vs Fast Marching: " << sqrt(norm_fm) / nb_grid_points << std::endl;
+	//std::cout << "Residual Brute Force Vs Fast Sweeping: " << sqrt(norm_fs) / nb_grid_points << std::endl;
+	//std::cout << "Residual Brute Force Vs Rouy-Tourin: " << sqrt(norm_rt) / nb_grid_points << std::endl;
+	//storing_path = outputPath + "difference.raw";
+	//manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	storing_path = outputPath + "information_test.csv";
-	FILE* p_info;
-	if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(p_info, "The test is performed on Tuesday 10th June\n");
-	fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
-	fprintf(p_info, "The input image is made of a single point\n");
-	fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
-	fprintf(p_info, "The residual is computed as the L2 norm between the distance map com[puted by brute force and the others\n");
-	fprintf(p_info, "The residual for Brute Vs Fast Marching is: %f\n", sqrt(norm_fm));
-	fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %f\n", sqrt(norm_fs));
-	fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %f\n", sqrt(norm_rt));
-	fclose(p_info);
+	//dataType hdistance_rt = computeHausDorffDistance(distanceMapBruteForce, RTDistanceMap, Length, Width, Height);
+	//dataType hdistance_fs = computeHausDorffDistance(distanceMapBruteForce, distanceMapFastSweeping, Length, Width, Height);
+	//dataType hdistance_fm = computeHausDorffDistance(distanceMapBruteForce, distanceMapFastMarching, Length, Width, Height);
+	//std::cout << "Haussdorff distance RT : " << hdistance_rt << std::endl;
+	//std::cout << "Haussdorff distance RT : " << hdistance_fs << std::endl;
+	//std::cout << "Haussdorff distance RT : " << hdistance_fm << std::endl;
+
+	//storing_path = outputPath + "information_test.csv";
+	//FILE* p_info;
+	//if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(p_info, "The test is performed on Tuesday 10th June\n");
+	//fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
+	//fprintf(p_info, "The input image is made of a single point\n");
+	//fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
+	//fprintf(p_info, "The residual is computed as the L2 norm between the distance map com[puted by brute force and the others\n");
+	//fprintf(p_info, "The residual for Brute Vs Fast Marching is: %f\n", sqrt(norm_fm));
+	//fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %f\n", sqrt(norm_fs));
+	//fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %f\n", sqrt(norm_rt));
+	//fclose(p_info);
 
 	for(k = 0; k < Height; k++) {
 		delete[] imageData[k];
@@ -4763,7 +4770,7 @@ int main() {
 	delete[] distanceMapFastSweeping;
 	delete[] RTDistanceMap;
 	delete[] difference;
-	
+	*/
 
 	//==================== Aorta bifurcation detection ===================================
 	

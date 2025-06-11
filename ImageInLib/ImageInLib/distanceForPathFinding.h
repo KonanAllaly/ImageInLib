@@ -20,7 +20,7 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y, z;
-		int pos;
+		size_t pos;
 		dataType* arrival;
 	} pointFastMarching3D;
 
