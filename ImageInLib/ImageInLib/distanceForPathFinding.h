@@ -20,6 +20,7 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y, z;
+		int pos;
 		dataType* arrival;
 	} pointFastMarching3D;
 
@@ -274,7 +275,7 @@ using namespace std;
 	/// <param name="height">image height</param>
 	/// <param name="seedPoint">ssed point</param>
 	/// <returns>return true after succes</returns>
-	bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
+	//bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
 
 	/// <summary>
 	/// compute speed (potential) in each point
@@ -334,7 +335,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing);
+	//bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
@@ -346,7 +347,7 @@ using namespace std;
 	/// <param name="path_points">Reference to a vector where the detected path points will be stored.</param>
 	/// <param name="path_saving">The file path where the resulting path will be saved.</param>
 	/// <returns>True if the front propagation and key point detection succeed; otherwise, false.</returns>
-	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& path_points, std::string path_saving);
+	//bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& path_points, std::string path_saving);
 
 	//==================================
 
@@ -367,7 +368,7 @@ using namespace std;
 	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
 	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
+	//bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method to compute a distance map from a given image.
@@ -376,7 +377,7 @@ using namespace std;
 	/// <param name="distanceFuncPtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
+	//bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	/// <summary>
 	/// Computes a distance map from the given image data using the fast sweeping method.
@@ -385,7 +386,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="backgroundValue">The value in the image that represents the background.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
+	//bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.
@@ -394,7 +395,9 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
+	//bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
+
+	//dataType computeHausDorffDistance(dataType** source1, dataType** source2, const size_t length, const size_t width, const size_t height);
 
 	/*
 	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
