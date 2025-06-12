@@ -2397,11 +2397,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		actionPtr.imageDataPtr[kminus][currentIndx] = dTop;
 		pointFastMarching3D TopNeighbor = { i, j, kminus, posTop, &actionPtr.imageDataPtr[kminus][currentIndx]};
 		inProcess.push_back(TopNeighbor);
-		//size_t indx = i * (width * height) + j * height + kminus;
-		//size_t indx2 = x_flat(i, j, kminus, length, width);
-		//size_t indx3 = kminus + height * currentIndx;
-		//size_t indx4 = j + (kminus * length + i) * width;
-		//size_t indx = i + length * (j + width * kminus);
 		size_t indx = x_flat(i, j, kminus, length, width);
 		indexArray[indx] = &inProcess[posTop].pos;
 		labelArray[kminus][currentIndx] = 2;
@@ -2421,8 +2416,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		inProcess.push_back(BottomNeighbor);
 		size_t indx = x_flat(i, j, kplus, length, width);
 		indexArray[indx] = &inProcess[posBottom].pos;
-		//size_t indx = i * (width * height) + j * height + kplus;
-		//indexArray[indx] = &inProcess[posBottom].pos;
 		labelArray[kplus][currentIndx] = 2;
 	}
 
@@ -2437,12 +2430,10 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 		size_t posNorth = inProcess.size();
 		actionPtr.imageDataPtr[k][indxNorth] = dNorth;
-		pointFastMarching3D NorthNeighbor = { i, jminus, k, posNorth,&actionPtr.imageDataPtr[k][indxNorth]};
+		pointFastMarching3D NorthNeighbor = { i, jminus, k, posNorth, &actionPtr.imageDataPtr[k][indxNorth] };
 		inProcess.push_back(NorthNeighbor);
 		size_t indx = x_flat(i, jminus, k, length, width);
 		indexArray[indx] = &inProcess[posNorth].pos;
-		//size_t indx = i * (width * height) + jminus * height + k;
-		//indexArray[indx] = &inProcess[posNorth].pos;
 		labelArray[k][indxNorth] = 2;
 	}
 
@@ -2461,8 +2452,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		inProcess.push_back(SouthNeighbor);
 		size_t indx = x_flat(i, jplus, k, length, width);
 		indexArray[indx] = &inProcess[posSouth].pos;
-		//size_t indx = i * (width * height) + jplus * height + k;
-		//indexArray[indx] = &inProcess[posSouth].pos;
 		labelArray[k][indxSouth] = 2;
 	}
 
@@ -2481,8 +2470,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		inProcess.push_back(EastNeighbor);
 		size_t indx = x_flat(iplus, j, k, length, width);
 		indexArray[indx] = &inProcess[posEast].pos;
-		//size_t indx = iplus * (width * height) + j * height + k;
-		//indexArray[indx] = &inProcess[posEast].pos;
 		labelArray[k][indxEast] = 2;
 	}
 
@@ -2501,8 +2488,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		inProcess.push_back(WestNeighbor);
 		size_t indx = x_flat(iminus, j, k, length, width);
 		indexArray[indx] = &inProcess[posWest].pos;
-		//size_t indx = iminus * (width * height) + j * height + k;
-		//indexArray[indx] = &inProcess[posWest].pos;
 		labelArray[k][indxWest] = 2;
 	}
 	
@@ -2583,7 +2568,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kminus);
 				dataType coefSpeed = potentialFuncPtr[kminus][currentIndx];
 				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = i * (width * height) + j * height + kminus;
 				size_t indx = x_flat(i, j, kminus, length, width);
 				if (label == 3) {
 					size_t posTop = inProcess.size();
@@ -2606,8 +2590,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[kminus][currentIndx] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2624,7 +2606,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, j, kplus);
 				dataType coefSpeed = potentialFuncPtr[kplus][currentIndx];
 				dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = i * (width * height) + j * height + kplus;
 				size_t indx = x_flat(i, j, kplus, length, width);
 				if (label == 3) {
 					size_t posBottom = inProcess.size();
@@ -2647,8 +2628,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[kplus][currentIndx] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2666,7 +2645,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iplus, j, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxEast];
 				dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = iplus * (width * height) + j * height + k;
 				size_t indx = x_flat(iplus, j, k, length, width);
 				if (label == 3) {
 					size_t posEast = inProcess.size();
@@ -2689,8 +2667,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[k][indxEast] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2708,14 +2684,13 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, iminus, j, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxWest];
 				dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = iminus * (width * height) + j * height + k;
 				size_t indx = x_flat(iminus, j, k, length, width);
 				if (label == 3) {
 					size_t posWest = inProcess.size();
 					actionPtr.imageDataPtr[k][indxWest] = dWest;
 					pointFastMarching3D WestNeighbor = { iminus, j, k, posWest, &actionPtr.imageDataPtr[k][indxWest] };
 					inProcess.push_back(WestNeighbor);
-					size_t indx = iminus * (width * height) + j * height + k;
+					size_t indx = x_flat(iminus, j, k, length, width);
 					indexArray[indx] = &inProcess[posWest].pos;
 					heapifyUp3D(inProcess, posWest);
 					labelArray[k][indxWest] = 2;
@@ -2732,8 +2707,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[k][indxWest] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2751,7 +2724,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jminus, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxNorth];
 				dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = i * (width * height) + jminus * height + k;
 				size_t indx = x_flat(i, jminus, k, length, width);
 				if (label == 3) {
 					size_t posNorth = inProcess.size();
@@ -2774,8 +2746,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[k][indxNorth] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2793,7 +2763,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 				dataType z = select3dZ(actionPtr.imageDataPtr, length, width, height, i, jplus, k);
 				dataType coefSpeed = potentialFuncPtr[k][indxSouth];
 				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				//size_t indx = i * (width * height) + jplus * height + k;
 				size_t indx = x_flat(i, jplus, k, length, width);
 				if (label == 3) {
 					size_t posSouth = inProcess.size();
@@ -2816,8 +2785,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 							std::cout << "status = " << labelArray[k][indxSouth] << std::endl;
 							return false;
 						}
-						//size_t pt_pos = *indexArray[indx];
-						//heapifyUp3D(inProcess, pt_pos);
 						cout_laborus_update++;
 					}
 				}
@@ -2825,8 +2792,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		}
 
 	}
-	//std::cout << processed_point << " points have been processed " << std::endl;
-	//std::cout << "The mistake happens : " << count_mistakes << " times" << std::endl;
 	
 	//Visualize the front propagation
 	id_save++;
