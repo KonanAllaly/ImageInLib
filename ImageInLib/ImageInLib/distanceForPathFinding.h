@@ -335,7 +335,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	//bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint, VoxelSpacing spacing);
+	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
