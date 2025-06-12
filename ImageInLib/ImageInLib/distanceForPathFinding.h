@@ -21,7 +21,7 @@ using namespace std;
 	typedef struct {
 		size_t x, y, z;
 		size_t pos;
-		dataType* arrival;
+		dataType arrival;
 	} pointFastMarching3D;
 
 	typedef struct {

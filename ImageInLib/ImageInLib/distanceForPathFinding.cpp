@@ -1536,19 +1536,19 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 	dataType val_current = 0.0, val_left = 0.0, val_right = 0.0;
 
 	if (current >= 0 && current < length_array) {
-		val_current = *in_Process[current].arrival;
+		val_current = in_Process[current].arrival;
 	}
 
 	if (left_child < length_array) {
-		val_left = *in_Process[left_child].arrival;
+		val_left = in_Process[left_child].arrival;
 		if (val_left < val_current) {
 			current = left_child;
-			val_current = *in_Process[current].arrival;
+			val_current = in_Process[current].arrival;
 		}
 	}
 
 	if (right_child < length_array) {
-		val_right = *in_Process[right_child].arrival;
+		val_right = in_Process[right_child].arrival;
 		if (val_right < val_current) {
 			current = right_child;
 		}
@@ -1570,8 +1570,8 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	if (i > 0) {
 		int parent = (i - 1) / 2;
-		dataType val_current = *in_Process[current].arrival;
-		dataType val_parent = *in_Process[parent].arrival;
+		dataType val_current = in_Process[current].arrival;
+		dataType val_parent = in_Process[parent].arrival;
 		if (val_current < val_parent) {
 			current = parent;
 		}
@@ -2367,6 +2367,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		indexArray[k].resize(dim2D, nullptr);
 	}
 
+	/*
 	//Initialization
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
@@ -2790,6 +2791,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			}
 		}
 	}
+	*/
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
