@@ -1652,45 +1652,47 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			//threshold : real image
-	//			if (edgeValue <= parameters.thres) {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//			////threshold artificial image
-	//			//if (norm_of_gradient > 0.0) {
-	//			//	maskThreshold[k][xd] = 0.0;
-	//			//}
-	//			//else {
-	//			//	maskThreshold[k][xd] = 1.0;
-	//			//}
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= 0.05) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
+				}
+				////threshold artificial image
+				//if (norm_of_gradient > 0.0) {
+				//	maskThreshold[k][xd] = 0.0;
+				//}
+				//else {
+				//	maskThreshold[k][xd] = 1.0;
+				//}
+			}
+		}
+	}
 	
-	////Real image
-	//Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 0.0);
-	////rouyTourinDistanceMap(toDistanceMap, distance, 0.0, 0.4, 0.5);
-	////////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//Real image
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	rouyTourinDistanceMap(toDistanceMap, distance, 0.001, 1000, 1.0);
+	//////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/crop/distance_map_rt.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/crop/edge_image.raw";
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	//////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
@@ -1714,13 +1716,13 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
 	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	
-	//dataType var_epsilon = 0.0;
-	//if (seedStats.sd_data != 0) {
-	//	var_epsilon = seedStats.sd_data;
-	//}
-	//else {
-	//	var_epsilon = parameters.eps;
-	//}
+	dataType var_epsilon = 0.0;
+	if (seedStats.sd_data != 0) {
+		var_epsilon = seedStats.sd_data / 2.0;
+	}
+	else {
+		var_epsilon = parameters.eps;
+	}
 	
 	dataType seedValCT = value_first_pt;
 	//////dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
@@ -1741,7 +1743,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			if (potential[k][i] > maxImage) {
 				maxImage = potential[k][i];
 			}
-			if (potential[k][i] < maxImage) {
+			if (potential[k][i] < minImage) {
 				minImage = potential[k][i];
 			}
 		}
@@ -1752,9 +1754,9 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * 1.0 / (1.0 + 1.0 * distance[k][i]);
+			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * 1.0 / (1.0 + 1.0 * distance[k][i]);
 			//potential[k][i] = 1.0 / (1.0 + 1.0 * distance[k][i]);
-			potential[k][i] = parameters.eps + potential[k][i] / maxImage;
+			//potential[k][i] = parameters.eps + potential[k][i] / maxImage;
 		}
 	}
 
@@ -3594,7 +3596,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 //========================================================================================================
 //================================== Distance Map ========================================================
 //========================================================================================================
-
 
 bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue) {
 
