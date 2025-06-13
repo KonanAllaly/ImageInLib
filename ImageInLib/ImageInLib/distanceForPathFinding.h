@@ -197,7 +197,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
+	dataType select3dX(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in y-direction
@@ -210,7 +210,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
+	dataType select3dY(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in z-direction
@@ -223,7 +223,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);	
+	dataType select3dZ(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// swap 3D variables
@@ -231,6 +231,8 @@ using namespace std;
 	/// <param name="a">first variable</param>
 	/// <param name="b">second variable</param>
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
+
+	void swap3dPointsExtend(pointFastMarching3D* a, pointFastMarching3D* b, size_t** position, const size_t length, const size_t width);
 
 	/// <summary>
 	/// create heap sorting from last element 
