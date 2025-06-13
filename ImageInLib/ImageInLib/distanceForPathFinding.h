@@ -368,7 +368,7 @@ using namespace std;
 	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
 	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	//bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
+	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method to compute a distance map from a given image.
@@ -377,7 +377,7 @@ using namespace std;
 	/// <param name="distanceFuncPtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	//bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
+	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	/// <summary>
 	/// Computes a distance map from the given image data using the fast sweeping method.
@@ -386,7 +386,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="backgroundValue">The value in the image that represents the background.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	//bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
+	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.
@@ -395,9 +395,9 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	//bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
+	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
 
-	//dataType computeHausDorffDistance(dataType** source1, dataType** source2, const size_t length, const size_t width, const size_t height);
+	dataType computeHausDorffDistance(dataType** source1, dataType** source2, const size_t length, const size_t width, const size_t height);
 
 	/*
 	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
