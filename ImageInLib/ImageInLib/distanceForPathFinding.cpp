@@ -1467,123 +1467,47 @@ dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
 
 }
 
-dataType select3dX(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
-	
-	//if (i == 0) {
-	//	return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
-	//}
-	//else {
-	//	if (i == length - 1) {
-	//		return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i, j, length)]);
-	//	}
-	//	else {
-	//		return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
-	//	}
-	//}
-
-	dataType x_minus, x_plus;
+dataType select3dX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
 	if (i == 0) {
-		x_minus = INFINITY;
+		return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
 	}
 	else {
-		if (label[k][x_new(i - 1, j, length)] == 1) {
-			x_minus = actionPtr[k][x_new(i - 1, j, length)];
+		if (i == length - 1) {
+			return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i, j, length)]);
 		}
 		else {
-			x_minus = INFINITY;
+			return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
 		}
 	}
-	if(i == length - 1) {
-		x_plus = INFINITY;
-	}
-	else {
-		if(label[k][x_new(i + 1, j, length)] == 1) {
-			x_plus = actionPtr[k][x_new(i + 1, j, length)];
-		}
-		else {
-			x_plus = INFINITY;
-		}
-	}
-	return min(x_minus, x_plus);
 }
 
-dataType select3dY(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
-	//if (j == 0) {
-	//	return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i, j + 1, length)]);
-	//}
-	//else {
-	//	if (j == width - 1) {
-	//		return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j, length)]);
-	//	}
-	//	else {
-	//		return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j + 1, length)]);
-	//	}
-	//}
-	
-	dataType y_minus, y_plus;
-	if(j == 0) {
-		y_minus = INFINITY;
+dataType select3dY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+	if (j == 0) {
+		return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i, j + 1, length)]);
 	}
 	else {
-		if(label[k][x_new(i, j - 1, length)] == 1) {
-			y_minus = actionPtr[k][x_new(i, j - 1, length)];
+		if (j == width - 1) {
+			return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j, length)]);
 		}
 		else {
-			y_minus = INFINITY;
+			return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j + 1, length)]);
 		}
 	}
-	if(j == width - 1) {
-		y_plus = INFINITY;
-	}
-	else {
-		if(label[k][x_new(i, j + 1, length)] == 1) {
-			y_plus = actionPtr[k][x_new(i, j + 1, length)];
-		}
-		else {
-			y_plus = INFINITY;
-		}
-	}
-	return min(y_minus, y_plus);
 }
 
-dataType select3dZ(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
 	size_t xd = x_new(i, j, length);
-	//if (k == 0) {
-	//	return min(actionPtr[k + 1][xd], actionPtr[k][xd]);
-	//}
-	//else {
-	//	if (k == height - 1) {
-	//		return min(actionPtr[k - 1][xd], actionPtr[k][xd]);
-	//	}
-	//	else {
-	//		return min(actionPtr[k + 1][xd], actionPtr[k - 1][xd]);
-	//	}
-	//}
-
-	dataType z_minus, z_plus;
-	if(k == 0) {
-		z_minus = INFINITY;
+	if (k == 0) {
+		return min(actionPtr[k + 1][xd], actionPtr[k][xd]);
 	}
 	else {
-		if(label[k - 1][xd] == 1) {
-			z_minus = actionPtr[k - 1][xd];
+		if (k == height - 1) {
+			return min(actionPtr[k - 1][xd], actionPtr[k][xd]);
 		}
 		else {
-			z_minus = INFINITY;
+			return min(actionPtr[k + 1][xd], actionPtr[k - 1][xd]);
 		}
 	}
-	if(k == height - 1) {
-		z_plus = INFINITY;
-	}
-	else {
-		if(label[k + 1][xd] == 1) {
-			z_plus = actionPtr[k + 1][xd];
-		}
-		else {
-			z_plus = INFINITY;
-		}
-	}
-	return min(z_minus, z_plus);
 }
 
 void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
@@ -1680,7 +1604,7 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
 	int length_array = in_Process.size();
-	if(length_array == 0) {
+	if(length_array < 2) {
 		return; //nothing to heapify
 	}
 	int ind, start = length_array / 2 - 1;
@@ -3821,9 +3745,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t kminus = k - 1;
 						short label = labelArray[kminus][currentIndx];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kminus);
 							dataType coefSpeed = 1.0;
 							dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(i, j, kminus, length, width);
@@ -3850,9 +3774,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t kplus = k + 1;
 						short label = labelArray[kplus][currentIndx];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
 							dataType coefSpeed = 1.0;
 							dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(i, j, kplus, length, width);
@@ -3880,9 +3804,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t indxEast = x_new(iplus, j, length);// iplus + j * length;
 						short label = labelArray[k][indxEast];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
 							dataType coefSpeed = 1.0;
 							dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(iplus, j, k, length, width);
@@ -3910,9 +3834,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t indxWest = x_new(iminus, j, length);
 						short label = labelArray[k][indxWest];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
 							dataType coefSpeed = 1.0;
 							dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(iminus, j, k, length, width);
@@ -3941,9 +3865,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t indxNorth = x_new(i, jminus, length);
 						short label = labelArray[k][indxNorth];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jminus, k);
 							dataType coefSpeed = 1.0;
 							dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(i, jminus, k, length, width);
@@ -3971,9 +3895,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 						size_t indxSouth = x_new(i, jplus, length);
 						short label = labelArray[k][indxSouth];
 						if (label != 1) {
-							dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
-							dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
-							dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
+							dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
+							dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
+							dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
 							dataType coefSpeed = 1.0;
 							dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 							size_t indx = x_flat(i, jplus, k, length, width);
@@ -4020,9 +3944,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t kminus = k - 1;
 			short label = labelArray[kminus][currentIndx];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, j, kminus);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kminus);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kminus);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kminus);
 				dataType coefSpeed = 1.0;
 				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(i, j, kminus, length, width);
@@ -4051,9 +3975,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t kplus = k + 1;
 			short label = labelArray[kplus][currentIndx];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, j, kplus);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, j, kplus);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, j, kplus);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, j, kplus);
 				dataType coefSpeed = 1.0;
 				dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(i, j, kplus, length, width);
@@ -4083,9 +4007,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t indxEast = x_new(iplus, j, length);// iplus + j * length;
 			short label = labelArray[k][indxEast];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, iplus, j, k);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, iplus, j, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, iplus, j, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, iplus, j, k);
 				dataType coefSpeed = 1.0;
 				dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(iplus, j, k, length, width);
@@ -4115,9 +4039,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t indxWest = x_new(iminus, j, length);
 			short label = labelArray[k][indxWest];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, iminus, j, k);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, iminus, j, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, iminus, j, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, iminus, j, k);
 				dataType coefSpeed = 1.0;
 				dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(iminus, j, k, length, width);
@@ -4148,9 +4072,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t indxNorth = x_new(i, jminus, length);
 			short label = labelArray[k][indxNorth];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, jminus, k);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jminus, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jminus, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jminus, k);
 				dataType coefSpeed = 1.0;
 				dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(i, jminus, k, length, width);
@@ -4180,9 +4104,9 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 			size_t indxSouth = x_new(i, jplus, length);
 			short label = labelArray[k][indxSouth];
 			if (label != 1) {
-				dataType x = select3dX(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
-				dataType y = select3dY(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
-				dataType z = select3dZ(distanceFuncPtr, labelArray, length, width, height, i, jplus, k);
+				dataType x = select3dX(distanceFuncPtr, length, width, height, i, jplus, k);
+				dataType y = select3dY(distanceFuncPtr, length, width, height, i, jplus, k);
+				dataType z = select3dZ(distanceFuncPtr, length, width, height, i, jplus, k);
 				dataType coefSpeed = 1.0;
 				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				size_t indx = x_flat(i, jplus, k, length, width);
@@ -7018,5 +6942,126 @@ bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, cons
 	}
 	return true;
 
+}
+*/
+
+/*
+dataType select3dX(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+
+	//if (i == 0) {
+	//	return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
+	//}
+	//else {
+	//	if (i == length - 1) {
+	//		return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i, j, length)]);
+	//	}
+	//	else {
+	//		return min(actionPtr[k][x_new(i - 1, j, length)], actionPtr[k][x_new(i + 1, j, length)]);
+	//	}
+	//}
+
+	dataType x_minus, x_plus;
+	if (i == 0) {
+		x_minus = INFINITY;
+	}
+	else {
+		if (label[k][x_new(i - 1, j, length)] == 1) {
+			x_minus = actionPtr[k][x_new(i - 1, j, length)];
+		}
+		else {
+			x_minus = INFINITY;
+		}
+	}
+	if(i == length - 1) {
+		x_plus = INFINITY;
+	}
+	else {
+		if(label[k][x_new(i + 1, j, length)] == 1) {
+			x_plus = actionPtr[k][x_new(i + 1, j, length)];
+		}
+		else {
+			x_plus = INFINITY;
+		}
+	}
+	return min(x_minus, x_plus);
+}
+
+dataType select3dY(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+	//if (j == 0) {
+	//	return min(actionPtr[k][x_new(i, j, length)], actionPtr[k][x_new(i, j + 1, length)]);
+	//}
+	//else {
+	//	if (j == width - 1) {
+	//		return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j, length)]);
+	//	}
+	//	else {
+	//		return min(actionPtr[k][x_new(i, j - 1, length)], actionPtr[k][x_new(i, j + 1, length)]);
+	//	}
+	//}
+
+	dataType y_minus, y_plus;
+	if(j == 0) {
+		y_minus = INFINITY;
+	}
+	else {
+		if(label[k][x_new(i, j - 1, length)] == 1) {
+			y_minus = actionPtr[k][x_new(i, j - 1, length)];
+		}
+		else {
+			y_minus = INFINITY;
+		}
+	}
+	if(j == width - 1) {
+		y_plus = INFINITY;
+	}
+	else {
+		if(label[k][x_new(i, j + 1, length)] == 1) {
+			y_plus = actionPtr[k][x_new(i, j + 1, length)];
+		}
+		else {
+			y_plus = INFINITY;
+		}
+	}
+	return min(y_minus, y_plus);
+}
+
+dataType select3dZ(dataType** actionPtr, short** label, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+	size_t xd = x_new(i, j, length);
+	//if (k == 0) {
+	//	return min(actionPtr[k + 1][xd], actionPtr[k][xd]);
+	//}
+	//else {
+	//	if (k == height - 1) {
+	//		return min(actionPtr[k - 1][xd], actionPtr[k][xd]);
+	//	}
+	//	else {
+	//		return min(actionPtr[k + 1][xd], actionPtr[k - 1][xd]);
+	//	}
+	//}
+
+	dataType z_minus, z_plus;
+	if(k == 0) {
+		z_minus = INFINITY;
+	}
+	else {
+		if(label[k - 1][xd] == 1) {
+			z_minus = actionPtr[k - 1][xd];
+		}
+		else {
+			z_minus = INFINITY;
+		}
+	}
+	if(k == height - 1) {
+		z_plus = INFINITY;
+	}
+	else {
+		if(label[k + 1][xd] == 1) {
+			z_plus = actionPtr[k + 1][xd];
+		}
+		else {
+			z_plus = INFINITY;
+		}
+	}
+	return min(z_minus, z_plus);
 }
 */
