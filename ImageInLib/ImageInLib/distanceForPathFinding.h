@@ -3,6 +3,11 @@
 
 #include<iostream>
 #include<vector>
+
+//#include<unordered_map>
+//#include<tuple>
+//#include<algorithm>
+
 #include "common_functions.h"
 #include "../src/data_load.h"
 #include "../src/endianity_bl.h"
@@ -12,6 +17,64 @@
 
 using namespace std;
 
+	struct point_fm {
+		size_t i, j, k;
+		dataType var; // arrival time
+		bool operator < (const point_fm& other) const {
+			return var > other.var;
+		} 
+	};
+
+	/*
+	class heapWidthIndex {
+	private:
+		std::vector<point_fm> heap;
+		std::unordered_map<std::tuple<size_t, size_t, size_t>, size_t> index_map;
+		void swap_elements(size_t a, size_t b) {
+			std::swap(heap[a], heap[b]);
+			index_map[{heap[a].i, heap[a].j, heap[a].k}] = a;
+			index_map[{heap[b].i, heap[b].j, heap[b].k}] = b;
+		}
+		
+	public:
+		void insert(const point_fm& pt) {
+			heap.push_back(pt);
+			size_t idx = heap.size() - 1;
+			index_map[{pt.i, pt.j, pt.k}] = idx;
+			std::push_heap(heap.begin(), heap.end());
+			rebuild_index();
+		}
+		point_fm* find(size_t i, size_t j, size_t k) {
+			auto it = index_map.find({ i, j, k });
+			if (it == index_map.end()) return nullptr;
+			return &heap[it->second];
+		}
+		void update(size_t i, size_t j, size_t k, dataType new_var) {
+			auto it = index_map.find({ i, j, k });
+			if (it == index_map.end()) return;
+
+			size_t idx = it->second;
+			heap[idx].var = new_var;
+
+			std::make_heap(heap.begin(), heap.end());
+			rebuild_index();
+		}
+		void popMin() {
+			if (heap.empty()) return;
+			std::pop_heap(heap.begin(), heap.end());
+			point_fm min_point = heap.back();
+			index_map.erase({ min_point.i, min_point.j, min_point.k });
+			rebuild_index();
+		}
+	private:
+		void rebuild_index() {
+			for (size_t i = 0; i < heap.size(); ++i) {
+				index_map[{heap[i].i, heap[i].j, heap[i].k}] = i;
+			}
+		}
+	};
+	*/
+
 	typedef struct {
 		size_t x, y;
 		dataType arrival;
@@ -20,7 +83,7 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y, z;
-		size_t pos;
+		short label;
 		dataType arrival;
 	} pointFastMarching3D;
 
@@ -232,7 +295,7 @@ using namespace std;
 	/// <param name="b">second variable</param>
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
 
-	void swap3dPointsExtend(pointFastMarching3D* a, pointFastMarching3D* b, size_t** position, const size_t length, const size_t width);
+	//void swap3dPointsExtend(pointFastMarching3D* a, pointFastMarching3D* b, size_t** position, const size_t length, const size_t width);
 
 	/// <summary>
 	/// create heap sorting from last element 
@@ -326,7 +389,7 @@ using namespace std;
 	/// <param name="endPoints">A pointer to an array of 3D points specifying the endpoints for the propagation.</param>
 	/// <param name="path_saving">A string specifying the file path where the resulting path should be saved.</param>
 	/// <returns>Returns true if the partial front propagation and path saving were successful; otherwise, returns false.</returns>
-	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
+	//bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method on a CT image with specified voxel spacing.
@@ -337,7 +400,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
+	//bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
@@ -388,7 +451,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="backgroundValue">The value in the image that represents the background.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
+	//bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.
