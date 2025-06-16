@@ -236,7 +236,7 @@ using namespace std;
 
 	bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
-	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, dataType tau, dataType foregroundValue);
+	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
 	/// <summary>
 	/// solve quadratic equation

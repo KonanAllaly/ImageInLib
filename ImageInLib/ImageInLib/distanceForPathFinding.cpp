@@ -1309,7 +1309,7 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 	return true;
 }
 
-bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, dataType tau, dataType foregroundValue) {
+bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
 		return false;
@@ -1329,12 +1329,17 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 	}
 
 	double mass = 10.0;
-	dataType hx_2 = 1.0 / ctImageData.spacing.sx * ctImageData.spacing.sx;
-	dataType hy_2 = 1.0 / ctImageData.spacing.sy * ctImageData.spacing.sy;
+	dataType hx = ctImageData.spacing.sx;
+	dataType hy = ctImageData.spacing.sy;
+	
+	dataType hx_2 = 1.0 / (hx * hx);
+	dataType hy_2 = 1.0 / (hy * hy);
 	dataType value = 0.0;
 
+	dataType tau = (hx * hy) / (2 * sqrt(hx * hx + hy * hy));
+	std::cout << "Tau = " << tau << std::endl;
+
 	size_t count_iteration = 0;
-	size_t max_iteration = 1000;
 
 	while (mass > tolerance && count_iteration < max_iteration) {
 
@@ -1359,6 +1364,7 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 		}
 		mass = sqrt(mass);
 	}
+	std::cout << "Convergence is reached after : " << count_iteration << " iterations and the mass is : " << mass << std::endl;
 
 	delete[] previousSolution;
 
