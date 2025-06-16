@@ -93,7 +93,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution > Y) {
+			if (solution >= Y) {
 				return solution;
 			}
 			else {
@@ -114,7 +114,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution > X)
+			if (solution >= X)
 			{
 				return solution;
 			}
@@ -136,7 +136,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution > max(X, Y)) {
+			if (solution >= max(X, Y)) {
 				return solution;
 			}
 			else {
