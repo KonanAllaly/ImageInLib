@@ -78,7 +78,6 @@ using namespace std;
 	typedef struct {
 		size_t x, y;
 		dataType arrival;
-		size_t index;
 	} pointFastMarching2D;
 
 	typedef struct {
@@ -130,7 +129,7 @@ using namespace std;
 	/// <param name="Y">coefficient related to the second variable</param>
 	/// <param name="W">additional coefficient</param>
 	/// <returns></returns>
-	dataType solve2dQuadratic(dataType X, dataType Y, dataType P);
+	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h);
 
 	/// <summary>
 	/// swap two given points 
@@ -172,7 +171,7 @@ using namespace std;
 	/// <param name="point"></param>
 	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 
-	void updateHeapPriority2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D pPoint);
+	int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
 
 	/*
 	/// <summary>
@@ -452,7 +451,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="backgroundValue">The value in the image that represents the background.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	//bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
+	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.

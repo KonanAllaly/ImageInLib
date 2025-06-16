@@ -30,7 +30,7 @@ dataType min0(dataType x, dataType y) {
 		return 0;
 }
 
-dataType selectX(dataType* actionPtr, const size_t length, const size_t width, const size_t i, const size_t j) {
+dataType selectX(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
 	// this function return the minimum in the upwind principle
 	// x--->j and y--->i
@@ -53,7 +53,7 @@ dataType selectX(dataType* actionPtr, const size_t length, const size_t width, c
 	return min(i_minus, i_plus);
 }
 
-dataType selectY(dataType* actionPtr, const size_t length, const size_t width, const size_t i, const size_t j) {
+dataType selectY(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
 	// this function return the minimum in the upwind principle
 	dataType j_minus, j_plus;
@@ -75,10 +75,16 @@ dataType selectY(dataType* actionPtr, const size_t length, const size_t width, c
 	return min(j_minus, j_plus);
 }
 
-dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
+dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType P_2 = P * P;
+
+	dataType hx = h.sx;
+	dataType hx_2 = h.sx * h.sx;
+
+	dataType hy = h.sy;
+	dataType hy_2 = h.sy * h.sy;
 
 	if (P <= 0.0) {
 		std::cerr << "Error: P must be positive." << std::endl;
@@ -87,9 +93,9 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 
 	if (X == INFINITY && Y != INFINITY)
 	{
-		a = 1.0;
-		b = -2 * Y;
-		c = (dataType)(Y * Y - P_2);
+		a = hx_2;
+		b = -2 * hx_2 * Y;
+		c = (dataType)(hx_2 * Y * Y - hx_2 * hy_2 * P_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
@@ -97,19 +103,19 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 				return solution;
 			}
 			else {
-				return (dataType)(Y + P);
+				return (dataType)(Y + hy * P);
 			}
 		}
 		else {
-			return (dataType)(Y + P);
+			return (dataType)(Y + hy * P);
 		}
 	}
 
 	if (X != INFINITY && Y == INFINITY)
 	{
-		a = 1.0;
-		b = -2 * X;
-		c = (dataType)(X * X - P_2);
+		a = hy_2;
+		b = -2 * hy_2 * X;
+		c = (dataType)(hy_2 * X * X - hx_2 * hy_2 * P_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
@@ -119,19 +125,19 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 				return solution;
 			}
 			else {
-				return (dataType)(X + P);
+				return (dataType)(X + hx * P);
 			}
 		}
 		else {
-			return (dataType)(X + P);
+			return (dataType)(X + hx * P);
 		}
 	}
 
 	if (X != INFINITY && Y != INFINITY)
 	{
-		a = 2.0;
-		b = -2 * (X + Y);
-		c = (dataType)(X * X + Y * Y - P_2);
+		a = hx_2 + hy_2;
+		b = -2 * (hy_2 * X + hx_2 * Y);
+		c = (dataType)(hy_2 * X * X + hx_2 * Y * Y - hx_2 * hy_2 * P_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
@@ -140,13 +146,14 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 				return solution;
 			}
 			else {
-				return (dataType)(min(X, Y) + P);
+				return (dataType)(min(X + hx * P, Y + hy * P));
 			}
 		}
 		else {
-			return (dataType)(min(X, Y) + P);
+			return (dataType)(min(X + hx * P, Y + hy * P));
 		}
 	}
+
 }
 
 /*
@@ -349,22 +356,19 @@ void deleteRootHeap2D(vector<pointFastMarching2D>& in_Process) {
 }
 
 void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point) {
-	
 	//we use type int for indexes because we do operations like pos--
 	in_Process.push_back(point);
 	int l = in_Process.size();
 	heapifyUp2D(in_Process, l - 1);
 }
 
-void updateHeapPriority2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D pPoint) {
-	//TODO: not efficient when in_Process size is large (!!! to be improved !!!)
-	for (size_t i = 0; i < in_Process.size(); i++) {
-		if (pPoint.index == in_Process[i].index) {
-			in_Process[i].arrival = pPoint.arrival;
-			break;
+int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j) {
+	for (int ind = 0; ind < in_Process.size(); ind++) {
+		if (in_Process[ind].x == i && in_Process[ind].y == j) {
+			return ind;
 		}
 	}
-	heapifyVector2D(in_Process);
+	return -1; //not found
 }
 
 /*
@@ -1001,16 +1005,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 						x = selectX(distanceFuncPtr, length, width, iminus, j);
 						y = selectY(distanceFuncPtr, length, width, iminus, j);
 						coefSpeed = 1.0;
-						dWest = solve2dQuadratic(x, y, coefSpeed);
-						pointFastMarching2D WestNeighbor = { iminus, j, dWest, indxWest };
+						dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+						pointFastMarching2D WestNeighbor = { iminus, j, dWest};
 						if (label == 3) {
-							inProcess.push_back(WestNeighbor);
 							distanceFuncPtr[indxWest] = dWest;
 							labelArray[indxWest] = 2;
+							addPointHeap2D(inProcess, WestNeighbor);
 						}
 						else {
 							if (dWest < distanceFuncPtr[indxWest]) {
 								distanceFuncPtr[indxWest] = dWest;
+								size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
+								if (pIndex != -1) {
+									heapifyUp2D(inProcess, pIndex);
+								}
 							}
 						}
 					}
@@ -1025,16 +1033,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 						x = selectX(distanceFuncPtr, length, width, iplus, j);
 						y = selectY(distanceFuncPtr, length, width, iplus, j);
 						coefSpeed = 1.0;
-						dEast = solve2dQuadratic(x, y, coefSpeed);
-						pointFastMarching2D EastNeighbor = { iplus, j, dEast, indxEast };
+						dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+						pointFastMarching2D EastNeighbor = { iplus, j, dEast};
 						if (label == 3) {
-							inProcess.push_back(EastNeighbor);
 							distanceFuncPtr[indxEast] = dEast;
 							labelArray[indxEast] = 2;
+							addPointHeap2D(inProcess, EastNeighbor);
 						}
 						else {
 							if (dEast < distanceFuncPtr[indxEast]) {
 								distanceFuncPtr[indxEast] = dEast;
+								size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
+								if (pIndex != -1) {
+									heapifyUp2D(inProcess, pIndex);
+								}
 							}
 						}
 					}
@@ -1049,16 +1061,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 						x = selectX(distanceFuncPtr, length, width, i, jminus);
 						y = selectY(distanceFuncPtr, length, width, i, jminus);
 						coefSpeed = 1.0;
-						dNorth = solve2dQuadratic(x, y, coefSpeed);
-						pointFastMarching2D NorthNeighbor = { i, jminus, dNorth, indxNorth };
+						dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+						pointFastMarching2D NorthNeighbor = { i, jminus, dNorth};
 						if (label == 3) {
-							inProcess.push_back(NorthNeighbor);
 							distanceFuncPtr[indxNorth] = dNorth;
 							labelArray[indxNorth] = 2;
+							addPointHeap2D(inProcess, NorthNeighbor);
 						}
 						else {
 							if (dNorth < distanceFuncPtr[indxNorth]) {
 								distanceFuncPtr[indxNorth] = dNorth;
+								size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
+								if (pIndex != -1) {
+									heapifyUp2D(inProcess, pIndex);
+								}
 							}
 						}
 					}
@@ -1073,16 +1089,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 						x = selectX(distanceFuncPtr, length, width, i, jplus);
 						y = selectY(distanceFuncPtr, length, width, i, jplus);
 						coefSpeed = 1.0;
-						dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
-						pointFastMarching2D SouthNeighbor = { i, jplus, dSouth, indxSouth };
+						dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+						pointFastMarching2D SouthNeighbor = { i, jplus, dSouth};
 						if (label == 3) {
-							inProcess.push_back(SouthNeighbor);
 							distanceFuncPtr[indxSouth] = dSouth;
 							labelArray[indxSouth] = 2;
+							addPointHeap2D(inProcess, SouthNeighbor);
 						}
 						else {
 							if (dSouth < distanceFuncPtr[indxSouth]) {
 								distanceFuncPtr[indxSouth] = dSouth;
+								size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
+								if (pIndex != -1) {
+									heapifyUp2D(inProcess, pIndex);
+								}
 							}
 						}
 					}
@@ -1091,8 +1111,6 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 			}
 		}
 	}
-
-	heapifyVector2D(inProcess);
 
 	while (inProcess.size() > 0) {
 
@@ -1119,17 +1137,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 				x = selectX(distanceFuncPtr, length, width, iminus, j);
 				y = selectY(distanceFuncPtr, length, width, iminus, j);
 				coefSpeed = 1.0;
-				dWest = solve2dQuadratic(x, y, coefSpeed);
-				pointFastMarching2D WestNeighbor = { iminus, j, dWest, indxWest };
+				dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D WestNeighbor = { iminus, j, dWest};
 				if (label == 3) {
-					inProcess.push_back(WestNeighbor);
 					distanceFuncPtr[indxWest] = dWest;
 					labelArray[indxWest] = 2;
+					addPointHeap2D(inProcess, WestNeighbor);
 				}
 				else {
 					if (dWest < distanceFuncPtr[indxWest]) {
 						distanceFuncPtr[indxWest] = dWest;
-						updateHeapPriority2D(inProcess, WestNeighbor);
+						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
@@ -1144,17 +1165,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 				x = selectX(distanceFuncPtr, length, width, iplus, j);
 				y = selectY(distanceFuncPtr, length, width, iplus, j);
 				coefSpeed = 1.0;
-				dEast = solve2dQuadratic(x, y, coefSpeed);
-				pointFastMarching2D EastNeighbor = { iplus, j, dEast, indxEast };
+				dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
 				if (label == 3) {
-					inProcess.push_back(EastNeighbor);
 					distanceFuncPtr[indxEast] = dEast;
 					labelArray[indxEast] = 2;
+					addPointHeap2D(inProcess, EastNeighbor);
 				}
 				else {
 					if (dEast < distanceFuncPtr[indxEast]) {
 						distanceFuncPtr[indxEast] = dEast;
-						updateHeapPriority2D(inProcess, EastNeighbor);
+						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
@@ -1169,17 +1193,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 				x = selectX(distanceFuncPtr, length, width, i, jminus);
 				y = selectY(distanceFuncPtr, length, width, i, jminus);
 				coefSpeed = 1.0;
-				dNorth = solve2dQuadratic(x, y, coefSpeed);
-				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth, indxNorth };
+				dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
 				if (label == 3) {
-					inProcess.push_back(NorthNeighbor);
 					distanceFuncPtr[indxNorth] = dNorth;
 					labelArray[indxNorth] = 2;
+					addPointHeap2D(inProcess, NorthNeighbor);
 				}
 				else {
 					if (dNorth < distanceFuncPtr[indxNorth]) {
 						distanceFuncPtr[indxNorth] = dNorth;
-						updateHeapPriority2D(inProcess, NorthNeighbor);
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
@@ -1194,17 +1221,20 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 				x = selectX(distanceFuncPtr, length, width, i, jplus);
 				y = selectY(distanceFuncPtr, length, width, i, jplus);
 				coefSpeed = 1.0;
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
-				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth, indxSouth };
+				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
 				if (label == 3) {
-					inProcess.push_back(SouthNeighbor);
 					distanceFuncPtr[indxSouth] = dSouth;
 					labelArray[indxSouth] = 2;
+					addPointHeap2D(inProcess, SouthNeighbor);
 				}
 				else {
 					if (dSouth < distanceFuncPtr[indxSouth]) {
 						distanceFuncPtr[indxSouth] = dSouth;
-						updateHeapPriority2D(inProcess, SouthNeighbor);
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
@@ -1224,10 +1254,19 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 	const size_t width = ctImageData.width;
 	PixelSpacing spacing = ctImageData.spacing;
 	const size_t dim2D = length * width;
+	
+	dataType coefSpeed = 1.0;
+	dataType hx = ctImageData.spacing.sx;
+	dataType hy = ctImageData.spacing.sy;
+	dataType hx_2 = pow(hx, 2);
+	dataType hy_2 = pow(hy, 2);
+
+	dataType x = 0.0, y = 0.0, new_val = 0.0;
+	dataType a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 
 	size_t length_minus = length - 1;
 	size_t width_minus = width - 1;
-
+	
 	//Initialization
 	for (size_t ij = 0; ij < dim2D; ij++)
 	{
@@ -1240,19 +1279,53 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 			distancePtr[ij] = INFINITY;
 		}
 	}
+	
+	size_t xd = 0;
+	dataType grad_x = 0.0, grad_y = 0.0;
 
 	//sweep 1
 	for (int i = 0; i < length; i++)
 	{
 		for (int j = 0; j < width; j++)
 		{
-			dataType x = selectX(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType y = selectY(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType coefSpeed = 1.0;
-			dataType pDistance = solve2dQuadratic(x, y, coefSpeed);
-			if (pDistance < distancePtr[x_new(i, j, length)])
+			xd = x_new(i, j, length);
+			if (i == 0) {
+				x = min(distancePtr[xd], distancePtr[x_new(i + 1, j, length)]);
+			}
+			else {
+				if (i == length_minus) {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[xd]);
+				}
+				else {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[x_new(i + 1, j, length)]);
+				}
+			}
+			if (j == 0) {
+				y = min(distancePtr[xd], distancePtr[x_new(i, j + 1, length)]);
+			}
+			else {
+				if (j == width_minus) {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[xd]);
+				}
+				else {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[x_new(i, j + 1, length)]);
+				}
+			}
+			a = hx_2 + hy_2;
+			b = -2 * (hy_2 * x + hx_2 * y);
+			c = hy_2 * pow(x, 2) + hx_2 * pow(y, 2) - hx_2 * hy_2 * coefSpeed;
+			delta = pow(b, 2) - 4 * a * c;
+			grad_x = x / hx;
+			grad_y = y / hy;
+			if (fabs(grad_x - grad_y) >= coefSpeed) {
+				new_val = min(x + hx * coefSpeed, y + hy * coefSpeed);
+			}
+			else {
+				new_val = ( -b + sqrt(delta) ) / (2 * a);
+			}
+			if (new_val < distancePtr[xd])
 			{
-				distancePtr[x_new(i, j, length)] = pDistance;
+				distancePtr[xd] = new_val;
 			}
 		}
 	}
@@ -1262,13 +1335,44 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 	{
 		for (int j = 0; j < width; j++)
 		{
-			dataType x = selectX(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType y = selectY(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType coefSpeed = 1.0;
-			dataType pDistance = solve2dQuadratic(x, y, coefSpeed);
-			if (pDistance < distancePtr[x_new(i, j, length)])
+			xd = x_new(i, j, length);
+			if (i == 0) {
+				x = min(distancePtr[xd], distancePtr[x_new(i + 1, j, length)]);
+			}
+			else {
+				if (i == length_minus) {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[xd]);
+				}
+				else {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[x_new(i + 1, j, length)]);
+				}
+			}
+			if (j == 0) {
+				y = min(distancePtr[xd], distancePtr[x_new(i, j + 1, length)]);
+			}
+			else {
+				if (j == width_minus) {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[xd]);
+				}
+				else {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[x_new(i, j + 1, length)]);
+				}
+			}
+			a = hx_2 + hy_2;
+			b = -2 * (hy_2 * x + hx_2 * y);
+			c = hy_2 * pow(x, 2) + hx_2 * pow(y, 2) - hx_2 * hy_2 * coefSpeed;
+			delta = pow(b, 2) - 4 * a * c;
+			grad_x = x / hx;
+			grad_y = y / hy;
+			if (fabs(grad_x - grad_y) >= coefSpeed) {
+				new_val = min(x + hx * coefSpeed, y + hy * coefSpeed);
+			}
+			else {
+				new_val = ( -b + sqrt(delta) ) / (2 * a);
+			}
+			if (new_val < distancePtr[xd])
 			{
-				distancePtr[x_new(i, j, length)] = pDistance;
+				distancePtr[xd] = new_val;
 			}
 		}
 	}
@@ -1278,15 +1382,45 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 	{
 		for (int j = width_minus; j > -1; j--)
 		{
-			dataType x = selectX(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType y = selectY(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType coefSpeed = 1.0;
-			dataType pDistance = solve2dQuadratic(x, y, coefSpeed);
-			if (pDistance < distancePtr[x_new(i, j, length)])
-			{
-				distancePtr[x_new(i, j, length)] = pDistance;
+			xd = x_new(i, j, length);
+			if (i == 0) {
+				x = min(distancePtr[xd], distancePtr[x_new(i + 1, j, length)]);
 			}
-
+			else {
+				if (i == length_minus) {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[xd]);
+				}
+				else {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[x_new(i + 1, j, length)]);
+				}
+			}
+			if (j == 0) {
+				y = min(distancePtr[xd], distancePtr[x_new(i, j + 1, length)]);
+			}
+			else {
+				if (j == width_minus) {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[xd]);
+				}
+				else {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[x_new(i, j + 1, length)]);
+				}
+			}
+			a = hx_2 + hy_2;
+			b = -2 * (hy_2 * x + hx_2 * y);
+			c = hy_2 * pow(x, 2) + hx_2 * pow(y, 2) - hx_2 * hy_2 * coefSpeed;
+			delta = pow(b, 2) - 4 * a * c;
+			grad_x = x / hx;
+			grad_y = y / hy;
+			if (fabs(grad_x - grad_y) >= coefSpeed) {
+				new_val = min(x + hx * coefSpeed, y + hy * coefSpeed);
+			}
+			else {
+				new_val = ( -b + sqrt(delta) ) / (2 * a);
+			}
+			if (new_val < distancePtr[xd])
+			{
+				distancePtr[xd] = new_val;
+			}
 		}
 	}
 
@@ -1295,13 +1429,44 @@ bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, 
 	{
 		for (int j = width_minus; j > -1; j--)
 		{
-			dataType x = selectX(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType y = selectY(distancePtr, length, width, (size_t)i, (size_t)j);
-			dataType coefSpeed = 1.0;
-			dataType pDistance = solve2dQuadratic(x, y, coefSpeed);
-			if (pDistance < distancePtr[x_new(i, j, length)])
+			xd = x_new(i, j, length);
+			if (i == 0) {
+				x = min(distancePtr[xd], distancePtr[x_new(i + 1, j, length)]);
+			}
+			else {
+				if (i == length_minus) {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[xd]);
+				}
+				else {
+					x = min(distancePtr[x_new(i - 1, j, length)], distancePtr[x_new(i + 1, j, length)]);
+				}
+			}
+			if (j == 0) {
+				y = min(distancePtr[xd], distancePtr[x_new(i, j + 1, length)]);
+			}
+			else {
+				if (j == width_minus) {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[xd]);
+				}
+				else {
+					y = min(distancePtr[x_new(i, j - 1, length)], distancePtr[x_new(i, j + 1, length)]);
+				}
+			}
+			a = hx_2 + hy_2;
+			b = -2 * (hy_2 * x + hx_2 * y);
+			c = hy_2 * pow(x, 2) + hx_2 * pow(y, 2) - hx_2 * hy_2 * coefSpeed;
+			delta = pow(b, 2) - 4 * a * c;
+			grad_x = x / hx;
+			grad_y = y / hy;
+			if (fabs(grad_x - grad_y) >= coefSpeed) {
+				new_val = min(x + hx * coefSpeed, y + hy * coefSpeed);
+			}
+			else {
+				new_val = ( -b + sqrt(delta) ) / (2 * a);
+			}
+			if (new_val < distancePtr[xd])
 			{
-				distancePtr[x_new(i, j, length)] = pDistance;
+				distancePtr[xd] = new_val;
 			}
 		}
 	}
@@ -4122,10 +4287,8 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	return true;
 }
 
-/*
 bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType foregroundValue)
 {
-
 	const size_t length = ctImageData.length;
 	const size_t width = ctImageData.width;
 	const size_t height = ctImageData.height;
@@ -4338,7 +4501,6 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 	
 	return true;
 }
-*/
 
 bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue) {
 
