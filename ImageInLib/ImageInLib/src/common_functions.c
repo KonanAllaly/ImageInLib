@@ -5,10 +5,6 @@
 #include <math.h>
 #include "common_functions.h"
 
-//#define M_PI 3.14159265358979323846
-//#define foreground 1.0
-//#define background 0.0
-
 //==============================================================================
 // Local Function Prototype
 //==============================================================================
@@ -591,14 +587,14 @@ bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t leng
 	}
 
 	size_t x = ind_x, y = ind_y;
-	if (x >= width)
+	if (x >= length)
 	{
-		x = width - 1;
+		x = length - 1;
 	}
 
-	if (y >= length)
+	if (y >= width)
 	{
-		y = length - 1;
+		y = width - 1;
 	}
 
 	dataType dx = 0.0, dy = 0.0;
@@ -607,28 +603,28 @@ bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t leng
 
 	if (x == 0)
 	{
-		dx = (imageDataPtr[x_new(x + 1, y, width)] - imageDataPtr[x_new(x, y, width)]) / fVolume.sx;
+		dx = (imageDataPtr[x_new(x + 1, y, length)] - imageDataPtr[x_new(x, y, length)]) / fVolume.sx;
 	}
-	else if (x == width - 1)
+	else if (x == length - 1)
 	{
-		dx = (imageDataPtr[x_new(x, y, width)] - imageDataPtr[x_new(x - 1, y, width)]) / fVolume.sx;
+		dx = (imageDataPtr[x_new(x, y, length)] - imageDataPtr[x_new(x - 1, y, length)]) / fVolume.sx;
 	}
 	else
 	{
-		dx = (imageDataPtr[x_new(x + 1, y, width)] - imageDataPtr[x_new(x - 1, y, width)]) / hx_c;
+		dx = (imageDataPtr[x_new(x + 1, y, length)] - imageDataPtr[x_new(x - 1, y, length)]) / hx_c;
 	}
 
 	if (y == 0)
 	{
-		dy = (imageDataPtr[x_new(x, y + 1, width)] - imageDataPtr[x_new(x, y, width)]) / fVolume.sy;
+		dy = (imageDataPtr[x_new(x, y + 1, length)] - imageDataPtr[x_new(x, y, length)]) / fVolume.sy;
 	}
-	else if (y == length - 1)
+	else if (y == width - 1)
 	{
-		dy = (imageDataPtr[x_new(x, y, width)] - imageDataPtr[x_new(x, y - 1, width)]) / fVolume.sy;
+		dy = (imageDataPtr[x_new(x, y, length)] - imageDataPtr[x_new(x, y - 1, length)]) / fVolume.sy;
 	}
 	else
 	{
-		dy = (imageDataPtr[x_new(x, y + 1, width)] - imageDataPtr[x_new(x, y - 1, width)]) / hy_c;
+		dy = (imageDataPtr[x_new(x, y + 1, length)] - imageDataPtr[x_new(x, y - 1, length)]) / hy_c;
 	}
 
 	grad->x = dx;
