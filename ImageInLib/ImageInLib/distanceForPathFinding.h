@@ -173,7 +173,6 @@ using namespace std;
 
 	int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
 
-	/*
 	/// <summary>
 	/// 
 	/// </summary>
@@ -195,18 +194,19 @@ using namespace std;
 	/// <param name="width">Width of the input image</param>
 	/// <param name="seedPoints">starting point</param>
 	/// <returns></returns>
-	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints);
+	bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* seedPoints);
+	
 	/// <summary>
-	/// compute speed for each pixel for the fast marching
+	/// Computes the potential function for a given 2D image using specified seed points and parameters.
 	/// </summary>
-	/// <param name="imageDataPtr">input image data</param>
-	/// <param name="potentialFuncPtr">speed map</param>
-	/// <param name="height">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="seedPoints">starting point</param>
-	/// <returns></returns>
-	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints);
+	/// <param name="imageDataStr">The 2D image data to process.</param>
+	/// <param name="potentialFuncPtr">Pointer to the output array where the computed potential function values will be stored.</param>
+	/// <param name="seedPoints">Pointer to an array of seed points used in the potential computation.</param>
+	/// <param name="parameters">The parameters controlling the potential computation.</param>
+	/// <returns>True if the potential computation was successful; otherwise, false.</returns>
+	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints, Potential_Parameters parameters);
 
+	/*
 	/// <summary>
 	/// Finds the shortest path in a 2D image using a action map and a set of seed points.
 	/// </summary>

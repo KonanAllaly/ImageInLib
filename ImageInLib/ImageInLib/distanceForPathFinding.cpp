@@ -32,8 +32,6 @@ dataType min0(dataType x, dataType y) {
 
 dataType selectX(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
-	// this function return the minimum in the upwind principle
-	// x--->j and y--->i
 	dataType i_minus, i_plus;
 
 	if (i == 0) {
@@ -55,7 +53,6 @@ dataType selectX(dataType* actionPtr, const size_t length, const size_t width, s
 
 dataType selectY(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
-	// this function return the minimum in the upwind principle
 	dataType j_minus, j_plus;
 
 	if (j == 0) {
@@ -156,54 +153,54 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 
 }
 
-/*
-bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D * seedPoints)
+bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D * seedPoints, Potential_Parameters parameters)
 {
-	//This function is used to compute the potential function
-	//were epsilon can be used also as parameter
-	//epislon = 0.01 was perfect for our experimentations
 
 	if (imageDataStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
 		return false;
 
-	const size_t height = imageDataStr.height;
+	const size_t length = imageDataStr.height;
 	const size_t width = imageDataStr.width;
-	size_t i, dim2D = height * width;
-	
-	//size_t i1 = (size_t)seedPoints[0].x, j1 = (size_t)seedPoints[0].y;
-	//size_t i2 = (size_t)seedPoints[1].x, j2 = (size_t)seedPoints[1].y;
+	size_t i, j, dim2D = length * width;
 
-	//dataType seedVal = (dataType)((imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, height)] + imageDataStr.imageDataPtr[x_new((size_t)seedPoints[1].x, (size_t)seedPoints[1].y, height)]) / 2.0);
-	dataType seedVal = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, height)]);
-	dataType epsilon = 0.000001;
-	dataType K = 100000.0;
+	dataType seedVal = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, length)]);
 
-	dataType* gradientVectorX = new dataType[dim2D]{ 0 };
-	dataType* gradientVectorY = new dataType[dim2D]{ 0 };
-	dataType* edgeDetector = new dataType[dim2D]{ 0 };
 	dataType* distanceMap = new dataType[dim2D]{ 0 };
+	dataType* edgeImage = new dataType[dim2D]{ 0 };	
 
-	computeImageGradient(imageDataStr, gradientVectorX, gradientVectorY);
-	dataType ux = 0.0, uy = 0.0, norm_of_gradient_square = 0.0;
-	for (i = 0; i < dim2D; i++) {
-		ux = gradientVectorX[i];
-		uy = gradientVectorY[i];
-		norm_of_gradient_square = ux * ux + uy * uy;
-		//edgeDetector[i] = 1.0 / (1.0 + K * norm_of_gradient_square);
-		//if (edgeDetector[i] <= 0.35) {
-		//	edgeDetector[i] = 0.0;
-		//}
-		//else {
-		//	edgeDetector[i] = 1.0;
-		//}
-		if (norm_of_gradient_square > 0.0) {
-			edgeDetector[i] = 1.0;
+	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
+	bool isGradientComputed = false;
+	Point2D grad_vector;
+	PixelSpacing fVolume = imageDataStr.spacing;
+
+	for (i = 0; i < length; i++) 
+	{
+		for (j = 0; j < width; j++) 
+		{
+			isGradientComputed = getGradient2D(imageDataStr.imageDataPtr, length, width, i, j, fVolume, &grad_vector);
+			if (isGradientComputed == true) {
+				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y);
+				edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+			}
+			else {
+				std::cout << "Error in computing gradient at point (" << i << ", " << j << ")" << std::endl;
+				return false;
+			}
+			//Threshold
+			if( edgeValue < parameters.thres) 
+			{
+				edgeValue = 0.0;
+			}
+			else 
+			{
+				edgeValue = 1.0;
+			}
 		}
 	}
 
-	fastSweepingFunction_2D(distanceMap, edgeDetector, height, width, 1.0, 1000000.0, 1.0);
+	//fastSweepingFunction_2D(distanceMap, edgeImage, length, width, 1.0, 1000000.0, 1.0);
 	//string path_file = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_2d.raw";
-	//manageRAWFile2D<dataType>(distanceMap, height, width, path_file.c_str(), STORE_DATA, false);
+	//manageRAWFile2D<dataType>(distanceMap, length, width, path_file.c_str(), STORE_DATA, false);
 
 	for (i = 0; i < dim2D; i++) {
 		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
@@ -218,64 +215,17 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	}
 	
 	//Normalization
-	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
+	dataType weight = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = (epsilon + potentialFuncPtr[i] / maxDiff) * (1.0 / (1 + 1.0 * distanceMap[i]));
+		weight = 1.0 / (1.0 + 1.0 * distanceMap[i]);
+		potentialFuncPtr[i] = (parameters.eps + potentialFuncPtr[i] / maxDiff) * weight;
 	}
 
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] edgeDetector;
+	delete[] distanceMap;
+	delete[] edgeImage;
 
 	return true;
 }
-
-void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep) {
-
-	size_t height = ctImageData.height;
-	size_t width = ctImageData.width;
-	size_t i = 0, j = 0;
-	dataType lambda1 = 1.0, lambda2 = 1.0, omega = 0.00001;
-
-	Statistics stats = get2DPointNeighborhoodStats(ctImageData, seedPoint, radiusInitial);
-	dataType meanInitial = stats.mean_data / radiusInitial, mean = 0.0;
-	dataType varianceInitial = stats.variance / radiusInitial, variance = 0.0;
-
-	dataType radius = 0.0, value = 0.0, minValue = 0.0;
-	dataType meanVal = 0.0, varianceVal = 0.0, optimalRadius = 0.0;
-
-	dataType* radiusArray = new dataType[height * width]{ 0 };
-
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			radius = radiusInitial;
-			meanVal = 0.0;
-			varianceVal = 0.0;
-			optimalRadius = 0.0;
-			Point2D current_point = { i, j };
-			while (radius <= radiusMax) {
-				stats = get2DPointNeighborhoodStats(ctImageData, current_point, radius);
-				mean = stats.mean_data / radius;
-				variance = stats.variance / radius;
-				if (mean >= meanVal) {
-					meanVal = mean;
-					//optimalRadius = radius;
-				}
-				if (variance >= varianceVal) {
-					varianceVal = variance;
-					optimalRadius = radius;
-				}
-				radius = radius + radiusStep;
-			}
-			value = omega + lambda1 * pow(meanVal - meanInitial, 2) + lambda2 * pow(varianceVal - varianceInitial, 2);
-			potentialPtr[x_new(i, j, height)] = value;
-			radiusArray[x_new(i, j, height)] = optimalRadius;
-		}
-	}
-
-	delete[] radiusArray;
-}
-*/
 
 void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
 	pointFastMarching2D temp = *a;
@@ -371,49 +321,43 @@ int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t
 	return -1; //not found
 }
 
-/*
-bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, Point2D* seedPoints) {
+bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* seedPoints) {
 
-	size_t dim2D = height * width;
+	const size_t length = imageData.height;
+	const size_t width = imageData.width;
+	PixelSpacing spacing = imageData.spacing;
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
+	size_t dim2D = length * width;
 
-	short* labelArray = new short[dim2D] {0};
-
-	if (imageDataPtr == NULL || distancePtr == NULL || potentialPtr == NULL || seedPoints == NULL || labelArray == NULL) {
+	vector<pointFastMarching2D> inProcess;
+	short* labelArray = new short[dim2D] { 0 };
+	if (imageData.imageDataPtr == NULL || distancePtr == NULL || potentialPtr == NULL || seedPoints == NULL || labelArray == NULL) {
 		return false;
 	}
-
-	size_t i = 0, j = 0, k = 0;
-	vector<pointFastMarching2D> inProcess;
-
-	dataType x = 0.0, y = 0.0, coefSpeed = 0.0;
-
-	//Compute the potential function
-	//computePotential(imageDataPtr, potentialPtr, height, width, seedPoints);
-
-	//STEP 1
-	//In labelAray we have : 
+	
 	//1 ---> already processed, 
 	//2 ---> in process and 
 	//3 ---> not processed
-	for (k = 0; k < dim2D; k++) {
+	for (size_t k = 0; k < dim2D; k++) {
 		distancePtr[k] = INFINITY;
 		labelArray[k] = 3;
 	}
 
-	i = (size_t)seedPoints[0].x;
-	j = (size_t)seedPoints[0].y;
-	size_t currentIndx = x_new(i, j, height);
+	size_t i = (size_t)seedPoints[0].x;
+	size_t j = (size_t)seedPoints[0].y;
+	size_t currentIndx = x_new(i, j, length);
 	distancePtr[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
 	//East
-	if (j < width - 1 && i >= 0 && i < height) {
+	if (j < width - 1 && i >= 0 && i < length) {
 		size_t jplus = j + 1;
-		x = selectX(distancePtr, height, width, i, jplus);
-		y = selectY(distancePtr, height, width, i, jplus);
-		size_t indxEast = x_new(i, jplus, height);
-		coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed);
+		dataType x = selectX(distancePtr, length, width, i, jplus);
+		dataType y = selectY(distancePtr, length, width, i, jplus);
+		size_t indxEast = x_new(i, jplus, length);
+		dataType coefSpeed = potentialPtr[indxEast];
+		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
 		distancePtr[indxEast] = dEast;
 		inProcess.push_back(EastNeighbor);
@@ -421,13 +365,13 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	}
 
 	//West
-	if (j > 0 && i >= 0 && i < height) {
+	if (j > 0 && i >= 0 && i < length) {
 		size_t jminus = j - 1;
-		x = selectX(distancePtr, height, width, i, jminus);
-		y = selectY(distancePtr, height, width, i, jminus);
-		size_t indxWest = x_new(i, jminus, height);
-		coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed);
+		dataType x = selectX(distancePtr, length, width, i, jminus);
+		dataType y = selectY(distancePtr, length, width, i, jminus);
+		size_t indxWest = x_new(i, jminus, length);
+		dataType coefSpeed = potentialPtr[indxWest];
+		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
 		distancePtr[indxWest] = dWest;
 		inProcess.push_back(WestNeighbor);
@@ -437,11 +381,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	//North
 	if (j >= 0 && j < width && i > 0) {
 		size_t iminus = i - 1;
-		x = selectX(distancePtr, height, width, iminus, j);
-		y = selectY(distancePtr, height, width, iminus, j);
-		size_t indxNorth = x_new(iminus, j, height);
-		coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed);
+		dataType x = selectX(distancePtr, length, width, iminus, j);
+		dataType y = selectY(distancePtr, length, width, iminus, j);
+		size_t indxNorth = x_new(iminus, j, length);
+		dataType coefSpeed = potentialPtr[indxNorth];
+		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
 		distancePtr[indxNorth] = dNorth;
 		inProcess.push_back(NorthNeighbor);
@@ -449,13 +393,13 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	}
 
 	//South
-	if (j >= 0 && j < width && i < height - 1) {
+	if (j >= 0 && j < width && i < length - 1) {
 		size_t iplus = i + 1;
-		x = selectX(distancePtr, height, width, iplus, j);
-		y = selectY(distancePtr, height, width, iplus, j);
-		size_t indxSouth = x_new(iplus, j, height);
-		coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
+		dataType x = selectX(distancePtr, length, width, iplus, j);
+		dataType y = selectY(distancePtr, length, width, iplus, j);
+		size_t indxSouth = x_new(iplus, j, length);
+		dataType coefSpeed = potentialPtr[indxSouth];
+		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
 		distancePtr[indxSouth] = dSouth;
 		inProcess.push_back(SouthNeighbor);
@@ -468,62 +412,65 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	pointFastMarching2D current;
 	short label = 0;
 	
-	while (inProcess.size() != 0) {
+	while (inProcess.size() > 0) {
 
 		current = inProcess[0];
 		i = current.x;
 		j = current.y;
-		currentIndx = x_new(i, j, height);
+		currentIndx = x_new(i, j, length);
 		labelArray[currentIndx] = 1;
-		distancePtr[currentIndx] = current.arrival;
 		deleteRootHeap2D(inProcess);
 
-		//East
-		if (j < width - 1 && i >= 0 && i < height) {
-			size_t jplus = j + 1;
-			size_t indxEast = x_new(i, jplus, height);
-			label = labelArray[indxEast];
+		//West
+		if (i > 0 && i < length && j >= 0 && j < width) {
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			short label = labelArray[indxWest];
 			if (label != 1) {
-				x = selectX(distancePtr, height, width, i, jplus);
-				y = selectY(distancePtr, height, width, i, jplus);
-				coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, iminus, j);
+				dataType y = selectY(distancePtr, length, width, iminus, j);
+				dataType coefSpeed = potentialPtr[indxWest];
+				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
 				if (label == 3) {
-					distancePtr[indxEast] = dEast;
-					labelArray[indxEast] = 2;
-					pointFastMarching2D EastNeighbor = { i, jplus, dEast };
-					addPointHeap2D(inProcess, EastNeighbor);
+					distancePtr[indxWest] = dWest;
+					labelArray[indxWest] = 2;
+					addPointHeap2D(inProcess, WestNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dEast < distancePtr[indxEast]) {
-							distancePtr[indxEast] = dEast;
+					if (dWest < distancePtr[indxWest]) {
+						distancePtr[indxWest] = dWest;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
 						}
 					}
 				}
 			}
 		}
 
-		//West
-		if (j > 0 && i >= 0 && i < height) {
-			size_t jminus = j - 1;
-			size_t indxWest = x_new(i, jminus, height);
-			label = labelArray[indxWest];
+		//East
+		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			short label = labelArray[indxEast];
 			if (label != 1) {
-				x = selectX(distancePtr, height, width, i, jminus);
-				y = selectY(distancePtr, height, width, i, jminus);
-				coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, iplus, j);
+				dataType y = selectY(distancePtr, length, width, iplus, j);
+				dataType coefSpeed = potentialPtr[indxEast];
+				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
 				if (label == 3) {
-					distancePtr[indxWest] = dWest;
-					labelArray[indxWest] = 2;
-					pointFastMarching2D WestNeighbor = { i, jminus, dWest };
-					addPointHeap2D(inProcess, WestNeighbor);
+					distancePtr[indxEast] = dEast;
+					labelArray[indxEast] = 2;
+					addPointHeap2D(inProcess, EastNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dWest < distancePtr[indxWest]) {
-							distancePtr[indxWest] = dWest;
+					if (dEast < distancePtr[indxEast]) {
+						distancePtr[indxEast] = dEast;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
 						}
 					}
 				}
@@ -531,65 +478,61 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 		}
 
 		//North
-		if (j >= 0 && j < width && i > 0) {
-			size_t iminus = i - 1;
-			size_t indxNorth = x_new(iminus, j, height);
-			label = labelArray[indxNorth];
+		if (j > 0 && j < width && i >= 0 && i < length) {
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			short label = labelArray[indxNorth];
 			if (label != 1) {
-				x = selectX(distancePtr, height, width, iminus, j);
-				y = selectY(distancePtr, height, width, iminus, j);
-				coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, i, jminus);
+				dataType y = selectY(distancePtr, length, width, i, jminus);
+				dataType coefSpeed = potentialPtr[indxNorth];
+				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
 				if (label == 3) {
 					distancePtr[indxNorth] = dNorth;
 					labelArray[indxNorth] = 2;
-					pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
 					addPointHeap2D(inProcess, NorthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dNorth < distancePtr[indxNorth]) {
-							distancePtr[indxNorth] = dNorth;
+					if (dNorth < distancePtr[indxNorth]) {
+						distancePtr[indxNorth] = dNorth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
 						}
 					}
 				}
 			}
-
-
 		}
 
 		//South
-		if (j >= 0 && j < width && i < height - 1) {
-			size_t iplus = i + 1;
-			size_t indxSouth = x_new(iplus, j, height);
-			label = labelArray[indxSouth];
+		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			short label = labelArray[indxSouth];
 			if (label != 1) {
-				x = selectX(distancePtr, height, width, iplus, j);
-				y = selectY(distancePtr, height, width, iplus, j);
-				coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, i, jplus);
+				dataType y = selectY(distancePtr, length, width, i, jplus);
+				dataType coefSpeed = potentialPtr[indxSouth];
+				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
 				if (label == 3) {
 					distancePtr[indxSouth] = dSouth;
 					labelArray[indxSouth] = 2;
-					pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
 					addPointHeap2D(inProcess, SouthNeighbor);
 				}
 				else {
-					if (label == 2) {
-						if (dSouth < distancePtr[indxSouth]) {
-							distancePtr[indxSouth] = dSouth;
+					if (dSouth < distancePtr[indxSouth]) {
+						distancePtr[indxSouth] = dSouth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
 						}
 					}
 				}
 			}
 		}
 
-	}
-
-	for (i = 0; i < dim2D; i++) {
-		if (distancePtr[i] == BIG_VALUE) {
-			distancePtr[i] = 0.0;
-		}
 	}
 
 	delete[] labelArray;
@@ -599,8 +542,11 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 
 	const size_t length = imageData.height;
 	const size_t width = imageData.width;
+	PixelSpacing spacing = imageData.spacing;
 
 	size_t dim2D = length * width;
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
 
 	short* labelArray = new short[dim2D] {0};
 
@@ -610,8 +556,6 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 
 	size_t i = 0, j = 0, k = 0;
 	vector<pointFastMarching2D> inProcess;
-
-	dataType x = 0.0, y = 0.0, coefSpeed = 0.0;
 
 	i = (size_t)endPoints[0].x;
 	j = (size_t)endPoints[0].y;
@@ -630,11 +574,11 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	//East
 	if (j < width - 1 && i >= 0 && i < length) {
 		size_t jplus = j + 1;
-		x = selectX(distancePtr, length, width, i, jplus);
-		y = selectY(distancePtr, length, width, i, jplus);
+		dataType x = selectX(distancePtr, length, width, i, jplus);
+		dataType y = selectY(distancePtr, length, width, i, jplus);
 		size_t indxEast = x_new(i, jplus, length);
-		coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed);
+		dataType coefSpeed = potentialPtr[indxEast];
+		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
 		distancePtr[indxEast] = dEast;
 		inProcess.push_back(EastNeighbor);
@@ -644,11 +588,11 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	//West
 	if (j > 0 && i >= 0 && i < length) {
 		size_t jminus = j - 1;
-		x = selectX(distancePtr, length, width, i, jminus);
-		y = selectY(distancePtr, length, width, i, jminus);
+		dataType x = selectX(distancePtr, length, width, i, jminus);
+		dataType y = selectY(distancePtr, length, width, i, jminus);
 		size_t indxWest = x_new(i, jminus, length);
-		coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed);
+		dataType coefSpeed = potentialPtr[indxWest];
+		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
 		distancePtr[indxWest] = dWest;
 		inProcess.push_back(WestNeighbor);
@@ -658,11 +602,11 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	//North
 	if (j >= 0 && j < width && i > 0) {
 		size_t iminus = i - 1;
-		x = selectX(distancePtr, length, width, iminus, j);
-		y = selectY(distancePtr, length, width, iminus, j);
+		dataType x = selectX(distancePtr, length, width, iminus, j);
+		dataType y = selectY(distancePtr, length, width, iminus, j);
 		size_t indxNorth = x_new(iminus, j, length);
-		coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed);
+		dataType coefSpeed = potentialPtr[indxNorth];
+		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
 		distancePtr[indxNorth] = dNorth;
 		inProcess.push_back(NorthNeighbor);
@@ -672,11 +616,11 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	//South
 	if (j >= 0 && j < width && i < length - 1) {
 		size_t iplus = i + 1;
-		x = selectX(distancePtr, length, width, iplus, j);
-		y = selectY(distancePtr, length, width, iplus, j);
+		dataType x = selectX(distancePtr, length, width, iplus, j);
+		dataType y = selectY(distancePtr, length, width, iplus, j);
 		size_t indxSouth = x_new(iplus, j, length);
-		coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
+		dataType coefSpeed = potentialPtr[indxSouth];
+		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
 		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
 		distancePtr[indxSouth] = dSouth;
 		inProcess.push_back(SouthNeighbor);
@@ -701,7 +645,6 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		j = current.y;
 		currentIndx = x_new(i, j, length);
 		labelArray[currentIndx] = 1;
-		distancePtr[currentIndx] = current.arrival;
 		nb_computed_points++;
 
 		//Save points for visualization
@@ -726,105 +669,118 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		
 		deleteRootHeap2D(inProcess);
 
-		//East
-		if (j < width - 1 && i >= 0 && i < length) {
-			size_t jplus = j + 1;
-			size_t indxEast = x_new(i, jplus, length);
-			short label = labelArray[indxEast];
-			if (label != 1) {
-				x = selectX(distancePtr, length, width, i, jplus);
-				y = selectY(distancePtr, length, width, i, jplus);
-				coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed);
-				if (label == 3) {
-					distancePtr[indxEast] = dEast;
-					labelArray[indxEast] = 2;
-					pointFastMarching2D EastNeighbor = { i, jplus, dEast };
-					addPointHeap2D(inProcess, EastNeighbor);
-				}
-				else {
-					if (dEast < distancePtr[indxEast]) {
-						distancePtr[indxEast] = dEast;
-					}
-				}
-			}
-		}
-
 		//West
-		if (j > 0 && i >= 0 && i < length) {
-			size_t jminus = j - 1;
-			size_t indxWest = x_new(i, jminus, length);
+		if (i > 0 && i < length && j >= 0 && j < width) {
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
 			short label = labelArray[indxWest];
 			if (label != 1) {
-				x = selectX(distancePtr, length, width, i, jminus);
-				y = selectY(distancePtr, length, width, i, jminus);
-				coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, iminus, j);
+				dataType y = selectY(distancePtr, length, width, iminus, j);
+				dataType coefSpeed = potentialPtr[indxWest];
+				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
 				if (label == 3) {
 					distancePtr[indxWest] = dWest;
 					labelArray[indxWest] = 2;
-					pointFastMarching2D WestNeighbor = { i, jminus, dWest };
 					addPointHeap2D(inProcess, WestNeighbor);
 				}
 				else {
 					if (dWest < distancePtr[indxWest]) {
 						distancePtr[indxWest] = dWest;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//East
+		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			short label = labelArray[indxEast];
+			if (label != 1) {
+				dataType x = selectX(distancePtr, length, width, iplus, j);
+				dataType y = selectY(distancePtr, length, width, iplus, j);
+				dataType coefSpeed = potentialPtr[indxEast];
+				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
+				if (label == 3) {
+					distancePtr[indxEast] = dEast;
+					labelArray[indxEast] = 2;
+					addPointHeap2D(inProcess, EastNeighbor);
+				}
+				else {
+					if (dEast < distancePtr[indxEast]) {
+						distancePtr[indxEast] = dEast;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
 		}
 
 		//North
-		if (j >= 0 && j < width && i > 0) {
-			size_t iminus = i - 1;
-			size_t indxNorth = x_new(iminus, j, length);
+		if (j > 0 && j < width && i >= 0 && i < length) {
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
 			short label = labelArray[indxNorth];
 			if (label != 1) {
-				x = selectX(distancePtr, length, width, iminus, j);
-				y = selectY(distancePtr, length, width, iminus, j);
-				coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, i, jminus);
+				dataType y = selectY(distancePtr, length, width, i, jminus);
+				dataType coefSpeed = potentialPtr[indxNorth];
+				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
 				if (label == 3) {
 					distancePtr[indxNorth] = dNorth;
 					labelArray[indxNorth] = 2;
-					pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
 					addPointHeap2D(inProcess, NorthNeighbor);
 				}
 				else {
 					if (dNorth < distancePtr[indxNorth]) {
 						distancePtr[indxNorth] = dNorth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
-
-
 		}
 
 		//South
-		if (j >= 0 && j < width && i < length - 1) {
-			size_t iplus = i + 1;
-			size_t indxSouth = x_new(iplus, j, length);
+		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
 			short label = labelArray[indxSouth];
 			if (label != 1) {
-				x = selectX(distancePtr, length, width, iplus, j);
-				y = selectY(distancePtr, length, width, iplus, j);
-				coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed);
+				dataType x = selectX(distancePtr, length, width, i, jplus);
+				dataType y = selectY(distancePtr, length, width, i, jplus);
+				dataType coefSpeed = potentialPtr[indxSouth];
+				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
 				if (label == 3) {
 					distancePtr[indxSouth] = dSouth;
 					labelArray[indxSouth] = 2;
-					pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
 					addPointHeap2D(inProcess, SouthNeighbor);
 				}
 				else {
 					if (dSouth < distancePtr[indxSouth]) {
 						distancePtr[indxSouth] = dSouth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
 					}
 				}
 			}
 		}
 	}
-
 	
 	//Save points for visualization
 	if (savingList.size() != 0) {
@@ -843,7 +799,6 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		fclose(frontPoint);
 	}
 	
-
 	delete[] labelArray;
 }
 
@@ -905,7 +860,6 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Po
 
 	return true;
 }
-*/
 
 bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue) {
 
@@ -1729,26 +1683,6 @@ void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
 	*b = temp;
 }
 
-/*
-void swap3dPointsExtend(pointFastMarching3D* a, pointFastMarching3D* b, size_t** position, const size_t length, const size_t width) {
-	pointFastMarching3D temp = *a;
-	*a = *b;
-	*b = temp;
-	//Extra condition for fast marching : update the position of the element in the vector
-	size_t i_pos = a->pos;
-	a->pos = b->pos;
-	b->pos = i_pos;
-
-	//Update the position pointer
-	size_t i1 = a->x, j1 = a->y, k1 = a->z;
-	size_t b1 = b->x, j2 = b->y, k2 = b->z;
-	size_t* temp_position = position[x_flat(i1, j1, k1, length, width)];
-	position[x_flat(i1, j1, k1, length, width)] = position[x_flat(i1, j1, k1, length, width)];
-	position[x_flat(b1, j2, k2, length, width)] = temp_position;
-
-}
-*/
-
 void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	int length_array = in_Process.size();
@@ -1882,60 +1816,60 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			//threshold : real image
-	//			if (edgeValue <= parameters.thres) {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//			////threshold artificial image
-	//			//if (norm_of_gradient > 0.0) {
-	//			//	maskThreshold[k][xd] = 0.0;
-	//			//}
-	//			//else {
-	//			//	maskThreshold[k][xd] = 1.0;
-	//			//}
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < length; i++) {
+			for (j = 0; j < width; j++) {
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
+				}
+				////threshold artificial image
+				//if (norm_of_gradient > 0.0) {
+				//	maskThreshold[k][xd] = 0.0;
+				//}
+				//else {
+				//	maskThreshold[k][xd] = 1.0;
+				//}
+			}
+		}
+	}
 	
-	//Real image
+	//////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/input/edge_image_crop_p3.raw";
 	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 	fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
 	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.001, 1000, 1.0);
-	//bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brt_fs.raw";
+	//////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fs.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/crop/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/crop/edge_image.raw";
+	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	//////Artificial image : no need to compute the edge image when empty inside
+	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	//////rouyTourinDistanceMap(toDistanceMap, distance, 1.0, 0.4, 0.5);
-	//////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	////bruteForceDistanceMap(toDistanceMap, distance, 1.0);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_FM.raw";
-	//////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fstswp.raw";
-	//////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_RT.raw";
-	////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brtforce.raw";
+	////fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
+	////rouyTourinDistanceMap(toDistanceMap, distance, 0.001, 1000, 1.0);
+	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	//////bruteForceDistanceMap(toDistanceMap, distance, 1.0);
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_FS.raw";
+	////////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fstswp.raw";
+	////////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_RT.raw";
+	//////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_brtforce.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
@@ -1943,14 +1877,14 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType value_first_pt = seedStats.mean_data;
 	////seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
 	////dataType value_second_pt = seedStats.mean_data;
-	//std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
-	//std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
-	//std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
-	//std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
+	std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
+	std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
+	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
+	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	
-	dataType var_epsilon = 0.0;
+	dataType var_epsilon = 0;//0.01;
 	if (seedStats.sd_data != 0) {
-		var_epsilon = 0.5 * seedStats.sd_data;
+		var_epsilon = seedStats.sd_data;
 	}
 	else {
 		var_epsilon = parameters.eps;
@@ -1984,14 +1918,27 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	std::cout << "difference min : " << minImage << std::endl;
 	std::cout << "difference max : " << maxImage << std::endl;
 
+	//dataType maxRatio = 0.0;
+	//dataType minRatio = INFINITY;
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
+			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+			//potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 			//potential[k][i] = 1.0 / (1.0 + 1.0 * distance[k][i]);
 			//potential[k][i] = parameters.eps + potential[k][i] / maxImage;
+			//dataType normFactor = potential[k][i] / maxImage;
+			//if(normFactor > maxRatio) {
+			//	maxRatio = normFactor;
+			//}
+			//if(normFactor < minRatio) {
+			//	minRatio = normFactor;
+			//}
 		}
 	}
+	//std::cout << "min factor : " << minRatio << std::endl;
+	//std::cout << "max factor : " << maxRatio << std::endl;
 
 	for (k = 0; k < height; k++) {
 		delete[] maskThreshold[k];
@@ -2003,7 +1950,6 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	return true;
 }
 
-/*
 bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint) {
 
 	if (distanceFuncPtr == NULL || potentialFuncPtr == NULL) {
@@ -2327,7 +2273,6 @@ bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, c
 
 	return true;
 }
-*/
 
 bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
 
@@ -4607,7 +4552,7 @@ dataType computeHausDorffDistance(dataType** source1, dataType** source2, const 
 }
 
 //========================================================================================================
-//================================= Front propagation and Path Extraction =================================
+//================================= Front propagation and Path Extraction ================================
 //========================================================================================================
 
 /*
@@ -7666,5 +7611,53 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	delete[] indexArray;
 
 	return true;
+}
+*/
+
+/*
+void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep) {
+
+	size_t height = ctImageData.height;
+	size_t width = ctImageData.width;
+	size_t i = 0, j = 0;
+	dataType lambda1 = 1.0, lambda2 = 1.0, omega = 0.00001;
+
+	Statistics stats = get2DPointNeighborhoodStats(ctImageData, seedPoint, radiusInitial);
+	dataType meanInitial = stats.mean_data / radiusInitial, mean = 0.0;
+	dataType varianceInitial = stats.variance / radiusInitial, variance = 0.0;
+
+	dataType radius = 0.0, value = 0.0, minValue = 0.0;
+	dataType meanVal = 0.0, varianceVal = 0.0, optimalRadius = 0.0;
+
+	dataType* radiusArray = new dataType[height * width]{ 0 };
+
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < width; j++) {
+			radius = radiusInitial;
+			meanVal = 0.0;
+			varianceVal = 0.0;
+			optimalRadius = 0.0;
+			Point2D current_point = { i, j };
+			while (radius <= radiusMax) {
+				stats = get2DPointNeighborhoodStats(ctImageData, current_point, radius);
+				mean = stats.mean_data / radius;
+				variance = stats.variance / radius;
+				if (mean >= meanVal) {
+					meanVal = mean;
+					//optimalRadius = radius;
+				}
+				if (variance >= varianceVal) {
+					varianceVal = variance;
+					optimalRadius = radius;
+				}
+				radius = radius + radiusStep;
+			}
+			value = omega + lambda1 * pow(meanVal - meanInitial, 2) + lambda2 * pow(varianceVal - varianceInitial, 2);
+			potentialPtr[x_new(i, j, height)] = value;
+			radiusArray[x_new(i, j, height)] = optimalRadius;
+		}
+	}
+
+	delete[] radiusArray;
 }
 */
