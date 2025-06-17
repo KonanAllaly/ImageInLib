@@ -206,7 +206,7 @@ using namespace std;
 	/// <returns>True if the potential computation was successful; otherwise, false.</returns>
 	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints, Potential_Parameters parameters);
 
-	/*
+	
 	/// <summary>
 	/// Finds the shortest path in a 2D image using a action map and a set of seed points.
 	/// </summary>
@@ -217,7 +217,8 @@ using namespace std;
 	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
 	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
 
-		/// <summary>
+	/*
+	/// <summary>
 	/// Computes the mean and variance of potential values in a 2D image within circular regions of increasing radius around a seed point.
 	/// </summary>
 	/// <param name="ctImageData">The 2D image data to process.</param>
@@ -292,8 +293,6 @@ using namespace std;
 	/// <param name="a">first variable</param>
 	/// <param name="b">second variable</param>
 	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
-
-	//void swap3dPointsExtend(pointFastMarching3D* a, pointFastMarching3D* b, size_t** position, const size_t length, const size_t width);
 
 	/// <summary>
 	/// create heap sorting from last element 
@@ -400,7 +399,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	//bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
+	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
