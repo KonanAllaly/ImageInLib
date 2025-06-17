@@ -389,7 +389,7 @@ using namespace std;
 	/// <param name="endPoints">A pointer to an array of 3D points specifying the endpoints for the propagation.</param>
 	/// <param name="path_saving">A string specifying the file path where the resulting path should be saved.</param>
 	/// <returns>Returns true if the partial front propagation and path saving were successful; otherwise, returns false.</returns>
-	//bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
+	bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints, std::string path_saving);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method on a CT image with specified voxel spacing.
