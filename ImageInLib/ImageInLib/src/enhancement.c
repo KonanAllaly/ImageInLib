@@ -237,3 +237,49 @@ bool CLACHE(dataType* imageDataPtr, const size_t height, const size_t width, con
 
 	return true;
 }
+
+void save2DImageAs3Dvtk(dataType* imageData, const size_t length, const size_t width, char* filename, int scale) {
+	
+	size_t n1 = length - 2, n2 = width - 2;
+	dataType sx = 1.0, sy = 1.0;
+	FILE* file_save;
+	if (fopen_s(&file_save, filename, "w") != 0) {
+		fprintf(stderr, "Error: Unable to open file %s\n\n", filename);
+		return;
+	}
+	fprintf(file_save, "# vtk DataFile Version 3.0\n");
+	fprintf(file_save, "file in ascii format\n");
+	fprintf(file_save, "ASCII\n");
+	fprintf(file_save, "DATASET UNSTRUCTURED_GRID\n");
+	fprintf(file_save, "POINTS %d float\n", (n1 + 1) * (n2 + 1));
+
+	size_t i, j, d;
+	for (i = 1; i <= n1 + 1; i++)
+	{
+		for (j = 1; j <= n2 + 1; j++)
+		{
+			if (scale == 0)
+				fprintf(file_save, "%d %d %f\n", i - 1, j - 1, (dataType)(imageData[x_new(i, j, length)]));
+			else
+				fprintf(file_save, "%d %d %f\n", i - 1, j - 1, (dataType)(scale * imageData[x_new(i, j, length)]));
+		}
+		fprintf(file_save, "\n");
+	}
+
+	fprintf(file_save, "CELLS %d %d\n", n1 * n2, n1 * n2 * 5);
+	for (i = 0; i < n1; i++)
+	{
+		for (j = 0; j < n2; j++)
+		{
+			d = i * (n1 + 1) + j;
+			fprintf(file_save, "4 %d %d %d %d\n", d, d + 1, d + n1 + 2, d + n1 + 1);
+		}
+	}
+
+	fprintf(file_save, "CELL_TYPES %d\n", n1 * n2);
+	for (i = 0; i < n1 * n2; i++)
+		fprintf(file_save, "9\n");
+
+	fclose(file_save);
+
+}

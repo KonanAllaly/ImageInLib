@@ -27,6 +27,8 @@ extern "C" {
 
 	bool CLACHE(dataType* imageDataPtr, const size_t height, const size_t width, const size_t nbDivision);
 
+	void save2DImageAs3Dvtk(dataType* imageData, const size_t length, const size_t width, char* filename, int scale);
+
 #ifdef __cplusplus
 }
 #endif
