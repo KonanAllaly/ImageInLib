@@ -206,7 +206,6 @@ using namespace std;
 	/// <returns>True if the potential computation was successful; otherwise, false.</returns>
 	bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Point2D* seedPoints, Potential_Parameters parameters);
 
-	
 	/// <summary>
 	/// Finds the shortest path in a 2D image using a action map and a set of seed points.
 	/// </summary>
@@ -411,7 +410,7 @@ using namespace std;
 	/// <param name="path_points">Reference to a vector where the detected path points will be stored.</param>
 	/// <param name="path_saving">The file path where the resulting path will be saved.</param>
 	/// <returns>True if the front propagation and key point detection succeed; otherwise, false.</returns>
-	//bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& path_points, std::string path_saving);
+	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving);
 
 	//==================================
 

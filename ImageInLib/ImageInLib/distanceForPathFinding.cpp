@@ -1849,16 +1849,16 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	
 	//////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/input/edge_image_crop_p3.raw";
-	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	std::string storing_path;// = "C:/Users/Konan Allaly/Documents/Tests/input/edge_image_crop_p3.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
 	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
 	//rouyTourinDistanceMap(toDistanceMap, distance, 0.001, 1000, 1.0);
 	//////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
 	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fs.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	////storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/crop/edge_image.raw";
-	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
@@ -1877,10 +1877,10 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType value_first_pt = seedStats.mean_data;
 	////seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
 	////dataType value_second_pt = seedStats.mean_data;
-	std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
-	std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
-	std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
-	std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
+	//std::cout << "Seed point mean value: " << seedStats.mean_data << std::endl;
+	//std::cout << "Seed point minimum value: " << seedStats.min_data << std::endl;
+	//std::cout << "Seed point maximum value: " << seedStats.max_data << std::endl;
+	//std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	
 	dataType var_epsilon = 0;//0.01;
 	if (seedStats.sd_data != 0) {
@@ -1915,8 +1915,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			}
 		}
 	}
-	std::cout << "difference min : " << minImage << std::endl;
-	std::cout << "difference max : " << maxImage << std::endl;
+	////std::cout << "difference min : " << minImage << std::endl;
+	////std::cout << "difference max : " << maxImage << std::endl;
 
 	//dataType maxRatio = 0.0;
 	//dataType minRatio = INFINITY;
@@ -1924,7 +1924,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
-			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 0.1 * distance[k][i]));
 			//potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 			//potential[k][i] = 1.0 / (1.0 + 1.0 * distance[k][i]);
 			//potential[k][i] = parameters.eps + potential[k][i] / maxImage;
@@ -2683,26 +2683,26 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			break;
 		}
 
-		//Visualize the front propagation
-		Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
-		sPoint = getRealCoordFromImageCoord3D(sPoint, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
-		savingList.push_back(sPoint);
-		//in real image save after every 10000 points
-		if (processed_point % 10000 == 0) {
-			id_save++;
-			string saving_csv = path_saving + to_string(id_save) + ".csv";
-			FILE* frontPoint;
-			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-				printf("Enable to open");
-				return false;
-			}
-			fprintf(frontPoint, "x,y,z\n");
-			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-				fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
-			}
-			savingList.clear();
-			fclose(frontPoint);
-		}
+		////Visualize the front propagation
+		//Point3D sPoint = { (dataType)i, (dataType)j, (dataType)k };
+		//sPoint = getRealCoordFromImageCoord3D(sPoint, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
+		//savingList.push_back(sPoint);
+		////in real image save after every 10000 points
+		//if (processed_point % 10000 == 0) {
+		//	id_save++;
+		//	string saving_csv = path_saving + to_string(id_save) + ".csv";
+		//	FILE* frontPoint;
+		//	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+		//		printf("Enable to open");
+		//		return false;
+		//	}
+		//	fprintf(frontPoint, "x,y,z\n");
+		//	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+		//		fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
+		//	}
+		//	savingList.clear();
+		//	fclose(frontPoint);
+		//}
 		
 		deleteRootHeap3D(inProcess);
 		
@@ -2886,22 +2886,22 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		
 	}
 	
-	//Visualize the front propagation
-	id_save++;
-	string saving_csv = path_saving + to_string(id_save) + ".csv";
-	FILE* frontPoint;
-	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(frontPoint, "x,y,z\n");
-	if (savingList.size() > 0) {
-		for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-			fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
-		}
-		savingList.clear();
-	}
-	fclose(frontPoint);
+	////Visualize the front propagation
+	//id_save++;
+	//string saving_csv = path_saving + to_string(id_save) + ".csv";
+	//FILE* frontPoint;
+	//if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(frontPoint, "x,y,z\n");
+	//if (savingList.size() > 0) {
+	//	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+	//		fprintf(frontPoint, "%f,%f,%f\n", savingList[i_n].x, savingList[i_n].y, savingList[i_n].z);
+	//	}
+	//	savingList.clear();
+	//}
+	//fclose(frontPoint);
 	
 	for (k = 0; k < height; k++) {
 		for(i = 0; i < dim2D; i++) {
@@ -3263,7 +3263,6 @@ bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** actionPtr, dat
 	return true;
 }
 
-/*
 bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving) {
 
 	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
@@ -3433,10 +3432,10 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		labelArray[k][currentIndx] = 1;
 
 		//Exit of the while loop if the end point is reached
-		if(labelArray[kEnd][x_new(iEnd, jEnd, length)] == 1) {
+		if (labelArray[kEnd][x_new(iEnd, jEnd, length)] == 1) {
 			break;
 		}
-		
+
 		//check if the current point is a key point
 		Point3D pSource = { i, j, k };
 		Point3D pSourceReal = getRealCoordFromImageCoord3D(pSource, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
@@ -3464,7 +3463,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			actionMapStr.imageDataPtr[k][currentIndx] = 0;
 
 			//Top
-			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length) 
+			if (k > 0 && j >= 0 && j < width && i >= 0 && i < length)
 			{
 				size_t kminus = k - 1;
 				actionMapStr.imageDataPtr[kminus][currentIndx] = INFINITY;
@@ -3480,7 +3479,7 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			}
 
 			//East
-			if(i < length_minus && j >= 0 && j < width && k >= 0 && k < height)
+			if (i < length_minus && j >= 0 && j < width && k >= 0 && k < height)
 			{
 				size_t iplus = i + 1;
 				size_t indxEast = x_new(iplus, j, length);
@@ -3549,6 +3548,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				else {
 					if (dTop < actionMapStr.imageDataPtr[kminus][currentIndx]) {
 						actionMapStr.imageDataPtr[kminus][currentIndx] = dTop;
+						size_t pt_pos = getIndexFromHeap3D(inProcess, i, j, kminus);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dTop;
+							heapifyUp3D(inProcess, pt_pos);
+						}
 					}
 				}
 			}
@@ -3573,6 +3577,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				else {
 					if (dBottom < actionMapStr.imageDataPtr[kplus][currentIndx]) {
 						actionMapStr.imageDataPtr[kplus][currentIndx] = dBottom;
+						size_t pt_pos = getIndexFromHeap3D(inProcess, i, j, kplus);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dBottom;
+							heapifyUp3D(inProcess, pt_pos);
+						}
 					}
 				}
 			}
@@ -3599,6 +3608,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				else {
 					if (dEast < actionMapStr.imageDataPtr[k][indxEast]) {
 						actionMapStr.imageDataPtr[k][indxEast] = dEast;
+						size_t pt_pos = getIndexFromHeap3D(inProcess, iplus, j, k);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dEast;
+							heapifyUp3D(inProcess, pt_pos);
+						}
 					}
 				}
 			}
@@ -3624,6 +3638,11 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				else {
 					if (dNorth < actionMapStr.imageDataPtr[k][indxNorth]) {
 						actionMapStr.imageDataPtr[k][indxNorth] = dNorth;
+						size_t pt_pos = getIndexFromHeap3D(inProcess, i, jminus, k);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dNorth;
+							heapifyUp3D(inProcess, pt_pos);
+						}
 					}
 				}
 			}
@@ -3649,36 +3668,47 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 				else {
 					if (dWest < actionMapStr.imageDataPtr[k][indxWest]) {
 						actionMapStr.imageDataPtr[k][indxWest] = dWest;
+						size_t pt_pos = getIndexFromHeap3D(inProcess, iminus, j, k);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dWest;
+							heapifyUp3D(inProcess, pt_pos);
+						}
 					}
 				}
 			}
-		}
 
-		//South
-		if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
-			size_t jplus = j + 1;
-			size_t indxSouth = x_new(i, jplus, length);
-			size_t label = labelArray[k][indxSouth];
-			if (label != 1) {
-				dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
-				dataType coefSpeed = potentialFuncPtr[k][indxSouth];
-				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[k][indxSouth] = 2;
-					actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
-					pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
-					addPointHeap3D(inProcess, SouthNeighbor);
-				}
-				else {
-					if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
+			//South
+			if (j < width_minus && i >= 0 && i < length && k >= 0 && k < height) {
+				size_t jplus = j + 1;
+				size_t indxSouth = x_new(i, jplus, length);
+				size_t label = labelArray[k][indxSouth];
+				if (label != 1) {
+					dataType x = select3dX(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					dataType y = select3dY(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					dataType z = select3dZ(actionMapStr.imageDataPtr, length, width, height, i, jplus, k);
+					dataType coefSpeed = potentialFuncPtr[k][indxSouth];
+					dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+					if (label == 3) {
+						labelArray[k][indxSouth] = 2;
 						actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+						pointFastMarching3D SouthNeighbor = { i, jplus, k, dSouth };
+						addPointHeap3D(inProcess, SouthNeighbor);
+					}
+					else {
+						if (dSouth < actionMapStr.imageDataPtr[k][indxSouth]) {
+							actionMapStr.imageDataPtr[k][indxSouth] = dSouth;
+							size_t pt_pos = getIndexFromHeap3D(inProcess, i, jplus, k);
+							if (pt_pos != -1) {
+								inProcess[pt_pos].arrival = dSouth;
+								heapifyUp3D(inProcess, pt_pos);
+							}
+						}
 					}
 				}
 			}
+			//====================
+
 		}
-		//====================
 
 	}
 	
@@ -3708,7 +3738,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	return true;
 }
-*/
 
 //========================================================================================================
 //================================== Distance Map ========================================================
@@ -3798,7 +3827,6 @@ bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFun
 	VoxelSpacing spacing = ctImageData.spacing;
 
 	vector <pointFastMarching3D> inProcess;
-	inProcess.reserve(length * width * height); // Reserve space to avoid frequent reallocations
 	size_t i = 0, j = 0, k = 0, dim2D = length * width;
 
 	short** labelArray = new short* [height];
