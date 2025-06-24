@@ -486,8 +486,8 @@ bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, c
 	}
 
 	size_t i, j, k, xd;
-	const size_t kernelSize = 2 * (size_t)sigma + 1;
-	const size_t p = (size_t)sigma;
+	const size_t kernelSize = (size_t)(2 * sigma + 1);
+	const size_t p = kernelSize / 2;
 	if (kernelSize < 3) {
 		return false;
 	}
@@ -503,6 +503,11 @@ bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, c
 	const size_t pLength = length + 2 * p;
 	const size_t pWidth = width + 2 * p;
 	dataType* imageDataExt = (dataType*)malloc(pLength * pWidth * sizeof(dataType));
+	for(i = 0; i < pLength; i++) {
+		for (j = 0; j < pWidth; j++) {
+			imageDataExt[x_new(i, j, pLength)] = 0.0;
+		}
+	}
 
 	//Copy to extended area
 	size_t i_ext, j_ext, k_ext, xd_ext;
