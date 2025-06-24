@@ -190,7 +190,7 @@ extern "C" {
 	//==============================================================================
 	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
 	//==============================================================================
-	bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad);
+	bool getGradient2D(dataType* imageDataPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad);
 	void computeImageGradient(Image_Data2D imageDataStr, dataType* gradientVectorX, dataType* gradientVectorY);
 	bool getGradient3D(Image_Data imageDataStr, const size_t ind_x, const size_t ind_y, const size_t ind_z, Point3D* grad);
 	bool compute3dImageGradient(Image_Data imageDataStr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ);

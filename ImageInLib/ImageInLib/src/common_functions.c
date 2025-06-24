@@ -573,7 +573,7 @@ bool compute3dImageGradient(Image_Data imageDataStr, dataType** gradientVectorX,
 	return true;
 }
 //==============================================================================
-bool getGradient2D(dataType* imageDataPtr, const size_t width, const size_t length, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad)
+bool getGradient2D(dataType* imageDataPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y, const PixelSpacing fVolume, Point2D* grad)
 {
 	
 	if (imageDataPtr == NULL || width < 2 || length < 2 || fVolume.sx == 0 || fVolume.sy == 0)
