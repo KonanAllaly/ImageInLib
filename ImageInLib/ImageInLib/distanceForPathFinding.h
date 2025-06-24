@@ -184,6 +184,8 @@ using namespace std;
 	/// <returns></returns>
 	bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
+	bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
+
 	/// <summary>
 	/// compute arrival time for each point in given image, given starting point and given local speed
 	/// </summary>
