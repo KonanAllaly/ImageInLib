@@ -648,7 +648,8 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	size_t seedI = endPoints[1].x, seedJ = endPoints[1].y, seedIndex = x_new(seedI, seedJ, length);
 
 	dataType max_save_action = 0.0;
-	dataType* partialDistancePtr = new dataType[length * width]{ 0 };
+	//dataType* partialDistancePtr = new dataType[length * width]{ 0 };
+	size_t nb_points_processed = 0;
 	while (labelArray[seedIndex] != 1) {
 
 		current = inProcess[0];
@@ -688,6 +689,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		//	manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
 		//}
 		
+		nb_points_processed++;
 		deleteRootHeap2D(inProcess);
 
 		//West
@@ -828,6 +830,9 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	//}
 	//manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
 
+	nb_points_processed += inProcess.size();
+	std::cout << "Number of points processed: " << nb_points_processed << std::endl;
+
 	//Set the distance of the end point to the maximum value
 	for(i = 0; i < dim2D; i++) {
 		if (labelArray[i] == 3) {
@@ -836,7 +841,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	}
 	inProcess.clear();
 	
-	delete[] partialDistancePtr;
+	//delete[] partialDistancePtr;
 	delete[] labelArray;
 }
 
@@ -1337,6 +1342,9 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 	//}
 	//manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
 
+	nb_computed_points += narrowBandFirstFront.size() + narrowBandSecondFront.size();
+	std::cout << "Number of points processed: " << nb_computed_points << std::endl;
+
 	for (size_t k = 0; k < dim2D; k++) {
 		if(actionFirstFront[k] == INFINITY) {
 			actionFirstFront[k] = max_save_action + 1;
@@ -1351,6 +1359,361 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 	delete[] firstLabelArray;
 	delete[] secondLabelArray;
 	
+	return true;
+}
+
+bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving) {
+
+	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
+		return false;
+	}
+
+	const size_t length = actionMapStr.height;
+	const size_t width = actionMapStr.width;
+
+	PixelSpacing spacing = actionMapStr.spacing;
+	if (seedPoint[0].x < 0 || seedPoint[0].x > length || seedPoint[0].y < 0 || seedPoint[0].y > width) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+	if (seedPoint[1].x < 0 || seedPoint[1].x > length || seedPoint[1].y < 0 || seedPoint[1].y > width) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+
+	vector <pointFastMarching2D> inProcess;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+
+	short* labelArray = new short[dim2D];
+
+	//Initialization
+	//All the points are notProcessed ---> label = 3
+	for (k = 0; k < dim2D; k++) {
+		actionMapStr.imageDataPtr[k] = INFINITY;
+		labelArray[k] = 3;
+	}
+
+	pointFastMarching2D current;
+	i = (size_t)seedPoint[0].x;
+	j = (size_t)seedPoint[0].y;
+	size_t currentIndx = x_new(i, j, length);
+	actionMapStr.imageDataPtr[currentIndx] = 0.0;
+	labelArray[currentIndx] = 1;
+
+	//find the neighbours of the initial point add add them to inProcess
+	size_t length_minus = length - 1, width_minus = width - 1;
+
+	//West
+	if (i > 0 && i < length && j >= 0 && j < width) {
+		size_t iminus = i - 1;
+		size_t indxWest = x_new(iminus, j, length);
+		dataType x = selectX(actionMapStr.imageDataPtr, length, width, iminus, j);
+		dataType y = selectY(actionMapStr.imageDataPtr, length, width, iminus, j);
+		dataType coefSpeed = potentialFuncPtr[indxWest];
+		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D WestNeighbor = { iminus, j, dWest };
+		actionMapStr.imageDataPtr[indxWest] = dWest;
+		inProcess.push_back(WestNeighbor);
+		labelArray[indxWest] = 2;
+	}
+
+	//East
+	if (i < length_minus && i >= 0 && j >= 0 && j < width) {
+		size_t iplus = i + 1;
+		size_t indxEast = x_new(iplus, j, length);
+		dataType x = selectX(actionMapStr.imageDataPtr, length, width, iplus, j);
+		dataType y = selectY(actionMapStr.imageDataPtr, length, width, iplus, j);
+		dataType coefSpeed = potentialFuncPtr[indxEast];
+		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D EastNeighbor = { iplus, j, dEast };
+		actionMapStr.imageDataPtr[indxEast] = dEast;
+		inProcess.push_back(EastNeighbor);
+		labelArray[indxEast] = 2;
+	}
+
+	//North
+	if (j > 0 && j < width && i >= 0 && i < length) {
+		size_t jminus = j - 1;
+		size_t indxNorth = x_new(i, jminus, length);
+		dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jminus);
+		dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jminus);
+		dataType coefSpeed = potentialFuncPtr[indxNorth];
+		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
+		actionMapStr.imageDataPtr[indxNorth] = dNorth;
+		inProcess.push_back(NorthNeighbor);
+		labelArray[indxNorth] = 2;
+	}
+
+	//South
+	if (j>= 0 && j < width_minus && i >= 0 && i < length) {
+		size_t jplus = j + 1;
+		size_t indxSouth = x_new(i, jplus, length);
+		dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jplus);
+		dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jplus);
+		dataType coefSpeed = potentialFuncPtr[indxSouth];
+		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
+		actionMapStr.imageDataPtr[indxSouth] = dSouth;
+		inProcess.push_back(SouthNeighbor);
+		labelArray[indxSouth] = 2;
+	}
+
+	heapifyVector2D(inProcess);
+	size_t label = 0;
+
+	int l = 0, m = 0;
+	size_t nbSourcePoint = 0;
+	dataType max_weighted_distance = 0.0;
+
+	size_t iEnd = (size_t)seedPoint[1].x;
+	size_t jEnd = (size_t)seedPoint[1].y;
+
+	//Visualize the front propagation
+	size_t id_keyPoint = 1;
+	std::string storing_path;
+	vector<Point2D> savingList;
+
+	double distanceToCurrentSourcePoint = 0.0;
+	//Set the starting point as initial source point
+	Point2D currentSourcePoint = { (dataType)i, (dataType)j};
+	key_points.push_back(currentSourcePoint);
+
+	while (inProcess.size() > 0) {
+
+		//processed the point with minimum distance
+		current = inProcess[0];
+		i = current.x;
+		j = current.y;
+		currentIndx = x_new(i, j, length);
+		labelArray[currentIndx] = 1;
+
+		//Exit of the while loop if the end point is reached
+		if (labelArray[x_new(iEnd, jEnd, length)] == 1) {
+			break;
+		}
+
+		//check if the current point is a key point
+		Point2D pSource = { i, j};
+		Point2D pSourceReal = getRealCoordFromImageCoord2D(pSource, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		Point2D pCurrent = getRealCoordFromImageCoord2D(currentSourcePoint, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		distanceToCurrentSourcePoint = getPoint2DDistance(pCurrent, pSourceReal);
+		//For vizualization
+		savingList.push_back(pSourceReal);
+		if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
+
+			string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
+			FILE* frontPoint;
+			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+				printf("Enable to open");
+				return false;
+			}
+			fprintf(frontPoint, "x,y\n");
+			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+				fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+			}
+			//savingList.clear(); //not empty the list of computed points to see the whole front
+			fclose(frontPoint);
+
+			//If the condition is true ---> new key point is found so we need to initilize it neighbors
+			currentSourcePoint = pSource;
+			key_points.push_back(currentSourcePoint);
+			actionMapStr.imageDataPtr[currentIndx] = 0;
+
+			//Initialize all the points inside the narrow band as not processed ---> label = 3
+			for (size_t it = 0; it < inProcess.size(); it++) {
+				labelArray[x_new(inProcess[it].x, inProcess[it].y, length)] = 1;
+			}
+
+			//West
+			if (i > 0 && i < length && j >= 0 && j < width)
+			{
+				size_t iminus = i - 1;
+				size_t indxWest = x_new(iminus, j, length);
+				actionMapStr.imageDataPtr[indxWest] = INFINITY;
+				labelArray[indxWest] = 3;
+			}
+
+			//East
+			if (i < length_minus && i >= 0 && j >= 0 && j < width)
+			{
+				size_t iplus = i + 1;
+				size_t indxEast = x_new(iplus, j, length);
+				actionMapStr.imageDataPtr[indxEast] = INFINITY;
+				labelArray[indxEast] = 3;
+			}
+
+			//North
+			if (j > 0 && j < width && i >= 0 && i < length)
+			{
+				size_t jminus = j - 1;
+				size_t indxNorth = x_new(i, jminus, length);
+				actionMapStr.imageDataPtr[indxNorth] = INFINITY;
+				labelArray[indxNorth] = 3;
+			}
+
+			//South
+			if (j >= 0 && j < width_minus && i >= 0 && i < length)
+			{
+				size_t jplus = j + 1;
+				size_t indxSouth = x_new(i, jplus, length);
+				actionMapStr.imageDataPtr[indxSouth] = INFINITY;
+				labelArray[indxSouth] = 3;
+			}
+
+			inProcess.clear();
+			id_keyPoint++;
+
+		}
+		else {
+			//actionMapStr.imageDataPtr[currentIndx] = current.arrival;
+			deleteRootHeap2D(inProcess);
+		}
+
+		//====================
+		
+		//processed neighbors of the minimum in the narrow band
+
+		//West
+		if (i > 0 && i < length && j >= 0 && j < width) {
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			size_t label = labelArray[indxWest];
+			if (label != 1) {
+				dataType x = selectX(actionMapStr.imageDataPtr, length, width, iminus, j);
+				dataType y = selectY(actionMapStr.imageDataPtr, length, width, iminus, j);
+				dataType coefSpeed = potentialFuncPtr[indxWest];
+				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+				if (label == 3) {
+					labelArray[indxWest] = 2;
+					actionMapStr.imageDataPtr[indxWest] = dWest;
+					pointFastMarching2D WestNeighbor = { iminus, j, dWest };
+					addPointHeap2D(inProcess, WestNeighbor);
+				}
+				else {
+					if (dWest < actionMapStr.imageDataPtr[indxWest]) {
+						actionMapStr.imageDataPtr[indxWest] = dWest;
+						size_t pt_pos = getIndexFromHeap2D(inProcess, iminus, j);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dWest;
+							heapifyUp2D(inProcess, pt_pos);
+						}
+					}
+				}
+			}
+		}
+		
+		//East
+		if (i < length_minus && i >= 0 && j >= 0 && j < width) {
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			size_t label = labelArray[indxEast];
+			if (label != 1) {
+				dataType x = selectX(actionMapStr.imageDataPtr, length, width, iplus, j);
+				dataType y = selectY(actionMapStr.imageDataPtr, length, width, iplus, j);
+				dataType coefSpeed = potentialFuncPtr[indxEast];
+				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+				if (label == 3) {
+					labelArray[indxEast] = 2;
+					actionMapStr.imageDataPtr[indxEast] = dEast;
+					pointFastMarching2D EastNeighbor = { iplus, j, dEast };
+					addPointHeap2D(inProcess, EastNeighbor);
+				}
+				else {
+					if (dEast < actionMapStr.imageDataPtr[indxEast]) {
+						actionMapStr.imageDataPtr[indxEast] = dEast;
+						size_t pt_pos = getIndexFromHeap2D(inProcess, iplus, j);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dEast;
+							heapifyUp2D(inProcess, pt_pos);
+						}
+					}
+				}
+			}
+		}
+
+		//North
+		if (j > 0 && j < width && i >= 0 && i < length) {
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			size_t label = labelArray[indxNorth];
+			if (label != 1) {
+				dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jminus);
+				dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jminus);
+				dataType coefSpeed = potentialFuncPtr[indxNorth];
+				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				if (label == 3) {
+					labelArray[indxNorth] = 2;
+					actionMapStr.imageDataPtr[indxNorth] = dNorth;
+					pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
+					addPointHeap2D(inProcess, NorthNeighbor);
+				}
+				else {
+					if (dNorth < actionMapStr.imageDataPtr[indxNorth]) {
+						actionMapStr.imageDataPtr[indxNorth] = dNorth;
+						size_t pt_pos = getIndexFromHeap2D(inProcess, i, jminus);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dNorth;
+							heapifyUp2D(inProcess, pt_pos);
+						}
+					}
+				}
+			}
+		}
+
+		//South
+		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			size_t label = labelArray[indxSouth];
+			if (label != 1) {
+				dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jplus);
+				dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jplus);
+				dataType coefSpeed = potentialFuncPtr[indxSouth];
+				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				if (label == 3) {
+					labelArray[indxSouth] = 2;
+					actionMapStr.imageDataPtr[indxSouth] = dSouth;
+					pointFastMarching2D NorthNeighbor = { i, jplus, dSouth };
+					addPointHeap2D(inProcess, NorthNeighbor);
+				}
+				else {
+					if (dSouth < actionMapStr.imageDataPtr[indxSouth]) {
+						actionMapStr.imageDataPtr[indxSouth] = dSouth;
+						size_t pt_pos = getIndexFromHeap2D(inProcess, i, jplus);
+						if (pt_pos != -1) {
+							inProcess[pt_pos].arrival = dSouth;
+							heapifyUp2D(inProcess, pt_pos);
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	key_points.push_back(seedPoint[1]);
+	std::cout << "The source Points are: " << std::endl;
+	for (int nb = 0; nb < key_points.size(); nb++) {
+		std::cout << "Point " << nb + 1 << " : " << key_points[nb].x << " " << key_points[nb].y << std::endl;
+	}
+
+	//id_keyPoint++;
+	string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
+	FILE* frontPoint;
+	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(frontPoint, "x,y\n");
+	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+		fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+	}
+	savingList.clear();
+	fclose(frontPoint);
+
+	delete[] labelArray;
+
 	return true;
 }
 
@@ -2347,54 +2710,37 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
 	bool isGradientComputed = false;
 	Point3D grad_vector;
-	
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(i, j, length);
-				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-				if (isGradientComputed == true) {
-					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-				}
-				else {
-					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-					return false;
-				}
-				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-				//threshold : real image
-				if (edgeValue <= parameters.thres) {
-					maskThreshold[k][xd] = 1.0;
-				}
-				else {
-					maskThreshold[k][xd] = 0.0;
-				}
-				////threshold artificial image
-				//if (norm_of_gradient > 0.0) {
-				//	maskThreshold[k][xd] = 0.0;
-				//}
-				//else {
-				//	maskThreshold[k][xd] = 1.0;
-				//}
-			}
-		}
-	}
+	//
+	//for (k = 0; k < height; k++) {
+	//	for (i = 0; i < length; i++) {
+	//		for (j = 0; j < width; j++) {
+	//			xd = x_new(i, j, length);
+	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+	//			if (isGradientComputed == true) {
+	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+	//			}
+	//			else {
+	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+	//				return false;
+	//			}
+	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+	//			//threshold : real image
+	//			if (edgeValue <= parameters.thres) {
+	//				maskThreshold[k][xd] = 1.0;
+	//			}
+	//			else {
+	//				maskThreshold[k][xd] = 0.0;
+	//			}
+	//		}
+	//	}
+	//}
 
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/input/raw/edge image/edge_image_p3.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	
-	//////Real image
+	//////////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//std::string storing_path;// = "C:/Users/Konan Allaly/Documents/Tests/input/edge_image_crop_p3.raw";
-	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	
 	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	
-	//fastMarching3dForDistanceMap(toDistanceMap, distance, 1.0);
-	//rouyTourinDistanceMap(toDistanceMap, distance, 0.001, 1000, 1.0);
-	//////bruteForceDistanceMap(toDistanceMap, distance, 0.0);
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fs.raw";
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/p6/distance_fs.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/p6/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////Find min and max of the distance map
@@ -2491,8 +2837,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			//potential[k][i] = var_epsilon + potential[k][i] / maxImage;
-			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 10.0 * distance[k][i]));
+			//potential[k][i] = var_epsilon + potential[k][i];
+			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 		}
 	}
 	//std::cout << "min factor : " << minRatio << std::endl;
@@ -4300,6 +4646,738 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		delete[] labelArray[k];
 	}
 	delete[] labelArray;
+
+	return true;
+}
+
+bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath) {
+
+	if (imageData.imageDataPtr == NULL || actionFirstFront == NULL || actionSecondFront == NULL || potentialPtr == NULL || endPoints == NULL) {
+		return false;
+	}
+
+	const size_t length = imageData.length;
+	const size_t width = imageData.width;
+	const size_t height = imageData.height;
+	VoxelSpacing spacing = imageData.spacing;
+
+	size_t dim2D = length * width;
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
+	size_t height_minus = height - 1;
+
+	short** firstLabelArray = new short*[height];
+	short** secondLabelArray = new short*[height];
+	for (size_t k = 0; k < height; k++) {
+		firstLabelArray[k] = new short[dim2D];
+		secondLabelArray[k] = new short[dim2D];
+		if (firstLabelArray[k] == NULL || secondLabelArray[k] == NULL) {
+			return false;
+		}
+	}
+	
+	//Initialize action
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < dim2D; i++) {
+			actionFirstFront[k][i] = INFINITY;
+			actionSecondFront[k][i] = INFINITY;
+			firstLabelArray[k][i] = 3; //3 ---> not processed
+			secondLabelArray[k][i] = 3; //3 ---> not processed
+		}
+	}
+
+	size_t x1 = (size_t)endPoints[0].x;
+	size_t y1 = (size_t)endPoints[0].y;
+	size_t z1 = (size_t)endPoints[0].z;
+	if (x1 >= length || y1 >= width || z1 >= height) {
+		delete[] firstLabelArray;
+		delete[] secondLabelArray;
+		return false; //Invalid end point
+	}
+	firstLabelArray[z1][x_new(x1, y1, length)] = 1; //1 ---> already processed
+	actionFirstFront[z1][x_new(x1, y1, length)] = 0.0;
+
+	size_t x2 = (size_t)endPoints[1].x;
+	size_t y2 = (size_t)endPoints[1].y;
+	size_t z2 = (size_t)endPoints[1].z;
+	if (x2 >= length || y2 >= width || z2 >= height) {
+		delete[] secondLabelArray;
+		delete[] firstLabelArray;
+		return false; //Invalid end point
+	}
+	secondLabelArray[z2][x_new(x2, y2, length)] = 1; //1 ---> already processed
+	actionSecondFront[z2][x_new(x2, y2, length)] = 0.0;
+
+	vector<pointFastMarching3D> narrowBandFirstFront, narrowBandSecondFront;
+
+	//Initialize neighbors for the first front
+
+	//Top
+	if (x1 >= 0 && x1 < length && y1 >= 0 && y1 < width && z1 > 0 && z1 < height) {
+		size_t zminus = z1 - 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, x1, y1, zminus);
+		dataType y = select3dY(actionFirstFront, length, width, height, x1, y1, zminus);
+		dataType z = select3dZ(actionFirstFront, length, width, height, x1, y1, zminus);
+		size_t indx = x_new(x1, y1, length);
+		dataType coefSpeed = potentialPtr[zminus][indx];
+		dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D TopNeighbor = { x1, y1, zminus, dTop };
+		actionFirstFront[zminus][indx] = dTop;
+		narrowBandFirstFront.push_back(TopNeighbor);
+		firstLabelArray[zminus][indx] = 2; //2 ---> in process
+	}
+
+	//Bottom
+	if (x1 >= 0 && x1 < length && y1 >= 0 && y1 < width && z1 >= 0 && z1 < height_minus) {
+		size_t zplus = z1 + 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, x1, y1, zplus);
+		dataType y = select3dY(actionFirstFront, length, width, height, x1, y1, zplus);
+		dataType z = select3dZ(actionFirstFront, length, width, height, x1, y1, zplus);
+		size_t indx = x_new(x1, y1, length);
+		dataType coefSpeed = potentialPtr[zplus][indx];
+		dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D BottomNeighbor = { x1, y1, zplus, dBottom };
+		actionFirstFront[zplus][indx] = dBottom;
+		narrowBandFirstFront.push_back(BottomNeighbor);
+		firstLabelArray[zplus][indx] = 2; //2 ---> in process
+	}
+
+	//East
+	if (x1 > 0 && x1 < length && y1 >= 0 && y1 < width && z1 >= 0 && z1 < height) {
+		size_t xminus = x1 - 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, xminus, y1, z1);
+		dataType y = select3dY(actionFirstFront, length, width, height, xminus, y1, z1);
+		dataType z = select3dZ(actionFirstFront, length, width, height, xminus, y1, z1);
+		size_t indxWest = x_new(xminus, y1, length);
+		dataType coefSpeed = potentialPtr[z1][indxWest];
+		dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D WestNeighbor = { xminus, y1, z1, dWest };
+		actionFirstFront[z1][indxWest] = dWest;
+		narrowBandFirstFront.push_back(WestNeighbor);
+		firstLabelArray[z1][indxWest] = 2; //2 ---> in process
+	}
+
+	//West
+	if (x1 >= 0 && x1 < length_minus && y1 >= 0 && y1 < width && z1 >= 0 && z1 < height) {
+		size_t xplus = x1 + 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, xplus, y1, z1);
+		dataType y = select3dY(actionFirstFront, length, width, height, xplus, y1, z1);
+		dataType z = select3dZ(actionFirstFront, length, width, height, xplus, y1, z1);
+		size_t indxEast = x_new(xplus, y1, length);
+		dataType coefSpeed = potentialPtr[z1][indxEast];
+		dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D EastNeighbor = { xplus, y1, z1, dEast };
+		actionFirstFront[z1][indxEast] = dEast;
+		narrowBandFirstFront.push_back(EastNeighbor);
+		firstLabelArray[z1][indxEast] = 2; //2 ---> in process
+	}
+
+	//North
+	if (y1 > 0 && y1 < length && x1 >= 0 && x1 < length && z1 >= 0 && z1 < height) {
+		size_t yminus = y1 - 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, x1, yminus, z1);
+		dataType y = select3dY(actionFirstFront, length, width, height, x1, yminus, z1);
+		dataType z = select3dZ(actionFirstFront, length, width, height, x1, yminus, z1);
+		size_t indxNorth = x_new(x1, yminus, length);
+		dataType coefSpeed = potentialPtr[z1][indxNorth];
+		dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D WestNeighbor = { x1, yminus, z1, dNorth };
+		actionFirstFront[z1][indxNorth] = dNorth;
+		narrowBandFirstFront.push_back(WestNeighbor);
+		firstLabelArray[z1][indxNorth] = 2; //2 ---> in process
+	}
+
+	//South
+	if (y1 >= 0 && y1 < width_minus && x1 >= 0 && x1 < length && z1 >= 0 && z1 < height) {
+		size_t yplus = y1 + 1;
+		dataType x = select3dX(actionFirstFront, length, width, height, x1, yplus, z1);
+		dataType y = select3dY(actionFirstFront, length, width, height, x1, yplus, z1);
+		dataType z = select3dZ(actionFirstFront, length, width, height, x1, yplus, z1);
+		size_t indxSouth = x_new(x1, yplus, length);
+		dataType coefSpeed = potentialPtr[z1][indxSouth];
+		dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D EastNeighbor = { x1, yplus, z1, dSouth };
+		actionFirstFront[z1][indxSouth] = dSouth;
+		narrowBandFirstFront.push_back(EastNeighbor);
+		firstLabelArray[z1][indxSouth] = 2; //2 ---> in process
+	}
+
+	//Initialize neighbors for the second front
+
+	//Top
+	if (x2 >= 0 && x2 < length && y2 >= 0 && y2 < width && z2 > 0 && z2 < height) {
+		size_t zminus = z2 - 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, x2, y2, zminus);
+		dataType y = select3dY(actionSecondFront, length, width, height, x2, y2, zminus);
+		dataType z = select3dZ(actionSecondFront, length, width, height, x2, y2, zminus);
+		size_t indx = x_new(x2, y2, length);
+		dataType coefSpeed = potentialPtr[zminus][indx];
+		dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D TopNeighbor = { x2, y2, zminus, dTop };
+		actionSecondFront[zminus][indx] = dTop;
+		narrowBandSecondFront.push_back(TopNeighbor);
+		secondLabelArray[zminus][indx] = 2; //2 ---> in process
+	}
+
+	//Bottom
+	if (x2 >= 0 && x2 < length && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height_minus) {
+		size_t zplus = z2 + 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, x2, y2, zplus);
+		dataType y = select3dY(actionSecondFront, length, width, height, x2, y2, zplus);
+		dataType z = select3dZ(actionSecondFront, length, width, height, x2, y2, zplus);
+		size_t indx = x_new(x2, y2, length);
+		dataType coefSpeed = potentialPtr[zplus][indx];
+		dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D BottomNeighbor = { x2, y2, zplus, dBottom };
+		actionSecondFront[zplus][indx] = dBottom;
+		narrowBandSecondFront.push_back(BottomNeighbor);
+		secondLabelArray[zplus][indx] = 2; //2 ---> in process
+	}
+
+	//East
+	if (x2 > 0 && x2 < length && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height) {
+		size_t xminus = x2 - 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, xminus, y2, z2);
+		dataType y = select3dY(actionSecondFront, length, width, height, xminus, y2, z2);
+		dataType z = select3dZ(actionSecondFront, length, width, height, xminus, y2, z2);
+		size_t indxWest = x_new(xminus, y2, length);
+		dataType coefSpeed = potentialPtr[z2][indxWest];
+		dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D WestNeighbor = { xminus, y2, z2, dWest };
+		actionSecondFront[z2][indxWest] = dWest;
+		narrowBandSecondFront.push_back(WestNeighbor);
+		secondLabelArray[z2][indxWest] = 2; //2 ---> in process
+	}
+
+	//West
+	if (x2 >= 0 && x2 < length_minus && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height) {
+		size_t xplus = x2 + 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, xplus, y2, z2);
+		dataType y = select3dY(actionSecondFront, length, width, height, xplus, y2, z2);
+		dataType z = select3dZ(actionSecondFront, length, width, height, xplus, y2, z2);
+		size_t indxEast = x_new(xplus, y2, length);
+		dataType coefSpeed = potentialPtr[z2][indxEast];
+		dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D EastNeighbor = { xplus, y2, z2, dEast };
+		actionSecondFront[z2][indxEast] = dEast;
+		narrowBandSecondFront.push_back(EastNeighbor);
+		secondLabelArray[z2][indxEast] = 2; //2 ---> in process
+	}
+
+	//North
+	if (y2 > 0 && y2 < width && x2 >= 0 && x2 < length && z2 >= 0 && z2 < height) {
+		size_t yminus = y2 - 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, x2, yminus, z2);
+		dataType y = select3dY(actionSecondFront, length, width, height, x2, yminus, z2);
+		dataType z = select3dZ(actionSecondFront, length, width, height, x2, yminus, z2);
+		size_t indxNorth = x_new(x2, yminus, length);
+		dataType coefSpeed = potentialPtr[z2][indxNorth];
+		dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D NorthNeighbor = { x2, yminus, z2, dNorth };
+		actionSecondFront[z2][indxNorth] = dNorth;
+		narrowBandSecondFront.push_back(NorthNeighbor);
+		secondLabelArray[z2][indxNorth] = 2; //2 ---> in process
+	}
+
+	//South
+	if (y2 >= 0 && y2 < width_minus && x2 >= 0 && x2 < length && z2 >= 0 && z2 < height) {
+		size_t yplus = y2 + 1;
+		dataType x = select3dX(actionSecondFront, length, width, height, x2, yplus, z2);
+		dataType y = select3dY(actionSecondFront, length, width, height, x2, yplus, z2);
+		dataType z = select3dZ(actionSecondFront, length, width, height, x2, yplus, z2);
+		size_t indxSouth = x_new(x2, yplus, length);
+		dataType coefSpeed = potentialPtr[z2][indxSouth];
+		dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+		pointFastMarching3D SouthNeighbor = { x2, yplus, z2, dSouth };
+		actionSecondFront[z2][indxSouth] = dSouth;
+		narrowBandSecondFront.push_back(SouthNeighbor);
+		secondLabelArray[z2][indxSouth] = 2; //2 ---> in process
+	}
+	
+
+	//heapify 2D vector
+	heapifyVector3D(narrowBandFirstFront);
+	heapifyVector3D(narrowBandSecondFront);
+
+	//Save points for visualization
+	//vector<Point2D> savingList;
+	//size_t id_save = 0;
+
+	dataType max_save_action = 0.0;
+	size_t nb_computed_points = 0;
+
+	while (narrowBandFirstFront.size() > 0 && narrowBandSecondFront.size() > 0) {
+
+		pointFastMarching3D firstFrontPoint = narrowBandFirstFront[0];
+		x1 = firstFrontPoint.x;
+		y1 = firstFrontPoint.y;
+		z1 = firstFrontPoint.z;
+		size_t indexFirst = x_new(x1, y1, length);
+		if (secondLabelArray[z1][indexFirst] == 1) {
+			//The fronts have met
+			endPoints[2].x = x1;
+			endPoints[2].y = y1;
+			endPoints[2].z = z1;
+			break;
+		}
+		else {
+			firstLabelArray[z1][indexFirst] = 1;
+		}
+
+		if (firstFrontPoint.arrival > max_save_action) {
+			max_save_action = firstFrontPoint.arrival;
+		}
+		deleteRootHeap3D(narrowBandFirstFront);
+		nb_computed_points++;
+
+		pointFastMarching3D secondFrontPoint = narrowBandSecondFront[0];
+		x2 = secondFrontPoint.x;
+		y2 = secondFrontPoint.y;
+		z2 = secondFrontPoint.z;
+		size_t indexSecond = x_new(x2, y2, length);
+		if (firstLabelArray[z2][indexSecond] == 1) {
+			//The fronts have met
+			endPoints[2].x = x2;
+			endPoints[2].y = y2;
+			endPoints[2].z = z2;
+			break;
+		}
+		else {
+			secondLabelArray[z2][indexSecond] = 1;
+		}
+
+		if (secondFrontPoint.arrival > max_save_action) {
+			max_save_action = secondFrontPoint.arrival;
+		}
+		deleteRootHeap3D(narrowBandSecondFront);
+		nb_computed_points++;
+
+		////Save points for visualization
+		//Point2D point = { (dataType)i, (dataType)j };
+		//savingList.push_back(point);
+		//if (nb_computed_points % 500 == 0) {
+		//	id_save++;
+		//	//string saving_csv = savingPath + to_string(id_save) + ".csv";
+		//	//FILE* frontPoint;
+		//	//if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+		//	//	printf("Enable to open");
+		//	//	return false;
+		//	//}
+		//	//fprintf(frontPoint, "x,y\n");
+		//	//for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+		//	//	fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+		//	//}
+		//	////Don't empty the list of points to see the whole computed points
+		//	////savingList.clear();
+		//	//fclose(frontPoint);
+		//	string saving_file = savingPath + to_string(id_save) + ".raw";
+		//	for(size_t in = 0; in < savingList.size(); in++) {
+		//		size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
+		//		partialDistancePtr[indx] = distancePtr[indx];
+		//	}
+		//	manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
+		//}
+
+		//Top first front
+		if (z1 > 0 && z1 < height && x1 >= 0 && x1 < length && y1 >= 0 && y1 < width) {
+			size_t zminus = z1 - 1;
+			size_t indx = x_new(x1, y1, length);
+			short label = firstLabelArray[zminus][indx];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, x1, y1, zminus);
+				dataType y = select3dY(actionFirstFront, length, width, height, x1, y1, zminus);
+				dataType z = select3dZ(actionFirstFront, length, width, height, x1, y1, zminus);
+				dataType coefSpeed = potentialPtr[zminus][indx];
+				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D TopNeighbor = { x1, y1, zminus, dTop };
+				if (label == 3) {
+					actionFirstFront[zminus][indx] = dTop;
+					firstLabelArray[zminus][indx] = 2;
+					addPointHeap3D(narrowBandFirstFront, TopNeighbor);
+				}
+				else {
+					if (dTop < actionFirstFront[zminus][indx]) {
+						actionFirstFront[zminus][indx] = dTop;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, x1, y1, zminus);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//Bottom first front
+		if (z1 >= 0 && z1 < height_minus && x1 >= 0 && x1 < length && y1 >= 0 && y1 < width) {
+			size_t zplus = z1 + 1;
+			size_t indx = x_new(x1, y1, length);
+			short label = firstLabelArray[zplus][indx];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, x1, y1, zplus);
+				dataType y = select3dY(actionFirstFront, length, width, height, x1, y1, zplus);
+				dataType z = select3dZ(actionFirstFront, length, width, height, x1, y1, zplus);
+				dataType coefSpeed = potentialPtr[zplus][indx];
+				dataType dBottom = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D BottomNeighbor = { x1, y1, zplus, dBottom };
+				if (label == 3) {
+					actionFirstFront[zplus][indx] = dBottom;
+					firstLabelArray[zplus][indx] = 2;
+					addPointHeap3D(narrowBandFirstFront, BottomNeighbor);
+				}
+				else {
+					if (dBottom < actionFirstFront[zplus][indx]) {
+						actionFirstFront[zplus][indx] = dBottom;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, x1, y1, zplus);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//West first front
+		if (x1 > 0 && x1 < length && y1 >= 0 && y1 < width && z1 >= 0 && z1 < height) {
+			size_t xminus = x1 - 1;
+			size_t indxWest = x_new(xminus, y1, length);
+			short label = firstLabelArray[z1][indxWest];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, xminus, y1, z1);
+				dataType y = select3dY(actionFirstFront, length, width, height, xminus, y1, z1);
+				dataType z = select3dZ(actionFirstFront, length, width, height, xminus, y1, z1);
+				dataType coefSpeed = potentialPtr[z1][indxWest];
+				dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D WestNeighbor = { xminus, y1, z1, dWest };
+				if (label == 3) {
+					actionFirstFront[z1][indxWest] = dWest;
+					firstLabelArray[z1][indxWest] = 2;
+					addPointHeap3D(narrowBandFirstFront, WestNeighbor);
+				}
+				else {
+					if (dWest < actionFirstFront[z1][indxWest]) {
+						actionFirstFront[z1][indxWest] = dWest;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, xminus, y1, z1);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//East first front
+		if (x1 < length_minus && x1 >= 0 && y1 >= 0 && y1 < width && z1 >= 0 && z1 < height) {
+			size_t xplus = x1 + 1;
+			size_t indxEast = x_new(xplus, y1, length);
+			short label = firstLabelArray[z1][indxEast];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, xplus, y1, z1);
+				dataType y = select3dY(actionFirstFront, length, width, height, xplus, y1, z1);
+				dataType z = select3dZ(actionFirstFront, length, width, height, xplus, y1, z1);
+				dataType coefSpeed = potentialPtr[z1][indxEast];
+				dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D EastNeighbor = { xplus, y1, z1, dEast };
+				if (label == 3) {
+					actionFirstFront[z1][indxEast] = dEast;
+					firstLabelArray[z1][indxEast] = 2;
+					addPointHeap3D(narrowBandFirstFront, EastNeighbor);
+				}
+				else {
+					if (dEast < actionFirstFront[z1][indxEast]) {
+						actionFirstFront[z1][indxEast] = dEast;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, xplus, y1, z1);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//North first front
+		if (y1 > 0 && y1 < width && x1 >= 0 && x1 < length && z1 >= 0 && z1 < height) {
+			size_t yminus = y1 - 1;
+			size_t indxNorth = x_new(x1, yminus, length);
+			short label = firstLabelArray[z1][indxNorth];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, x1, yminus, z1);
+				dataType y = select3dY(actionFirstFront, length, width, height, x1, yminus, z1);
+				dataType z = select3dZ(actionFirstFront, length, width, height, x1, yminus, z1);
+				dataType coefSpeed = potentialPtr[z1][indxNorth];
+				dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D NorthNeighbor = { x1, yminus, z1, dNorth };
+				if (label == 3) {
+					actionFirstFront[z1][indxNorth] = dNorth;
+					firstLabelArray[z1][indxNorth] = 2;
+					addPointHeap3D(narrowBandFirstFront, NorthNeighbor);
+				}
+				else {
+					if (dNorth < actionFirstFront[z1][indxNorth]) {
+						actionFirstFront[z1][indxNorth] = dNorth;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, x1, yminus, z1);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//South first front
+		if (y1 >= 0 && y1 < width_minus && x1 >= 0 && x1 < length && z1 >= 0 && z1 < height) {
+			size_t yplus = y1 + 1;
+			size_t indxSouth = x_new(x1, yplus, length);
+			short label = firstLabelArray[z1][indxSouth];
+			if (label != 1) {
+				dataType x = select3dX(actionFirstFront, length, width, height, x1, yplus, z1);
+				dataType y = select3dY(actionFirstFront, length, width, height, x1, yplus, z1);
+				dataType z = select3dZ(actionFirstFront, length, width, height, x1, yplus, z1);
+				dataType coefSpeed = potentialPtr[z1][indxSouth];
+				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D SouthNeighbor = { x1, yplus, z1, dSouth };
+				if (label == 3) {
+					actionFirstFront[z1][indxSouth] = dSouth;
+					firstLabelArray[z1][indxSouth] = 2;
+					addPointHeap3D(narrowBandFirstFront, SouthNeighbor);
+				}
+				else {
+					if (dSouth < actionFirstFront[z1][indxSouth]) {
+						actionFirstFront[z1][indxSouth] = dSouth;
+						size_t pIndex = getIndexFromHeap3D(narrowBandFirstFront, x1, yplus, z1);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandFirstFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//==========================================
+
+		//Top second front
+		if (x2 >= 0 && x2 < length && y2 >= 0 && y2 < width && z2 > 0 && z2 < height) {
+			size_t zminus = z2 - 1;
+			//size_t indx = x_new(x2, y2, length);
+			short label = secondLabelArray[zminus][indexSecond];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, x2, y2, zminus);
+				dataType y = select3dY(actionSecondFront, length, width, height, x2, y2, zminus);
+				dataType z = select3dZ(actionSecondFront, length, width, height, x2, y2, zminus);
+				dataType coefSpeed = potentialPtr[zminus][indexSecond];
+				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D TopNeighbor = { x2, y2, zminus, dTop };
+				if (label == 3) {
+					actionSecondFront[zminus][indexSecond] = dTop;
+					secondLabelArray[zminus][indexSecond] = 2;
+					addPointHeap3D(narrowBandSecondFront, TopNeighbor);
+				}
+				else {
+					if (dTop < actionSecondFront[zminus][indexSecond]) {
+						actionSecondFront[zminus][indexSecond] = dTop;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, x2, y2, zminus);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//Bottom second front
+		if (x2 >= 0 && x2 < length && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height_minus) {
+			size_t zplus = z2 + 1;
+			//size_t indx = x_new(x2, y2, length);
+			short label = secondLabelArray[zplus][indexSecond];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, x2, y2, zplus);
+				dataType y = select3dY(actionSecondFront, length, width, height, x2, y2, zplus);
+				dataType z = select3dZ(actionSecondFront, length, width, height, x2, y2, zplus);
+				dataType coefSpeed = potentialPtr[zplus][indexSecond];
+				dataType dTop = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D TopNeighbor = { x2, y2, zplus, dTop };
+				if (label == 3) {
+					actionSecondFront[zplus][indexSecond] = dTop;
+					secondLabelArray[zplus][indexSecond] = 2;
+					addPointHeap3D(narrowBandSecondFront, TopNeighbor);
+				}
+				else {
+					if (dTop < actionSecondFront[zplus][indexSecond]) {
+						actionSecondFront[zplus][indexSecond] = dTop;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, x2, y2, zplus);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//West second front
+		if (x2 > 0 && x2 < length && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height) {
+			size_t xminus = x2 - 1;
+			size_t indxWest = x_new(xminus, y2, length);
+			short label = secondLabelArray[z2][indxWest];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, xminus, y2, z2);
+				dataType y = select3dY(actionSecondFront, length, width, height, xminus, y2, z2);
+				dataType z = select3dZ(actionSecondFront, length, width, height, xminus, y2, z2);
+				dataType coefSpeed = potentialPtr[z2][indxWest];
+				dataType dWest = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D WestNeighbor = { xminus, y2, z2, dWest };
+				if (label == 3) {
+					actionSecondFront[z2][indxWest] = dWest;
+					secondLabelArray[z2][indxWest] = 2;
+					addPointHeap3D(narrowBandSecondFront, WestNeighbor);
+				}
+				else {
+					if (dWest < actionSecondFront[z2][indxWest]) {
+						actionSecondFront[z2][indxWest] = dWest;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, xminus, y2, z2);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//East second front
+		if (x2 < length_minus && x2 >= 0 && y2 >= 0 && y2 < width && z2 >= 0 && z2 < height) {
+			size_t xplus = x2 + 1;
+			size_t indxEast = x_new(xplus, y2, length);
+			short label = secondLabelArray[z2][indxEast];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, xplus, y2, z2);
+				dataType y = select3dY(actionSecondFront, length, width, height, xplus, y2, z2);
+				dataType z = select3dZ(actionSecondFront, length, width, height, xplus, y2, z2);
+				dataType coefSpeed = potentialPtr[z2][indxEast];
+				dataType dEast = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D EastNeighbor = { xplus, y2, z2, dEast };
+				if (label == 3) {
+					actionSecondFront[z2][indxEast] = dEast;
+					secondLabelArray[z2][indxEast] = 2;
+					addPointHeap3D(narrowBandSecondFront, EastNeighbor);
+				}
+				else {
+					if (dEast < actionSecondFront[z2][indxEast]) {
+						actionSecondFront[z2][indxEast] = dEast;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, xplus, y2, z2);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//North second front
+		if (y2 > 0 && y2 < width && x2 >= 0 && x2 < length && z2 >= 0 && z2 < height) {
+			size_t yminus = y2 - 1;
+			size_t indxNorth = x_new(x2, yminus, length);
+			short label = secondLabelArray[z2][indxNorth];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, x2, yminus, z2);
+				dataType y = select3dY(actionSecondFront, length, width, height, x2, yminus, z2);
+				dataType z = select3dZ(actionSecondFront, length, width, height, x2, yminus, z2);
+				dataType coefSpeed = potentialPtr[z2][indxNorth];
+				dataType dNorth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D NorthNeighbor = { x2, yminus, z2, dNorth };
+				if (label == 3) {
+					actionSecondFront[z2][indxNorth] = dNorth;
+					secondLabelArray[z2][indxNorth] = 2;
+					addPointHeap3D(narrowBandSecondFront, NorthNeighbor);
+				}
+				else {
+					if (dNorth < actionSecondFront[z2][indxNorth]) {
+						actionSecondFront[z2][indxNorth] = dNorth;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, x2, yminus, z2);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//South second front
+		if (y2 >= 0 && y2 < width_minus && x2 >= 0 && x2 < length && z2 >= 0 && z2 < height) {
+			size_t yplus = y2 + 1;
+			size_t indxSouth = x_new(x2, yplus, length);
+			short label = secondLabelArray[z2][indxSouth];
+			if (label != 1) {
+				dataType x = select3dX(actionSecondFront, length, width, height, x2, yplus, z2);
+				dataType y = select3dY(actionSecondFront, length, width, height, x2, yplus, z2);
+				dataType z = select3dZ(actionSecondFront, length, width, height, x2, yplus, z2);
+				dataType coefSpeed = potentialPtr[z2][indxSouth];
+				dataType dSouth = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
+				pointFastMarching3D SouthNeighbor = { x2, yplus, z2, dSouth };
+				if (label == 3) {
+					actionSecondFront[z2][indxSouth] = dSouth;
+					secondLabelArray[z2][indxSouth] = 2;
+					addPointHeap3D(narrowBandSecondFront, SouthNeighbor);
+				}
+				else {
+					if (dSouth < actionSecondFront[z2][indxSouth]) {
+						actionSecondFront[z2][indxSouth] = dSouth;
+						size_t pIndex = getIndexFromHeap3D(narrowBandSecondFront, x2, yplus, z2);
+						if (pIndex != -1) {
+							heapifyUp3D(narrowBandSecondFront, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//if (nb_computed_points == 150000) {
+		//	break;
+		//}
+
+	}
+
+	////Save points for visualization
+	//if (savingList.size() != 0) {
+	//	id_save++;
+	//	string saving_csv = savingPath + to_string(id_save) + ".csv";
+	//	FILE* frontPoint;
+	//	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
+	//		printf("Enable to open");
+	//		return false;
+	//	}
+	//	fprintf(frontPoint, "x,y\n");
+	//	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
+	//		fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
+	//	}
+	//	savingList.clear();
+	//	fclose(frontPoint);
+	//}
+
+	//id_save++;
+	//string saving_file = savingPath + to_string(id_save) + ".raw";
+	//for (size_t in = 0; in < savingList.size(); in++) {
+	//	size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
+	//	partialDistancePtr[indx] = distancePtr[indx];
+	//}
+	//manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
+
+	nb_computed_points += narrowBandFirstFront.size() + narrowBandSecondFront.size();
+	std::cout << "Number of points processed: " << nb_computed_points << std::endl;
+	std::cout << "Max arrival before exit: " << max_save_action << std::endl;
+
+	for (size_t k = 0; k < height; k++) {
+		for (size_t i = 0; i < dim2D; i++) {
+			if (actionFirstFront[k][i] == INFINITY) {
+				actionFirstFront[k][i] = max_save_action + 1;
+			}
+			if (actionSecondFront[k][i] == INFINITY) {
+				actionSecondFront[k][i] = max_save_action + 1;
+			}
+		}
+	}
+	narrowBandFirstFront.clear();
+	narrowBandSecondFront.clear();
+
+	delete[] firstLabelArray;
+	delete[] secondLabelArray;
 
 	return true;
 }

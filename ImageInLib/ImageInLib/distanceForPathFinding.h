@@ -186,6 +186,8 @@ using namespace std;
 
 	bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
+	bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving);
+
 	/// <summary>
 	/// compute arrival time for each point in given image, given starting point and given local speed
 	/// </summary>
@@ -413,6 +415,8 @@ using namespace std;
 	/// <param name="path_saving">The file path where the resulting path will be saved.</param>
 	/// <returns>True if the front propagation and key point detection succeed; otherwise, false.</returns>
 	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving);
+
+	bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath);
 
 	//==================================
 
