@@ -1025,6 +1025,16 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 }
 
+int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k) {
+	//we use type int for indexes because we do operations like pos--
+	for (int ind = 0; ind < in_Process.size(); ind++) {
+		if (in_Process[ind].x == i && in_Process[ind].y == j && in_Process[ind].z == k) {
+			return ind;
+		}
+	}
+	return -1; //not found
+}
+
 bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
 
 	if (imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL) {
@@ -1203,6 +1213,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
 							distanceFuncPtr[kplus][currentIndx] = dBottom;
+							int index = getIndexFromHeap3D(inProcess, j, i, kplus);
+							if (index != -1) {
+								inProcess[index].arrival = dBottom;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1229,6 +1244,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dTop < distanceFuncPtr[kminus][currentIndx]) {
 							distanceFuncPtr[kminus][currentIndx] = dTop;
+							int index = getIndexFromHeap3D(inProcess, j, i, kminus);
+							if (index != -1) {
+								inProcess[index].arrival = dTop;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1256,6 +1276,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dEast < distanceFuncPtr[k][indxEast]) {
 							distanceFuncPtr[k][indxEast] = dEast;
+							int index = getIndexFromHeap3D(inProcess, j, iplus, k);
+							if (index != -1) {
+								inProcess[index].arrival = dEast;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1283,6 +1308,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dWest < distanceFuncPtr[k][indxWest]) {
 							distanceFuncPtr[k][indxWest] = dWest;
+							int index = getIndexFromHeap3D(inProcess, j, iminus, k);
+							if (index != -1) {
+								inProcess[index].arrival = dWest;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1310,6 +1340,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dNorth < distanceFuncPtr[k][indxNorth]) {
 							distanceFuncPtr[k][indxNorth] = dNorth;
+							int index = getIndexFromHeap3D(inProcess, jminus, i, k);
+							if (index != -1) {
+								inProcess[index].arrival = dNorth;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1337,6 +1372,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dSouth < distanceFuncPtr[k][indxSouth]) {
 							distanceFuncPtr[k][indxSouth] = dSouth;
+							int index = getIndexFromHeap3D(inProcess, jplus, i, k);
+							if (index != -1) {
+								inProcess[index].arrival = dSouth;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
