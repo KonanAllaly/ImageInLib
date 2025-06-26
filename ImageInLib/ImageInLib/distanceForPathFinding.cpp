@@ -526,47 +526,26 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	dataType iNew = 0.0;
 	dataType jNew = 0.0;
 
-	dataType * gradientVectorX = new dataType[dim2d];
-	dataType * gradientVectorY = new dataType[dim2d];
-
-	//Normalization of the gradient
-	computeImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
-	dataType norm_of_gradient = computeGradientNorm2d(gradientVectorX, gradientVectorY, height, width);
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			xd = x_new(j, i, width);
-			gradientVectorX[xd] = gradientVectorX[xd] / norm_of_gradient;
-			gradientVectorY[xd] = gradientVectorY[xd] / norm_of_gradient;
-		}
-	}
-
-
 	//Find the closest point till the last point
 	size_t cpt = 1;
 	i_current = i_end; j_current = j_end;
 	resultedPath[x_new(j_current, i_current, width)] = 1;
 
-	// Make the end point visible on the result
-	//===============
-	resultedPath[x_new(j_init, i_init, width)] = 1; 
-	resultedPath[x_new(j_init, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init, i_init + 1, width)] = 1;
-	resultedPath[x_new(j_init - 1, i_init, width)] = 1; 
-	resultedPath[x_new(j_init - 1, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init - 1, i_init + 1, width)] = 1; 
-	resultedPath[x_new(j_init + 1, i_init, width)] = 1; 
-	resultedPath[x_new(j_init + 1, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init + 1, i_init + 1, width)] = 1;
-	//===============
-
 	iNew = (dataType)i_current; 
 	jNew = (dataType)j_current;
 	dataType currentDist = 0;
 
+	Point2D v_gradient;
+	const FiniteVolumeSize2D spacing = { 1.0, 1.0 };
+	dataType norm_gradient = 0.0;	
+
 	do{
 
-		iNew = iNew - tau * gradientVectorY[x_new(j_current, i_current, width)];
-		jNew = jNew - tau * gradientVectorX[x_new(j_current, i_current, width)];
+		getGradient2D(distanceFuncPtr, width, height, i_current, j_current, spacing, &v_gradient);
+		norm_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y);
+
+		iNew = iNew - tau * (v_gradient.x / norm_gradient);
+		jNew = jNew - tau * (v_gradient.y / norm_gradient);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init));
 
@@ -581,9 +560,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 
 	cout << "\nDistance to the end point : " << dist_min << endl;
 	cout << "\nNumber of iterations : " << cpt << endl;
-
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
 
 	return true;
 }
@@ -1329,32 +1305,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	dataType tau = 0.8, tol = 1.0;
 	size_t i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 	size_t i_end = seedPoints[1].y, j_end = seedPoints[1].x, k_end = seedPoints[1].z;
-
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType [dim2d];
-		gradientVectorY[k] = new dataType [dim2d];
-		gradientVectorZ[k] = new dataType [dim2d];
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-
-	//Normalization of the gradient
-	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
-	dataType norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(j, i, width);
-				gradientVectorX[k][xd] = gradientVectorX[k][xd] / norm_of_gradient;
-				gradientVectorY[k][xd] = gradientVectorY[k][xd] / norm_of_gradient;
-				gradientVectorZ[k][xd] = gradientVectorZ[k][xd] / norm_of_gradient;
-			}
-		}
-	}
 	
 	//Find the closest point till the last point
 	size_t cpt = 0;
@@ -1370,12 +1320,19 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	dataType currentDist = 0.0;
 	dataType dist_min = 0.0;
 
+	const FiniteVolumeSize3D spacing = { 1.0, 1.0, 1.0 };
+	Point3D v_gradient;
+	dataType norm_of_gradient = 0;
+
 	do {
 
+		getGradient3D(distanceFuncPtr, length, width, height, i_current, j_current, k_current, spacing, &v_gradient);
+		norm_of_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y + v_gradient.z * v_gradient.z);	
+
 		currentIndx = x_new(j_current, i_current, width);
-		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
-		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
-		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
+		iNew = iNew - tau * (v_gradient.x / norm_of_gradient);
+		jNew = jNew - tau * (v_gradient.y / norm_of_gradient);
+		kNew = kNew - tau * (v_gradient.z / norm_of_gradient);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1383,23 +1340,12 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
 		resultedPath[k_current][x_new(j_current, i_current, width)] = 1;
-
-		//currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
 
 	cout << "\nDistance to the end point : " << dist_min << endl;
 	cout << "\nNumber of iterations : " << cpt << endl;
-
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
 
 	return true;
 }
