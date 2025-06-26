@@ -17,64 +17,6 @@
 
 using namespace std;
 
-	struct point_fm {
-		size_t i, j, k;
-		dataType var; // arrival time
-		bool operator < (const point_fm& other) const {
-			return var > other.var;
-		} 
-	};
-
-	/*
-	class heapWidthIndex {
-	private:
-		std::vector<point_fm> heap;
-		std::unordered_map<std::tuple<size_t, size_t, size_t>, size_t> index_map;
-		void swap_elements(size_t a, size_t b) {
-			std::swap(heap[a], heap[b]);
-			index_map[{heap[a].i, heap[a].j, heap[a].k}] = a;
-			index_map[{heap[b].i, heap[b].j, heap[b].k}] = b;
-		}
-		
-	public:
-		void insert(const point_fm& pt) {
-			heap.push_back(pt);
-			size_t idx = heap.size() - 1;
-			index_map[{pt.i, pt.j, pt.k}] = idx;
-			std::push_heap(heap.begin(), heap.end());
-			rebuild_index();
-		}
-		point_fm* find(size_t i, size_t j, size_t k) {
-			auto it = index_map.find({ i, j, k });
-			if (it == index_map.end()) return nullptr;
-			return &heap[it->second];
-		}
-		void update(size_t i, size_t j, size_t k, dataType new_var) {
-			auto it = index_map.find({ i, j, k });
-			if (it == index_map.end()) return;
-
-			size_t idx = it->second;
-			heap[idx].var = new_var;
-
-			std::make_heap(heap.begin(), heap.end());
-			rebuild_index();
-		}
-		void popMin() {
-			if (heap.empty()) return;
-			std::pop_heap(heap.begin(), heap.end());
-			point_fm min_point = heap.back();
-			index_map.erase({ min_point.i, min_point.j, min_point.k });
-			rebuild_index();
-		}
-	private:
-		void rebuild_index() {
-			for (size_t i = 0; i < heap.size(); ++i) {
-				index_map[{heap[i].i, heap[i].j, heap[i].k}] = i;
-			}
-		}
-	};
-	*/
-
 	typedef struct {
 		size_t x, y;
 		dataType arrival;
