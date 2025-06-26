@@ -326,6 +326,15 @@ void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D
 	heapifyUp2D(in_Process, l - 1);
 }
 
+int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j) {
+	for (int ind = 0; ind < in_Process.size(); ind++) {
+		if (in_Process[ind].x == i && in_Process[ind].y == j) {
+			return ind;
+		}
+	}
+	return -1; //not found
+}
+
 bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints) {
 
 	short* labelArray = new short[height * width];
@@ -417,7 +426,7 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	pointFastMarching2D current;
 	short label = 0;
 
-	while (inProcess.size() != 0) {
+	while (inProcess.size() > 0) {
 
 		current = inProcess[0];
 		j = current.x;
@@ -447,6 +456,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dEast < distancePtr[indxEast]) {
 							distancePtr[indxEast] = dEast;
+							int indx = getIndexFromHeap2D(inProcess, jplus, i);
+							if(indx != -1) {
+								inProcess[indx].arrival = dEast;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -473,6 +487,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dWest < distancePtr[indxWest]) {
 							distancePtr[indxWest] = dWest;
+							int indx = getIndexFromHeap2D(inProcess, jminus, i);
+							if(indx != -1) {
+								inProcess[indx].arrival = dWest;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -499,6 +518,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dNorth < distancePtr[indxNorth]) {
 							distancePtr[indxNorth] = dNorth;
+							int indx = getIndexFromHeap2D(inProcess, j, iminus);
+							if(indx != -1) {
+								inProcess[indx].arrival = dNorth;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -527,6 +551,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dSouth < distancePtr[indxSouth]) {
 							distancePtr[indxSouth] = dSouth;
+							int indx = getIndexFromHeap2D(inProcess, j, iplus);
+							if(indx != -1) {
+								inProcess[indx].arrival = dSouth;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
