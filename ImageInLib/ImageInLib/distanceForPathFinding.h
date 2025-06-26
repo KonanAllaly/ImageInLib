@@ -220,19 +220,6 @@ using namespace std;
 	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
 	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
 
-	/*
-	/// <summary>
-	/// Computes the mean and variance of potential values in a 2D image within circular regions of increasing radius around a seed point.
-	/// </summary>
-	/// <param name="ctImageData">The 2D image data to process.</param>
-	/// <param name="potentialPtr">Pointer to the output buffer where computed potential values will be stored.</param>
-	/// <param name="seedPoint">The center point in the image from which circular regions are expanded.</param>
-	/// <param name="radiusInitial">The initial radius of the circular region.</param>
-	/// <param name="radiusMax">The maximum radius to consider for the circular region.</param>
-	/// <param name="radiusStep">The increment by which the radius increases for each computation.</param>
-	void computePotentialMeanVariance(Image_Data2D ctImageData, dataType* potentialPtr, Point2D seedPoint, dataType radiusInitial, dataType radiusMax, dataType radiusStep);
-	*/
-
 	bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
 	bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFuncPtr, dataType foregroundValue);
@@ -240,16 +227,6 @@ using namespace std;
 	bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
 	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
-
-	/// <summary>
-	/// solve quadratic equation
-	/// </summary>
-	/// <param name="X">first quadratic coefficient</param>
-	/// <param name="Y">second quadratic coefficient</param>
-	/// <param name="Z">third quadratic coefficient</param>
-	/// <param name="W">second member</param>
-	/// <returns></returns>
-	dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W);
 
 	/// <summary>
 	/// discretization in x-direction
@@ -333,18 +310,6 @@ using namespace std;
 	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 
 	/// <summary>
-	/// 3D fast marching (front propagation), starting by one seed point
-	/// </summary>
-	/// <param name="distanceFuncPtr">pointer to caintaining computed action field</param>
-	/// <param name="potentialFuncPtr">pointer containing the potential (speed) in each point</param>
-	/// <param name="length">image length</param>
-	/// <param name="width">image width</param>
-	/// <param name="height">image height</param>
-	/// <param name="seedPoint">ssed point</param>
-	/// <returns>return true after succes</returns>
-	//bool fastMarching3D_N(dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, Point3D seedPoint);
-
-	/// <summary>
 	/// compute speed (potential) in each point
 	/// </summary>
 	/// <param name="ctImageData">input image data</param>
@@ -402,7 +367,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	bool fastMarching3dWithSpacing(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
+	bool frontPropagation(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
@@ -417,8 +382,6 @@ using namespace std;
 	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving);
 
 	bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath);
-
-	//==================================
 
 	/// <summary>
 	/// Returns the smaller of two values.
@@ -446,7 +409,7 @@ using namespace std;
 	/// <param name="distanceFuncPtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	bool fastMarching3dForDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
+	bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	/// <summary>
 	/// Computes a distance map from the given image data using the fast sweeping method.
@@ -465,25 +428,3 @@ using namespace std;
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
 	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
-
-	dataType computeHausDorffDistance(dataType** source1, dataType** source2, const size_t length, const size_t width, const size_t height);
-
-	/*
-	//bool computeDistanceToOnePoint(dataType** distancePtr, const size_t length, const size_t width, const size_t height, Point3D seed);
-	/// <summary>
-	/// find a path inside the aorta from given one point
-	/// </summary>
-	/// <param name="ctImageData">input image data</param>
-	/// <param name="meanImagePtr">mean image obtained by averaging pixel value around each pixel</param>
-	/// <param name="resultedPath">shortest path inside the aorta</param>
-	/// <param name="seedPoints">seed points</param>
-	/// <param name="parameters">parameters for potential function computation</param>
-	/// <param name="stop_criterium">stopping criterium</param>
-	/// <returns></returns>
-	//bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
-	//bool partialPropagation(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, const size_t length, const size_t width, const size_t height, Point3D* seedPoints, const double maxLength);
-	//bool partialPropagationWithSpacing(Image_Data actionPtr, dataType** potentialPtr, dataType** maskPtr, Point3D* seedPoints, const double maxLength);
-	bool findPathFromOneGivenPointWithCircleDetection(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
-	bool findPathFromOneGivenPoint(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
-	bool findPathTwoSteps(Image_Data ctImageData, Point3D* seedPoints, Potential_Parameters parameters);
-	*/
