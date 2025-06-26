@@ -18,41 +18,6 @@ using namespace std;
 
 //Functions for 2D images
 
-dataType solve2dQuadratic(dataType X, dataType Y, dataType W) {
-	//This fuction is used the solve the following quadratic coming the discretization 
-	// by upwind principle in the implementation of the fast marching method 
-	// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
-	dataType sol = 0.0, a, b, c, delta;
-
-	a = 2.0; 
-	if (X == INFINITY) {
-		X = 0; a--;
-	}
-	if (Y == INFINITY) {
-		Y = 0; a--;
-	}
-
-	b = -2 * (X + Y); 
-	c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-	delta = (dataType)(pow(b, 2) - 4 * a * c);
-
-	if (delta >= 0) {
-		sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-	}
-	else {
-		sol = (dataType)(min(X, Y) + W);
-	}
-
-	if (sol < 0) {
-		cout << "The solution is negative " << endl;
-		return 0;
-	}
-	else {
-		return sol;
-	}
-	
-}
-
 dataType selectX(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J) {
 	// this function return the minimum in the upwind principle
 	// x--->j and y--->i
@@ -95,6 +60,64 @@ dataType selectY(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ
 	}
 
 	return min(i_minus, i_plus);
+}
+
+dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
+
+	//This fuction is used the solve the following quadratic coming the discretization 
+	// by upwind principle in the implementation of the fast marching method 
+	// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
+
+	/* In the cuurrent implmentation, the grid is supposed to be uniform with grid size hx= hy = 1.0 */
+
+	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta;
+	dataType P_2 = P * P;
+
+	if (P <= 0) {
+		std::cout << "The potential should be positive";
+		return INFINITY;
+	}
+
+	if (X != INFINITY && Y == INFINITY) {
+		a = 1.0;
+		b = -2 * X;
+		c = (dataType)(pow(X, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = X + P;
+		}
+	}
+
+	if (X == INFINITY && Y != INFINITY) {
+		a = 1.0;
+		b = -2 * Y;
+		c = (dataType)(pow(Y, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = Y + P;
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY) {
+		a = 2.0;
+		b = -2 * (X + Y);
+		c = (dataType)(pow(X, 2) + pow(Y, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = min(X, Y) + P;
+		}
+	}
+
+	return solution;
 }
 
 bool computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width, dataType h) {
@@ -567,103 +590,6 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 //===========================================================
 
 //Functions for 3D images
-// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
-dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
-
-	dataType sol = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
-
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (Y + Z));
-		c = (dataType)(pow(Y, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(Y, Z) + W;
-		}
-	}
-
-	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (X + Z));
-		c = (dataType)(pow(X, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, Z) + W;
-		}
-	}
-
-	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (X + Y));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, Y) + W;
-		}
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
-		a = 1;
-		b = -2 * Z;
-		c = pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return Z + W;
-		}
-	}
-
-	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
-		a = 1;
-		b = -2 * Y;
-		c = pow(Y, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return Y + W;
-		}
-	}
-
-	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
-		a = 1;
-		b = -2 * X;
-		c = pow(X, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return X + W;
-		}
-	}
-
-	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 3;
-		b = -2 * (X + Y + Z);
-		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, min(Y, Z)) + W;
-		}
-	}
-
-}
 
 dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
 
@@ -728,6 +654,107 @@ dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t d
 	}
 
 	return min(k_minus, k_plus);
+}
+
+// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
+dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType P) {
+
+	/* In the cuurrent implementation, the grid is supposed to be uniform with grid size hx= hy = hz = 1.0 */
+
+	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
+	dataType P_2 = P * P;
+
+	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (Y + Z));
+		c = (dataType)(pow(Y, 2) + pow(Z, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(Y, Z) + P;
+		}
+	}
+
+	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (X + Z));
+		c = (dataType)(pow(X, 2) + pow(Z, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, Z) + P;
+		}
+	}
+
+	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (X + Y));
+		c = (dataType)(pow(X, 2) + pow(Y, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, Y) + P;
+		}
+	}
+
+	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
+		a = 1;
+		b = -2 * Z;
+		c = pow(Z, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return Z + P;
+		}
+	}
+
+	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
+		a = 1;
+		b = -2 * Y;
+		c = pow(Y, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return Y + P;
+		}
+	}
+
+	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
+		a = 1;
+		b = -2 * X;
+		c = pow(X, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return X + P;
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
+		a = 3;
+		b = -2 * (X + Y + Z);
+		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, min(Y, Z)) + P;
+		}
+	}
+
 }
 
 dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
