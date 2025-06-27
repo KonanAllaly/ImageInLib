@@ -362,9 +362,6 @@
     <ClCompile Include="src\path_extraction.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
-    <ClCompile Include="src\potential_action_map.c">
-      <Filter>Source Files\Front Popagation</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -551,9 +548,6 @@
       <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
     <ClInclude Include="include\path_extraction.h">
-      <Filter>Header Files\Front propagation</Filter>
-    </ClInclude>
-    <ClInclude Include="include\potential_action_map.h">
       <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
   </ItemGroup>
