@@ -240,3 +240,8 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* actionMapPtr, d
 
 	delete[] labelArray;
 }
+
+bool partialFrontPropagation(Image_Data inputImageData, dataType** actionMapPtr, dataType** potentialPtr, Point3D* endPoints) {
+	//TO DO
+	return true;
+}
