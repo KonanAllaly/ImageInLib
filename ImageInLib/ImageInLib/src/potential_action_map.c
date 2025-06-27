@@ -1,6 +1,5 @@
 #include "potential_action_map.h"
 
-/*
 bool computePotential2D(Image_Data2D imageData, dataType* potentialPtr, Point2D* endPoints, Potential_Parameters parameters)
 {
 	
@@ -38,4 +37,3 @@ bool computePotential2D(Image_Data2D imageData, dataType* potentialPtr, Point2D*
 
 	return true;
 }
-*/

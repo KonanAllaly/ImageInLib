@@ -2,10 +2,12 @@
 extern "C" {
 #endif
 
-//#pragma once
-//#include "front_propagation.h"
+#pragma once
+#ifndef POTENTIAL_ACTION_MAP_H
+#define POTENTIAL_ACTION_MAP_H
 
-/*
+#include "front_propagation.h"
+
 typedef struct {  
     dataType tau; // used in the descent gradient  
     size_t max_iteration; // maximal iteration to stop descent gradient  
@@ -14,8 +16,7 @@ typedef struct {
 
 bool computePotential2D(Image_Data2D imageData, dataType* potentialFuncPtr, Point2D* seedPoints, Potential_Parameters parameters);
 
-*/
-
+#endif // !POTENTIAL_ACTION_MAP_H
 #ifdef __cplusplus
 }
 #endif
