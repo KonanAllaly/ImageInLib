@@ -1,13 +1,12 @@
+
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include<iostream>
 #include<vector>
-#include "../src/data_load.h"
-#include <string.h>
+#include "common_functions.h"
 
+#define min_data(a,b)((a) < (b)) ? (a) : (b)
+#define max_data(a,b)((a) > (b)) ? (a) : (b)
 
 	typedef struct {
 		size_t x, y;
@@ -93,7 +92,3 @@ extern "C" {
 	dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
 
 	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h);
-
-#ifdef __cplusplus
-}
-#endif

@@ -1,6 +1,4 @@
 #include "front_propagation.h"
-#include <algorithm>
-#include <cmath>
 
 void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
 	pointFastMarching2D temp = *a;
@@ -97,7 +95,7 @@ dataType selectX(dataType* actionMapPtr, const size_t length, const size_t width
 	else {
 		x_plus = actionMapPtr[x_new(ind_x + 1, ind_y, length)];
 	}
-	return std::min(x_minus, x_plus);
+	return min_data(x_minus, x_plus);
 }
 
 dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
@@ -114,7 +112,7 @@ dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width
 	else {
 		y_plus = actionMapPtr[x_new(ind_x, ind_y + 1, length)];
 	}
-	return std::min(y_minus, y_plus);
+	return min_data(y_minus, y_plus);
 }
 
 dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
@@ -140,7 +138,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		c = (dataType)(Y * Y - hy_2 * P_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
 			if (solution >= Y) {
 				return solution;
 			}
@@ -161,7 +159,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
-			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
 			if (solution >= X)
 			{
 				return solution;
@@ -183,16 +181,16 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
-			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
-			if (solution >= std::max(X, Y)) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution >= max_data(X, Y)) {
 				return solution;
 			}
 			else {
-				return (dataType)(std::min(X + hx * P, Y + hy * P));
+				return (dataType)(min_data(X + hx * P, Y + hy * P));
 			}
 		}
 		else {
-			return (dataType)(std::min(X + hx * P, Y + hy * P));
+			return (dataType)(min_data(X + hx * P, Y + hy * P));
 		}
 	}
 
