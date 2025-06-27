@@ -1,0 +1,49 @@
+#include "fast_marching_front_propagation.h"
+
+void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* potential, Point2D* endPoints, const PropagationType pType)
+{
+	switch (pType)
+	{
+    /*	case PARTIAL_FRONT_PROPAGATION:
+		partialFrontPropagation(inputImageData, potential, endPoints);
+		break;
+	case FRONT_PROPAGATION:
+		frontPropagation(inputImageData, potential, endPoints);
+		break;
+	case DOUBLE_FRONT_PROPAGATION:
+		doubleFrontPropagation(inputImageData, potential, endPoints);
+		break;
+	case KEY_POINT_DETECTION:
+		frontPropagationsWithKeyPointDetection(inputImageData, potential, endPoints);
+		break;
+	case DISTANCE_MAP:
+		distanceMapFastMarching(inputImageData, potential, endPoints);
+		break*/;
+	default:
+		break;
+	}
+}
+
+void fastMarchingfrontPropagation(Image_Data inputImageData, dataType** potential, Point3D* endPoints, const PropagationType pType)
+{
+	switch (pType)
+	{
+		/*	case PARTIAL_FRONT_PROPAGATION:
+			partialFrontPropagation(inputImageData, potential, endPoints);
+			break;
+		case FRONT_PROPAGATION:
+			frontPropagation(inputImageData, potential, endPoints);
+			break;
+		case DOUBLE_FRONT_PROPAGATION:
+			doubleFrontPropagation(inputImageData, potential, endPoints);
+			break;
+		case KEY_POINT_DETECTION:
+			frontPropagationsWithKeyPointDetection(inputImageData, potential, endPoints);
+			break;
+		case DISTANCE_MAP:
+			distanceMapFastMarching(inputImageData, potential, endPoints);
+			break*/;
+	default:
+		break;
+	}
+}

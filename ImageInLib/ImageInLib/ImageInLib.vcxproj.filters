@@ -353,6 +353,12 @@
     <ClCompile Include="src\front_propagation.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\fast_marching_front_propagation.cpp">
+      <Filter>Source Files\Interfaces\Front Propagation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\partial_front_propagation.cpp">
+      <Filter>Source Files\Front Popagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -530,6 +536,12 @@
       <Filter>Header Files\Shape Generation</Filter>
     </ClInclude>
     <ClInclude Include="include\front_propagation.h">
+      <Filter>Header Files\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fast_marching_front_propagation.h">
+      <Filter>Header Files\Interfaces\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\partial_front_propagation.h">
       <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
   </ItemGroup>

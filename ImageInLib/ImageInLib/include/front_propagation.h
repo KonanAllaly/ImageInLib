@@ -53,5 +53,5 @@
 	/// <param name="in_Process">A reference to the vector representing the current processing heap of 2D points.</param>
 	/// <param name="point">The 2D point to be added to the processing heap.</param>
 	void addPointHeap2D(std::vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
-
+	
 	int getIndexFromHeap2D(std::vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
