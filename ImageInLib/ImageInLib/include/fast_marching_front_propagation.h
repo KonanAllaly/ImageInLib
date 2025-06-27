@@ -1,6 +1,7 @@
 
 #pragma once
 #include "front_propagation.h"
+#include "partial_front_propagation.h"
 
 	typedef enum
 	{
@@ -11,6 +12,6 @@
 		DISTANCE_MAP = 5
 	} PropagationType;
 
-	void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* potential, Point2D* endPoints, const PropagationType pType);
+	void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* endPoints, const PropagationType pType);
 
 	void fastMarchingfrontPropagation(Image_Data inputImageData, dataType** potential, Point3D* endPoints, const PropagationType pType);

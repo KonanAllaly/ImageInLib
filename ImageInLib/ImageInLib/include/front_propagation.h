@@ -53,4 +53,35 @@
 	/// <param name="point">The 2D point to be added to the processing heap.</param>
 	void addPointHeap2D(std::vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 	
+	/// <summary>
+	/// Returns the index of the element at the specified 2D coordinates in a 1D vector representing a 2D heap structure.
+	/// </summary>
+	/// <param name="in_Process">A reference to a vector of pointFastMarching2D objects representing the 2D heap.</param>
+	/// <param name="i">The row index of the element.</param>
+	/// <param name="j">The column index of the element.</param>
+	/// <returns>The index in the vector corresponding to the element at position (i, j) in the 2D heap.</returns>
 	int getIndexFromHeap2D(std::vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
+
+	/// <summary>
+	/// Return the minimum action value in x direction for a given point in a 2D action map.
+	/// </summary>
+	/// <param name="actionMapPtr">Pointer to the action map</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="ind_x">x coordinate of current point</param>
+	/// <param name="ind_y">y coordinate of current point</param>
+	/// <returns>INIFITY if the point is on the boundary or UNKNOW or minimum value using upwind principle</returns>
+	dataType selectX(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
+
+	/// <summary>
+	/// Return the minimum action value in y direction for a given point in a 2D action map.
+	/// </summary>
+	/// <param name="actionMapPtr">Pointer to the action map</param>
+	/// <param name="length">image length</param>
+	/// <param name="width">image width</param>
+	/// <param name="ind_x">x coordinate of current point</param>
+	/// <param name="ind_y">y coordinate of current point</param>
+	/// <returns>INIFITY if the point is on the boundary or UNKNOW or minimum value using upwind principle</returns>
+	dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
+
+	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h);

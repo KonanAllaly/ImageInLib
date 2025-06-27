@@ -18,50 +18,6 @@ using namespace std;
 
 //Functions for 2D images
 
-dataType selectX(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J) {
-	// this function return the minimum in the upwind principle
-	// x--->j and y--->i
-	dataType j_minus, j_plus;
-
-	if (J == 0) {
-		j_minus = INFINITY;
-	}
-	else {
-		j_minus = distanceFuncPtr[x_new(J - 1, I, dimJ)];
-	}
-
-	if (J == dimJ - 1) {
-		j_plus = INFINITY;
-	}
-	else {
-		j_plus = distanceFuncPtr[x_new(J + 1, I, dimJ)];
-	}
-
-	return min(j_minus, j_plus);
-}
-
-dataType selectY(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J) {
-	// this function return the minimum in the upwind principle
-	// x--->j and y--->i
-	dataType i_minus, i_plus;
-
-	if (I == 0) {
-		i_minus = BIG_VALUE;
-	}
-	else {
-		i_minus = distanceFuncPtr[x_new(J, I - 1, dimJ)];
-	}
-
-	if (I == dimI - 1) {
-		i_plus = BIG_VALUE;
-	}
-	else {
-		i_plus = distanceFuncPtr[x_new(J, I + 1, dimJ)];
-	}
-
-	return min(i_minus, i_plus);
-}
-
 dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
 
 	//This fuction is used the solve the following quadratic coming the discretization 

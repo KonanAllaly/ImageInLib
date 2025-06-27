@@ -1,12 +1,13 @@
 #include "fast_marching_front_propagation.h"
 
-void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* potential, Point2D* endPoints, const PropagationType pType)
+void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* endPoints, const PropagationType pType)
 {
 	switch (pType)
 	{
-    /*	case PARTIAL_FRONT_PROPAGATION:
-		partialFrontPropagation(inputImageData, potential, endPoints);
+    case PARTIAL_FRONT_PROPAGATION:
+		partialFrontPropagation2D(inputImageData, actionMapPtr, potentialPtr, endPoints);
 		break;
+	/*
 	case FRONT_PROPAGATION:
 		frontPropagation(inputImageData, potential, endPoints);
 		break;

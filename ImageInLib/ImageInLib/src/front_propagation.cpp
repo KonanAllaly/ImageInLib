@@ -83,6 +83,40 @@ int getIndexFromHeap2D(std::vector<pointFastMarching2D>& in_Process, size_t i, s
 	return -1; //not found
 }
 
+dataType selectX(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
+	dataType x_minus, x_plus;
+	if (ind_x == 0) {
+		x_minus = INFINITY;
+	}
+	else {
+		x_minus = actionMapPtr[x_new(ind_x - 1, ind_y, length)];
+	}
+	if (ind_x == length - 1) {
+		x_plus = INFINITY;
+	}
+	else {
+		x_plus = actionMapPtr[x_new(ind_x + 1, ind_y, length)];
+	}
+	return std::min(x_minus, x_plus);
+}
+
+dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
+	dataType y_minus, y_plus;
+	if (ind_y == 0) {
+		y_minus = INFINITY;
+	}
+	else {
+		y_minus = actionMapPtr[x_new(ind_x, ind_y - 1, length)];
+	}
+	if (ind_y == width - 1) {
+		y_plus = INFINITY;
+	}
+	else {
+		y_plus = actionMapPtr[x_new(ind_x, ind_y + 1, length)];
+	}
+	return std::min(y_minus, y_plus);
+}
+
 dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;

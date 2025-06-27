@@ -2,4 +2,4 @@
 
 #include "front_propagation.h"
 
-void partialFrontPropagation(Image_Data inputImageData, dataType** potential, Point3D* endPoints);
+bool partialFrontPropagation2D(Image_Data2D imageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* endPoints);
