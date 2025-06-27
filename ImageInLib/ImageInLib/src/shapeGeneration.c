@@ -59,8 +59,8 @@ bool generate3DCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_
 	{
 	case SPHERE_3D_CURVE:
 		return generateSphereCurve(pCurve, pInitialPoints, initialPointsCount, pointsDistance);
-	case LINE_3D_CURVE:
-		return generateStraightLineCurve(pCurve, pInitialPoints, initialPointsCount, pointsDistance);
+	//case LINE_3D_CURVE:
+	//	return generateStraightLineCurve(pCurve, pInitialPoints, initialPointsCount, pointsDistance);
 	default:
 		return false;
 	}
