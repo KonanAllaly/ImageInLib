@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "include/front_propagation.h"
+
 using namespace std;
 
 	//2D functions
@@ -16,30 +18,7 @@ using namespace std;
 		size_t x, y;
 	} point2D;
 
-	typedef struct {
-		size_t x, y;
-		dataType arrival;
-	}pointFastMarching2D;
-
-	// heap functions
-
-	void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b);
-
-	void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos);
-
-	void heapifyUp2D(vector<pointFastMarching2D>& in_Process, int pos);
-
-	void heapifyVector2D(vector<pointFastMarching2D>& in_Process);
-
-	void deleteRootHeap2D(vector<pointFastMarching2D>& in_Process);
-
-	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
-
-	int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
-
 	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints);
-
-	//fast marching functions
 
 	dataType solve2dQuadratic(dataType X, dataType Y, dataType W);
 

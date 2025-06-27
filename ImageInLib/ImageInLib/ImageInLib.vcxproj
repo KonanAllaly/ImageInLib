@@ -30,6 +30,7 @@
     <ClCompile Include="src\fast_sweeping_method.c" />
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\filtering.c" />
+    <ClCompile Include="src\front_propagation.cpp" />
     <ClCompile Include="src\generate_2d_curves.c" />
     <ClCompile Include="src\generate_3d_curves.c" />
     <ClCompile Include="src\generate_3d_shapes.c" />
@@ -81,6 +82,7 @@
     <ClInclude Include="include\distanceMaps.h" />
     <ClInclude Include="include\file.h" />
     <ClInclude Include="include\filtering.h" />
+    <ClInclude Include="include\front_propagation.h" />
     <ClInclude Include="include\Labelling.h" />
     <ClInclude Include="include\morphological_change.h" />
     <ClInclude Include="include\noiseGeneration.h" />
