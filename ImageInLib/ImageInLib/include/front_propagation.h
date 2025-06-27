@@ -4,7 +4,6 @@
 #include<vector>
 #include "common_functions.h"
 #include "../src/data_load.h"
-#include "../src/endianity_bl.h"
 #include <stdio.h>
 #include <string.h>
 

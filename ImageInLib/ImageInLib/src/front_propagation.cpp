@@ -1,4 +1,6 @@
 #include "front_propagation.h"
+#include <algorithm>
+#include <cmath>
 
 void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
 	pointFastMarching2D temp = *a;
@@ -79,4 +81,85 @@ int getIndexFromHeap2D(std::vector<pointFastMarching2D>& in_Process, size_t i, s
 		}
 	}
 	return -1; //not found
+}
+
+dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
+
+	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
+	dataType P_2 = P * P;
+
+	dataType hx = h.sx;
+	dataType hx_2 = h.sx * h.sx;
+
+	dataType hy = h.sy;
+	dataType hy_2 = h.sy * h.sy;
+
+	if (P <= 0.0) {
+		std::cerr << "Error: P must be positive." << std::endl;
+		return solution; // Return 0 if P is not positive
+	}
+
+	if (X == INFINITY && Y != INFINITY)
+	{
+		a = 1.0;
+		b = -2 * Y;
+		c = (dataType)(Y * Y - hy_2 * P_2);
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			if (solution >= Y) {
+				return solution;
+			}
+			else {
+				return (dataType)(Y + hy * P);
+			}
+		}
+		else {
+			return (dataType)(Y + hy * P);
+		}
+	}
+
+	if (X != INFINITY && Y == INFINITY)
+	{
+		a = 1.0;
+		b = -2 * X;
+		c = (dataType)(X * X - hx_2 * P_2);
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0)
+		{
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			if (solution >= X)
+			{
+				return solution;
+			}
+			else {
+				return (dataType)(X + hx * P);
+			}
+		}
+		else {
+			return (dataType)(X + hx * P);
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY)
+	{
+		a = hx_2 + hy_2;
+		b = -2 * (hy_2 * X + hx_2 * Y);
+		c = (dataType)(hy_2 * X * X + hx_2 * Y * Y - hx_2 * hy_2 * P_2);
+		delta = (dataType)(b * b - 4 * a * c);
+		if (delta >= 0)
+		{
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			if (solution >= std::max(X, Y)) {
+				return solution;
+			}
+			else {
+				return (dataType)(std::min(X + hx * P, Y + hy * P));
+			}
+		}
+		else {
+			return (dataType)(std::min(X + hx * P, Y + hy * P));
+		}
+	}
+
 }
