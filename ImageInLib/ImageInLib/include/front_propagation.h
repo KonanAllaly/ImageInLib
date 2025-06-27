@@ -13,6 +13,19 @@
 		dataType arrival;
 	}pointFastMarching2D;
 
+	typedef struct {
+		dataType K; //edge detection coef
+		dataType thres;//edge detector threshold
+		dataType eps; //path smothing parameter
+		double radius;
+	} Potential_Parameters;
+
+	typedef struct {
+		dataType tau; // used in the descent gradient
+		size_t max_iteration; // maximal iteration to stop descent gradient
+		double tolerance; //minimal distance to stop
+	} Path_Parameters;
+
 	/// <summary>
 	/// Swaps the values of two 2D points represented by pointFastMarching2D structures.
 	/// </summary>
