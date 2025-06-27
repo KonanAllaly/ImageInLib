@@ -35,6 +35,8 @@ using namespace std;
 
 	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 
+	int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
+
 	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints);
 
 	//fast marching functions
@@ -91,6 +93,8 @@ using namespace std;
 	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
 
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
+
+	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 
 	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
 

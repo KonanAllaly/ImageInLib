@@ -18,41 +18,6 @@ using namespace std;
 
 //Functions for 2D images
 
-dataType solve2dQuadratic(dataType X, dataType Y, dataType W) {
-	//This fuction is used the solve the following quadratic coming the discretization 
-	// by upwind principle in the implementation of the fast marching method 
-	// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
-	dataType sol = 0.0, a, b, c, delta;
-
-	a = 2.0; 
-	if (X == INFINITY) {
-		X = 0; a--;
-	}
-	if (Y == INFINITY) {
-		Y = 0; a--;
-	}
-
-	b = -2 * (X + Y); 
-	c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-	delta = (dataType)(pow(b, 2) - 4 * a * c);
-
-	if (delta >= 0) {
-		sol = (dataType)((-b + sqrt(delta)) / (2 * a));
-	}
-	else {
-		sol = (dataType)(min(X, Y) + W);
-	}
-
-	if (sol < 0) {
-		cout << "The solution is negative " << endl;
-		return 0;
-	}
-	else {
-		return sol;
-	}
-	
-}
-
 dataType selectX(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J) {
 	// this function return the minimum in the upwind principle
 	// x--->j and y--->i
@@ -95,6 +60,64 @@ dataType selectY(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ
 	}
 
 	return min(i_minus, i_plus);
+}
+
+dataType solve2dQuadratic(dataType X, dataType Y, dataType P) {
+
+	//This fuction is used the solve the following quadratic coming the discretization 
+	// by upwind principle in the implementation of the fast marching method 
+	// aU^2 -2U(X+Y) + (X^2 + Y^2 - W) = 0
+
+	/* In the cuurrent implmentation, the grid is supposed to be uniform with grid size hx= hy = 1.0 */
+
+	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta;
+	dataType P_2 = P * P;
+
+	if (P <= 0) {
+		std::cout << "The potential should be positive";
+		return INFINITY;
+	}
+
+	if (X != INFINITY && Y == INFINITY) {
+		a = 1.0;
+		b = -2 * X;
+		c = (dataType)(pow(X, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = X + P;
+		}
+	}
+
+	if (X == INFINITY && Y != INFINITY) {
+		a = 1.0;
+		b = -2 * Y;
+		c = (dataType)(pow(Y, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = Y + P;
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY) {
+		a = 2.0;
+		b = -2 * (X + Y);
+		c = (dataType)(pow(X, 2) + pow(Y, 2) - P_2);
+		delta = (dataType)(pow(b, 2) - 4 * a * c);
+		if (delta >= 0) {
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+		}
+		else {
+			solution = min(X, Y) + P;
+		}
+	}
+
+	return solution;
 }
 
 bool computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width, dataType h) {
@@ -303,6 +326,15 @@ void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D
 	heapifyUp2D(in_Process, l - 1);
 }
 
+int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j) {
+	for (int ind = 0; ind < in_Process.size(); ind++) {
+		if (in_Process[ind].x == i && in_Process[ind].y == j) {
+			return ind;
+		}
+	}
+	return -1; //not found
+}
+
 bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints) {
 
 	short* labelArray = new short[height * width];
@@ -394,7 +426,7 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	pointFastMarching2D current;
 	short label = 0;
 
-	while (inProcess.size() != 0) {
+	while (inProcess.size() > 0) {
 
 		current = inProcess[0];
 		j = current.x;
@@ -424,6 +456,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dEast < distancePtr[indxEast]) {
 							distancePtr[indxEast] = dEast;
+							int indx = getIndexFromHeap2D(inProcess, jplus, i);
+							if(indx != -1) {
+								inProcess[indx].arrival = dEast;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -450,6 +487,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dWest < distancePtr[indxWest]) {
 							distancePtr[indxWest] = dWest;
+							int indx = getIndexFromHeap2D(inProcess, jminus, i);
+							if(indx != -1) {
+								inProcess[indx].arrival = dWest;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -476,6 +518,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dNorth < distancePtr[indxNorth]) {
 							distancePtr[indxNorth] = dNorth;
+							int indx = getIndexFromHeap2D(inProcess, j, iminus);
+							if(indx != -1) {
+								inProcess[indx].arrival = dNorth;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -504,6 +551,11 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 					if (label == 2) {
 						if (dSouth < distancePtr[indxSouth]) {
 							distancePtr[indxSouth] = dSouth;
+							int indx = getIndexFromHeap2D(inProcess, j, iplus);
+							if(indx != -1) {
+								inProcess[indx].arrival = dSouth;
+								heapifyUp2D(inProcess, indx);
+							}
 						}
 					}
 				}
@@ -526,47 +578,26 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	dataType iNew = 0.0;
 	dataType jNew = 0.0;
 
-	dataType * gradientVectorX = new dataType[dim2d];
-	dataType * gradientVectorY = new dataType[dim2d];
-
-	//Normalization of the gradient
-	computeImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
-	dataType norm_of_gradient = computeGradientNorm2d(gradientVectorX, gradientVectorY, height, width);
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			xd = x_new(j, i, width);
-			gradientVectorX[xd] = gradientVectorX[xd] / norm_of_gradient;
-			gradientVectorY[xd] = gradientVectorY[xd] / norm_of_gradient;
-		}
-	}
-
-
 	//Find the closest point till the last point
 	size_t cpt = 1;
 	i_current = i_end; j_current = j_end;
 	resultedPath[x_new(j_current, i_current, width)] = 1;
 
-	// Make the end point visible on the result
-	//===============
-	resultedPath[x_new(j_init, i_init, width)] = 1; 
-	resultedPath[x_new(j_init, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init, i_init + 1, width)] = 1;
-	resultedPath[x_new(j_init - 1, i_init, width)] = 1; 
-	resultedPath[x_new(j_init - 1, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init - 1, i_init + 1, width)] = 1; 
-	resultedPath[x_new(j_init + 1, i_init, width)] = 1; 
-	resultedPath[x_new(j_init + 1, i_init - 1, width)] = 1;
-	resultedPath[x_new(j_init + 1, i_init + 1, width)] = 1;
-	//===============
-
 	iNew = (dataType)i_current; 
 	jNew = (dataType)j_current;
 	dataType currentDist = 0;
 
+	Point2D v_gradient;
+	const FiniteVolumeSize2D spacing = { 1.0, 1.0 };
+	dataType norm_gradient = 0.0;	
+
 	do{
 
-		iNew = iNew - tau * gradientVectorY[x_new(j_current, i_current, width)];
-		jNew = jNew - tau * gradientVectorX[x_new(j_current, i_current, width)];
+		getGradient2D(distanceFuncPtr, width, height, i_current, j_current, spacing, &v_gradient);
+		norm_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y);
+
+		iNew = iNew - tau * (v_gradient.x / norm_gradient);
+		jNew = jNew - tau * (v_gradient.y / norm_gradient);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init));
 
@@ -582,112 +613,12 @@ bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const siz
 	cout << "\nDistance to the end point : " << dist_min << endl;
 	cout << "\nNumber of iterations : " << cpt << endl;
 
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-
 	return true;
 }
 
 //===========================================================
 
 //Functions for 3D images
-// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
-dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W) {
-
-	dataType sol = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
-
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (Y + Z));
-		c = (dataType)(pow(Y, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(Y, Z) + W;
-		}
-	}
-
-	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (X + Z));
-		c = (dataType)(pow(X, 2) + pow(Z, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, Z) + W;
-		}
-	}
-
-	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
-		a = 2;
-		b = (dataType)(- 2 * (X + Y));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) - W);
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, Y) + W;
-		}
-	}
-
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
-		a = 1;
-		b = -2 * Z;
-		c = pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return Z + W;
-		}
-	}
-
-	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
-		a = 1;
-		b = -2 * Y;
-		c = pow(Y, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return Y + W;
-		}
-	}
-
-	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
-		a = 1;
-		b = -2 * X;
-		c = pow(X, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return X + W;
-		}
-	}
-
-	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 3;
-		b = -2 * (X + Y + Z);
-		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - W;
-		delta = b * b - 4 * a * c;
-		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
-		}
-		else {
-			return min(X, min(Y, Z)) + W;
-		}
-	}
-
-}
 
 dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
 
@@ -752,6 +683,107 @@ dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t d
 	}
 
 	return min(k_minus, k_plus);
+}
+
+// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
+dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType P) {
+
+	/* In the cuurrent implementation, the grid is supposed to be uniform with grid size hx= hy = hz = 1.0 */
+
+	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
+	dataType P_2 = P * P;
+
+	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (Y + Z));
+		c = (dataType)(pow(Y, 2) + pow(Z, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(Y, Z) + P;
+		}
+	}
+
+	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (X + Z));
+		c = (dataType)(pow(X, 2) + pow(Z, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, Z) + P;
+		}
+	}
+
+	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
+		a = 2;
+		b = (dataType)(-2 * (X + Y));
+		c = (dataType)(pow(X, 2) + pow(Y, 2) - P_2);
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, Y) + P;
+		}
+	}
+
+	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
+		a = 1;
+		b = -2 * Z;
+		c = pow(Z, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return Z + P;
+		}
+	}
+
+	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
+		a = 1;
+		b = -2 * Y;
+		c = pow(Y, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return Y + P;
+		}
+	}
+
+	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
+		a = 1;
+		b = -2 * X;
+		c = pow(X, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return X + P;
+		}
+	}
+
+	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
+		a = 3;
+		b = -2 * (X + Y + Z);
+		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - P_2;
+		delta = b * b - 4 * a * c;
+		if (delta >= 0) {
+			return (-b + sqrt(delta)) / (2 * a);
+		}
+		else {
+			return min(X, min(Y, Z)) + P;
+		}
+	}
+
 }
 
 dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
@@ -993,6 +1025,16 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 }
 
+int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k) {
+	//we use type int for indexes because we do operations like pos--
+	for (int ind = 0; ind < in_Process.size(); ind++) {
+		if (in_Process[ind].x == i && in_Process[ind].y == j && in_Process[ind].z == k) {
+			return ind;
+		}
+	}
+	return -1; //not found
+}
+
 bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
 
 	if (imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL) {
@@ -1171,6 +1213,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dBottom < distanceFuncPtr[kplus][currentIndx]) {
 							distanceFuncPtr[kplus][currentIndx] = dBottom;
+							int index = getIndexFromHeap3D(inProcess, j, i, kplus);
+							if (index != -1) {
+								inProcess[index].arrival = dBottom;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1197,6 +1244,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dTop < distanceFuncPtr[kminus][currentIndx]) {
 							distanceFuncPtr[kminus][currentIndx] = dTop;
+							int index = getIndexFromHeap3D(inProcess, j, i, kminus);
+							if (index != -1) {
+								inProcess[index].arrival = dTop;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1224,6 +1276,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dEast < distanceFuncPtr[k][indxEast]) {
 							distanceFuncPtr[k][indxEast] = dEast;
+							int index = getIndexFromHeap3D(inProcess, j, iplus, k);
+							if (index != -1) {
+								inProcess[index].arrival = dEast;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1251,6 +1308,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dWest < distanceFuncPtr[k][indxWest]) {
 							distanceFuncPtr[k][indxWest] = dWest;
+							int index = getIndexFromHeap3D(inProcess, j, iminus, k);
+							if (index != -1) {
+								inProcess[index].arrival = dWest;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1278,6 +1340,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dNorth < distanceFuncPtr[k][indxNorth]) {
 							distanceFuncPtr[k][indxNorth] = dNorth;
+							int index = getIndexFromHeap3D(inProcess, jminus, i, k);
+							if (index != -1) {
+								inProcess[index].arrival = dNorth;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1305,6 +1372,11 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 					if (label == 2) {
 						if (dSouth < distanceFuncPtr[k][indxSouth]) {
 							distanceFuncPtr[k][indxSouth] = dSouth;
+							int index = getIndexFromHeap3D(inProcess, jplus, i, k);
+							if (index != -1) {
+								inProcess[index].arrival = dSouth;
+								heapifyUp3D(inProcess, index);
+							}
 						}
 					}
 				}
@@ -1329,32 +1401,6 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	dataType tau = 0.8, tol = 1.0;
 	size_t i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
 	size_t i_end = seedPoints[1].y, j_end = seedPoints[1].x, k_end = seedPoints[1].z;
-
-	dataType** gradientVectorX = new dataType * [height];
-	dataType** gradientVectorY = new dataType * [height];
-	dataType** gradientVectorZ = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType [dim2d];
-		gradientVectorY[k] = new dataType [dim2d];
-		gradientVectorZ[k] = new dataType [dim2d];
-	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
-		return false;
-
-	//Normalization of the gradient
-	compute3dImageGradient(distanceFuncPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
-	dataType norm_of_gradient = computeGradientNorm3d(gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height);
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(j, i, width);
-				gradientVectorX[k][xd] = gradientVectorX[k][xd] / norm_of_gradient;
-				gradientVectorY[k][xd] = gradientVectorY[k][xd] / norm_of_gradient;
-				gradientVectorZ[k][xd] = gradientVectorZ[k][xd] / norm_of_gradient;
-			}
-		}
-	}
 	
 	//Find the closest point till the last point
 	size_t cpt = 0;
@@ -1370,12 +1416,19 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 	dataType currentDist = 0.0;
 	dataType dist_min = 0.0;
 
+	const FiniteVolumeSize3D spacing = { 1.0, 1.0, 1.0 };
+	Point3D v_gradient;
+	dataType norm_of_gradient = 0;
+
 	do {
 
+		getGradient3D(distanceFuncPtr, length, width, height, i_current, j_current, k_current, spacing, &v_gradient);
+		norm_of_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y + v_gradient.z * v_gradient.z);	
+
 		currentIndx = x_new(j_current, i_current, width);
-		iNew = iNew - tau * gradientVectorY[k_current][currentIndx];
-		jNew = jNew - tau * gradientVectorX[k_current][currentIndx];
-		kNew = kNew - tau * gradientVectorZ[k_current][currentIndx];
+		iNew = iNew - tau * (v_gradient.x / norm_of_gradient);
+		jNew = jNew - tau * (v_gradient.y / norm_of_gradient);
+		kNew = kNew - tau * (v_gradient.z / norm_of_gradient);
 
 		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
 
@@ -1383,23 +1436,12 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 		j_current = (size_t)(round(jNew));
 		k_current = (size_t)(round(kNew));
 		resultedPath[k_current][x_new(j_current, i_current, width)] = 1;
-
-		//currentDist = distanceFuncPtr[k_current][x_new(j_current, i_current, width)];
 		cpt++;
 
 	} while (dist_min > tol && cpt < max_iter);
 
 	cout << "\nDistance to the end point : " << dist_min << endl;
 	cout << "\nNumber of iterations : " << cpt << endl;
-
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
-	}
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-	delete[] gradientVectorZ;
 
 	return true;
 }
