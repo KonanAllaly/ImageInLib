@@ -1,3 +1,6 @@
+#include<iostream>
+#include<vector>
+
 #include "front_propagation.h"
 
 void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
@@ -195,3 +198,5 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 	}
 
 }
+
+
