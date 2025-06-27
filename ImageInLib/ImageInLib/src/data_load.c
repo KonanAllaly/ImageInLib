@@ -1,10 +1,3 @@
-#pragma warning(disable : 4996)
-
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4D Image Segmentation Methods
-* Language:  C
-*/
 
 #include "common_functions.h"
 #include "data_load.h"
@@ -156,14 +149,6 @@ bool load3dDataArrayRAW(dataType ** imageDataPtr, const size_t imageLength, cons
 			}
 		}
 	}
-  
-	//for (k = 0; k < imageHeight; k++)
-	//{
-	//	for (i = 0; i < imageLength * imageWidth; i++)
-	//	{
-	//		revertBytes(&imageDataPtr[k][i], sizeof(dataType));
-	//	}
-	//}
   
 	fclose(file);
 	return true;

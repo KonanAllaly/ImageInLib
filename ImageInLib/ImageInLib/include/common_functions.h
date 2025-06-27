@@ -192,6 +192,10 @@ extern "C" {
 	/*
 	* Calculate to 1D representation from 2D Array
 	* x from column and row indices
+    #include <stddef.h> // Ensure this include is present at the top of the file  
+
+    // Replace the problematic line with the following:  
+    typedef size_t numPoints;
 	*/
 	size_t x_new(const size_t rowIndex, const size_t columnIndex, const size_t rowLength);
 	//==============================================================================
