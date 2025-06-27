@@ -359,6 +359,9 @@
     <ClCompile Include="src\partial_front_propagation.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\path_extraction.cpp">
+      <Filter>Source Files\Front Popagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -542,6 +545,9 @@
       <Filter>Header Files\Interfaces\Front propagation</Filter>
     </ClInclude>
     <ClInclude Include="include\partial_front_propagation.h">
+      <Filter>Header Files\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\path_extraction.h">
       <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
   </ItemGroup>

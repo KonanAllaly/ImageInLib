@@ -429,56 +429,6 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	return true;
 }
 
-bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints) {
-
-	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
-		return false;
-
-	size_t i, j, xd, dim2d = height * width;
-	dataType tau = 0.8, dist_min = INFINITY, tol = 1.0;
-	size_t i_init = seedPoints[0].y, j_init = seedPoints[0].x, i_end = seedPoints[1].y, j_end = seedPoints[1].x;
-	size_t i_current, j_current;
-	dataType iNew = 0.0;
-	dataType jNew = 0.0;
-
-	//Find the closest point till the last point
-	size_t cpt = 1;
-	i_current = i_end; j_current = j_end;
-	resultedPath[x_new(j_current, i_current, width)] = 1;
-
-	iNew = (dataType)i_current; 
-	jNew = (dataType)j_current;
-	dataType currentDist = 0;
-
-	Point2D v_gradient;
-	const FiniteVolumeSize2D spacing = { 1.0, 1.0 };
-	dataType norm_gradient = 0.0;	
-
-	do{
-
-		getGradient2D(distanceFuncPtr, width, height, i_current, j_current, spacing, &v_gradient);
-		norm_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y);
-
-		iNew = iNew - tau * (v_gradient.x / norm_gradient);
-		jNew = jNew - tau * (v_gradient.y / norm_gradient);
-
-		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init));
-
-		i_current = round(iNew); j_current = round(jNew);
-		resultedPath[x_new(j_current, i_current, width)] = 1.0;
-		
-		currentDist = distanceFuncPtr[x_new(j_current, i_current, width)];
-
-		cpt++;
-	}
-	while(dist_min > tol && cpt < 10000000);
-
-	cout << "\nDistance to the end point : " << dist_min << endl;
-	cout << "\nNumber of iterations : " << cpt << endl;
-
-	return true;
-}
-
 //===========================================================
 
 //Functions for 3D images
