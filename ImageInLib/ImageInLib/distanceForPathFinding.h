@@ -8,19 +8,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "include/front_propagation.h"
-
 using namespace std;
 
 	//2D functions
 
-	typedef struct {
-		size_t x, y;
-	} point2D;
-
+	/*
 	bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints);
 
 	dataType solve2dQuadratic(dataType X, dataType Y, dataType W);
+	*/
 
 	dataType selectX(dataType* distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t I, const size_t J);
 
@@ -29,10 +25,6 @@ using namespace std;
 	bool computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width, dataType h);
 
 	dataType computeGradientNorm2d(dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width);
-
-	bool computePotential(dataType * imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, point2D* seedPoints);
-
-	bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints);
 
 	//==============================================================
 	 

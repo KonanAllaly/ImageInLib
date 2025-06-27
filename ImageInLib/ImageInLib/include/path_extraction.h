@@ -1,3 +1,3 @@
 #include "front_propagation.h"
 
-bool shortestPath2d(dataType* distanceFuncPtr, dataType* resultedPath, const size_t height, const size_t width, dataType h, point2D* seedPoints);
+bool shortestPath2d(Image_Data2D actionMapStr, Point2D* seedPoints, std::vector<Point2D>& path_points, Path_Parameters parameters);

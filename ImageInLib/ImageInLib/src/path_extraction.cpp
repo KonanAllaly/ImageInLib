@@ -1,13 +1,15 @@
-#include "path_extraction"
+#include "path_extraction.h"
 
-bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters) {
+bool shortestPath2d(Image_Data2D actionMapStr, Point2D* seedPoints, std::vector<Point2D>& path_points, Path_Parameters parameters) {
 
-	if (distanceFuncPtr.imageDataPtr == NULL || seedPoints == NULL)
+	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
 		return false;
 
-	const size_t height = distanceFuncPtr.height;
-	const size_t width = distanceFuncPtr.width;
+	const size_t length = actionMapStr.height;
+	const size_t width = actionMapStr.width;
 	dataType dist_min = 0.0;
+
+	const FiniteVolumeSize2D spacing = { actionMapStr.spacing.sx, actionMapStr.spacing.sx };
 
 	size_t i = (size_t)seedPoints[1].x;
 	size_t j = (size_t)seedPoints[1].y;
@@ -20,7 +22,7 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Po
 
 	do {
 
-		getGradient2D(distanceFuncPtr.imageDataPtr, height, width, i, j, distanceFuncPtr.spacing, &grad);
+		getGradient2D(actionMapStr.imageDataPtr, actionMapStr.height, actionMapStr.width, i, j, spacing, &grad);
 		dataType gradNorm = sqrt(grad.x * grad.x + grad.y * grad.y);
 		x -= tau * grad.x / gradNorm;
 		y -= tau * grad.y / gradNorm;

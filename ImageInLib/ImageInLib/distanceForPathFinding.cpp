@@ -134,70 +134,8 @@ dataType computeGradientNorm2d(dataType* gradientVectorX, dataType* gradientVect
 	return sqrt(norm_array);
 }
 
-bool computePotential(dataType* imageDataPtr, dataType* potentialFuncPtr, const size_t height, const size_t width, point2D * seedPoints)
-{
-	//This function is used to compute the potential function
-	//were epsilon can be used also as parameter
-	//epislon = 0.01 was perfect for our experimentations
-
-	if (imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
-		return false;
-
-	size_t i, j;
-	size_t i1 = seedPoints[0].y, j1 = seedPoints[0].x;
-	size_t i2 = seedPoints[1].y, j2 = seedPoints[1].x;
-
-	dataType seedVal = (dataType)((imageDataPtr[x_new(j1, i1, width)] + imageDataPtr[x_new(j2, i2, width)]) / 2.0);
-	size_t currentIndx = 0;
-	dataType epsylon = 0.01;
-	dataType K = 0.00005;
-
-	dataType* gradientVectorX = new dataType[height * width];
-	dataType* gradientVectorY = new dataType[height * width];
-	computeImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, height, width, 1.0);
-
-	size_t seedIndice = x_new(j1, i1, width);
-	dataType ux0 = gradientVectorX[seedIndice], uy0 = gradientVectorY[seedIndice], ux = 0.0, uy = 0.0;
-
-	//Computation of potential function
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			currentIndx = x_new(j, i, width);
-			potentialFuncPtr[currentIndx] = abs(seedVal - imageDataPtr[currentIndx]);
-		}
-	}
-
-	//find the max potential
-	dataType max_potential = -1 * INFINITY;
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			currentIndx = x_new(j, i, width);
-			if (potentialFuncPtr[currentIndx] > max_potential) {
-				max_potential = potentialFuncPtr[currentIndx];
-			}
-		}
-	}
-
-	//Normalization
-	dataType weight = 0.0, edgeValue = 0.0, norm_of_gradient = 0.0;
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			currentIndx = x_new(j, i, width);
-			ux = gradientVectorX[currentIndx]; uy = gradientVectorY[currentIndx]; norm_of_gradient = sqrt(ux * ux + uy * uy);
-			edgeValue = 1 + K * (ux * ux + uy * uy);
-			weight = potentialFuncPtr[currentIndx] / max_potential;
-			potentialFuncPtr[currentIndx] = (dataType)(epsylon + weight * edgeValue);
-		}
-	}
-
-	delete[] gradientVectorX;
-	delete[] gradientVectorY;
-
-	return true;
-}
-
 //function to swap 2D points in the fast marching contest
-
+/*
 bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* potentialPtr, const size_t height, const size_t width, point2D* seedPoints) {
 
 	short* labelArray = new short[height * width];
@@ -428,7 +366,7 @@ bool fastMarching2D(dataType* imageDataPtr, dataType* distancePtr, dataType* pot
 	}
 	return true;
 }
-
+*/
 //===========================================================
 
 //Functions for 3D images
