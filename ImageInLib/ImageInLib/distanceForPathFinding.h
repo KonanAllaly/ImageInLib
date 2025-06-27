@@ -13,7 +13,7 @@
 #include "../src/endianity_bl.h"
 #include <stdio.h>
 #include <string.h>
-#include<../src/imageInterpolation.h>
+#include <../src/imageInterpolation.h>
 
 using namespace std;
 
@@ -26,6 +26,22 @@ using namespace std;
 		size_t x, y, z;
 		dataType arrival;
 	} pointFastMarching3D;
+
+	typedef struct {
+		union {
+			struct ptsstruct;
+			Point3D pt;
+		};
+		enum {
+			ALIVE = 0,
+			FAR_POINT = 1,
+			NARROW_BAND = 2
+		};
+		dataType arrivalTime;
+		bool isEndPoint;
+		void* prev_point;
+		void* next_point;
+	} frontPoint3D;
 
 	typedef struct {
 		dataType K; //edge detection coef
