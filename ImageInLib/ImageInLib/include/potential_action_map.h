@@ -2,8 +2,8 @@
 extern "C" {
 #endif
 
-#pragma once
-#include "front_propagation.h"
+//#pragma once
+//#include "front_propagation.h"
 
 /*
 typedef struct {  
