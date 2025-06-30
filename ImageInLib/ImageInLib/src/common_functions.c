@@ -205,8 +205,6 @@ void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWi
 	}
 }
 //==============================================================================
-
-//2D function
 void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth) {
 	size_t i, j, xd;
 	for (i = 0; i < imageHeight; i++) {
@@ -276,6 +274,29 @@ void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidt
 		toReflectImage[x] = toReflectImage[x - 1];
 	}
 
+}
+//==============================================================================
+void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p)
+{
+	size_t i, j;
+	size_t length = imageLength, width = imageWidth;
+	size_t rowLength = length + 2 * p;
+
+	// Modified Dimension less 1
+	size_t length_minus = length - 1, width_minus = width - 1;
+
+	// Y reflection
+	for (j = p; j <= (width_minus)+p; j++)
+	{
+		toReflectImage[x_new(p - 1, j, rowLength)] = toReflectImage[x_new(p + 1, j, rowLength)];
+		toReflectImage[x_new((length_minus)+p + 1, j, rowLength)] = toReflectImage[x_new((length_minus)+p - 1, j, rowLength)];
+	}
+	// X Direction
+	for (i = 0; i <= (length_minus)+2 * p; i++)
+	{
+		toReflectImage[x_new(i, p - 1, rowLength)] = toReflectImage[x_new(i, p + 1, rowLength)];
+		toReflectImage[x_new(i, (width_minus)+p + 1, rowLength)] = toReflectImage[x_new(i, (width_minus)+p - 1, rowLength)];
+	}
 }
 //==============================================================================
 double getPoint2DDistance(const Point2D a, const Point2D b)
@@ -523,7 +544,6 @@ bool initializeLinkedCurve(Curve2D* pcurve, LinkedCurve* plinked_curve, const bo
 
 	return true;
 }
-
 
 LinkedPoint* pushAfterPoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double point_x, const double point_y)
 {

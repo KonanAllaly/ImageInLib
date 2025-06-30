@@ -262,8 +262,6 @@ extern "C" {
 	void centroidImage(dataType** imageDataPtr, dataType* centroid, size_t imageHeight, size_t imageLength, size_t imageWidth, dataType imageBackground);
 	void centroidClipBox(dataType* centroid, ClipBox coord, dataType** imageDataPtr, size_t imageLength, dataType imageBackground);
 	//==============================================================================
-
-	//==============================================================================
 	void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
 	void copyDataTo2dExtendedArea(dataType* originalDataPtr, dataType* extendedDataPtr, const size_t originalHeight, const size_t originalWidth);
@@ -272,8 +270,10 @@ extern "C" {
 	//==============================================================================
 	void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
+	void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p);
+	//==============================================================================
 	double getPoint2DDistance(const Point2D a, const Point2D b);
-
+	//==============================================================================
 	/// <summary>
 	/// The points of pCurve are copied to pArray. The function expects same length of the particular objects (curve and array)
 	/// </summary>
