@@ -109,7 +109,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* actionMapPtr, d
 		labelArray[currentIndx] = 1;
 
 		// Exit when the final point is reached by the front
-		if (i == x_final_point && j == x_final_point) {
+		if (i == x_final_point && j == y_final_point) {
 			labelArray[currentIndx] = 1; // Mark the seed point as processed
 			break; 
 		}
