@@ -5,11 +5,9 @@ bool shortestPath2d(Image_Data2D actionMapStr, Point2D* seedPoints, std::vector<
 	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
 		return false;
 
-	const size_t length = actionMapStr.height;
-	const size_t width = actionMapStr.width;
 	dataType dist_min = 0.0;
 
-	const FiniteVolumeSize2D spacing = { actionMapStr.spacing.sx, actionMapStr.spacing.sx };
+	const FiniteVolumeSize2D spacing = { actionMapStr.spacing.sx, actionMapStr.spacing.sy };
 
 	size_t i = (size_t)seedPoints[1].x;
 	size_t j = (size_t)seedPoints[1].y;
@@ -24,6 +22,10 @@ bool shortestPath2d(Image_Data2D actionMapStr, Point2D* seedPoints, std::vector<
 
 		getGradient2D(actionMapStr.imageDataPtr, actionMapStr.height, actionMapStr.width, i, j, spacing, &grad);
 		dataType gradNorm = sqrt(grad.x * grad.x + grad.y * grad.y);
+		if(gradNorm < 1e-6) {
+			//Gradient is too small, stop the iteration to avoid division by zero
+			break;
+		}
 		x -= tau * grad.x / gradNorm;
 		y -= tau * grad.y / gradNorm;
 
