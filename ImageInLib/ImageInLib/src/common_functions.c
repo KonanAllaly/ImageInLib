@@ -491,7 +491,6 @@ bool getGradient2D(dataType* pbase_data, const size_t width, const size_t height
 	}
 	else
 	{
-		const size_t xtmp = x_new(x, y + 1, width);
 		dy = (pbase_data[x_new(x, y + 1, width)] - pbase_data[x_new(x, y - 1, width)]) / hy_c;
 	}
 
