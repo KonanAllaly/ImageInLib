@@ -362,6 +362,9 @@
     <ClCompile Include="src\path_extraction.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\gaussian.c">
+      <Filter>Source Files\Filtering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -549,6 +552,9 @@
     </ClInclude>
     <ClInclude Include="include\path_extraction.h">
       <Filter>Header Files\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gaussian.h">
+      <Filter>Header Files\Filtering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
