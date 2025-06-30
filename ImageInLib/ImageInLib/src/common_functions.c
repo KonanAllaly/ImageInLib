@@ -205,6 +205,35 @@ void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWi
 	}
 }
 //==============================================================================
+void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew){
+	
+	size_t i, dim2D = imageLength * imageWidth;
+
+	// Find the minimum and maximum values in the image data
+	dataType max_dta = imageDataPtr[0];
+	dataType min_dta = imageDataPtr[0];
+	for (i = 0; dim2D; i++) {
+		if (imageDataPtr[i] > max_dta) 
+		{
+			max_dta = imageDataPtr[i];
+		}
+		if( imageDataPtr[i] < min_dta) 
+		{
+			min_dta = imageDataPtr[i];
+		}
+	}
+
+	// Rescale from min_new to max_new
+	dataType diffOld = max_dta - min_dta;
+	dataType diffNew = maxNew - minNew;
+	dataType scale_factor = (diffNew) / (diffOld);
+
+	for(i = 0; i < dim2D; i++)
+	{
+		imageDataPtr[i] = scale_factor * (imageDataPtr[i] - max_dta) + maxNew;
+	}
+}
+//==============================================================================
 void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth) {
 	size_t i, j, xd;
 	for (i = 0; i < imageHeight; i++) {

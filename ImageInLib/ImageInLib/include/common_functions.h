@@ -254,6 +254,8 @@ extern "C" {
 	//==============================================================================
 	void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWidth, size_t imageHeight, dataType minNew, dataType maxNew, dataType max_dta, dataType min_dta);
 	//==============================================================================
+	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
+	//==============================================================================
 	typedef struct {
 		size_t k_min, i_min, j_min, k_max, i_max, j_max;
 	} ClipBox;
