@@ -2,8 +2,9 @@
 #include "partial_front_propagation.h"
 #include "front_propagation.h"
 #include "double_front_propagation.h"
+#include "key_points_detection.h"
 
-void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* firstActionMapPtr, dataType* secondActionMapPtr, dataType* potentialPtr, Point2D* endPoints, const PropagationType pType)
+void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* firstActionMapPtr, dataType* secondActionMapPtr, dataType* potentialPtr, Point2D* endPoints, const dataType LengthKeyPoints, std::vector<Point2D>& keyPoints, const PropagationType pType)
 {
 	switch (pType)
 	{
@@ -16,9 +17,9 @@ void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* first
 	case DOUBLE_FRONT_PROPAGATION:
 		doubleFrontPropagation2D(inputImageData, firstActionMapPtr, secondActionMapPtr, potentialPtr, endPoints);
 		break;
-	//case KEY_POINT_DETECTION:
-		//frontPropagationWithKeyPointDetection(inputImageData, firstActionMapPtr, potentialPtr, endPoints, LengthKeyPoints, key_points);
-		//break;
+	case KEY_POINT_DETECTION:
+		frontPropagationWithKeyPointDetection(inputImageData, firstActionMapPtr, potentialPtr, endPoints, LengthKeyPoints, keyPoints);
+		break;
 	default:
 		break;
 	}
