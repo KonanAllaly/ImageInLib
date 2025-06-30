@@ -2,7 +2,7 @@
 #include "math.h" // exp, pow, sqrt
 #include "gaussian.h"
 
-bool generateGaussianKernel(dataType** kernel, const dataType sigma) {
+bool generateGaussianKernel(dataType* kernel, const dataType sigma) {
 
 	if (kernel == NULL || sigma <= 0) {
 		return false;
@@ -10,22 +10,20 @@ bool generateGaussianKernel(dataType** kernel, const dataType sigma) {
 
 	dataType sum = 0.0;
 	size_t kernelSize = (size_t)(2 * sigma + 1);
-	for (size_t k = 0; k < kernelSize; k++) {
-		for (size_t i = 0; i < kernelSize; i++) {
-			for (size_t j = 0; j < kernelSize; j++) {
-				size_t xd = x_new(i, j, kernelSize);
-				kernel[k][xd] = (dataType)(exp(-( pow(i, 2) + pow(j, 2) + pow(k, 2) )) / (2.0 * pow(sigma, 2)));
-				sum += kernel[k][xd];
-			}
+	for (size_t i = 0; i < kernelSize; i++) 
+	{
+		for(size_t j = 0; j < kernelSize; j++) 
+		{
+			size_t xd = x_new(i, j, kernelSize);
+			kernel[xd] = (dataType)(exp(-( pow(i, 2) + pow(j, 2) )) / (2.0 * pow(sigma, 2)));
+			sum += kernel[xd];
 		}
 	}
 
 	//The empirical normalization is considered to avoid accumulated errors
 	// Analitical normalization ---> 1.0 / pow(sqrt(2.0 * M_PI * sigma * sigma), d);  d is the dimension
-	for (size_t k = 0; k < kernelSize; k++) {
-		for (size_t i = 0; i < kernelSize * kernelSize; i++) {
-			kernel[k][i] /= sum;
-		}
+	for (size_t i = 0; i < kernelSize * kernelSize; i++) {
+		kernel[i] /= sum;
 	}
 	return true;
 }
@@ -43,7 +41,7 @@ bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, c
 		return false;
 	}
 
-	dataType* kernel = (dataType*)malloc(kernelSize * kernelSize * sizeof(dataType*));
+	dataType* kernel = (dataType*)malloc(kernelSize * kernelSize * sizeof(dataType));
 	if (kernel == NULL) {
 		return false;
 	}
@@ -88,6 +86,7 @@ bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, c
 		}
 	}
 
+	free(imageDataExt);
 	free(kernel);
 
 	return true;

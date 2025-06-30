@@ -5,7 +5,7 @@ extern "C" {
 #pragma once
 #include "common_functions.h"
 
-	bool generateGaussianKernel(dataType** kernel, const dataType sigma);
+	bool generateGaussianKernel(dataType* kernel, const dataType sigma);
 	
 	bool gaussianSmoothing2D(dataType* imageDataPtr, dataType* smoothImageDataPtr, const size_t length, const size_t width, const dataType sigma);
 
