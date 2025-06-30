@@ -370,7 +370,7 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         {
             free(pscheme_data);
             length_of_data = linked_curve.number_of_points + 2;
-            pscheme_data = (SchemeData*)calloc(length_of_data, sizeof(SchemeData));
+            pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
         }
         
         //evolve curve

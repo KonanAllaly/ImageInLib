@@ -1,11 +1,5 @@
 #pragma warning(disable : 4996)
 
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4D Image Segmentation Methods
-* Language:  C
-*/
-
 #include "common_functions.h"
 #include "data_load.h"
 #include "endianity_bl.h"
@@ -157,14 +151,6 @@ bool load3dDataArrayRAW(dataType ** imageDataPtr, const size_t imageLength, cons
 		}
 	}
   
-	//for (k = 0; k < imageHeight; k++)
-	//{
-	//	for (i = 0; i < imageLength * imageWidth; i++)
-	//	{
-	//		revertBytes(&imageDataPtr[k][i], sizeof(dataType));
-	//	}
-	//}
-  
 	fclose(file);
 	return true;
 }
@@ -188,7 +174,11 @@ bool load2dPGM(dataType* imageDataPtr, const size_t xDim, const size_t yDim, con
 
     int pgmVersion;
     fgets(line1, 4, file);
-    sscanf(line1, "P%d\n", &pgmVersion);
+	if (sscanf(line1, "P%d", &pgmVersion) != 1) {
+		fclose(file);
+		free(line2);
+		return false; // Error reading PGM version
+	}
 
 	//filtering out potential comment
 	do {
@@ -196,7 +186,11 @@ bool load2dPGM(dataType* imageDataPtr, const size_t xDim, const size_t yDim, con
 	} while (line2[0] == '#');
 
 	size_t tmpX, tmpY;
-	sscanf(line2, "%zu %zu", &tmpX, &tmpY);
+	if(sscanf(line2, "%zu %zu", &tmpX, &tmpY) != 2) {
+		fclose(file);
+		free(line2);
+		return false; // Error reading dimensions
+	}
 
 	if (xDim != tmpX || yDim != tmpY) {
 		//dimensions of used array is not compatible with loaded image
@@ -212,7 +206,10 @@ bool load2dPGM(dataType* imageDataPtr, const size_t xDim, const size_t yDim, con
 		size_t xd = 0;
         for (i = 0; i < yDim; i++) {
             for (j = 0; j < xDim; j++) {
-                fscanf(file, "%d", &intensity);
+				if (fscanf(file, "%d", &intensity) != 1) {
+					fclose(file);
+					return false; // Error reading intensity
+				}
 				// 2D to 1D representation for i, j
 				xd = x_new(j, i, xDim);
                 imageDataPtr[xd] = (dataType)intensity;

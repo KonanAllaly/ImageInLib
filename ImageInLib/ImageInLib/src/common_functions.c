@@ -205,8 +205,35 @@ void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWi
 	}
 }
 //==============================================================================
+void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew){
+	
+	size_t i, dim2D = imageLength * imageWidth;
 
-//2D function
+	// Find the minimum and maximum values in the image data
+	dataType max_dta = imageDataPtr[0];
+	dataType min_dta = imageDataPtr[0];
+	for (i = 0; i < dim2D; i++) {
+		if (imageDataPtr[i] > max_dta) 
+		{
+			max_dta = imageDataPtr[i];
+		}
+		if( imageDataPtr[i] < min_dta) 
+		{
+			min_dta = imageDataPtr[i];
+		}
+	}
+
+	// Rescale from min_new to max_new
+	dataType diffOld = max_dta - min_dta;
+	dataType diffNew = maxNew - minNew;
+	dataType scale_factor = (diffNew) / (diffOld);
+
+	for(i = 0; i < dim2D; i++)
+	{
+		imageDataPtr[i] = scale_factor * (imageDataPtr[i] - max_dta) + maxNew;
+	}
+}
+//==============================================================================
 void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth) {
 	size_t i, j, xd;
 	for (i = 0; i < imageHeight; i++) {
@@ -276,6 +303,33 @@ void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidt
 		toReflectImage[x] = toReflectImage[x - 1];
 	}
 
+}
+//==============================================================================
+void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p)
+{
+	size_t i, j, k;
+	size_t rowLength = imageLength + 2 * p;
+
+	size_t length_minus = imageLength - 1, width_minus = imageWidth - 1;
+
+	// Y reflection
+	for (j = p; j <= (width_minus + p); j++)
+	{
+		for (k = 0; k < p; k++) 
+		{
+			toReflectImage[x_new((p - k - 1), j, rowLength)] = toReflectImage[x_new((p + k), j, rowLength)];
+			toReflectImage[x_new((length_minus + p + k), j, rowLength)] = toReflectImage[x_new((length_minus + p - k - 1), j, rowLength)];
+		}
+	}
+	// X Direction
+	for (i = 0; i <= (length_minus + 2 * p); i++)
+	{
+		for (k = 0; k < p; k++) 
+		{
+			toReflectImage[x_new(i, p - k - 1, rowLength)] = toReflectImage[x_new(i, p + k, rowLength)];
+			toReflectImage[x_new(i, (width_minus + p + k), rowLength)] = toReflectImage[x_new(i, (width_minus + p - k - 1), rowLength)];
+		}
+	}
 }
 //==============================================================================
 double getPoint2DDistance(const Point2D a, const Point2D b)
@@ -437,7 +491,6 @@ bool getGradient2D(dataType* pbase_data, const size_t width, const size_t height
 	}
 	else
 	{
-		const size_t xtmp = x_new(x, y + 1, width);
 		dy = (pbase_data[x_new(x, y + 1, width)] - pbase_data[x_new(x, y - 1, width)]) / hy_c;
 	}
 
@@ -523,7 +576,6 @@ bool initializeLinkedCurve(Curve2D* pcurve, LinkedCurve* plinked_curve, const bo
 
 	return true;
 }
-
 
 LinkedPoint* pushAfterPoint(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double point_x, const double point_y)
 {

@@ -192,6 +192,10 @@ extern "C" {
 	/*
 	* Calculate to 1D representation from 2D Array
 	* x from column and row indices
+    #include <stddef.h> // Ensure this include is present at the top of the file  
+
+    // Replace the problematic line with the following:  
+    typedef size_t numPoints;
 	*/
 	size_t x_new(const size_t rowIndex, const size_t columnIndex, const size_t rowLength);
 	//==============================================================================
@@ -250,6 +254,8 @@ extern "C" {
 	//==============================================================================
 	void rescaleNewRange(dataType** imageDataPtr, size_t imageLength, size_t imageWidth, size_t imageHeight, dataType minNew, dataType maxNew, dataType max_dta, dataType min_dta);
 	//==============================================================================
+	void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageWidth, dataType minNew, dataType maxNew);
+	//==============================================================================
 	typedef struct {
 		size_t k_min, i_min, j_min, k_max, i_max, j_max;
 	} ClipBox;
@@ -257,8 +263,6 @@ extern "C" {
 	// Calc. centroid of image data
 	void centroidImage(dataType** imageDataPtr, dataType* centroid, size_t imageHeight, size_t imageLength, size_t imageWidth, dataType imageBackground);
 	void centroidClipBox(dataType* centroid, ClipBox coord, dataType** imageDataPtr, size_t imageLength, dataType imageBackground);
-	//==============================================================================
-
 	//==============================================================================
 	void copyDataToAnother2dArray(dataType* source, dataType* destination, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
@@ -268,8 +272,10 @@ extern "C" {
 	//==============================================================================
 	void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidth);
 	//==============================================================================
+	void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p);
+	//==============================================================================
 	double getPoint2DDistance(const Point2D a, const Point2D b);
-
+	//==============================================================================
 	/// <summary>
 	/// The points of pCurve are copied to pArray. The function expects same length of the particular objects (curve and array)
 	/// </summary>
