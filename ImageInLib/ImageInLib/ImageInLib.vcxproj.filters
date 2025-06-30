@@ -365,6 +365,9 @@
     <ClCompile Include="src\gaussian.c">
       <Filter>Source Files\Filtering</Filter>
     </ClCompile>
+    <ClCompile Include="src\double_front_propagation.cpp">
+      <Filter>Source Files\Front Popagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -555,6 +558,9 @@
     </ClInclude>
     <ClInclude Include="include\gaussian.h">
       <Filter>Header Files\Filtering</Filter>
+    </ClInclude>
+    <ClInclude Include="include\double_front_propagation.h">
+      <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

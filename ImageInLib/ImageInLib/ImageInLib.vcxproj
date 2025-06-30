@@ -23,6 +23,7 @@
     <ClCompile Include="src\data_load.c" />
     <ClCompile Include="src\data_storage.c" />
     <ClCompile Include="src\distanceMaps.c" />
+    <ClCompile Include="src\double_front_propagation.cpp" />
     <ClCompile Include="src\edge_detection_function.c" />
     <ClCompile Include="src\endianity_bl.c" />
     <ClCompile Include="src\explicit_regularized_pm_equation.c" />
@@ -84,6 +85,7 @@
     <ClInclude Include="include\common_math.h" />
     <ClInclude Include="include\common_vtk.h" />
     <ClInclude Include="include\distanceMaps.h" />
+    <ClInclude Include="include\double_front_propagation.h" />
     <ClInclude Include="include\fast_marching_front_propagation.h" />
     <ClInclude Include="include\file.h" />
     <ClInclude Include="include\filtering.h" />
