@@ -16,6 +16,9 @@ void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* first
 	case DOUBLE_FRONT_PROPAGATION:
 		doubleFrontPropagation2D(inputImageData, firstActionMapPtr, secondActionMapPtr, potentialPtr, endPoints);
 		break;
+	//case KEY_POINT_DETECTION:
+	//	frontPropagationWithKeyPointsDetection();
+	//	break;
 	default:
 		break;
 	}
