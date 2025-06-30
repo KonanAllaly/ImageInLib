@@ -92,3 +92,5 @@
 	dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
 
 	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h);
+
+	bool frontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* seedPoints);

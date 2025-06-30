@@ -1,5 +1,7 @@
 #include<iostream>
 #include<vector>
+#include<cmath>     // sqrt()
+#include<algorithm> // min() , max()
 
 #include "front_propagation.h"
 
@@ -98,7 +100,7 @@ dataType selectX(dataType* actionMapPtr, const size_t length, const size_t width
 	else {
 		x_plus = actionMapPtr[x_new(ind_x + 1, ind_y, length)];
 	}
-	return min_data(x_minus, x_plus);
+	return std::min(x_minus, x_plus);
 }
 
 dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
@@ -115,7 +117,7 @@ dataType selectY(dataType* actionMapPtr, const size_t length, const size_t width
 	else {
 		y_plus = actionMapPtr[x_new(ind_x, ind_y + 1, length)];
 	}
-	return min_data(y_minus, y_plus);
+	return std::min(y_minus, y_plus);
 }
 
 dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
@@ -141,7 +143,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		c = (dataType)(Y * Y - hy_2 * P_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
 			if (solution >= Y) {
 				return solution;
 			}
@@ -162,7 +164,7 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
-			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
 			if (solution >= X)
 			{
 				return solution;
@@ -184,19 +186,235 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
-			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution >= max_data(X, Y)) {
+			solution = (dataType)((-b + std::sqrt(delta)) / (2 * a));
+			if (solution >= std::max(X, Y)) {
 				return solution;
 			}
 			else {
-				return (dataType)(min_data(X + hx * P, Y + hy * P));
+				return (dataType)(std::min(X + hx * P, Y + hy * P));
 			}
 		}
 		else {
-			return (dataType)(min_data(X + hx * P, Y + hy * P));
+			return (dataType)(std::min(X + hx * P, Y + hy * P));
 		}
 	}
 
 }
 
+bool frontPropagation2D(Image_Data2D imageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* seedPoints) {
 
+	const size_t length = imageData.height;
+	const size_t width = imageData.width;
+	PixelSpacing spacing = imageData.spacing;
+	size_t length_minus = length - 1;
+	size_t width_minus = width - 1;
+	size_t dim2D = length * width;
+
+	std::vector<pointFastMarching2D> inProcess;
+	short* labelArray = new short[dim2D] { 0 };
+	if (imageData.imageDataPtr == NULL || actionMapPtr == NULL || potentialPtr == NULL || seedPoints == NULL || labelArray == NULL) {
+		return false;
+	}
+
+	//1 ---> already processed, 
+	//2 ---> in process and 
+	//3 ---> not processed
+	for (size_t k = 0; k < dim2D; k++) {
+		actionMapPtr[k] = INFINITY;
+		labelArray[k] = 3;
+	}
+
+	size_t i = (size_t)seedPoints[0].x;
+	size_t j = (size_t)seedPoints[0].y;
+	size_t currentIndx = x_new(i, j, length);
+	actionMapPtr[currentIndx] = 0.0;
+	labelArray[currentIndx] = 1;
+
+	//East
+	if (j < width - 1 && i >= 0 && i < length) {
+		size_t jplus = j + 1;
+		dataType x = selectX(actionMapPtr, length, width, i, jplus);
+		dataType y = selectY(actionMapPtr, length, width, i, jplus);
+		size_t indxEast = x_new(i, jplus, length);
+		dataType coefSpeed = potentialPtr[indxEast];
+		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
+		actionMapPtr[indxEast] = dEast;
+		inProcess.push_back(EastNeighbor);
+		labelArray[indxEast] = 2;
+	}
+
+	//West
+	if (j > 0 && i >= 0 && i < length) {
+		size_t jminus = j - 1;
+		dataType x = selectX(actionMapPtr, length, width, i, jminus);
+		dataType y = selectY(actionMapPtr, length, width, i, jminus);
+		size_t indxWest = x_new(i, jminus, length);
+		dataType coefSpeed = potentialPtr[indxWest];
+		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
+		actionMapPtr[indxWest] = dWest;
+		inProcess.push_back(WestNeighbor);
+		labelArray[indxWest] = 2;
+	}
+
+	//North
+	if (j >= 0 && j < width && i > 0) {
+		size_t iminus = i - 1;
+		dataType x = selectX(actionMapPtr, length, width, iminus, j);
+		dataType y = selectY(actionMapPtr, length, width, iminus, j);
+		size_t indxNorth = x_new(iminus, j, length);
+		dataType coefSpeed = potentialPtr[indxNorth];
+		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
+		actionMapPtr[indxNorth] = dNorth;
+		inProcess.push_back(NorthNeighbor);
+		labelArray[indxNorth] = 2;
+	}
+
+	//South
+	if (j >= 0 && j < width && i < length - 1) {
+		size_t iplus = i + 1;
+		dataType x = selectX(actionMapPtr, length, width, iplus, j);
+		dataType y = selectY(actionMapPtr, length, width, iplus, j);
+		size_t indxSouth = x_new(iplus, j, length);
+		dataType coefSpeed = potentialPtr[indxSouth];
+		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
+		actionMapPtr[indxSouth] = dSouth;
+		inProcess.push_back(SouthNeighbor);
+		labelArray[indxSouth] = 2;
+	}
+
+	//heapify 2D vector
+	heapifyVector2D(inProcess);
+
+	pointFastMarching2D current;
+	short label = 0;
+
+	while (inProcess.size() > 0) {
+
+		current = inProcess[0];
+		i = current.x;
+		j = current.y;
+		currentIndx = x_new(i, j, length);
+		labelArray[currentIndx] = 1;
+		deleteRootHeap2D(inProcess);
+
+		//West
+		if (i > 0 && i < length && j >= 0 && j < width) {
+			size_t iminus = i - 1;
+			size_t indxWest = x_new(iminus, j, length);
+			short label = labelArray[indxWest];
+			if (label != 1) {
+				dataType x = selectX(actionMapPtr, length, width, iminus, j);
+				dataType y = selectY(actionMapPtr, length, width, iminus, j);
+				dataType coefSpeed = potentialPtr[indxWest];
+				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
+				if (label == 3) {
+					actionMapPtr[indxWest] = dWest;
+					labelArray[indxWest] = 2;
+					addPointHeap2D(inProcess, WestNeighbor);
+				}
+				else {
+					if (dWest < actionMapPtr[indxWest]) {
+						actionMapPtr[indxWest] = dWest;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//East
+		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
+			size_t iplus = i + 1;
+			size_t indxEast = x_new(iplus, j, length);
+			short label = labelArray[indxEast];
+			if (label != 1) {
+				dataType x = selectX(actionMapPtr, length, width, iplus, j);
+				dataType y = selectY(actionMapPtr, length, width, iplus, j);
+				dataType coefSpeed = potentialPtr[indxEast];
+				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
+				if (label == 3) {
+					actionMapPtr[indxEast] = dEast;
+					labelArray[indxEast] = 2;
+					addPointHeap2D(inProcess, EastNeighbor);
+				}
+				else {
+					if (dEast < actionMapPtr[indxEast]) {
+						actionMapPtr[indxEast] = dEast;
+						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//North
+		if (j > 0 && j < width && i >= 0 && i < length) {
+			size_t jminus = j - 1;
+			size_t indxNorth = x_new(i, jminus, length);
+			short label = labelArray[indxNorth];
+			if (label != 1) {
+				dataType x = selectX(actionMapPtr, length, width, i, jminus);
+				dataType y = selectY(actionMapPtr, length, width, i, jminus);
+				dataType coefSpeed = potentialPtr[indxNorth];
+				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
+				if (label == 3) {
+					actionMapPtr[indxNorth] = dNorth;
+					labelArray[indxNorth] = 2;
+					addPointHeap2D(inProcess, NorthNeighbor);
+				}
+				else {
+					if (dNorth < actionMapPtr[indxNorth]) {
+						actionMapPtr[indxNorth] = dNorth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+		//South
+		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
+			size_t jplus = j + 1;
+			size_t indxSouth = x_new(i, jplus, length);
+			short label = labelArray[indxSouth];
+			if (label != 1) {
+				dataType x = selectX(actionMapPtr, length, width, i, jplus);
+				dataType y = selectY(actionMapPtr, length, width, i, jplus);
+				dataType coefSpeed = potentialPtr[indxSouth];
+				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
+				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
+				if (label == 3) {
+					actionMapPtr[indxSouth] = dSouth;
+					labelArray[indxSouth] = 2;
+					addPointHeap2D(inProcess, SouthNeighbor);
+				}
+				else {
+					if (dSouth < actionMapPtr[indxSouth]) {
+						actionMapPtr[indxSouth] = dSouth;
+						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
+						if (pIndex != -1) {
+							heapifyUp2D(inProcess, pIndex);
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	inProcess.clear();
+	delete[] labelArray;
+}
