@@ -278,24 +278,28 @@ void reflection2D(dataType* toReflectImage, size_t imageHeight, size_t imageWidt
 //==============================================================================
 void reflection2DB(dataType* toReflectImage, size_t imageLength, size_t imageWidth, size_t p)
 {
-	size_t i, j;
-	size_t length = imageLength, width = imageWidth;
-	size_t rowLength = length + 2 * p;
+	size_t i, j, k;
+	size_t rowLength = imageLength + 2 * p;
 
-	// Modified Dimension less 1
-	size_t length_minus = length - 1, width_minus = width - 1;
+	size_t length_minus = imageLength - 1, width_minus = imageWidth - 1;
 
 	// Y reflection
-	for (j = p; j <= (width_minus)+p; j++)
+	for (j = p; j <= (width_minus + p); j++)
 	{
-		toReflectImage[x_new(p - 1, j, rowLength)] = toReflectImage[x_new(p + 1, j, rowLength)];
-		toReflectImage[x_new((length_minus)+p + 1, j, rowLength)] = toReflectImage[x_new((length_minus)+p - 1, j, rowLength)];
+		for (k = 0; k < p; k++) 
+		{
+			toReflectImage[x_new((p - k - 1), j, rowLength)] = toReflectImage[x_new((p + k), j, rowLength)];
+			toReflectImage[x_new((length_minus + p + k), j, rowLength)] = toReflectImage[x_new((length_minus + p - k - 1), j, rowLength)];
+		}
 	}
 	// X Direction
-	for (i = 0; i <= (length_minus)+2 * p; i++)
+	for (i = 0; i <= (length_minus + 2 * p); i++)
 	{
-		toReflectImage[x_new(i, p - 1, rowLength)] = toReflectImage[x_new(i, p + 1, rowLength)];
-		toReflectImage[x_new(i, (width_minus)+p + 1, rowLength)] = toReflectImage[x_new(i, (width_minus)+p - 1, rowLength)];
+		for (k = 0; k < p; k++) 
+		{
+			toReflectImage[x_new(i, p - k - 1, rowLength)] = toReflectImage[x_new(i, p + k, rowLength)];
+			toReflectImage[x_new(i, (width_minus + p + k), rowLength)] = toReflectImage[x_new(i, (width_minus + p - k - 1), rowLength)];
+		}
 	}
 }
 //==============================================================================
