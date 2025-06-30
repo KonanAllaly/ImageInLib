@@ -212,7 +212,7 @@ void rescaleNewRange2D(dataType* imageDataPtr, size_t imageLength, size_t imageW
 	// Find the minimum and maximum values in the image data
 	dataType max_dta = imageDataPtr[0];
 	dataType min_dta = imageDataPtr[0];
-	for (i = 0; dim2D; i++) {
+	for (i = 0; i < dim2D; i++) {
 		if (imageDataPtr[i] > max_dta) 
 		{
 			max_dta = imageDataPtr[i];
