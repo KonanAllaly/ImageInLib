@@ -15,3 +15,5 @@
 	void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* endPoints, const PropagationType pType);
 
 	void fastMarchingfrontPropagation(Image_Data inputImageData, dataType** potential, Point3D* endPoints, const PropagationType pType);
+
+	void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon);

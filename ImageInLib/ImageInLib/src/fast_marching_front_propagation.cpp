@@ -49,3 +49,20 @@ void fastMarchingfrontPropagation(Image_Data inputImageData, dataType** actionMa
 		break;
 	}
 }
+
+void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon) {
+	if(imageDataPtr == NULL || potentialPtr == NULL || endPoints == NULL) {
+		return; // Handle null pointers
+	}
+
+	size_t x1 = (size_t)endPoints[0].x;
+	size_t y1 = (size_t)endPoints[0].y;
+	size_t x2 = (size_t)endPoints[1].x;
+	size_t y2 = (size_t)endPoints[1].y;
+	dataType seedValue = ( imageDataPtr[x_new(x1, y1, length)] + imageDataPtr[x_new(x2, y2, length)] ) / 2.0;
+
+	size_t dim2D = length * width;
+	for(size_t i = 0; i < dim2D; i++) {
+		potentialPtr[i] = epsilon + fabs(seedValue - imageDataPtr[i]);
+	}
+}
