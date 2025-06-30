@@ -368,6 +368,9 @@
     <ClCompile Include="src\double_front_propagation.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\key_points_detection.cpp">
+      <Filter>Source Files\Front Popagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -560,6 +563,9 @@
       <Filter>Header Files\Filtering</Filter>
     </ClInclude>
     <ClInclude Include="include\double_front_propagation.h">
+      <Filter>Header Files\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\key_points_detection.h">
       <Filter>Header Files\Front propagation</Filter>
     </ClInclude>
   </ItemGroup>

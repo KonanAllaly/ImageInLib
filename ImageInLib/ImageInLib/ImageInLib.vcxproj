@@ -44,6 +44,7 @@
     <ClCompile Include="src\image_norm.c" />
     <ClCompile Include="src\implicit_regularized_pm_equation.c" />
     <ClCompile Include="src\interpolations.c" />
+    <ClCompile Include="src\key_points_detection.cpp" />
     <ClCompile Include="src\l2_norm.c" />
     <ClCompile Include="src\Labelling.cpp" />
     <ClCompile Include="src\linked_list.c" />
@@ -91,6 +92,7 @@
     <ClInclude Include="include\filtering.h" />
     <ClInclude Include="include\front_propagation.h" />
     <ClInclude Include="include\gaussian.h" />
+    <ClInclude Include="include\key_points_detection.h" />
     <ClInclude Include="include\Labelling.h" />
     <ClInclude Include="include\morphological_change.h" />
     <ClInclude Include="include\noiseGeneration.h" />
