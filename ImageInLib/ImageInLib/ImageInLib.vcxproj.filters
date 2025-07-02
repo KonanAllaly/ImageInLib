@@ -141,29 +141,17 @@
     <Filter Include="Source Files\Distance Function">
       <UniqueIdentifier>{529cb28c-1d6e-4db1-b6e6-3b2fe6d8cc75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Labelling">
-      <UniqueIdentifier>{6e8d466e-45e8-40e6-9ab7-31f58f2428ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Labelling">
-      <UniqueIdentifier>{441c6922-f006-4b26-9368-b8b3d41ec056}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\morphology">
       <UniqueIdentifier>{0b397659-66a9-4901-b55e-a528365c25af}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\morphology">
       <UniqueIdentifier>{4391e895-a529-434c-b679-ffc255f9b1ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Front Popagation">
-      <UniqueIdentifier>{36ab1fcf-3a04-40a0-9417-e3b735f1efc6}</UniqueIdentifier>
+    <Filter Include="Header Files\Interfaces\Front Propagation">
+      <UniqueIdentifier>{d768996a-385a-4988-a721-9e402a4fb7e6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Interfaces\Front Propagation">
-      <UniqueIdentifier>{c5469f28-b256-4cb7-9e80-79f612705d0f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Front propagation">
-      <UniqueIdentifier>{30a00689-394c-48d7-b5ef-e72dd8b4ee6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Interfaces\Front propagation">
-      <UniqueIdentifier>{2e9c3afb-187d-4f5b-96ff-c2396c3fd5d2}</UniqueIdentifier>
+      <UniqueIdentifier>{79ad6003-af42-454f-a10f-178ee815fd83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -317,9 +305,6 @@
     <ClCompile Include="src\mean_hausdorff_distance.c">
       <Filter>Source Files\Distance Function</Filter>
     </ClCompile>
-    <ClCompile Include="src\Labelling.cpp">
-      <Filter>Source Files\Labelling</Filter>
-    </ClCompile>
     <ClCompile Include="src\morphological_change.c">
       <Filter>Source Files\morphology</Filter>
     </ClCompile>
@@ -350,26 +335,11 @@
     <ClCompile Include="src\generate_3d_curves.c">
       <Filter>Source Files\Shape Generation</Filter>
     </ClCompile>
-    <ClCompile Include="src\front_propagation.cpp">
-      <Filter>Source Files\Front Popagation</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fast_marching_front_propagation.cpp">
-      <Filter>Source Files\Interfaces\Front Propagation</Filter>
-    </ClCompile>
-    <ClCompile Include="src\partial_front_propagation.cpp">
-      <Filter>Source Files\Front Popagation</Filter>
-    </ClCompile>
-    <ClCompile Include="src\path_extraction.cpp">
-      <Filter>Source Files\Front Popagation</Filter>
-    </ClCompile>
     <ClCompile Include="src\gaussian.c">
       <Filter>Source Files\Filtering</Filter>
     </ClCompile>
-    <ClCompile Include="src\double_front_propagation.cpp">
-      <Filter>Source Files\Front Popagation</Filter>
-    </ClCompile>
-    <ClCompile Include="src\key_points_detection.cpp">
-      <Filter>Source Files\Front Popagation</Filter>
+    <ClCompile Include="src\labeling.c">
+      <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -508,9 +478,6 @@
     <ClInclude Include="src\mean_hausdorff_distance.h">
       <Filter>Header Files\Distance Function</Filter>
     </ClInclude>
-    <ClInclude Include="include\Labelling.h">
-      <Filter>Header Files\Labelling</Filter>
-    </ClInclude>
     <ClInclude Include="include\template_functions.h">
       <Filter>Header Files\File Management</Filter>
     </ClInclude>
@@ -547,26 +514,11 @@
     <ClInclude Include="src\generate_3d_curves.h">
       <Filter>Header Files\Shape Generation</Filter>
     </ClInclude>
-    <ClInclude Include="include\front_propagation.h">
-      <Filter>Header Files\Front propagation</Filter>
-    </ClInclude>
-    <ClInclude Include="include\fast_marching_front_propagation.h">
-      <Filter>Header Files\Interfaces\Front propagation</Filter>
-    </ClInclude>
-    <ClInclude Include="include\partial_front_propagation.h">
-      <Filter>Header Files\Front propagation</Filter>
-    </ClInclude>
-    <ClInclude Include="include\path_extraction.h">
-      <Filter>Header Files\Front propagation</Filter>
-    </ClInclude>
     <ClInclude Include="include\gaussian.h">
       <Filter>Header Files\Filtering</Filter>
     </ClInclude>
-    <ClInclude Include="include\double_front_propagation.h">
-      <Filter>Header Files\Front propagation</Filter>
-    </ClInclude>
-    <ClInclude Include="include\key_points_detection.h">
-      <Filter>Header Files\Front propagation</Filter>
+    <ClInclude Include="include\labeling.h">
+      <Filter>Header Files\Segmentation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
