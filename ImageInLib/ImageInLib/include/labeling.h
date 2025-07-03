@@ -8,7 +8,6 @@ extern "C" {
 
 #include <stdbool.h>
 #include "common_functions.h"
-#include "linked_list.h"
 
 	typedef enum
 	{
@@ -16,7 +15,7 @@ extern "C" {
 		LABEL_3D_ARRAY,
 	} labelingApproach;
 
-	LinkedPoint* pushPointToList(LinkedCurve* linked_curve, LinkedPoint* linked_point, const size_t x, const size_t y);
+	LinkedPoint* pushPointToList(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y);
 
 	void popFirstEltList(LinkedCurve* linked_curve);
 
