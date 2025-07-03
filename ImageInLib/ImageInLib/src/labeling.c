@@ -1,60 +1,10 @@
 #include <stdlib.h>
 #include "labeling.h"
 
-/*
-LinkedPoint* pushPointToList(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y)
-{
-	if (linked_curve == NULL || linked_point == NULL)
-	{
-		return NULL; // Safety check
-	}
-
-	LinkedPoint* new_linked_point = (LinkedPoint*)malloc(sizeof(LinkedPoint));
-	if (new_linked_point == NULL)
-	{
-		return NULL; // malloc failed
-	}
-	new_linked_point->x = x;
-	new_linked_point->y = y;
-	new_linked_point->next = linked_point->next;
-	new_linked_point->previous = linked_point;
-	new_linked_point->distance_to_next = 0;
-	new_linked_point->id = getNextID();
-
-	if (linked_point->next != NULL)
-	{
-		linked_point->next->previous = new_linked_point;
-	}
-
-	linked_point->next = new_linked_point;
-	linked_curve->number_of_points++;
-
-	return new_linked_point;
-}
-
-void popFirstEltList(LinkedCurve* linked_curve)
-{
-	if (linked_curve == NULL || linked_curve->first_point == NULL)
-	{
-		return;
-	}
-	LinkedPoint* current_point = linked_curve->first_point;
-	LinkedPoint* next_point = current_point->next;
-	if (next_point != NULL)
-	{
-		next_point->previous = NULL;
-	}
-	free(current_point);
-	linked_curve->first_point = next_point;
-	linked_curve->number_of_points--;
-}
-*/
-
 LinkedList createLinkedList()
 {
 	LinkedList linkedList;
 	linkedList.number_of_points = 0;
-	linkedList.length = 0;
 	return linkedList;
 }
 
@@ -92,7 +42,6 @@ labelingPoint* pushElementToList(labelingList* linked_list, labelingPoint* linke
 	new_linked_point->z = z;
 	new_linked_point->next = linked_point->next;
 	new_linked_point->previous = linked_point;
-	new_linked_point->distance_to_next = 0;
 	new_linked_point->id = getNextID();
 
 	if (linked_point->next != NULL)
@@ -142,15 +91,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 			{
 				if(inputImageData.imageDataPtr[xd] == foreGroundValue)
 				{	
-				
-					//label++;
-					//LinkedCurve neighbours_list = createLinkedCurve();
-					//LinkedPoint* current_point = (LinkedPoint*)malloc(sizeof(LinkedPoint));
-					//current_point->x = i;
-					//current_point->y = j;
-					//current_point->previous = NULL;
-					//current_point->next = NULL;
-					//neighbours_list.first_point = current_point;
 
 					label++;
 					LinkedList neighbours_list = createLinkedList();
@@ -169,7 +109,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 						{
 							if (inputImageData.imageDataPtr[xn] == foreGroundValue)
 							{
-								//current_point = pushPointToList(&neighbours_list, current_point, i - 1, j);
 								current_point = pushElementToList(&neighbours_list, current_point, i - 1, j, z);
 								statusArray[xn] = 2;
 							}
@@ -185,7 +124,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 						{
 							if (inputImageData.imageDataPtr[xs] == foreGroundValue)
 							{
-								//current_point = pushPointToList(&neighbours_list, current_point, i + 1, j);
 								current_point = pushElementToList(&neighbours_list, current_point, i + 1, j, z);
 								statusArray[xs] = 2;
 							}
@@ -201,7 +139,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 						{
 							if (inputImageData.imageDataPtr[xw] == foreGroundValue)
 							{
-								//current_point = pushPointToList(&neighbours_list, current_point, i, j - 1);
 								current_point = pushElementToList(&neighbours_list, current_point, i, j - 1, z);
 								statusArray[xw] = 2;
 							}
@@ -217,7 +154,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 						{
 							if (inputImageData.imageDataPtr[xe] == foreGroundValue)
 							{
-								//current_point = pushPointToList(&neighbours_list, current_point, i, j + 1);
 								current_point = pushElementToList(&neighbours_list, current_point, i, j + 1, z);
 								statusArray[xe] = 2;
 							}
@@ -232,12 +168,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 					statusArray[xd] = 1; //set the status
 					
 					while (neighbours_list.number_of_points > 0) {
-						
-						//LinkedPoint* pcurrent_point = neighbours_list.first_point;
-						//size_t it = (size_t)pcurrent_point->x;
-						//size_t jt = (size_t)pcurrent_point->y;
-						//size_t xdt = x_new(it, jt, length);
-						//popFirstEltList(&neighbours_list);
 
 						labelingPoint* pcurrent_point = neighbours_list.first_point;
 						size_t it = (size_t)pcurrent_point->x;
@@ -253,7 +183,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 							{
 								if(inputImageData.imageDataPtr[xn] == foreGroundValue)
 								{
-									//current_point = pushPointToList(&neighbours_list, current_point, it - 1, jt);
 									current_point = pushElementToList(&neighbours_list, current_point, it - 1, jt, z);
 									statusArray[xn] = 2;
 								}else
@@ -270,7 +199,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 							{
 								if (inputImageData.imageDataPtr[xs] == foreGroundValue)
 								{
-									//current_point = pushPointToList(&neighbours_list, current_point, it + 1, jt);
 									current_point = pushElementToList(&neighbours_list, current_point, it + 1, jt, z);
 									statusArray[xs] = 2;
 								}
@@ -288,7 +216,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 							{
 								if (inputImageData.imageDataPtr[xw] == foreGroundValue)
 								{
-									//current_point = pushPointToList(&neighbours_list, current_point, it, jt - 1);
 									current_point = pushElementToList(&neighbours_list, current_point, it, jt - 1, z);
 									statusArray[xw] = 2;
 								}
@@ -306,7 +233,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 							{
 								if (inputImageData.imageDataPtr[xe] == foreGroundValue)
 								{
-									//current_point = pushPointToList(&neighbours_list, current_point, it, jt + 1);
 									current_point = pushElementToList(&neighbours_list, current_point, it, jt + 1, z);
 									statusArray[xe] = 2;
 								}
@@ -317,7 +243,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 							}
 						}
 	
-						//fix the current point
 						segment[xdt] = label; //set the label
 						statusArray[xdt] = 1; //set the status
 					}
@@ -339,12 +264,16 @@ bool labeling3D(Image_Data inputImageData, dataType** segment, dataType foreGrou
 	if (inputImageData.imageDataPtr == NULL || segment == NULL)
 		return false;
 
-	/*
-	const size_t length = inputImageData.height;
+	const size_t height = inputImageData.height;
+	const size_t length = inputImageData.length;
 	const size_t width = inputImageData.width;
 	const size_t dim2D = length * width;
 
-	short* statusArray = (short*)malloc(sizeof(short) * dim2D);
+	short** statusArray = (short**)malloc(sizeof(short*) * height);
+	for(size_t k = 0; k < height; k++)
+	{
+		statusArray[k] = (short*)malloc(sizeof(short) * dim2D);
+	}
 	if (statusArray == NULL) {
 		return false;
 	}
@@ -354,186 +283,256 @@ bool labeling3D(Image_Data inputImageData, dataType** segment, dataType foreGrou
 	// 1: processed (done)
 
 	//Initialize
-	for (size_t i = 0; i < dim2D; i++) {
-		statusArray[i] = 3;
-	}
-
-	int label = 0;
-	for (size_t i = 0; i < length; i++)
+	for(size_t k = 0; k < height; k++)
 	{
-		for (size_t j = 0; j < width; j++)
+		for (size_t i = 0; i < dim2D; i++) 
 		{
-			size_t xd = x_new(i, j, length);
-			if (statusArray[xd] == 3)
+			statusArray[k][i] = 3;
+		}
+	}
+	
+	int label = 0;
+	for(size_t k = 0; k < height; k++)
+	{
+		for (size_t i = 0; i < length; i++)
+		{
+			for (size_t j = 0; j < width; j++)
 			{
-				if (inputImageData.imageDataPtr[xd] == foreGroundValue)
+				size_t xd = x_new(i, j, length);
+				if (statusArray[k][xd] == 3)
 				{
-					//new segment
-					label++;
-					LinkedCurve neighbours_list = createLinkedCurve();
-					LinkedPoint* current_point = (LinkedPoint*)malloc(sizeof(LinkedPoint));
-					current_point->x = i;
-					current_point->y = j;
-					current_point->previous = NULL;
-					current_point->next = NULL;
-					neighbours_list.first_point = current_point;
+					if (inputImageData.imageDataPtr[k][xd] == foreGroundValue)
+					{
+						label++;
+						LinkedList neighbours_list = createLinkedList();
+						labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
+						current_point->x = i;
+						current_point->y = j;
+						current_point->z = k;
+						current_point->previous = NULL;
+						current_point->next = NULL;
+						neighbours_list.first_point = current_point;
 
-					//North
-					if (i > 0) {
-						size_t xn = x_new(i - 1, j, length);
-						if (statusArray[xn] == 3)
-						{
-							if (inputImageData.imageDataPtr[xn] == foreGroundValue)
+						//Top
+						if (k > 0) {
+							if (statusArray[k - 1][xd] == 3)
 							{
-								current_point = pushPointToList(&neighbours_list, current_point, i - 1, j);
-								statusArray[xn] = 2;
-							}
-							else {
-								statusArray[xn] = 1;
-							}
-						}
-					}
-					//South
-					if (i < (length - 1)) {
-						size_t xs = x_new(i + 1, j, length);
-						if (statusArray[xs] == 3)
-						{
-							if (inputImageData.imageDataPtr[xs] == foreGroundValue)
-							{
-								current_point = pushPointToList(&neighbours_list, current_point, i + 1, j);
-								statusArray[xs] = 2;
-							}
-							else {
-								statusArray[xs] = 1;
-							}
-						}
-					}
-					//West
-					if (j > 0) {
-						size_t xw = x_new(i, j - 1, length);
-						if (statusArray[xw] == 3)
-						{
-							if (inputImageData.imageDataPtr[xw] == foreGroundValue)
-							{
-								current_point = pushPointToList(&neighbours_list, current_point, i, j - 1);
-								statusArray[xw] = 2;
-							}
-							else {
-								statusArray[xw] = 1;
-							}
-						}
-					}
-					//East
-					if (j < (width - 1)) {
-						size_t xe = x_new(i, j + 1, length);
-						if (statusArray[xe] == 3)
-						{
-							if (inputImageData.imageDataPtr[xe] == foreGroundValue)
-							{
-								current_point = pushPointToList(&neighbours_list, current_point, i, j + 1);
-								statusArray[xe] = 2;
-							}
-							else {
-								statusArray[xe] = 1;
-							}
-						}
-					}
-
-					//fix the current point
-					segment[xd] = label; //set the label
-					statusArray[xd] = 1; //set the status
-
-					while (neighbours_list.number_of_points > 0) {
-
-						LinkedPoint* pcurrent_point = neighbours_list.first_point;
-						size_t it = (size_t)pcurrent_point->x;
-						size_t jt = (size_t)pcurrent_point->y;
-						size_t xdt = x_new(it, jt, length);
-						popFirstEltList(&neighbours_list);
-
-						//North
-						if (it > 0)
-						{
-							size_t xn = x_new(it - 1, jt, length);
-							if (statusArray[xn] == 3)
-							{
-								if (inputImageData.imageDataPtr[xn] == foreGroundValue)
+								if (inputImageData.imageDataPtr[k - 1][xd] == foreGroundValue)
 								{
-									current_point = pushPointToList(&neighbours_list, current_point, it - 1, jt);
-									statusArray[xn] = 2;
+									current_point = pushElementToList(&neighbours_list, current_point, i, j, k - 1);
+									statusArray[k - 1][xd] = 2;
 								}
-								else
+								else {
+									statusArray[k - 1][xd] = 1;
+								}
+							}
+						}
+						//Bottom
+						if (k < (height - 1)) {
+							if (statusArray[k + 1][xd] == 3)
+							{
+								if (inputImageData.imageDataPtr[k + 1][xd] == foreGroundValue)
 								{
-									statusArray[xn] = 1;
+									current_point = pushElementToList(&neighbours_list, current_point, i, j, k + 1);
+									statusArray[k + 1][xd] = 2;
+								}
+								else {
+									statusArray[k + 1][xd] = 1;
+								}
+							}
+						}
+						//North
+						if (i > 0) {
+							size_t xn = x_new(i - 1, j, length);
+							if (statusArray[k][xn] == 3)
+							{
+								if (inputImageData.imageDataPtr[k][xn] == foreGroundValue)
+								{
+									current_point = pushElementToList(&neighbours_list, current_point, i - 1, j, k);
+									statusArray[k][xn] = 2;
+								}
+								else {
+									statusArray[k][xn] = 1;
 								}
 							}
 						}
 						//South
-						if (it < (length - 1))
-						{
-							size_t xs = x_new(it + 1, jt, length);
+						if (i < (length - 1)) {
+							size_t xs = x_new(i + 1, j, length);
 							if (statusArray[xs] == 3)
 							{
-								if (inputImageData.imageDataPtr[xs] == foreGroundValue)
+								if (inputImageData.imageDataPtr[k][xs] == foreGroundValue)
 								{
-									current_point = pushPointToList(&neighbours_list, current_point, it + 1, jt);
-									statusArray[xs] = 2;
+									current_point = pushElementToList(&neighbours_list, current_point, i + 1, j, k);
+									statusArray[k][xs] = 2;
 								}
-								else
-								{
-									statusArray[xs] = 1;
+								else {
+									statusArray[k][xs] = 1;
 								}
 							}
 						}
 						//West
-						if (jt > 0)
-						{
-							size_t xw = x_new(it, jt - 1, length);
+						if (j > 0) {
+							size_t xw = x_new(i, j - 1, length);
 							if (statusArray[xw] == 3)
 							{
-								if (inputImageData.imageDataPtr[xw] == foreGroundValue)
+								if (inputImageData.imageDataPtr[k][xw] == foreGroundValue)
 								{
-									current_point = pushPointToList(&neighbours_list, current_point, it, jt - 1);
-									statusArray[xw] = 2;
+									current_point = pushElementToList(&neighbours_list, current_point, i, j - 1, k);
+									statusArray[k][xw] = 2;
 								}
-								else
-								{
-									statusArray[xw] = 1;
+								else {
+									statusArray[k][xw] = 1;
 								}
 							}
 						}
 						//East
-						if (jt < (width - 1))
-						{
-							size_t xe = x_new(it, jt + 1, length);
-							if (statusArray[xe] == 3)
+						if (j < (width - 1)) {
+							size_t xe = x_new(i, j + 1, length);
+							if (statusArray[k][xe] == 3)
 							{
-								if (inputImageData.imageDataPtr[xe] == foreGroundValue)
+								if (inputImageData.imageDataPtr[k][xe] == foreGroundValue)
 								{
-									current_point = pushPointToList(&neighbours_list, current_point, it, jt + 1);
-									statusArray[xe] = 2;
+									current_point = pushElementToList(&neighbours_list, current_point, i, j + 1, k);
+									statusArray[k][xe] = 2;
 								}
-								else
-								{
-									statusArray[xe] = 1;
+								else {
+									statusArray[k][xe] = 1;
 								}
 							}
 						}
 
 						//fix the current point
-						segment[xdt] = label; //set the label
-						statusArray[xdt] = 1; //set the status
+						segment[k][xd] = label; //set the label
+						statusArray[k][xd] = 1; //set the status
+						
+						while (neighbours_list.number_of_points > 0) {
+
+							labelingPoint* pcurrent_point = neighbours_list.first_point;
+							size_t it = (size_t)pcurrent_point->x;
+							size_t jt = (size_t)pcurrent_point->y;
+							size_t kt = (size_t)pcurrent_point->z;
+							size_t xdt = x_new(it, jt, length);
+							popFirstElement(&neighbours_list);
+
+							//Top
+							if (kt > 0)
+							{
+								if (statusArray[kt - 1][xdt] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt - 1][xdt] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it, jt, kt - 1);
+										statusArray[kt - 1][xdt] = 2;
+									}
+									else
+									{
+										statusArray[kt - 1][xdt] = 1;
+									}
+								}
+							}
+							//Bottom
+							if (kt < (height - 1))
+							{
+								if (statusArray[kt + 1][xdt] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt + 1][xdt] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it, jt, kt + 1);
+										statusArray[kt + 1][xdt] = 2;
+									}
+									else
+									{
+										statusArray[kt + 1][xdt] = 1;
+									}
+								}
+							}
+							//North
+							if (it > 0)
+							{
+								size_t xn = x_new(it - 1, jt, length);
+								if (statusArray[kt][xn] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt][xn] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it - 1, jt, kt);
+										statusArray[kt][xn] = 2;
+									}
+									else
+									{
+										statusArray[kt][xn] = 1;
+									}
+								}
+							}
+							//South
+							if (it < (length - 1))
+							{
+								size_t xs = x_new(it + 1, jt, length);
+								if (statusArray[kt][xs] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt][xs] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it + 1, jt, kt);
+										statusArray[kt][xs] = 2;
+									}
+									else
+									{
+										statusArray[kt][xs] = 1;
+									}
+								}
+							}
+							//West
+							if (jt > 0)
+							{
+								size_t xw = x_new(it, jt - 1, length);
+								if (statusArray[kt][xw] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt][xw] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it, jt - 1, kt);
+										statusArray[kt][xw] = 2;
+									}
+									else
+									{
+										statusArray[kt][xw] = 1;
+									}
+								}
+							}
+							//East
+							if (jt < (width - 1))
+							{
+								size_t xe = x_new(it, jt + 1, length);
+								if (statusArray[kt][xe] == 3)
+								{
+									if (inputImageData.imageDataPtr[kt][xe] == foreGroundValue)
+									{
+										current_point = pushElementToList(&neighbours_list, current_point, it, jt + 1, kt);
+										statusArray[kt][xe] = 2;
+									}
+									else
+									{
+										statusArray[kt][xe] = 1;
+									}
+								}
+							}
+
+							segment[kt][xdt] = label; //set the label
+							statusArray[kt][xdt] = 1; //set the status
+						}
+						
 					}
-				}
-				else {
-					statusArray[xd] == 1;
+					else {
+						statusArray[k][xd] == 1;
+					}
 				}
 			}
 		}
 	}
 
+	for (size_t k = 0; k < height; k++) {
+		free(statusArray[k]);
+	}
 	free(statusArray);
-	*/
 
 	return true;
 }
