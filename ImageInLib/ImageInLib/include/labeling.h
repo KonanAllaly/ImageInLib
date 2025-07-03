@@ -15,6 +15,35 @@ extern "C" {
 		LABEL_3D_ARRAY,
 	} labelingApproach;
 
+	typedef struct labelingPoint
+	{
+		dataType x;
+		dataType y;
+		dataType z;
+		struct labelingPoint* next;
+		struct labelingPoint* previous;
+		double distance_to_next;
+		int id;
+	} labelingPoint;
+
+	typedef struct labelingList
+	{
+		size_t number_of_points;
+		labelingPoint* first_point;
+		double length;
+	} labelingList;
+
+	typedef struct LinkedList
+	{
+		size_t number_of_points;
+		labelingPoint* first_point;
+		double length;
+	} LinkedList;
+
+	LinkedList createLinkedList();
+
+	void popFirstElement(labelingList* linked_list);
+
 	LinkedPoint* pushPointToList(LinkedCurve* linked_curve, LinkedPoint* linked_point, const double x, const double y);
 
 	void popFirstEltList(LinkedCurve* linked_curve);
