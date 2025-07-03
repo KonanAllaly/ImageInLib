@@ -43,15 +43,12 @@ labelingPoint* pushElementToList(labelingList* linked_list, labelingPoint* linke
 	new_linked_point->next = linked_point->next;
 	new_linked_point->previous = linked_point;
 	new_linked_point->id = getNextID();
-
 	if (linked_point->next != NULL)
 	{
 		linked_point->next->previous = new_linked_point;
 	}
-
 	linked_point->next = new_linked_point;
 	linked_list->number_of_points++;
-
 	return new_linked_point;
 }
 
@@ -405,7 +402,6 @@ bool labeling3D(Image_Data inputImageData, dataType** segment, dataType foreGrou
 						//fix the current point
 						segment[k][xd] = label; //set the label
 						statusArray[k][xd] = 1; //set the status
-						
 						while (neighbours_list.number_of_points > 0) {
 
 							labelingPoint* pcurrent_point = neighbours_list.first_point;
@@ -519,7 +515,6 @@ bool labeling3D(Image_Data inputImageData, dataType** segment, dataType foreGrou
 							segment[kt][xdt] = label; //set the label
 							statusArray[kt][xdt] = 1; //set the status
 						}
-						
 					}
 					else {
 						statusArray[k][xd] == 1;
