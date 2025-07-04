@@ -1174,11 +1174,11 @@ void release3dLinkedCurve(LinkedCurve3D* linked_curve)
 	}
 }
 
-BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius) {
+BoundingBox findPointBoundingBox(Point3D point, const size_t length, const size_t width, const size_t height, const dataType radius) {
   
 	size_t x_min, x_max, y_min, y_max, z_min, z_max;
 
-	double ind_x_min = point.x - (radius + 0.5);
+	dataType ind_x_min = (dataType)(point.x - (radius + 0.5));
 	if (ind_x_min <= 0) {
 		x_min = 0;
 	}
@@ -1186,7 +1186,7 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 		x_min = (size_t)ind_x_min;
 	}
 
-	double ind_y_min = point.y - (radius + 0.5);
+	dataType ind_y_min = (dataType)(point.y - (radius + 0.5));
 	if (ind_y_min <= 0) {
 		y_min = 0;
 	}
@@ -1194,7 +1194,7 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 		y_min = (size_t)ind_y_min;
 	}
 
-	double ind_z_min = point.z - (radius + 0.5);
+	dataType ind_z_min = (dataType)(point.z - (radius + 0.5));
 	if (ind_z_min <= 0) {
 		z_min = 0;
 	}
@@ -1202,25 +1202,25 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 		z_min = (size_t)ind_z_min;
 	}
 
-	double ind_x_max = point.x + (radius + 0.5);
-	if (ind_x_max >= imageDataPtr.width) {
-		x_max = imageDataPtr.width - 1;
+	dataType ind_x_max = (dataType)(point.x + (radius + 0.5));
+	if (ind_x_max >= length - 1) {
+		x_max = length - 1;
 	}
 	else {
 		x_max = (size_t)ind_x_max;
 	}
 
-	double ind_y_max = point.y + (radius + 0.5);
-	if (ind_y_max >= imageDataPtr.length) {
-		y_max = imageDataPtr.length - 1;
+	dataType ind_y_max = (dataType)(point.y + (radius + 0.5));
+	if (ind_y_max >= width - 1) {
+		y_max = width - 1;
 	}
 	else {
 		y_max = (size_t)ind_y_max;
 	}
 
-	double ind_z_max = point.z + (radius + 0.5);
-	if (ind_z_max >= imageDataPtr.height) {
-		z_max = imageDataPtr.height - 1;
+	dataType ind_z_max = (dataType)(point.z + (radius + 0.5));
+	if (ind_z_max >= height - 1) {
+		z_max = height - 1;
 	}
 	else {
 		z_max = (size_t)ind_z_max;
@@ -1229,7 +1229,7 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 	return (BoundingBox) { x_min, x_max, y_min, y_max, z_min, z_max };
 }
 
-BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius) {
+BoundingBox2D findPointBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius) {
 
 	BoundingBox2D box = { 0, 0, 0, 0 };
 

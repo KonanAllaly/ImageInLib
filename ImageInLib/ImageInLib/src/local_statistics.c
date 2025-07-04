@@ -11,7 +11,7 @@ Statistics statistics2D(Image_Data2D inputImageData, Point2D pointOfInterest, co
 	const size_t length = inputImageData.height;
 	const size_t width = inputImageData.width;
 
-	BoundingBox2D box = findBoundingBox2D(pointOfInterest, length, width, radiusOfSearchDomain);
+	BoundingBox2D box = findPointBoundingBox2D(pointOfInterest, length, width, radiusOfSearchDomain);
 
 	dataType min_data = 100000000;//large value
 	dataType max_data = 0;
@@ -122,7 +122,123 @@ Statistics statistics3D(Image_Data inputImageData, Point3D pointOfInterest, cons
 		return (Statistics) { -1, -1, -1, -1 };
 	}
 
-	return (Statistics) { -1, -1, -1, -1 };
+	const size_t length = inputImageData.length;
+	const size_t width = inputImageData.width;
+	const size_t height = inputImageData.height;
+
+	BoundingBox box = findPointBoundingBox(pointOfInterest, length, width, height, radiusOfSearchDomain);
+
+	dataType min_data = 100000000;//large value
+	dataType max_data = 0;
+	dataType mean_data = 0.0, std = 0.0, sum = 0;
+	size_t count = 0;
+
+	if (shape == SQUARE) {
+		//compute minimum, maximum and mean
+		for(size_t k = box.z_min; k <= box.z_max; k++)
+		{
+			for (size_t i = box.x_min; i <= box.x_max; i++)
+			{
+				for (size_t j = box.y_min; j <= box.y_max; j++)
+				{
+					size_t xd = x_new(i, j, length);
+					dataType value = inputImageData.imageDataPtr[k][xd];
+					if (min_data > value)
+					{
+						min_data = value;
+					}
+					if (max_data < value)
+					{
+						max_data = value;
+					}
+					count++;
+					mean_data += value;
+				}
+			}
+		}
+		if (count != 0) {
+			mean_data /= (dataType)count;
+		}
+		else {
+			return (Statistics) { -1, -1, -1, -1 };
+		}
+		//compute standard deviation
+		for(size_t k = box.z_min; k<= box.z_max; k++)
+		{
+			for (size_t i = box.x_min; i <= box.x_max; i++)
+			{
+				for (size_t j = box.y_min; j <= box.y_max; j++)
+				{
+					size_t xd = x_new(i, j, length);
+					dataType value = inputImageData.imageDataPtr[k][xd];
+					std += pow(value - mean_data, 2);
+				}
+			}
+		}
+		std = sqrt(std / (dataType)count);
+	}
+	else {
+		if (shape == SPHERE)
+		{
+			//compute minimum, maximum and mean
+			for(size_t k = box.z_min; k <= box.z_max; k++)
+			{
+				for (size_t i = box.x_min; i <= box.x_max; i++)
+				{
+					for (size_t j = box.y_min; j <= box.y_max; j++)
+					{
+						Point3D current_point = { i, j, k };
+						double pDistance = getPoint3DDistance(pointOfInterest, current_point);
+						{
+							if (pDistance <= radiusOfSearchDomain)
+							{
+								size_t xd = x_new(i, j, length);
+								dataType value = inputImageData.imageDataPtr[k][xd];
+								if (min_data > value)
+								{
+									min_data = value;
+								}
+								if (max_data < value)
+								{
+									max_data = value;
+								}
+								count++;
+								mean_data += value;
+							}
+						}
+
+					}
+				}
+			}
+			if (count != 0) {
+				mean_data /= (dataType)count;
+			}
+			else {
+				return (Statistics) { -1, -1, -1, -1 };
+			}
+			//compute standard deviation
+			for(size_t k = box.z_min; k <= box.z_max; k++)
+			{
+				for (size_t i = box.x_min; i <= box.x_max; i++)
+				{
+					for (size_t j = box.y_min; j <= box.y_max; j++)
+					{
+						Point3D current_point = { i, j, k };
+						double pDistance = getPoint3DDistance(pointOfInterest, current_point);
+						if (pDistance <= radiusOfSearchDomain)
+						{
+							size_t xd = x_new(i, j, length);
+							dataType value = inputImageData.imageDataPtr[k][xd];
+							std += pow(value - mean_data, 2);
+						}
+					}
+				}
+			}
+			std = sqrt(std / (dataType)count);
+		}
+	}
+
+	return (Statistics) { min_data, max_data, mean_data, std };
 }
 
 void getStatisticsAroundPoint(void* pInputImageData, void* pointOfInterest, Statistics stats, const dataType radiusOfSearchDomain, const seachDomainShape shape, const pDimension dim)

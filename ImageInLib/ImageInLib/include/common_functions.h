@@ -169,9 +169,9 @@ extern "C" {
 	} Statistics;
 
 	typedef struct {
-		size_t i_min, i_max;
-		size_t j_min, j_max;
-		size_t k_min, k_max;
+		size_t x_min, x_max;
+		size_t y_min, y_max;
+		size_t z_min, z_max;
 	} BoundingBox;
 
 	typedef struct {
@@ -586,9 +586,9 @@ extern "C" {
 	/// <param name="linked_curve">linked</param>
 	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
 
-	BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius);
+	BoundingBox findPointBoundingBox(Point3D point, const size_t length, const size_t width, const size_t height, const dataType radius);
 
-	BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius);
+	BoundingBox2D findPointBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius);
 
 #endif // !COMMON_FUNCTIONS
 
