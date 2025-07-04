@@ -35,12 +35,6 @@ size_t howManyPointsForSphereCurve(const Point3D* pInitialPoints, const size_t i
     return (size_t)((sphereSurface / singlePointSurface) + 0.5);
 }
 
-bool generate3DLineCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
-{
-    //TODO
-    return true;
-}
-
 bool generateSphereCurve(Curve3D* pCurve, const Point3D* pInitialPoints, const size_t initialPointsCount, const double pointsDistance)
 {
     if (pCurve == NULL || pInitialPoints == NULL)
