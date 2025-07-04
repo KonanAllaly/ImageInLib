@@ -341,6 +341,9 @@
     <ClCompile Include="src\labeling.c">
       <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
+    <ClCompile Include="src\region_growing.c">
+      <Filter>Source Files\Segmentation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -518,6 +521,9 @@
       <Filter>Header Files\Filtering</Filter>
     </ClInclude>
     <ClInclude Include="include\labeling.h">
+      <Filter>Header Files\Segmentation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\region_growing.h">
       <Filter>Header Files\Segmentation</Filter>
     </ClInclude>
   </ItemGroup>
