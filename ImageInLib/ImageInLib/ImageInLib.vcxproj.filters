@@ -350,9 +350,6 @@
     <ClCompile Include="src\local_statistics.c">
       <Filter>Source Files\Statistics</Filter>
     </ClCompile>
-    <ClCompile Include="src\front_propagation_2d.c">
-      <Filter>Source Files\Front Propagation</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -534,9 +531,6 @@
     </ClInclude>
     <ClInclude Include="include\local_statistics.h">
       <Filter>Header Files\Statistics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\front_propagation_2d.h">
-      <Filter>Header Files\Front Propagation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
