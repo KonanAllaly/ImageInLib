@@ -11,7 +11,7 @@ bool regionGrowing2D(Image_Data2D inputImageData, dataType* segment, Point2D see
 		return false;
 
 	//Find the threshold in region around the seed point
-	BoundingBox2D box = findBoundingBox2D(seed, length, width, radius);
+	BoundingBox2D box = findPointBoundingBox2D(seed, length, width, radius);
 
 	//get the threshold value in region around seed point
 	return true;
@@ -22,11 +22,11 @@ bool regionGrowing3D(Image_Data inputImageData, dataType** segment, Point3D seed
 	return true;
 }
 
-void regionGrowingSegmentation(void* pInputImageData, void* segmentationResult, void* seed, const dataType radius, const dataType foreGroundValue, const dimRG dimension)
+void regionGrowingSegmentation(void* pInputImageData, void* segmentationResult, void* seed, const dataType radius, const dataType foreGroundValue, const pDimension dim)
 {
-	switch (dimension)
+	switch (dim)
 	{
-	case RG_2D:
+	case TWO_D:
 	{
 		Image_Data2D inputImageData = *(Image_Data2D*)pInputImageData;
 		dataType* segment = (dataType*)segmentationResult;
@@ -34,7 +34,7 @@ void regionGrowingSegmentation(void* pInputImageData, void* segmentationResult, 
 		regionGrowing2D(inputImageData, segment, pStart, radius, foreGroundValue);
 		break;
 	}
-	case RG_3D:
+	case THREE_D:
 	{
 		Image_Data inputImageData = *(Image_Data*)pInputImageData;
 		dataType** segment = (dataType**)segmentationResult;
