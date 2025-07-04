@@ -174,6 +174,11 @@ extern "C" {
 		size_t k_min, k_max;
 	} BoundingBox;
 
+	typedef struct {
+		size_t x_min, x_max;
+		size_t y_min, y_max;
+	} BoundingBox2D;
+
 	//==============================================================================
 	// Shapes Container
 	typedef struct {
@@ -582,6 +587,8 @@ extern "C" {
 	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
 
 	BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius);
+
+	BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius);
 
 #endif // !COMMON_FUNCTIONS
 

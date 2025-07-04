@@ -1228,3 +1228,56 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 
 	return (BoundingBox) { x_min, x_max, y_min, y_max, z_min, z_max };
 }
+
+BoundingBox2D findBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius) {
+
+	BoundingBox2D box = { 0, 0, 0, 0 };
+
+	//find x_min
+	dataType ind_x = (dataType)(point.x - (radius + 0.5));
+	if (ind_x < 0) {
+		box.x_min = 0;
+	}
+	else {
+		if (ind_x < length - 1) {
+			box.x_min = (size_t)ind_x;
+		}
+		else {
+			box.x_min = length - 1;
+		}
+	}
+
+	//find x_max
+	ind_x = (dataType)(point.x + (radius + 0.5));
+	if (ind_x >= length - 1) {
+		box.x_max = length - 1;
+	}
+	else {
+		box.x_max = (size_t)ind_x;
+	}
+
+	//find y_min
+	dataType ind_y = (dataType)(point.y - (radius + 0.5));
+	if (ind_y < 0) {
+		box.y_min = 0;
+	}
+	else {
+		if (ind_y < width - 1) {
+			box.y_min = (size_t)ind_y;
+		}
+		else {
+			box.y_min = width - 1;
+		}
+	}
+
+	//find y_max
+	ind_y = (dataType)(point.y + (radius + 0.5));
+	if (ind_y >= width - 1) {
+		box.y_max = width - 1;
+	}
+	else {
+		box.y_max = (size_t)ind_y;
+	}
+
+	return box;
+}
