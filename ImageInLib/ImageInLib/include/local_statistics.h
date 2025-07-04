@@ -14,11 +14,11 @@ extern "C" {
 		SPHERE,
 	} seachDomainShape;
 
-	bool statistics2D(Image_Data2D inputImageData, Point2D pointOfInterest, const dataType radiusOfSearchDomain);
+	Statistics statistics2D(Image_Data2D inputImageData, Point2D pointOfInterest, const dataType radiusOfSearchDomain, const seachDomainShape shape);
 
-	bool statistics3D(Image_Data inputImageData, Point3D pointOfInterest, dataType radiusOfSearchDomain);
+	Statistics statistics3D(Image_Data inputImageData, Point3D pointOfInterest, const dataType radiusOfSearchDomain, const seachDomainShape shape);
 
-	void getStatisticsAroundPoint(void* pInputImageData, void* pointOfInterest, const pDimension dim, const seachDomainShape shape);
+	void getStatisticsAroundPoint(void* pInputImageData, void* pointOfInterest, Statistics stats, const dataType radiusOfSearchDomain, const seachDomainShape shape, const pDimension dim);
 
 #endif // !LOCAL_STATISTICS
 
