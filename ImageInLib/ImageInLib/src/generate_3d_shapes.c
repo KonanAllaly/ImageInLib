@@ -201,12 +201,12 @@ bool generate3DSpiralTube(Image_Data image, Point3D center, double radius, doubl
 		
 		Point3D current_center = { x, y, z };
 		double radius_tube = 15.0;
-		box = findPointBoundingBox(image, current_center, radius_tube);
-		for (size_t k = box.k_min; k <= box.k_max; k++) 
+		box = findPointBoundingBox(current_center, image.length, image.width, image.height, radius_tube);
+		for (size_t k = box.z_min; k <= box.z_max; k++) 
 		{
-			for (size_t i = box.i_min; i <= box.i_max; i++)
+			for (size_t i = box.x_min; i <= box.x_max; i++)
 			{
-				for (size_t j = box.j_min; j <= box.j_max; j++)
+				for (size_t j = box.y_min; j <= box.y_max; j++)
 				{
 					Point3D current_point = { i, j, k };
 					double dist = getPoint3DDistance(current_center, current_point);
