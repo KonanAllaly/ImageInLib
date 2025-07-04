@@ -153,6 +153,12 @@
     <Filter Include="Source Files\Interfaces\Front Propagation">
       <UniqueIdentifier>{79ad6003-af42-454f-a10f-178ee815fd83}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Front Propagation">
+      <UniqueIdentifier>{212bab61-9149-40f5-9b4f-92458c40dfd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Front Propagation">
+      <UniqueIdentifier>{77eff63b-cc1e-4964-b38f-79467ae6c540}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\transformations.c">
@@ -344,6 +350,9 @@
     <ClCompile Include="src\local_statistics.c">
       <Filter>Source Files\Statistics</Filter>
     </ClCompile>
+    <ClCompile Include="src\front_propagation_2d.c">
+      <Filter>Source Files\Front Propagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -525,6 +534,9 @@
     </ClInclude>
     <ClInclude Include="include\local_statistics.h">
       <Filter>Header Files\Statistics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\front_propagation_2d.h">
+      <Filter>Header Files\Front Propagation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
