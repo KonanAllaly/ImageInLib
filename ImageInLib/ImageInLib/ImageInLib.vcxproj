@@ -11,7 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="distanceForPathFinding.cpp" />
     <ClCompile Include="src\balls_on_cirlce.c" />
     <ClCompile Include="src\balls_on_helix.c" />
     <ClCompile Include="src\brute_force_algorithm.c" />
@@ -77,7 +76,6 @@
     <ClCompile Include="src\vtk_format_ascii.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="distanceForPathFinding.h" />
     <ClInclude Include="include\common_functions.h" />
     <ClInclude Include="include\common_math.h" />
     <ClInclude Include="include\common_vtk.h" />

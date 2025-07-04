@@ -320,9 +320,6 @@
     <ClCompile Include="src\segmentation2d.c">
       <Filter>Source Files\Segmentation</Filter>
     </ClCompile>
-    <ClCompile Include="distanceForPathFinding.cpp">
-      <Filter>Source Files\Distance Function</Filter>
-    </ClCompile>
     <ClCompile Include="src\imageInterpolation.c">
       <Filter>Source Files\Transformation</Filter>
     </ClCompile>
@@ -498,9 +495,6 @@
     </ClInclude>
     <ClInclude Include="include\segmentation2d.h">
       <Filter>Header Files\Segmentation</Filter>
-    </ClInclude>
-    <ClInclude Include="distanceForPathFinding.h">
-      <Filter>Header Files\Distance Function</Filter>
     </ClInclude>
     <ClInclude Include="src\imageInterpolation.h">
       <Filter>Header Files\Transformation</Filter>
