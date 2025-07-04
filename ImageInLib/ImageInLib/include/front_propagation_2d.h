@@ -6,11 +6,10 @@ extern "C" {
 #ifndef FRONT_PROPAGATION_2D
 #define FRONT_PROPAGATION_2D
 
-#include "labeling.h"
+#include <stdbool.h>
+#include "common_function.h"
 
-	bool partialFrontPropagation2D(Image_Data2D inputImageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D seed);
-
-	void frontPropagation2D(void* pInputImageData, void* actionMap, void* potential, void* endPoints);
+	bool partialFrontPropagation2D(Image_Data2D inputImageData, dataType* actionMapPtr, dataType* potentialPtr, Point2D* seed);
 
 #endif // !FRONT_PROPAGATION_2D
 
