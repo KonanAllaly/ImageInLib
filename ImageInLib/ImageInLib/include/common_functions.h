@@ -590,6 +590,34 @@ extern "C" {
 
 	BoundingBox2D findPointBoundingBox2D(Point2D point, const size_t length, const size_t width, const dataType radius);
 
+	//================================================
+
+	typedef struct {
+		size_t x, y, z;
+		dataType arrival;
+		size_t position;
+	} pointFastMarching;
+
+	typedef struct {
+		pointFastMarching* data;
+		size_t capacity;
+		size_t size;
+	} heapStructure;
+
+	heapStructure* createHeap(size_t capacity);
+
+	void swapPointFastMarching(pointFastMarching* a, pointFastMarching* b);
+
+	void heapifyDown(heapStructure* heap, int i);
+
+	void heapifyUp(heapStructure* heap, int i);
+
+	void pushToHeap(heapStructure* heap, pointFastMarching pt);
+
+	pointFastMarching getPointWithMinimalArrival(heapStructure* heap);
+
+	int getPointPosition(heapStructure* heap, pointFastMarching pt);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus

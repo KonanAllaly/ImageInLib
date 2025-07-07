@@ -1281,3 +1281,89 @@ BoundingBox2D findPointBoundingBox2D(Point2D point, const size_t length, const s
 
 	return box;
 }
+
+//======================================================================================
+
+heapStructure* createHeap(size_t capacity) 
+{
+	heapStructure* heap = (heapStructure*)malloc(sizeof(heapStructure));
+	heap->data = (pointFastMarching*)malloc(sizeof(pointFastMarching) * capacity);
+	heap->capacity = capacity;
+	heap->size = 0;
+	return heap;
+}
+
+void swapPointFastMarching(pointFastMarching* a, pointFastMarching* b) 
+{
+	pointFastMarching temp = *a;
+	*a = *b;
+	*b = temp;
+}
+
+void heapifyDown(heapStructure* heap, int i) 
+{
+	int current = i;
+	int left = 2 * i + 1;
+	int right = 2 * i + 2;
+
+	if (left < heap->size && heap->data[left].arrival < heap->data[current].arrival)
+	{
+		current = left;
+	}
+	if (right < heap->size && heap->data[right].arrival < heap->data[current].arrival)
+	{
+		current = right;
+	}
+	if (current != i) {
+		swapPointFastMarching(&heap->data[i], &heap->data[current]);
+		heapifyDown(heap, current);
+	}
+}
+
+void heapifyUp(heapStructure* heap, int i) 
+{
+	int parent = (i - 1) / 2;
+	if (heap->data[parent].arrival > heap->data[i].arrival) 
+	{
+		swapPointFastMarching(&heap->data[i], &heap->data[parent]);
+		heapifyUp(heap, parent);
+	}
+}
+
+void pushToHeap(heapStructure* heap, pointFastMarching pt) 
+{
+	if (heap->size == heap->capacity) {
+		return;
+	}
+	heap->data[heap->size] = pt;
+	heapifyUp(heap, heap->size);
+	heap->size++;
+}
+
+pointFastMarching getPointWithMinimalArrival(heapStructure* heap) 
+{
+	if (heap->size <= 0) {
+		exit(EXIT_FAILURE);
+	}
+	pointFastMarching root = heap->data[0];
+	heap->data[0] = heap->data[heap->size - 1];
+	heap->size--;
+	heapifyDown(heap, 0);
+	return root;
+}
+
+int getPointPosition(heapStructure* heap, pointFastMarching pt)
+{
+	if(heap->size <= 0)
+	{
+		return -1;
+	}
+	for(size_t i = 0; i < heap->size; i++)
+	{
+		if (i == pt.position) 
+		{
+			return i;
+		}
+	}
+	return -1;
+}
