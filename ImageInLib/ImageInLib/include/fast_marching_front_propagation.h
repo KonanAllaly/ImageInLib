@@ -1,6 +1,11 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #pragma once
-#include "front_propagation.h"
+#ifndef FAST_MARCHING_FRONT_PROPAGATION
+#define FAST_MARCHING_FRONT_PROPAGATION
+#include "common_function.h"
 
 	typedef enum
 	{
@@ -11,8 +16,14 @@
 		DISTANCE_MAP = 5
 	} PropagationType;
 
-	void fastMarchingfrontPropagation2D(Image_Data2D inputImageData, dataType* firstActionMapPtr, dataType* secondActionMapPtr, dataType* potentialPtr, Point2D* endPoints, const dataType LengthKeyPoints, std::vector<Point2D>& keyPoints, const PropagationType pType);
+	void fastMarchingFrontPropagation(void* inputImageData, void* actionPtr, void* potentialPtr, void* endPoints, const PropagationType pType);
 
-	void fastMarchingfrontPropagation(Image_Data inputImageData, dataType** actionMapPtr, dataType** potentialPtr, Point3D* endPoints, const PropagationType pType);
+	bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint);
 
 	void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon);
+
+#endif // !FAST_MARCHING_FRONT_PROPAGATION
+
+#ifdef __cplusplus
+}
+#endif
