@@ -42,10 +42,24 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	}
 
 	//std::vector<pointFastMarching2D> narrowBand;
+	labelingList narrowBand = createlabelingList();
+	labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
+	if(current_point == NULL)
+	{
+		return;
+	}
 
 	size_t i = (size_t)endPoint[0].x;
 	size_t j = (size_t)endPoint[0].y;
 	size_t currentIndx = x_new(i, j, length);
+
+	current_point->x = endPoint[0].x;
+	current_point->y = endPoint[1].y;
+	current_point->z = -1;//In 2D : set the third coordinate to -1
+	current_point->arrival = 0.0;
+	current_point->previous = NULL;
+	current_point->next = NULL;
+	narrowBand.first_point = current_point;
 
 	//STEP 1
 	//In labelAray we have : 1 ---> already processed, 2 ---> narrow band and 3 ---> not processed
@@ -54,24 +68,24 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		labelArray[k] = 3;
 	}
 
-	/*
-	actionMapPtr[currentIndx] = 0.0;
+	action[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
 	//East
 	if (j < width - 1 && i >= 0 && i < length) {
 		size_t jplus = j + 1;
-		dataType x = selectX(actionMapPtr, length, width, i, jplus);
-		dataType y = selectY(actionMapPtr, length, width, i, jplus);
+		dataType x = selectX(action, length, width, i, jplus);
+		dataType y = selectY(action, length, width, i, jplus);
 		size_t indxEast = x_new(i, jplus, length);
-		dataType coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
-		actionMapPtr[indxEast] = dEast;
-		narrowBand.push_back(EastNeighbor);
+		dataType coefSpeed = potential[indxEast];
+		//dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
+		//pointFastMarching2D EastNeighbor = { i, jplus, dEast };
+		action[indxEast] = dEast;
+		//narrowBand.push_back(EastNeighbor);
 		labelArray[indxEast] = 2;
 	}
 
+	/*
 	//West
 	if (j > 0 && i >= 0 && i < length) {
 		size_t jminus = j - 1;
@@ -265,6 +279,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	narrowBand.clear();
 	*/
 
+	free(current_point);
 	free(labelArray);
 	return true;
 }
