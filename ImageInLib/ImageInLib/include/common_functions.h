@@ -616,7 +616,7 @@ extern "C" {
 
 	pointFastMarching getPointWithMinimalArrival(heapStructure* heap);
 
-	int getPointPosition(heapStructure* heap, pointFastMarching pt);
+	int getPointPosition(heapStructure* heap, size_t position);
 
 #endif // !COMMON_FUNCTIONS
 

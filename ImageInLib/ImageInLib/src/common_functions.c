@@ -1352,7 +1352,7 @@ pointFastMarching getPointWithMinimalArrival(heapStructure* heap)
 	return root;
 }
 
-int getPointPosition(heapStructure* heap, pointFastMarching pt)
+int getPointPosition(heapStructure* heap, size_t position)
 {
 	if(heap->size <= 0)
 	{
@@ -1360,7 +1360,7 @@ int getPointPosition(heapStructure* heap, pointFastMarching pt)
 	}
 	for(size_t i = 0; i < heap->size; i++)
 	{
-		if (i == pt.position) 
+		if (heap->data[i].position == position)
 		{
 			return i;
 		}
