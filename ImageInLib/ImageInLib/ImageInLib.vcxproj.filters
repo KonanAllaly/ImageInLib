@@ -356,6 +356,9 @@
     <ClCompile Include="src\fast_marching_front_propagation_3d.c">
       <Filter>Source Files\Front Propagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\descent_gradient_path_extraction.C">
+      <Filter>Source Files\Front Propagation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -542,6 +545,9 @@
       <Filter>Header Files\Front Propagation</Filter>
     </ClInclude>
     <ClInclude Include="include\fast_marching_front_propagation_3d.h">
+      <Filter>Header Files\Front Propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\descent_gradient_path_extraction.h">
       <Filter>Header Files\Front Propagation</Filter>
     </ClInclude>
   </ItemGroup>
