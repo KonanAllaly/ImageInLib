@@ -20,6 +20,7 @@ extern "C" {
 		dataType x;
 		dataType y;
 		dataType z;
+		dataType arrival;
 		struct labelingPoint* next;
 		struct labelingPoint* previous;
 		int id;
@@ -31,13 +32,7 @@ extern "C" {
 		labelingPoint* first_point;
 	} labelingList;
 
-	typedef struct LinkedList
-	{
-		size_t number_of_points;
-		labelingPoint* first_point;
-	} LinkedList;
-
-	LinkedList createLinkedList();
+	labelingList createlabelingList();
 
 	void popFirstElement(labelingList* linked_list);
 

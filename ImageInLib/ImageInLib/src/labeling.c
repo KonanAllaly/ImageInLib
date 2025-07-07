@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include "labeling.h"
 
-LinkedList createLinkedList()
+labelingList createlabelingList()
 {
-	LinkedList linkedList;
+	labelingList linkedList;
 	linkedList.number_of_points = 0;
 	return linkedList;
 }
@@ -90,7 +90,7 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 				{	
 
 					label++;
-					LinkedList neighbours_list = createLinkedList();
+					labelingList neighbours_list = createlabelingList();
 					labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
 					current_point->x = i;
 					current_point->y = j;
@@ -301,7 +301,7 @@ bool labeling3D(Image_Data inputImageData, dataType** segment, dataType foreGrou
 					if (inputImageData.imageDataPtr[k][xd] == foreGroundValue)
 					{
 						label++;
-						LinkedList neighbours_list = createLinkedList();
+						labelingList neighbours_list = createlabelingList();
 						labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
 						current_point->x = i;
 						current_point->y = j;
