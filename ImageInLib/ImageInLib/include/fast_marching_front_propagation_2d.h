@@ -7,7 +7,6 @@ extern "C" {
 #define FAST_MARCHING_FRONT_PROPAGATION_2D
 
 #include "common_functions.h"
-#include "labeling.h"
 
 	typedef struct {
 		dataType K; //edge detection coef

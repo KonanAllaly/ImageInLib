@@ -156,25 +156,15 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		return false;
 	}
 
-	//std::vector<pointFastMarching2D> narrowBand;
-	labelingList narrowBand = createlabelingList();
-	labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
-	if(current_point == NULL)
-	{
-		return;
-	}
+	heapStructure* narrowBand = createHeap(dim2D);
 
 	size_t i = (size_t)endPoint[0].x;
 	size_t j = (size_t)endPoint[0].y;
 	size_t currentIndx = x_new(i, j, length);
-
-	current_point->x = endPoint[0].x;
-	current_point->y = endPoint[1].y;
-	current_point->z = -1;//In 2D : set the third coordinate to -1
-	current_point->arrival = 0.0;
-	current_point->previous = NULL;
-	current_point->next = NULL;
-	narrowBand.first_point = current_point;
+	if(i < 0 || i > length || j < 0 || j > width)
+	{
+		false;
+	}
 
 	//STEP 1
 	//In labelAray we have : 1 ---> already processed, 2 ---> narrow band and 3 ---> not processed
@@ -186,75 +176,74 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	action[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
-	//East
-	if (j < width - 1 && i >= 0 && i < length) {
-		size_t jplus = j + 1;
-		dataType ux = upwindFiniteDifference2dX(action, length, width, i, jplus);
-		dataType uy = selectY(action, length, width, i, jplus);
-		size_t indxEast = x_new(i, jplus, length);
-		dataType coefSpeed = potential[indxEast];
-		dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
-		current_point = pushElementToList(&narrowBand, current_point, i, jplus, -1);
-		//action[indxEast] = dEast;
-		//narrowBand.push_back(EastNeighbor);
-		labelArray[indxEast] = 2;
-	}
-
-	/*
-	//West
-	if (j > 0 && i >= 0 && i < length) {
-		size_t jminus = j - 1;
-		dataType x = selectX(actionMapPtr, length, width, i, jminus);
-		dataType y = selectY(actionMapPtr, length, width, i, jminus);
-		size_t indxWest = x_new(i, jminus, length);
-		dataType coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
-		actionMapPtr[indxWest] = dWest;
-		narrowBand.push_back(WestNeighbor);
-		labelArray[indxWest] = 2;
-	}
-
 	//North
-	if (j >= 0 && j < width && i > 0) {
+	if (i > 0) {
 		size_t iminus = i - 1;
-		dataType x = selectX(actionMapPtr, length, width, iminus, j);
-		dataType y = selectY(actionMapPtr, length, width, iminus, j);
+		dataType ux = upwindFiniteDifference2dX(action, length, width, iminus, j);
+		dataType uy = upwindFiniteDifference2dY(action, length, width, iminus, j);
 		size_t indxNorth = x_new(iminus, j, length);
-		dataType coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
-		actionMapPtr[indxNorth] = dNorth;
-		narrowBand.push_back(NorthNeighbor);
+		dataType coefSpeed = potential[indxNorth];
+		dataType dNorth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+		pointFastMarching NorthNeighbor = { iminus, j, -1, dNorth, indxNorth };
+		pushToHeap(&narrowBand, NorthNeighbor);
+		action[indxNorth] = dNorth;
 		labelArray[indxNorth] = 2;
 	}
 
 	//South
-	if (j >= 0 && j < width && i < length - 1) {
+	if (i < length_minus) {
 		size_t iplus = i + 1;
-		dataType x = selectX(actionMapPtr, length, width, iplus, j);
-		dataType y = selectY(actionMapPtr, length, width, iplus, j);
+		dataType ux = upwindFiniteDifference2dX(action, length, width, iplus, j);
+		dataType uy = upwindFiniteDifference2dY(action, length, width, iplus, j);
 		size_t indxSouth = x_new(iplus, j, length);
-		dataType coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
-		actionMapPtr[indxSouth] = dSouth;
-		narrowBand.push_back(SouthNeighbor);
+		dataType coefSpeed = potential[indxSouth];
+		dataType dSouth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+		pointFastMarching SouthNeighbor = { iplus, j, -1, dSouth, indxSouth };
+		pushToHeap(&narrowBand, SouthNeighbor);
+		action[indxSouth] = dSouth;
 		labelArray[indxSouth] = 2;
 	}
 
-	//heapify 2D vector
-	heapifyVector2D(narrowBand);
+	//East
+	if (j < width_minus) {
+		size_t jplus = j + 1;
+		dataType ux = upwindFiniteDifference2dX(action, length, width, i, jplus);
+		dataType uy = upwindFiniteDifference2dY(action, length, width, i, jplus);
+		size_t indxEast = x_new(i, jplus, length);
+		dataType coefSpeed = potential[indxEast];
+		dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+		pointFastMarching EastNeighbor = {i, jplus, -1, dEast, indxEast};
+		pushToHeap(&narrowBand, EastNeighbor);
+		action[indxEast] = dEast;
+		labelArray[indxEast] = 2;
+	}
 
-	//Save points for visualization
-	size_t x_final_point = (size_t)endPoints[1].x;
-	size_t y_final_point = (size_t)endPoints[1].y;
+	//West
+	if (j > 0) {
+		size_t jminus = j - 1;
+		dataType ux = upwindFiniteDifference2dX(action, length, width, i, jminus);
+		dataType uy = upwindFiniteDifference2dY(action, length, width, i, jminus);
+		size_t indxWest = x_new(i, jminus, length);
+		dataType coefSpeed = potential[indxWest];
+		dataType dWest = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+		pointFastMarching WestNeighbor = { i, jminus, -1, dWest, indxWest };
+		pushToHeap(&narrowBand, WestNeighbor);
+		action[indxWest] = dWest;
+		labelArray[indxWest] = 2;
+	}
 
 	dataType max_save_action = 0.0;
 
-	while (narrowBand.size() > 0) {
+	size_t x_final_point = endPoint[1].x;
+	size_t y_final_point = endPoint[1].y;
+	if (x_final_point < 0 || x_final_point > length || y_final_point < 0 || y_final_point > width)
+	{
+		false;
+	}
 
-		pointFastMarching2D current = narrowBand[0];
+	while (narrowBand->size > 0) {
+
+		pointFastMarching current = getPointWithMinimalArrival(&narrowBand);
 		size_t i = current.x;
 		size_t j = current.y;
 		size_t currentIndx = x_new(i, j, length);
@@ -262,38 +251,36 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 
 		// Exit when the final point is reached by the front
 		if (i == x_final_point && j == y_final_point) {
-			labelArray[currentIndx] = 1; // Mark the seed point as processed
+			labelArray[currentIndx] = 1;
 			break;
 		}
 
-		if (actionMapPtr[currentIndx] > max_save_action) {
-			max_save_action = actionMapPtr[currentIndx];
+		if (action[currentIndx] > max_save_action) {
+			max_save_action = action[currentIndx];
 		}
 
-		deleteRootHeap2D(narrowBand);
-
 		//West
-		if (i > 0 && i < length && j >= 0 && j < width) {
+		if (i > 0) {
 			size_t iminus = i - 1;
 			size_t indxWest = x_new(iminus, j, length);
 			short label = labelArray[indxWest];
 			if (label != 1) {
-				dataType x = selectX(actionMapPtr, length, width, iminus, j);
-				dataType y = selectY(actionMapPtr, length, width, iminus, j);
-				dataType coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
+				dataType ux = upwindFiniteDifference2dX(action, length, width, iminus, j);
+				dataType uy = upwindFiniteDifference2dY(action, length, width, iminus, j);
+				dataType coefSpeed = potential[indxWest];
+				dataType dWest = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+				pointFastMarching WestNeighbor = { iminus, j, -1, dWest, dWest };
 				if (label == 3) {
-					actionMapPtr[indxWest] = dWest;
+					pushToHeap(&narrowBand, WestNeighbor);
+					action[indxWest] = dWest;
 					labelArray[indxWest] = 2;
-					addPointHeap2D(narrowBand, WestNeighbor);
 				}
 				else {
-					if (dWest < actionMapPtr[indxWest]) {
-						actionMapPtr[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(narrowBand, iminus, j);
+					if (dWest < action[indxWest]) {
+						action[indxWest] = dWest;
+						int pIndex = getPointPosition(&narrowBand, indxWest);
 						if (pIndex != -1) {
-							heapifyUp2D(narrowBand, pIndex);
+							heapifyUp(&narrowBand, pIndex);
 						}
 					}
 				}
@@ -301,27 +288,27 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		}
 
 		//East
-		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
+		if (i < length_minus) {
 			size_t iplus = i + 1;
 			size_t indxEast = x_new(iplus, j, length);
 			short label = labelArray[indxEast];
 			if (label != 1) {
-				dataType x = selectX(actionMapPtr, length, width, iplus, j);
-				dataType y = selectY(actionMapPtr, length, width, iplus, j);
-				dataType coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
+				dataType ux = upwindFiniteDifference2dX(action, length, width, iplus, j);
+				dataType uy = upwindFiniteDifference2dY(action, length, width, iplus, j);
+				dataType coefSpeed = potential[indxEast];
+				dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+				pointFastMarching EastNeighbor = { iplus, j, -1, dEast, indxEast };
 				if (label == 3) {
-					actionMapPtr[indxEast] = dEast;
+					pushToHeap(&narrowBand, EastNeighbor);
+					action[indxEast] = dEast;
 					labelArray[indxEast] = 2;
-					addPointHeap2D(narrowBand, EastNeighbor);
 				}
 				else {
-					if (dEast < actionMapPtr[indxEast]) {
-						actionMapPtr[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(narrowBand, iplus, j);
+					if (dEast < action[indxEast]) {
+						action[indxEast] = dEast;
+						int pIndex = getPointPosition(&narrowBand, indxEast);
 						if (pIndex != -1) {
-							heapifyUp2D(narrowBand, pIndex);
+							heapifyUp(&narrowBand, pIndex);
 						}
 					}
 				}
@@ -329,27 +316,27 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		}
 
 		//North
-		if (j > 0 && j < width && i >= 0 && i < length) {
+		if (j > 0) {
 			size_t jminus = j - 1;
 			size_t indxNorth = x_new(i, jminus, length);
 			short label = labelArray[indxNorth];
 			if (label != 1) {
-				dataType x = selectX(actionMapPtr, length, width, i, jminus);
-				dataType y = selectY(actionMapPtr, length, width, i, jminus);
-				dataType coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
+				dataType ux = upwindFiniteDifference2dX(action, length, width, i, jminus);
+				dataType uy = upwindFiniteDifference2dY(action, length, width, i, jminus);
+				dataType coefSpeed = potential[indxNorth];
+				dataType dNorth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+				pointFastMarching NorthNeighbor = { i, jminus, -1, dNorth, indxNorth };
 				if (label == 3) {
-					actionMapPtr[indxNorth] = dNorth;
+					pushToHeap(&narrowBand, NorthNeighbor);
+					action[indxNorth] = dNorth;
 					labelArray[indxNorth] = 2;
-					addPointHeap2D(narrowBand, NorthNeighbor);
 				}
 				else {
-					if (dNorth < actionMapPtr[indxNorth]) {
-						actionMapPtr[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(narrowBand, i, jminus);
+					if (dNorth < action[indxNorth]) {
+						action[indxNorth] = dNorth;
+						int pIndex = getPointPosition(&narrowBand, indxNorth);
 						if (pIndex != -1) {
-							heapifyUp2D(narrowBand, pIndex);
+							heapifyUp(&narrowBand, pIndex);
 						}
 					}
 				}
@@ -357,27 +344,27 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		}
 
 		//South
-		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
+		if (j < width_minus) {
 			size_t jplus = j + 1;
 			size_t indxSouth = x_new(i, jplus, length);
 			short label = labelArray[indxSouth];
 			if (label != 1) {
-				dataType x = selectX(actionMapPtr, length, width, i, jplus);
-				dataType y = selectY(actionMapPtr, length, width, i, jplus);
-				dataType coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
+				dataType ux = upwindFiniteDifference2dX(action, length, width, i, jplus);
+				dataType uy = upwindFiniteDifference2dY(action, length, width, i, jplus);
+				dataType coefSpeed = potential[indxSouth];
+				dataType dSouth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+				pointFastMarching SouthNeighbor = { i, jplus, -1, dSouth, indxSouth };
 				if (label == 3) {
-					actionMapPtr[indxSouth] = dSouth;
+					pushToHeap(&narrowBand, SouthNeighbor);
+					action[indxSouth] = dSouth;
 					labelArray[indxSouth] = 2;
-					addPointHeap2D(narrowBand, SouthNeighbor);
 				}
 				else {
-					if (dSouth < actionMapPtr[indxSouth]) {
-						actionMapPtr[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(narrowBand, i, jplus);
+					if (dSouth < action[indxSouth]) {
+						action[indxSouth] = dSouth;
+						int pIndex = getPointPosition(&narrowBand, indxSouth);
 						if (pIndex != -1) {
-							heapifyUp2D(narrowBand, pIndex);
+							heapifyUp(&narrowBand, pIndex);
 						}
 					}
 				}
@@ -388,13 +375,14 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	//Set the action of the non-processed points to maximum action value + 1
 	for (size_t k = 0; k < dim2D; k++) {
 		if (labelArray[k] == 3) {
-			actionMapPtr[k] = max_save_action + 1;
+			action[k] = max_save_action + 1;
 		}
 	}
-	narrowBand.clear();
-	*/
 
-	free(current_point);
+	//release memory
+	free(narrowBand->data);
+	free(narrowBand);
 	free(labelArray);
+
 	return true;
 }
