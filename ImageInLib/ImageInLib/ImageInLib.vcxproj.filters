@@ -356,7 +356,7 @@
     <ClCompile Include="src\fast_marching_front_propagation_3d.c">
       <Filter>Source Files\Front Propagation</Filter>
     </ClCompile>
-    <ClCompile Include="src\descent_gradient_path_extraction.C">
+    <ClCompile Include="src\descent_gradient_path_extraction.c">
       <Filter>Source Files\Front Propagation</Filter>
     </ClCompile>
   </ItemGroup>
