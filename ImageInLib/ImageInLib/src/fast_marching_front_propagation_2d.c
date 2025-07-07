@@ -36,7 +36,7 @@ dataType upwindFiniteDifference2dY(dataType* action, const size_t length, const 
 	return fmin(y_minus, y_plus);
 }
 
-dataType solve2dQuadratic(dataType dx, dataType dy, dataType p, PixelSpacing h) {
+dataType solve2dQuadratic(dataType ux, dataType uy, dataType p, PixelSpacing h) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType p_2 = p * p;
@@ -52,66 +52,66 @@ dataType solve2dQuadratic(dataType dx, dataType dy, dataType p, PixelSpacing h) 
 		return INFINITY; // Return 0 if P is not positive
 	}
 
-	if (dx == INFINITY && dy != INFINITY)
+	if (ux == INFINITY && uy != INFINITY)
 	{
 		a = 1.0;
-		b = -2 * dy;
-		c = (dataType)(dy * dy - hy_2 * p_2);
+		b = -2 * uy;
+		c = (dataType)(uy * uy - hy_2 * p_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution >= dy) {
+			if (solution >= uy) {
 				return solution;
 			}
 			else {
-				return (dataType)(dy + hy * p);
+				return (dataType)(uy + hy * p);
 			}
 		}
 		else {
-			return (dataType)(dy + hy * p);
+			return (dataType)(uy + hy * p);
 		}
 	}
 
-	if (dx != INFINITY && dy == INFINITY)
+	if (ux != INFINITY && uy == INFINITY)
 	{
 		a = 1.0;
-		b = -2 * dx;
-		c = (dataType)(dx * dx - hx_2 * p_2);
+		b = -2 * ux;
+		c = (dataType)(ux * ux - hx_2 * p_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution >= dx)
+			if (solution >= ux)
 			{
 				return solution;
 			}
 			else {
-				return (dataType)(dx + hx * p);
+				return (dataType)(ux + hx * p);
 			}
 		}
 		else {
-			return (dataType)(dx + hx * p);
+			return (dataType)(ux + hx * p);
 		}
 	}
 
-	if (dx != INFINITY && dy != INFINITY)
+	if (ux != INFINITY && uy != INFINITY)
 	{
 		a = hx_2 + hy_2;
-		b = -2 * (hy_2 * dx + hx_2 * dy);
-		c = (dataType)(hy_2 * dx * dx + hx_2 * dy * dy - hx_2 * hy_2 * p_2);
+		b = -2 * (hy_2 * ux + hx_2 * uy);
+		c = (dataType)(hy_2 * ux * ux + hx_2 * uy * uy - hx_2 * hy_2 * p_2);
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			if (solution >= fmax(dx, dy)) {
+			if (solution >= fmax(ux, uy)) {
 				return solution;
 			}
 			else {
-				return (dataType)(fmin(dx + hx * p, dy + hy * p));
+				return (dataType)(fmin(ux + hx * p, uy + hy * p));
 			}
 		}
 		else {
-			return (dataType)(fmin(dx + hx * p, dy + hy * p));
+			return (dataType)(fmin(ux + hx * p, uy + hy * p));
 		}
 	}
 
@@ -189,12 +189,12 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	//East
 	if (j < width - 1 && i >= 0 && i < length) {
 		size_t jplus = j + 1;
-		//dataType x = selectX(action, length, width, i, jplus);
-		//dataType y = selectY(action, length, width, i, jplus);
+		dataType ux = upwindFiniteDifference2dX(action, length, width, i, jplus);
+		dataType uy = selectY(action, length, width, i, jplus);
 		size_t indxEast = x_new(i, jplus, length);
 		dataType coefSpeed = potential[indxEast];
-		//dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		//pointFastMarching2D EastNeighbor = { i, jplus, dEast };
+		dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+		current_point = pushElementToList(&narrowBand, current_point, i, jplus, -1);
 		//action[indxEast] = dEast;
 		//narrowBand.push_back(EastNeighbor);
 		labelArray[indxEast] = 2;
