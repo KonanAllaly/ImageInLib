@@ -185,7 +185,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		dataType coefSpeed = potential[indxNorth];
 		dataType dNorth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 		pointFastMarching NorthNeighbor = { iminus, j, -1, dNorth, indxNorth };
-		pushToHeap(&narrowBand, NorthNeighbor);
+		pushToHeap(narrowBand, NorthNeighbor);
 		action[indxNorth] = dNorth;
 		labelArray[indxNorth] = 2;
 	}
@@ -199,7 +199,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		dataType coefSpeed = potential[indxSouth];
 		dataType dSouth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 		pointFastMarching SouthNeighbor = { iplus, j, -1, dSouth, indxSouth };
-		pushToHeap(&narrowBand, SouthNeighbor);
+		pushToHeap(narrowBand, SouthNeighbor);
 		action[indxSouth] = dSouth;
 		labelArray[indxSouth] = 2;
 	}
@@ -213,7 +213,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		dataType coefSpeed = potential[indxEast];
 		dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 		pointFastMarching EastNeighbor = {i, jplus, -1, dEast, indxEast};
-		pushToHeap(&narrowBand, EastNeighbor);
+		pushToHeap(narrowBand, EastNeighbor);
 		action[indxEast] = dEast;
 		labelArray[indxEast] = 2;
 	}
@@ -227,7 +227,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		dataType coefSpeed = potential[indxWest];
 		dataType dWest = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 		pointFastMarching WestNeighbor = { i, jminus, -1, dWest, indxWest };
-		pushToHeap(&narrowBand, WestNeighbor);
+		pushToHeap(narrowBand, WestNeighbor);
 		action[indxWest] = dWest;
 		labelArray[indxWest] = 2;
 	}
@@ -243,7 +243,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 
 	while (narrowBand->size > 0) {
 
-		pointFastMarching current = getPointWithMinimalArrival(&narrowBand);
+		pointFastMarching current = getPointWithMinimalArrival(narrowBand);
 		size_t i = current.x;
 		size_t j = current.y;
 		size_t currentIndx = x_new(i, j, length);
@@ -271,16 +271,16 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				dataType dWest = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 				pointFastMarching WestNeighbor = { iminus, j, -1, dWest, dWest };
 				if (label == 3) {
-					pushToHeap(&narrowBand, WestNeighbor);
+					pushToHeap(narrowBand, WestNeighbor);
 					action[indxWest] = dWest;
 					labelArray[indxWest] = 2;
 				}
 				else {
 					if (dWest < action[indxWest]) {
 						action[indxWest] = dWest;
-						int pIndex = getPointPosition(&narrowBand, indxWest);
+						int pIndex = getPointPosition(narrowBand, indxWest);
 						if (pIndex != -1) {
-							heapifyUp(&narrowBand, pIndex);
+							heapifyUp(narrowBand, pIndex);
 						}
 					}
 				}
@@ -299,16 +299,16 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				dataType dEast = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 				pointFastMarching EastNeighbor = { iplus, j, -1, dEast, indxEast };
 				if (label == 3) {
-					pushToHeap(&narrowBand, EastNeighbor);
+					pushToHeap(narrowBand, EastNeighbor);
 					action[indxEast] = dEast;
 					labelArray[indxEast] = 2;
 				}
 				else {
 					if (dEast < action[indxEast]) {
 						action[indxEast] = dEast;
-						int pIndex = getPointPosition(&narrowBand, indxEast);
+						int pIndex = getPointPosition(narrowBand, indxEast);
 						if (pIndex != -1) {
-							heapifyUp(&narrowBand, pIndex);
+							heapifyUp(narrowBand, pIndex);
 						}
 					}
 				}
@@ -327,16 +327,16 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				dataType dNorth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 				pointFastMarching NorthNeighbor = { i, jminus, -1, dNorth, indxNorth };
 				if (label == 3) {
-					pushToHeap(&narrowBand, NorthNeighbor);
+					pushToHeap(narrowBand, NorthNeighbor);
 					action[indxNorth] = dNorth;
 					labelArray[indxNorth] = 2;
 				}
 				else {
 					if (dNorth < action[indxNorth]) {
 						action[indxNorth] = dNorth;
-						int pIndex = getPointPosition(&narrowBand, indxNorth);
+						int pIndex = getPointPosition(narrowBand, indxNorth);
 						if (pIndex != -1) {
-							heapifyUp(&narrowBand, pIndex);
+							heapifyUp(narrowBand, pIndex);
 						}
 					}
 				}
@@ -355,16 +355,16 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				dataType dSouth = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 				pointFastMarching SouthNeighbor = { i, jplus, -1, dSouth, indxSouth };
 				if (label == 3) {
-					pushToHeap(&narrowBand, SouthNeighbor);
+					pushToHeap(narrowBand, SouthNeighbor);
 					action[indxSouth] = dSouth;
 					labelArray[indxSouth] = 2;
 				}
 				else {
 					if (dSouth < action[indxSouth]) {
 						action[indxSouth] = dSouth;
-						int pIndex = getPointPosition(&narrowBand, indxSouth);
+						int pIndex = getPointPosition(narrowBand, indxSouth);
 						if (pIndex != -1) {
-							heapifyUp(&narrowBand, pIndex);
+							heapifyUp(narrowBand, pIndex);
 						}
 					}
 				}
