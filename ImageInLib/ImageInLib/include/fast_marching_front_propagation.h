@@ -18,9 +18,8 @@ extern "C" {
 
 	void fastMarchingFrontPropagation(void* inputImageData, void* actionPtr, void* potentialPtr, void* endPoints, const PropagationType pType);
 
-	bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint);
-
-	void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon);
+	//bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint);
+	//void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon);
 
 #endif // !FAST_MARCHING_FRONT_PROPAGATION
 

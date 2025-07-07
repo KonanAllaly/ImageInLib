@@ -2,7 +2,7 @@
 #include <math.h>
 #include "fast_marching_front_propagation_2d.h"
 
-void fastMarchingFrontPropagation(void* inputImageData, void* actionPtr, void* potentialPtr, void* endPoints, const PropagationType pType)
+void fastMarchingFrontPropagation2D(void* inputImageData, void* actionPtr, void* potentialPtr, void* endPoints, const PropagationType pType)
 {
 	switch (pType)
 	{
@@ -267,12 +267,4 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 
 	free(labelArray);
 	return true;
-}
-
-void computePotential2D(dataType* imageDataPtr, dataType* potentialPtr, const size_t length, const size_t width, Point2D* endPoints, const dataType epsilon)
-{
-	if(imageDataPtr == NULL || potentialPtr == NULL || endPoints == NULL)
-	{
-		return;
-	}
 }

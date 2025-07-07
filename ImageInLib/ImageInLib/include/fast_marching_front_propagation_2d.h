@@ -6,13 +6,8 @@ extern "C" {
 #ifndef FAST_MARCHING_FRONT_PROPAGATION_2D
 #define FAST_MARCHING_FRONT_PROPAGATION_2D
 
-#include <stdbool.h>
 #include "common_functions.h"
-
-	typedef struct {
-		size_t x, y, z;
-		dataType arrival;
-	}pointFastMarching;
+#include "labeling.h"
 
 	typedef struct {
 		dataType K; //edge detection coef
@@ -30,7 +25,7 @@ extern "C" {
 		DISTANCE_MAP = 5
 	} PropagationType;
 
-	void fastMarchingFrontPropagation(void* inputImageData, void* actionPtr, void* potential, void* endPoints, const PropagationType pType);
+	void fastMarchingFrontPropagation2D(void* inputImageData, void* actionPtr, void* potential, void* endPoints, const PropagationType pType);
 
 	bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint);
 
