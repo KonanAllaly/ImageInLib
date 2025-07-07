@@ -25,6 +25,12 @@ extern "C" {
 		DISTANCE_MAP = 5
 	} PropagationType;
 
+	dataType upwindFiniteDifference2dX(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
+
+	dataType upwindFiniteDifference2dY(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y);
+
+	dataType solve2dQuadratic(dataType dx, dataType dy, dataType p, PixelSpacing h);
+
 	void fastMarchingFrontPropagation2D(void* inputImageData, void* actionPtr, void* potential, void* endPoints, const PropagationType pType);
 
 	bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint);

@@ -2,6 +2,40 @@
 #include <math.h>
 #include "fast_marching_front_propagation_2d.h"
 
+dataType upwindFiniteDifference2dX(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
+	dataType x_minus, x_plus;
+	if (ind_x == 0) {
+		x_minus = INFINITY;
+	}
+	else {
+		x_minus = action[x_new(ind_x - 1, ind_y, length)];
+	}
+	if (ind_x == length - 1) {
+		x_plus = INFINITY;
+	}
+	else {
+		x_plus = action[x_new(ind_x + 1, ind_y, length)];
+	}
+	return fmin(x_minus, x_plus);
+}
+
+dataType upwindFiniteDifference2dY(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
+	dataType y_minus, y_plus;
+	if (ind_y == 0) {
+		y_minus = INFINITY;
+	}
+	else {
+		y_minus = action[x_new(ind_x, ind_y - 1, length)];
+	}
+	if (ind_y == width - 1) {
+		y_plus = INFINITY;
+	}
+	else {
+		y_plus = action[x_new(ind_x, ind_y + 1, length)];
+	}
+	return fmin(y_minus, y_plus);
+}
+
 dataType solve2dQuadratic(dataType dx, dataType dy, dataType p, PixelSpacing h) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
