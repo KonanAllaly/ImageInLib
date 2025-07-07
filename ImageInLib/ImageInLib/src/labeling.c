@@ -79,6 +79,9 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 	dataType z = -1;
 
 	int label = 0;
+	labelingList neighbours_list = createlabelingList();
+	labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
+
 	for (size_t i = 0; i < length; i++) 
 	{
 		for (size_t j = 0; j < width; j++) 
@@ -90,8 +93,6 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 				{	
 
 					label++;
-					labelingList neighbours_list = createlabelingList();
-					labelingPoint* current_point = (labelingPoint*)malloc(sizeof(labelingPoint));
 					current_point->x = i;
 					current_point->y = j;
 					current_point->z = z;//In 2D : set the third coordinate to -1
@@ -252,6 +253,7 @@ bool labeling2D(Image_Data2D inputImageData, dataType* segment, dataType foreGro
 		}
 	}
 
+	free(current_point);
 	free(statusArray);
 	return true;
 }
