@@ -135,6 +135,33 @@ void fastMarchingFrontPropagation2D(void* inputImageData, void* actionPtr, void*
 	}
 }
 
+void updateNeighbor2D(size_t ni, size_t nj, size_t length, size_t width,
+	dataType* action, dataType* potential, short* labelArray,
+	PixelSpacing spacing, heapStructure* narrowBand)
+{
+	if (ni >= length || nj >= width)
+		return;
+
+	size_t neighborIndx = x_new(ni, nj, length);
+	dataType ux = upwindFiniteDifference2dX(action, length, width, ni, nj);
+	dataType uy = upwindFiniteDifference2dY(action, length, width, ni, nj);
+	dataType coefSpeed = potential[neighborIndx];
+	dataType d = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+	pointFastMarching neighbor = { ni, nj, -1, d, neighborIndx };
+	if (labelArray[neighborIndx] == 3) {
+		pushToHeap(narrowBand, neighbor);
+		action[neighborIndx] = d;
+		labelArray[neighborIndx] = 2;
+	}
+	else if (labelArray[neighborIndx] == 2 && d < action[neighborIndx]) {
+		action[neighborIndx] = d;
+		int pIndex = getPointPosition(narrowBand, neighborIndx);
+		if (pIndex != -1) {
+			heapifyUp(narrowBand, pIndex);
+		}
+	}
+}
+
 bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataType* potential, Point2D* endPoint)
 {
 	if(inputImage.imageDataPtr == NULL || action == NULL || potential == NULL || endPoint == NULL)
@@ -157,12 +184,19 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	}
 
 	heapStructure* narrowBand = createHeap(dim2D);
+	if(narrowBand == NULL || narrowBand->data == NULL)
+	{
+		return false;
+	}
 
 	size_t i = (size_t)endPoint[0].x;
 	size_t j = (size_t)endPoint[0].y;
 	size_t currentIndx = x_new(i, j, length);
-	if(i < 0 || i > length || j < 0 || j > width)
+	if( i >= length || j >= width)
 	{
+		free(labelArray);
+		free(narrowBand->data);
+		free(narrowBand);
 		false;
 	}
 
@@ -176,6 +210,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 	action[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
+	/*
 	//North
 	if (i > 0) {
 		size_t iminus = i - 1;
@@ -231,26 +266,47 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 		action[indxWest] = dWest;
 		labelArray[indxWest] = 2;
 	}
+	*/
+
+	if(i > 0)
+	{
+		updateNeighbor2D(i - 1, j, length, width, action, potential, labelArray, spacing, narrowBand);
+	}
+	if (i < length_minus)
+	{
+		updateNeighbor2D(i + 1, j, length, width, action, potential, labelArray, spacing, narrowBand);
+	}
+	if (j > 0)
+	{
+		updateNeighbor2D(i, j - 1, length, width, action, potential, labelArray, spacing, narrowBand);
+	}
+	if (j < width_minus)
+	{
+		updateNeighbor2D(i, j + 1, length, width, action, potential, labelArray, spacing, narrowBand);
+	}
 
 	dataType max_save_action = 0.0;
 
 	size_t x_final_point = (size_t)endPoint[1].x;
 	size_t y_final_point = (size_t)endPoint[1].y;
-	if (x_final_point < 0 || x_final_point > length || y_final_point < 0 || y_final_point > width)
+	if (x_final_point >= length || y_final_point >= width)
 	{
+		free(labelArray);
+		free(narrowBand->data);
+		free(narrowBand);
 		false;
 	}
 
 	while (narrowBand->size > 0) {
 
 		pointFastMarching current = getPointWithMinimalArrival(narrowBand);
-		size_t i = current.x;
-		size_t j = current.y;
-		size_t currentIndx = x_new(i, j, length);
+		size_t ni = current.x;
+		size_t nj = current.y;
+		size_t currentIndx = x_new(ni, nj, length);
 		labelArray[currentIndx] = 1;
 
 		// Exit when the final point is reached by the front
-		if (i == x_final_point && j == y_final_point) {
+		if (ni == x_final_point && nj == y_final_point) {
 			labelArray[currentIndx] = 1;
 			break;
 		}
@@ -259,6 +315,24 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 			max_save_action = action[currentIndx];
 		}
 
+		if (i > 0)
+		{
+			updateNeighbor2D(i - 1, j, length, width, action, potential, labelArray, spacing, narrowBand);
+		}
+		if (i < length_minus)
+		{
+			updateNeighbor2D(i + 1, j, length, width, action, potential, labelArray, spacing, narrowBand);
+		}
+		if (j > 0)
+		{
+			updateNeighbor2D(i, j - 1, length, width, action, potential, labelArray, spacing, narrowBand);
+		}
+		if (j < width_minus)
+		{
+			updateNeighbor2D(i, j + 1, length, width, action, potential, labelArray, spacing, narrowBand);
+		}
+
+		/*
 		//West
 		if (i > 0) {
 			size_t iminus = i - 1;
@@ -370,6 +444,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				}
 			}
 		}
+		*/
 	}
 
 	//Set the action of the non-processed points to maximum action value + 1
@@ -386,3 +461,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 
 	return true;
 }
+
+
+
+
