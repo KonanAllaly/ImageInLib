@@ -4,13 +4,13 @@
 
 dataType upwindFiniteDifference2dX(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
 	dataType x_minus, x_plus;
-	if (ind_x == 0) {
+	if (ind_x <= 0) {
 		x_minus = INFINITY;
 	}
 	else {
 		x_minus = action[x_new(ind_x - 1, ind_y, length)];
 	}
-	if (ind_x == length - 1) {
+	if (ind_x >= (length - 1)) {
 		x_plus = INFINITY;
 	}
 	else {
@@ -21,13 +21,13 @@ dataType upwindFiniteDifference2dX(dataType* action, const size_t length, const 
 
 dataType upwindFiniteDifference2dY(dataType* action, const size_t length, const size_t width, const size_t ind_x, const size_t ind_y) {
 	dataType y_minus, y_plus;
-	if (ind_y == 0) {
+	if (ind_y <= 0) {
 		y_minus = INFINITY;
 	}
 	else {
 		y_minus = action[x_new(ind_x, ind_y - 1, length)];
 	}
-	if (ind_y == width - 1) {
+	if (ind_y >= (width - 1)) {
 		y_plus = INFINITY;
 	}
 	else {
@@ -234,8 +234,8 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 
 	dataType max_save_action = 0.0;
 
-	size_t x_final_point = endPoint[1].x;
-	size_t y_final_point = endPoint[1].y;
+	size_t x_final_point = (size_t)endPoint[1].x;
+	size_t y_final_point = (size_t)endPoint[1].y;
 	if (x_final_point < 0 || x_final_point > length || y_final_point < 0 || y_final_point > width)
 	{
 		false;
@@ -269,7 +269,7 @@ bool partialFrontPropagation2D(Image_Data2D inputImage, dataType* action, dataTy
 				dataType uy = upwindFiniteDifference2dY(action, length, width, iminus, j);
 				dataType coefSpeed = potential[indxWest];
 				dataType dWest = solve2dQuadratic(ux, uy, coefSpeed, spacing);
-				pointFastMarching WestNeighbor = { iminus, j, -1, dWest, dWest };
+				pointFastMarching WestNeighbor = { iminus, j, -1, dWest, indxWest };
 				if (label == 3) {
 					pushToHeap(narrowBand, WestNeighbor);
 					action[indxWest] = dWest;
