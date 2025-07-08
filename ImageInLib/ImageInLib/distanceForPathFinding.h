@@ -255,6 +255,10 @@ using namespace std;
 
 	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 
+	void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
+		dataType** action, dataType** potential, short** labelArray,
+		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand);
+
 	/// <summary>
 	/// compute speed (potential) in each point
 	/// </summary>

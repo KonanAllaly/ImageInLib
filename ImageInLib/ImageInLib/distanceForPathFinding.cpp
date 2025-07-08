@@ -1702,6 +1702,36 @@ int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t
 	return -1; //not found
 }
 
+void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
+	dataType** action, dataType** potential, short** labelArray,
+	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand)
+{
+
+	if (ind_x >= length || ind_y >= width || ind_z >= height)
+		return;
+
+	size_t xd = x_new(ind_x, ind_y, length);
+	dataType ux = select3dX(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uy = select3dY(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uz = select3dZ(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType coefSpeed = potential[ind_z][xd];
+	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
+	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, solution };
+	if (labelArray[ind_z][xd] == 3) {
+		addPointHeap3D(narrowBand, neighbor);
+		action[ind_z][xd] = solution;
+		labelArray[ind_z][xd] = 2;
+	}
+	else if (labelArray[ind_z][xd] == 2 && solution < action[ind_z][xd]) {
+		action[ind_z][xd] = solution;
+		int pIndex = getIndexFromHeap3D(narrowBand, ind_x, ind_y, ind_z);
+		if (pIndex != -1) {
+			heapifyUp3D(narrowBand, pIndex);
+		}
+	}
+
+}
+
 bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters) {
 
 	if (ctImageData.imageDataPtr == NULL || potential == NULL) {
