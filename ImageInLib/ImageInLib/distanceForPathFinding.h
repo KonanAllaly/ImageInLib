@@ -28,22 +28,6 @@ using namespace std;
 	} pointFastMarching3D;
 
 	typedef struct {
-		union {
-			struct ptsstruct;
-			Point3D pt;
-		};
-		enum {
-			ALIVE = 0,
-			FAR_POINT = 1,
-			NARROW_BAND = 2
-		};
-		dataType arrivalTime;
-		bool isEndPoint;
-		void* prev_point;
-		void* next_point;
-	} frontPoint3D;
-
-	typedef struct {
 		dataType K; //edge detection coef
 		dataType thres;//edge detector threshold
 		dataType eps; //path smothing parameter
@@ -65,7 +49,7 @@ using namespace std;
 	/// <param name="I">y coordinate</param>
 	/// <param name="J">x coordinate</param>
 	/// <returns></returns>
-	dataType selectX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
+	dataType upwindFiniteDifference2dX(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
 
 	/// <summary>
 	/// selection of neighboring pixels in y direction
@@ -76,7 +60,7 @@ using namespace std;
 	/// <param name="I">y coordinate</param>
 	/// <param name="J">x coordinate</param>
 	/// <returns></returns>
-	dataType selectY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
+	dataType upwindFiniteDifference2dY(dataType* actionPtr, const size_t height, const size_t width, const size_t i, const size_t j);
 
 	/// <summary>
 	/// solve quadratic equation : 	This fuction is used the solve the following quadratic coming the discretization 
@@ -130,6 +114,10 @@ using namespace std;
 	void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point);
 
 	int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t j);
+
+	void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
+		dataType* action, dataType* potential, short* labelArray,
+		PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand);
 
 	/// <summary>
 	/// 

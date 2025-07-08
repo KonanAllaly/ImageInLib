@@ -30,7 +30,7 @@ dataType min0(dataType x, dataType y) {
 		return 0;
 }
 
-dataType selectX(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
+dataType upwindFiniteDifference2dX(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
 	dataType i_minus, i_plus;
 
@@ -41,7 +41,7 @@ dataType selectX(dataType* actionPtr, const size_t length, const size_t width, s
 		i_minus = actionPtr[x_new(i - 1, j, length)];
 	}
 
-	if (i == length - 1) {
+	if (i >= length - 1) {
 		i_plus = INFINITY;
 	}
 	else {
@@ -51,7 +51,7 @@ dataType selectX(dataType* actionPtr, const size_t length, const size_t width, s
 	return min(i_minus, i_plus);
 }
 
-dataType selectY(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
+dataType upwindFiniteDifference2dY(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
 	dataType j_minus, j_plus;
 
@@ -62,7 +62,7 @@ dataType selectY(dataType* actionPtr, const size_t length, const size_t width, s
 		j_minus = actionPtr[x_new(i, j - 1, length)];
 	}
 
-	if (j == width - 1) {
+	if (j >= width - 1) {
 		j_plus = INFINITY;
 	}
 	else {
@@ -330,6 +330,35 @@ int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t
 	return -1; //not found
 }
 
+void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
+	dataType* action, dataType* potential, short* labelArray,
+	PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand)
+{
+
+	if (ind_x >= length || ind_y >= width)
+		return;
+
+	size_t neighborIndx = x_new(ind_x, ind_y, length);
+	dataType ux = upwindFiniteDifference2dX(action, length, width, ind_x, ind_y);
+	dataType uy = upwindFiniteDifference2dY(action, length, width, ind_x, ind_y);
+	dataType coefSpeed = potential[neighborIndx];
+	dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+	pointFastMarching2D neighbor = { ind_x, ind_y, solution };
+	if (labelArray[neighborIndx] == 3) {
+		addPointHeap2D(narrowBand, neighbor);
+		action[neighborIndx] = solution;
+		labelArray[neighborIndx] = 2;
+	}
+	else if (labelArray[neighborIndx] == 2 && solution < action[neighborIndx]) {
+		action[neighborIndx] = solution;
+		int pIndex = getIndexFromHeap2D(narrowBand, ind_x, ind_y);
+		if (pIndex != -1) {
+			heapifyUp2D(narrowBand, pIndex);
+		}
+	}
+
+}
+
 bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* seedPoints) {
 
 	const size_t length = imageData.height;
@@ -359,189 +388,48 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 	distancePtr[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
-	//East
-	if (j < width - 1 && i >= 0 && i < length) {
-		size_t jplus = j + 1;
-		dataType x = selectX(distancePtr, length, width, i, jplus);
-		dataType y = selectY(distancePtr, length, width, i, jplus);
-		size_t indxEast = x_new(i, jplus, length);
-		dataType coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
-		distancePtr[indxEast] = dEast;
-		inProcess.push_back(EastNeighbor);
-		labelArray[indxEast] = 2;
+	if (i > 0)
+	{
+		updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 	}
-
-	//West
-	if (j > 0 && i >= 0 && i < length) {
-		size_t jminus = j - 1;
-		dataType x = selectX(distancePtr, length, width, i, jminus);
-		dataType y = selectY(distancePtr, length, width, i, jminus);
-		size_t indxWest = x_new(i, jminus, length);
-		dataType coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
-		distancePtr[indxWest] = dWest;
-		inProcess.push_back(WestNeighbor);
-		labelArray[indxWest] = 2;
+	if (i < length_minus)
+	{
+		updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 	}
-
-	//North
-	if (j >= 0 && j < width && i > 0) {
-		size_t iminus = i - 1;
-		dataType x = selectX(distancePtr, length, width, iminus, j);
-		dataType y = selectY(distancePtr, length, width, iminus, j);
-		size_t indxNorth = x_new(iminus, j, length);
-		dataType coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
-		distancePtr[indxNorth] = dNorth;
-		inProcess.push_back(NorthNeighbor);
-		labelArray[indxNorth] = 2;
+	if (j > 0)
+	{
+		updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 	}
-
-	//South
-	if (j >= 0 && j < width && i < length - 1) {
-		size_t iplus = i + 1;
-		dataType x = selectX(distancePtr, length, width, iplus, j);
-		dataType y = selectY(distancePtr, length, width, iplus, j);
-		size_t indxSouth = x_new(iplus, j, length);
-		dataType coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
-		distancePtr[indxSouth] = dSouth;
-		inProcess.push_back(SouthNeighbor);
-		labelArray[indxSouth] = 2;
+	if (j < width_minus)
+	{
+		updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 	}
-
-	//heapify 2D vector
-	heapifyVector2D(inProcess);
-
-	pointFastMarching2D current;
-	short label = 0;
 	
 	while (inProcess.size() > 0) {
 
-		current = inProcess[0];
+		pointFastMarching2D current = inProcess[0];
 		i = current.x;
 		j = current.y;
 		currentIndx = x_new(i, j, length);
 		labelArray[currentIndx] = 1;
 		deleteRootHeap2D(inProcess);
 
-		//West
-		if (i > 0 && i < length && j >= 0 && j < width) {
-			size_t iminus = i - 1;
-			size_t indxWest = x_new(iminus, j, length);
-			short label = labelArray[indxWest];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, iminus, j);
-				dataType y = selectY(distancePtr, length, width, iminus, j);
-				dataType coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
-				if (label == 3) {
-					distancePtr[indxWest] = dWest;
-					labelArray[indxWest] = 2;
-					addPointHeap2D(inProcess, WestNeighbor);
-				}
-				else {
-					if (dWest < distancePtr[indxWest]) {
-						distancePtr[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i > 0)
+		{
+			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//East
-		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
-			size_t iplus = i + 1;
-			size_t indxEast = x_new(iplus, j, length);
-			short label = labelArray[indxEast];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, iplus, j);
-				dataType y = selectY(distancePtr, length, width, iplus, j);
-				dataType coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
-				if (label == 3) {
-					distancePtr[indxEast] = dEast;
-					labelArray[indxEast] = 2;
-					addPointHeap2D(inProcess, EastNeighbor);
-				}
-				else {
-					if (dEast < distancePtr[indxEast]) {
-						distancePtr[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i < length_minus)
+		{
+			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//North
-		if (j > 0 && j < width && i >= 0 && i < length) {
-			size_t jminus = j - 1;
-			size_t indxNorth = x_new(i, jminus, length);
-			short label = labelArray[indxNorth];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, i, jminus);
-				dataType y = selectY(distancePtr, length, width, i, jminus);
-				dataType coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
-				if (label == 3) {
-					distancePtr[indxNorth] = dNorth;
-					labelArray[indxNorth] = 2;
-					addPointHeap2D(inProcess, NorthNeighbor);
-				}
-				else {
-					if (dNorth < distancePtr[indxNorth]) {
-						distancePtr[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j > 0)
+		{
+			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//South
-		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
-			size_t jplus = j + 1;
-			size_t indxSouth = x_new(i, jplus, length);
-			short label = labelArray[indxSouth];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, i, jplus);
-				dataType y = selectY(distancePtr, length, width, i, jplus);
-				dataType coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
-				if (label == 3) {
-					distancePtr[indxSouth] = dSouth;
-					labelArray[indxSouth] = 2;
-					addPointHeap2D(inProcess, SouthNeighbor);
-				}
-				else {
-					if (dSouth < distancePtr[indxSouth]) {
-						distancePtr[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j < width_minus)
+		{
+			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
 	}
 
 	delete[] labelArray;
@@ -580,258 +468,57 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	distancePtr[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
-	//East
-	if (j < width - 1 && i >= 0 && i < length) {
-		size_t jplus = j + 1;
-		dataType x = selectX(distancePtr, length, width, i, jplus);
-		dataType y = selectY(distancePtr, length, width, i, jplus);
-		size_t indxEast = x_new(i, jplus, length);
-		dataType coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { i, jplus, dEast };
-		distancePtr[indxEast] = dEast;
-		inProcess.push_back(EastNeighbor);
-		labelArray[indxEast] = 2;
+	if(i > 0)
+	{
+		updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+	}
+	if (i < length_minus)
+	{
+		updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+	}
+	if (j > 0)
+	{
+		updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+	}
+	if (j < width_minus)
+	{
+		updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 	}
 
-	//West
-	if (j > 0 && i >= 0 && i < length) {
-		size_t jminus = j - 1;
-		dataType x = selectX(distancePtr, length, width, i, jminus);
-		dataType y = selectY(distancePtr, length, width, i, jminus);
-		size_t indxWest = x_new(i, jminus, length);
-		dataType coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { i, jminus, dWest };
-		distancePtr[indxWest] = dWest;
-		inProcess.push_back(WestNeighbor);
-		labelArray[indxWest] = 2;
-	}
-
-	//North
-	if (j >= 0 && j < width && i > 0) {
-		size_t iminus = i - 1;
-		dataType x = selectX(distancePtr, length, width, iminus, j);
-		dataType y = selectY(distancePtr, length, width, iminus, j);
-		size_t indxNorth = x_new(iminus, j, length);
-		dataType coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D NorthNeighbor = { iminus, j, dNorth };
-		distancePtr[indxNorth] = dNorth;
-		inProcess.push_back(NorthNeighbor);
-		labelArray[indxNorth] = 2;
-	}
-
-	//South
-	if (j >= 0 && j < width && i < length - 1) {
-		size_t iplus = i + 1;
-		dataType x = selectX(distancePtr, length, width, iplus, j);
-		dataType y = selectY(distancePtr, length, width, iplus, j);
-		size_t indxSouth = x_new(iplus, j, length);
-		dataType coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D SouthNeighbor = { iplus, j, dSouth };
-		distancePtr[indxSouth] = dSouth;
-		inProcess.push_back(SouthNeighbor);
-		labelArray[indxSouth] = 2;
-	}
-
-	//heapify 2D vector
-	heapifyVector2D(inProcess);
-
-	pointFastMarching2D current;
-
-	//Save points for visualization
-	vector<Point2D> savingList;
-	size_t id_save = 0;
-	size_t nb_computed_points = 0;
 	size_t seedI = endPoints[1].x, seedJ = endPoints[1].y, seedIndex = x_new(seedI, seedJ, length);
 
 	dataType max_save_action = 0.0;
-	//dataType* partialDistancePtr = new dataType[length * width]{ 0 };
-	size_t nb_points_processed = 0;
 	while (labelArray[seedIndex] != 1) {
 
-		current = inProcess[0];
+		pointFastMarching2D current = inProcess[0];
 		i = current.x;
 		j = current.y;
 		currentIndx = x_new(i, j, length);
 		labelArray[currentIndx] = 1;
-		nb_computed_points++;
 
 		if(distancePtr[currentIndx] > max_save_action) {
 			max_save_action = distancePtr[currentIndx];
 		}
-
-		////Save points for visualization
-		//Point2D point = { (dataType)i, (dataType)j };
-		//savingList.push_back(point);
-		//if (nb_computed_points % 500 == 0) {
-		//	id_save++;
-		//	//string saving_csv = savingPath + to_string(id_save) + ".csv";
-		//	//FILE* frontPoint;
-		//	//if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-		//	//	printf("Enable to open");
-		//	//	return false;
-		//	//}
-		//	//fprintf(frontPoint, "x,y\n");
-		//	//for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-		//	//	fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-		//	//}
-		//	////Don't empty the list of points to see the whole computed points
-		//	////savingList.clear();
-		//	//fclose(frontPoint);
-		//	string saving_file = savingPath + to_string(id_save) + ".raw";
-		//	for(size_t in = 0; in < savingList.size(); in++) {
-		//		size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
-		//		partialDistancePtr[indx] = distancePtr[indx];
-		//	}
-		//	manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
-		//}
 		
-		nb_points_processed++;
 		deleteRootHeap2D(inProcess);
 
-		//West
-		if (i > 0 && i < length && j >= 0 && j < width) {
-			size_t iminus = i - 1;
-			size_t indxWest = x_new(iminus, j, length);
-			short label = labelArray[indxWest];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, iminus, j);
-				dataType y = selectY(distancePtr, length, width, iminus, j);
-				dataType coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { iminus, j, dWest };
-				if (label == 3) {
-					distancePtr[indxWest] = dWest;
-					labelArray[indxWest] = 2;
-					addPointHeap2D(inProcess, WestNeighbor);
-				}
-				else {
-					if (dWest < distancePtr[indxWest]) {
-						distancePtr[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i > 0)
+		{
+			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//East
-		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
-			size_t iplus = i + 1;
-			size_t indxEast = x_new(iplus, j, length);
-			short label = labelArray[indxEast];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, iplus, j);
-				dataType y = selectY(distancePtr, length, width, iplus, j);
-				dataType coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
-				if (label == 3) {
-					distancePtr[indxEast] = dEast;
-					labelArray[indxEast] = 2;
-					addPointHeap2D(inProcess, EastNeighbor);
-				}
-				else {
-					if (dEast < distancePtr[indxEast]) {
-						distancePtr[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i < length_minus)
+		{
+			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//North
-		if (j > 0 && j < width && i >= 0 && i < length) {
-			size_t jminus = j - 1;
-			size_t indxNorth = x_new(i, jminus, length);
-			short label = labelArray[indxNorth];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, i, jminus);
-				dataType y = selectY(distancePtr, length, width, i, jminus);
-				dataType coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
-				if (label == 3) {
-					distancePtr[indxNorth] = dNorth;
-					labelArray[indxNorth] = 2;
-					addPointHeap2D(inProcess, NorthNeighbor);
-				}
-				else {
-					if (dNorth < distancePtr[indxNorth]) {
-						distancePtr[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j > 0)
+		{
+			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//South
-		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
-			size_t jplus = j + 1;
-			size_t indxSouth = x_new(i, jplus, length);
-			short label = labelArray[indxSouth];
-			if (label != 1) {
-				dataType x = selectX(distancePtr, length, width, i, jplus);
-				dataType y = selectY(distancePtr, length, width, i, jplus);
-				dataType coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
-				if (label == 3) {
-					distancePtr[indxSouth] = dSouth;
-					labelArray[indxSouth] = 2;
-					addPointHeap2D(inProcess, SouthNeighbor);
-				}
-				else {
-					if (dSouth < distancePtr[indxSouth]) {
-						distancePtr[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j < width_minus)
+		{
+			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
 		}
 	}
-	
-	////Save points for visualization
-	//if (savingList.size() != 0) {
-	//	id_save++;
-	//	string saving_csv = savingPath + to_string(id_save) + ".csv";
-	//	FILE* frontPoint;
-	//	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-	//		printf("Enable to open");
-	//		return false;
-	//	}
-	//	fprintf(frontPoint, "x,y\n");
-	//	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-	//		fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-	//	}
-	//	savingList.clear();
-	//	fclose(frontPoint);
-	//}
-
-	//id_save++;
-	//string saving_file = savingPath + to_string(id_save) + ".raw";
-	//for (size_t in = 0; in < savingList.size(); in++) {
-	//	size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
-	//	partialDistancePtr[indx] = distancePtr[indx];
-	//}
-	//manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
-
-	nb_points_processed += inProcess.size();
-	std::cout << "Number of points processed: " << nb_points_processed << std::endl;
 
 	//Set the distance of the end point to the maximum value
 	for(i = 0; i < dim2D; i++) {
@@ -841,7 +528,6 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	}
 	inProcess.clear();
 	
-	//delete[] partialDistancePtr;
 	delete[] labelArray;
 }
 
@@ -896,119 +582,41 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 
 	//Initialize neighbors for the first front
 
-	if(x1 > 0 && y1 >= 0 && y1 < width) {
-		size_t xminus = x1 - 1;
-		dataType x = selectX(actionFirstFront, length, width, xminus, y1);
-		dataType y = selectY(actionFirstFront, length, width, xminus, y1);
-		size_t indxWest = x_new(xminus, y1, length);
-		dataType coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { xminus, y1, dWest };
-		actionFirstFront[indxWest] = dWest;
-		narrowBandFirstFront.push_back(WestNeighbor);
-		firstLabelArray[indxWest] = 2; //2 ---> in process
+	if (x1 > 0)
+	{
+		updateNeighbor2D(x1 - 1, y1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
 	}
-
-	if(x1 < length_minus && y1 >= 0 && y1 < width) {
-		size_t xplus = x1 + 1;
-		dataType x = selectX(actionFirstFront, length, width, xplus, y1);
-		dataType y = selectY(actionFirstFront, length, width, xplus, y1);
-		size_t indxEast = x_new(xplus, y1, length);
-		dataType coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { xplus, y1, dEast };
-		actionFirstFront[indxEast] = dEast;
-		narrowBandFirstFront.push_back(EastNeighbor);
-		firstLabelArray[indxEast] = 2; //2 ---> in process
+	if (x1 < length_minus)
+	{
+		updateNeighbor2D(x1 + 1, y1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
 	}
-
-	if (y1 > 0 && x1 >= 0 && x1 < length) {
-		size_t yminus = y1 - 1;
-		dataType x = selectX(actionFirstFront, length, width, x1, yminus);
-		dataType y = selectY(actionFirstFront, length, width, x1, yminus);
-		size_t indxNorth = x_new(x1, yminus, length);
-		dataType coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { x1, yminus, dNorth };
-		actionFirstFront[indxNorth] = dNorth;
-		narrowBandFirstFront.push_back(WestNeighbor);
-		firstLabelArray[indxNorth] = 2; //2 ---> in process
+	if (y1 > 0)
+	{
+		updateNeighbor2D(x1, y1 - 1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
 	}
-
-	if (y1 < width_minus && x1 >= 0 && x1 < length) {
-		size_t yplus = y1 + 1;
-		dataType x = selectX(actionFirstFront, length, width, x1, yplus);
-		dataType y = selectY(actionFirstFront, length, width, x1, yplus);
-		size_t indxSouth = x_new(x1, yplus, length);
-		dataType coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { x1, yplus, dSouth };
-		actionFirstFront[indxSouth] = dSouth;
-		narrowBandFirstFront.push_back(EastNeighbor);
-		firstLabelArray[indxSouth] = 2; //2 ---> in process
+	if (y1 < width_minus)
+	{
+		updateNeighbor2D(x1, y1 + 1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
 	}
 
 	//Initialize neighbors for the second front
 
-	if (x2 > 0 && y2 >= 0 && y2 < width) {
-		size_t xminus = x2 - 1;
-		dataType x = selectX(actionSecondFront, length, width, xminus, y2);
-		dataType y = selectY(actionSecondFront, length, width, xminus, y2);
-		size_t indxWest = x_new(xminus, y2, length);
-		dataType coefSpeed = potentialPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { xminus, y2, dWest };
-		actionSecondFront[indxWest] = dWest;
-		narrowBandSecondFront.push_back(WestNeighbor);
-		secondLabelArray[indxWest] = 2; //2 ---> in process
+	if (x2 > 0)
+	{
+		updateNeighbor2D(x2 - 1, y2, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 	}
-
-	if(x2 < length_minus && y2 >= 0 && y2 < width) {
-		size_t xplus = x2 + 1;
-		dataType x = selectX(actionSecondFront, length, width, xplus, y2);
-		dataType y = selectY(actionSecondFront, length, width, xplus, y2);
-		size_t indxEast = x_new(xplus, y2, length);
-		dataType coefSpeed = potentialPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { xplus, y2, dEast };
-		actionSecondFront[indxEast] = dEast;
-		narrowBandSecondFront.push_back(EastNeighbor);
-		secondLabelArray[indxEast] = 2; //2 ---> in process
+	if (x2 < length_minus)
+	{
+		updateNeighbor2D(x2 + 1, y2, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 	}
-
-	if(y2 > 0 && x2 >= 0 && x2 < length) {
-		size_t yminus = y2 - 1;
-		dataType x = selectX(actionSecondFront, length, width, x2, yminus);
-		dataType y = selectY(actionSecondFront, length, width, x2, yminus);
-		size_t indxNorth = x_new(x2, yminus, length);
-		dataType coefSpeed = potentialPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D NorthNeighbor = { x2, yminus, dNorth };
-		actionSecondFront[indxNorth] = dNorth;
-		narrowBandSecondFront.push_back(NorthNeighbor);
-		secondLabelArray[indxNorth] = 2; //2 ---> in process
+	if (y2 > 0)
+	{
+		updateNeighbor2D(x2, y2 - 1, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 	}
-
-	if(y2 < width_minus && x2 >= 0 && x2 < length) {
-		size_t yplus = y2 + 1;
-		dataType x = selectX(actionSecondFront, length, width, x2, yplus);
-		dataType y = selectY(actionSecondFront, length, width, x2, yplus);
-		size_t indxSouth = x_new(x2, yplus, length);
-		dataType coefSpeed = potentialPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D SouthNeighbor = { x2, yplus, dSouth };
-		actionSecondFront[indxSouth] = dSouth;
-		narrowBandSecondFront.push_back(SouthNeighbor);
-		secondLabelArray[indxSouth] = 2; //2 ---> in process
+	if (y2 < width_minus)
+	{
+		updateNeighbor2D(x2, y2 + 1, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 	}
-
-	//heapify 2D vector
-	heapifyVector2D(narrowBandFirstFront);
-	heapifyVector2D(narrowBandSecondFront);
-
-	//Save points for visualization
-	//vector<Point2D> savingList;
-	//size_t id_save = 0;
 
 	dataType max_save_action = 0.0;
 	size_t nb_computed_points = 0;
@@ -1024,9 +632,6 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 			endPoints[2].x = x1;
 			endPoints[2].y = y1;
 			break;
-			//narrowBandFirstFront.clear();
-			//narrowBandSecondFront.clear();
-			//return true; //End the propagation
 		}
 		else {
 			firstLabelArray[indexFirst] = 1;
@@ -1047,9 +652,6 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 			endPoints[2].x = x2;
 			endPoints[2].y = y2;
 			break;
-			//narrowBandFirstFront.clear();
-			//narrowBandSecondFront.clear();
-			//return true; //End the propagation
 		}
 		else {
 			secondLabelArray[indexSecond] = 1;
@@ -1059,291 +661,46 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 			max_save_action = secondFrontPoint.arrival;
 		}
 		deleteRootHeap2D(narrowBandSecondFront);
-		nb_computed_points++;
 
-		////Save points for visualization
-		//Point2D point = { (dataType)i, (dataType)j };
-		//savingList.push_back(point);
-		//if (nb_computed_points % 500 == 0) {
-		//	id_save++;
-		//	//string saving_csv = savingPath + to_string(id_save) + ".csv";
-		//	//FILE* frontPoint;
-		//	//if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-		//	//	printf("Enable to open");
-		//	//	return false;
-		//	//}
-		//	//fprintf(frontPoint, "x,y\n");
-		//	//for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-		//	//	fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-		//	//}
-		//	////Don't empty the list of points to see the whole computed points
-		//	////savingList.clear();
-		//	//fclose(frontPoint);
-		//	string saving_file = savingPath + to_string(id_save) + ".raw";
-		//	for(size_t in = 0; in < savingList.size(); in++) {
-		//		size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
-		//		partialDistancePtr[indx] = distancePtr[indx];
-		//	}
-		//	manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
-		//}
+		//update neighbors for the first front
 
-		//West first front
-		if (x1 > 0 && x1 < length && y1 >= 0 && y1 < width) {
-			size_t xminus = x1 - 1;
-			size_t indxWest = x_new(xminus, y1, length);
-			short label = firstLabelArray[indxWest];
-			if (label != 1) {
-				dataType x = selectX(actionFirstFront, length, width, xminus, y1);
-				dataType y = selectY(actionFirstFront, length, width, xminus, y1);
-				dataType coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { xminus, y1, dWest };
-				if (label == 3) {
-					actionFirstFront[indxWest] = dWest;
-					firstLabelArray[indxWest] = 2;
-					addPointHeap2D(narrowBandFirstFront, WestNeighbor);
-				}
-				else {
-					if (dWest < actionFirstFront[indxWest]) {
-						actionFirstFront[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(narrowBandFirstFront, xminus, y1);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandFirstFront, pIndex);
-						}
-					}
-				}
-			}
+		if (x1 > 0)
+		{
+			updateNeighbor2D(x1 - 1, y1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
+		}
+		if (x1 < length_minus)
+		{
+			updateNeighbor2D(x1 + 1, y1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
+		}
+		if (y1 > 0)
+		{
+			updateNeighbor2D(x1, y1 - 1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
+		}
+		if (y1 < width_minus)
+		{
+			updateNeighbor2D(x1, y1 + 1, length, width, actionFirstFront, potentialPtr, firstLabelArray, spacing, narrowBandFirstFront);
 		}
 
-		//West second front
-		if(x2 > 0 && x2 < length && y2 >= 0 && y2 < width) {
-			size_t xminus = x2 - 1;
-			size_t indxWest = x_new(xminus, y2, length);
-			short label = secondLabelArray[indxWest];
-			if (label != 1) {
-				dataType x = selectX(actionSecondFront, length, width, xminus, y2);
-				dataType y = selectY(actionSecondFront, length, width, xminus, y2);
-				dataType coefSpeed = potentialPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { xminus, y2, dWest };
-				if (label == 3) {
-					actionSecondFront[indxWest] = dWest;
-					secondLabelArray[indxWest] = 2;
-					addPointHeap2D(narrowBandSecondFront, WestNeighbor);
-				}
-				else {
-					if (dWest < actionSecondFront[indxWest]) {
-						actionSecondFront[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(narrowBandSecondFront, xminus, y2);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandSecondFront, pIndex);
-						}
-					}
-				}
-			}
-		}
+		//update  neighbors for the second front
 
-		//East first front
-		if (x1 < length_minus && x1 >= 0 && y1 >= 0 && y1 < width) {
-			size_t xplus = x1 + 1;
-			size_t indxEast = x_new(xplus, y1, length);
-			short label = firstLabelArray[indxEast];
-			if (label != 1) {
-				dataType x = selectX(actionFirstFront, length, width, xplus, y1);
-				dataType y = selectY(actionFirstFront, length, width, xplus, y1);
-				dataType coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { xplus, y1, dEast };
-				if (label == 3) {
-					actionFirstFront[indxEast] = dEast;
-					firstLabelArray[indxEast] = 2;
-					addPointHeap2D(narrowBandFirstFront, EastNeighbor);
-				}
-				else {
-					if (dEast < actionFirstFront[indxEast]) {
-						actionFirstFront[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(narrowBandFirstFront, xplus, y1);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandFirstFront, pIndex);
-						}
-					}
-				}
-			}
+		if (x2 > 0)
+		{
+			updateNeighbor2D(x2 - 1, y2, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 		}
-
-		//East second front
-		if (x2 < length_minus && x2 >= 0 && y2 >= 0 && y2 < width) {
-			size_t xplus = x2 + 1;
-			size_t indxEast = x_new(xplus, y2, length);
-			short label = secondLabelArray[indxEast];
-			if (label != 1) {
-				dataType x = selectX(actionSecondFront, length, width, xplus, y2);
-				dataType y = selectY(actionSecondFront, length, width, xplus, y2);
-				dataType coefSpeed = potentialPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { xplus, y2, dEast };
-				if (label == 3) {
-					actionSecondFront[indxEast] = dEast;
-					secondLabelArray[indxEast] = 2;
-					addPointHeap2D(narrowBandSecondFront, EastNeighbor);
-				}
-				else {
-					if (dEast < actionSecondFront[indxEast]) {
-						actionSecondFront[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(narrowBandSecondFront, xplus, y2);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandSecondFront, pIndex);
-						}
-					}
-				}
-			}
+		if (x2 < length_minus)
+		{
+			updateNeighbor2D(x2 + 1, y2, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 		}
-
-		//North first front
-		if(y1 > 0 && y1 < width && x1 >= 0 && x1 < length) {
-			size_t yminus = y1 - 1;
-			size_t indxNorth = x_new(x1, yminus, length);
-			short label = firstLabelArray[indxNorth];
-			if (label != 1) {
-				dataType x = selectX(actionFirstFront, length, width, x1, yminus);
-				dataType y = selectY(actionFirstFront, length, width, x1, yminus);
-				dataType coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { x1, yminus, dNorth };
-				if (label == 3) {
-					actionFirstFront[indxNorth] = dNorth;
-					firstLabelArray[indxNorth] = 2;
-					addPointHeap2D(narrowBandFirstFront, NorthNeighbor);
-				}
-				else {
-					if (dNorth < actionFirstFront[indxNorth]) {
-						actionFirstFront[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(narrowBandFirstFront, x1, yminus);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandFirstFront, pIndex);
-						}
-					}
-				}
-			}
+		if (y2 > 0)
+		{
+			updateNeighbor2D(x2, y2 - 1, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 		}
-
-		//North second front
-		if (y2 > 0 && y2 < width && x2 >= 0 && x2 < length) {
-			size_t yminus = y2 - 1;
-			size_t indxNorth = x_new(x2, yminus, length);
-			short label = secondLabelArray[indxNorth];
-			if (label != 1) {
-				dataType x = selectX(actionSecondFront, length, width, x2, yminus);
-				dataType y = selectY(actionSecondFront, length, width, x2, yminus);
-				dataType coefSpeed = potentialPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { x2, yminus, dNorth };
-				if (label == 3) {
-					actionSecondFront[indxNorth] = dNorth;
-					secondLabelArray[indxNorth] = 2;
-					addPointHeap2D(narrowBandSecondFront, NorthNeighbor);
-				}
-				else {
-					if (dNorth < actionSecondFront[indxNorth]) {
-						actionSecondFront[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(narrowBandSecondFront, x2, yminus);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandSecondFront, pIndex);
-						}
-					}
-				}
-			}
+		if (y2 < width_minus)
+		{
+			updateNeighbor2D(x2, y2 + 1, length, width, actionSecondFront, potentialPtr, secondLabelArray, spacing, narrowBandSecondFront);
 		}
-
-		//South first front
-		if(y1 >= 0 && y1 < width_minus && x1 >= 0 && x1 < length) {
-			size_t yplus = y1 + 1;
-			size_t indxSouth = x_new(x1, yplus, length);
-			short label = firstLabelArray[indxSouth];
-			if (label != 1) {
-				dataType x = selectX(actionFirstFront, length, width, x1, yplus);
-				dataType y = selectY(actionFirstFront, length, width, x1, yplus);
-				dataType coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { x1, yplus, dSouth };
-				if (label == 3) {
-					actionFirstFront[indxSouth] = dSouth;
-					firstLabelArray[indxSouth] = 2;
-					addPointHeap2D(narrowBandFirstFront, SouthNeighbor);
-				}
-				else {
-					if (dSouth < actionFirstFront[indxSouth]) {
-						actionFirstFront[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(narrowBandFirstFront, x1, yplus);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandFirstFront, pIndex);
-						}
-					}
-				}
-			}
-		}
-
-		//South second front
-		if(y2 >= 0 && y2 < width_minus && x2 >= 0 && x2 < length) {
-			size_t yplus = y2 + 1;
-			size_t indxSouth = x_new(x2, yplus, length);
-			short label = secondLabelArray[indxSouth];
-			if (label != 1) {
-				dataType x = selectX(actionSecondFront, length, width, x2, yplus);
-				dataType y = selectY(actionSecondFront, length, width, x2, yplus);
-				dataType coefSpeed = potentialPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { x2, yplus, dSouth };
-				if (label == 3) {
-					actionSecondFront[indxSouth] = dSouth;
-					secondLabelArray[indxSouth] = 2;
-					addPointHeap2D(narrowBandSecondFront, SouthNeighbor);
-				}
-				else {
-					if (dSouth < actionSecondFront[indxSouth]) {
-						actionSecondFront[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(narrowBandSecondFront, x2, yplus);
-						if (pIndex != -1) {
-							heapifyUp2D(narrowBandSecondFront, pIndex);
-						}
-					}
-				}
-			}
-		}
-
-		//if (nb_computed_points == 50000) {
-		//	break;
-		//}
 
 	}
-
-	////Save points for visualization
-	//if (savingList.size() != 0) {
-	//	id_save++;
-	//	string saving_csv = savingPath + to_string(id_save) + ".csv";
-	//	FILE* frontPoint;
-	//	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-	//		printf("Enable to open");
-	//		return false;
-	//	}
-	//	fprintf(frontPoint, "x,y\n");
-	//	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-	//		fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-	//	}
-	//	savingList.clear();
-	//	fclose(frontPoint);
-	//}
-
-	//id_save++;
-	//string saving_file = savingPath + to_string(id_save) + ".raw";
-	//for (size_t in = 0; in < savingList.size(); in++) {
-	//	size_t indx = x_new((size_t)savingList[in].x, (size_t)savingList[in].y, length);
-	//	partialDistancePtr[indx] = distancePtr[indx];
-	//}
-	//manageRAWFile2D<dataType>(distancePtr, length, width, saving_file.c_str(), STORE_DATA, false);
-
-	nb_computed_points += narrowBandFirstFront.size() + narrowBandSecondFront.size();
-	std::cout << "Number of points processed: " << nb_computed_points << std::endl;
 
 	for (size_t k = 0; k < dim2D; k++) {
 		if(actionFirstFront[k] == INFINITY) {
@@ -1403,76 +760,28 @@ bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* 
 	//find the neighbours of the initial point add add them to inProcess
 	size_t length_minus = length - 1, width_minus = width - 1;
 
-	//West
-	if (i > 0 && i < length && j >= 0 && j < width) {
-		size_t iminus = i - 1;
-		size_t indxWest = x_new(iminus, j, length);
-		dataType x = selectX(actionMapStr.imageDataPtr, length, width, iminus, j);
-		dataType y = selectY(actionMapStr.imageDataPtr, length, width, iminus, j);
-		dataType coefSpeed = potentialFuncPtr[indxWest];
-		dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D WestNeighbor = { iminus, j, dWest };
-		actionMapStr.imageDataPtr[indxWest] = dWest;
-		inProcess.push_back(WestNeighbor);
-		labelArray[indxWest] = 2;
+	if (i > 0)
+	{
+		updateNeighbor2D(i - 1, j, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 	}
-
-	//East
-	if (i < length_minus && i >= 0 && j >= 0 && j < width) {
-		size_t iplus = i + 1;
-		size_t indxEast = x_new(iplus, j, length);
-		dataType x = selectX(actionMapStr.imageDataPtr, length, width, iplus, j);
-		dataType y = selectY(actionMapStr.imageDataPtr, length, width, iplus, j);
-		dataType coefSpeed = potentialFuncPtr[indxEast];
-		dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D EastNeighbor = { iplus, j, dEast };
-		actionMapStr.imageDataPtr[indxEast] = dEast;
-		inProcess.push_back(EastNeighbor);
-		labelArray[indxEast] = 2;
+	if (i < length_minus)
+	{
+		updateNeighbor2D(i + 1, j, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 	}
-
-	//North
-	if (j > 0 && j < width && i >= 0 && i < length) {
-		size_t jminus = j - 1;
-		size_t indxNorth = x_new(i, jminus, length);
-		dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jminus);
-		dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jminus);
-		dataType coefSpeed = potentialFuncPtr[indxNorth];
-		dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
-		actionMapStr.imageDataPtr[indxNorth] = dNorth;
-		inProcess.push_back(NorthNeighbor);
-		labelArray[indxNorth] = 2;
+	if (j > 0)
+	{
+		updateNeighbor2D(i, j - 1, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 	}
-
-	//South
-	if (j>= 0 && j < width_minus && i >= 0 && i < length) {
-		size_t jplus = j + 1;
-		size_t indxSouth = x_new(i, jplus, length);
-		dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jplus);
-		dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jplus);
-		dataType coefSpeed = potentialFuncPtr[indxSouth];
-		dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-		pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
-		actionMapStr.imageDataPtr[indxSouth] = dSouth;
-		inProcess.push_back(SouthNeighbor);
-		labelArray[indxSouth] = 2;
+	if (j < width_minus)
+	{
+		updateNeighbor2D(i, j + 1, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 	}
-
-	heapifyVector2D(inProcess);
-	size_t label = 0;
-
-	int l = 0, m = 0;
-	size_t nbSourcePoint = 0;
-	dataType max_weighted_distance = 0.0;
 
 	size_t iEnd = (size_t)seedPoint[1].x;
 	size_t jEnd = (size_t)seedPoint[1].y;
 
 	//Visualize the front propagation
 	size_t id_keyPoint = 1;
-	std::string storing_path;
-	vector<Point2D> savingList;
 
 	double distanceToCurrentSourcePoint = 0.0;
 	//Set the starting point as initial source point
@@ -1498,29 +807,14 @@ bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* 
 		Point2D pSourceReal = getRealCoordFromImageCoord2D(pSource, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
 		Point2D pCurrent = getRealCoordFromImageCoord2D(currentSourcePoint, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
 		distanceToCurrentSourcePoint = getPoint2DDistance(pCurrent, pSourceReal);
-		//For vizualization
-		savingList.push_back(pSourceReal);
 		if (distanceToCurrentSourcePoint >= LengthKeyPoints) {
-
-			string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
-			FILE* frontPoint;
-			if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-				printf("Enable to open");
-				return false;
-			}
-			fprintf(frontPoint, "x,y\n");
-			for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-				fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-			}
-			//savingList.clear(); //not empty the list of computed points to see the whole front
-			fclose(frontPoint);
 
 			//If the condition is true ---> new key point is found so we need to initilize it neighbors
 			currentSourcePoint = pSource;
 			key_points.push_back(currentSourcePoint);
 			actionMapStr.imageDataPtr[currentIndx] = 0;
 
-			//Initialize all the points inside the narrow band as not processed ---> label = 3
+			//Initialize all the points inside the narrow band as processed ---> label = 1
 			for (size_t it = 0; it < inProcess.size(); it++) {
 				labelArray[x_new(inProcess[it].x, inProcess[it].y, length)] = 1;
 			}
@@ -1563,7 +857,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* 
 
 			inProcess.clear();
 			id_keyPoint++;
-
 		}
 		else {
 			//actionMapStr.imageDataPtr[currentIndx] = current.arrival;
@@ -1572,145 +865,28 @@ bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* 
 
 		//====================
 		
-		//processed neighbors of the minimum in the narrow band
+		//update neighbors of the minimum in the narrow band
 
-		//West
-		if (i > 0 && i < length && j >= 0 && j < width) {
-			size_t iminus = i - 1;
-			size_t indxWest = x_new(iminus, j, length);
-			size_t label = labelArray[indxWest];
-			if (label != 1) {
-				dataType x = selectX(actionMapStr.imageDataPtr, length, width, iminus, j);
-				dataType y = selectY(actionMapStr.imageDataPtr, length, width, iminus, j);
-				dataType coefSpeed = potentialFuncPtr[indxWest];
-				dataType dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[indxWest] = 2;
-					actionMapStr.imageDataPtr[indxWest] = dWest;
-					pointFastMarching2D WestNeighbor = { iminus, j, dWest };
-					addPointHeap2D(inProcess, WestNeighbor);
-				}
-				else {
-					if (dWest < actionMapStr.imageDataPtr[indxWest]) {
-						actionMapStr.imageDataPtr[indxWest] = dWest;
-						size_t pt_pos = getIndexFromHeap2D(inProcess, iminus, j);
-						if (pt_pos != -1) {
-							inProcess[pt_pos].arrival = dWest;
-							heapifyUp2D(inProcess, pt_pos);
-						}
-					}
-				}
-			}
+		if (i > 0)
+		{
+			updateNeighbor2D(i - 1, j, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 		}
-		
-		//East
-		if (i < length_minus && i >= 0 && j >= 0 && j < width) {
-			size_t iplus = i + 1;
-			size_t indxEast = x_new(iplus, j, length);
-			size_t label = labelArray[indxEast];
-			if (label != 1) {
-				dataType x = selectX(actionMapStr.imageDataPtr, length, width, iplus, j);
-				dataType y = selectY(actionMapStr.imageDataPtr, length, width, iplus, j);
-				dataType coefSpeed = potentialFuncPtr[indxEast];
-				dataType dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[indxEast] = 2;
-					actionMapStr.imageDataPtr[indxEast] = dEast;
-					pointFastMarching2D EastNeighbor = { iplus, j, dEast };
-					addPointHeap2D(inProcess, EastNeighbor);
-				}
-				else {
-					if (dEast < actionMapStr.imageDataPtr[indxEast]) {
-						actionMapStr.imageDataPtr[indxEast] = dEast;
-						size_t pt_pos = getIndexFromHeap2D(inProcess, iplus, j);
-						if (pt_pos != -1) {
-							inProcess[pt_pos].arrival = dEast;
-							heapifyUp2D(inProcess, pt_pos);
-						}
-					}
-				}
-			}
+		if (i < length_minus)
+		{
+			updateNeighbor2D(i + 1, j, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 		}
-
-		//North
-		if (j > 0 && j < width && i >= 0 && i < length) {
-			size_t jminus = j - 1;
-			size_t indxNorth = x_new(i, jminus, length);
-			size_t label = labelArray[indxNorth];
-			if (label != 1) {
-				dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jminus);
-				dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jminus);
-				dataType coefSpeed = potentialFuncPtr[indxNorth];
-				dataType dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[indxNorth] = 2;
-					actionMapStr.imageDataPtr[indxNorth] = dNorth;
-					pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
-					addPointHeap2D(inProcess, NorthNeighbor);
-				}
-				else {
-					if (dNorth < actionMapStr.imageDataPtr[indxNorth]) {
-						actionMapStr.imageDataPtr[indxNorth] = dNorth;
-						size_t pt_pos = getIndexFromHeap2D(inProcess, i, jminus);
-						if (pt_pos != -1) {
-							inProcess[pt_pos].arrival = dNorth;
-							heapifyUp2D(inProcess, pt_pos);
-						}
-					}
-				}
-			}
+		if (j > 0)
+		{
+			updateNeighbor2D(i, j - 1, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 		}
-
-		//South
-		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
-			size_t jplus = j + 1;
-			size_t indxSouth = x_new(i, jplus, length);
-			size_t label = labelArray[indxSouth];
-			if (label != 1) {
-				dataType x = selectX(actionMapStr.imageDataPtr, length, width, i, jplus);
-				dataType y = selectY(actionMapStr.imageDataPtr, length, width, i, jplus);
-				dataType coefSpeed = potentialFuncPtr[indxSouth];
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				if (label == 3) {
-					labelArray[indxSouth] = 2;
-					actionMapStr.imageDataPtr[indxSouth] = dSouth;
-					pointFastMarching2D NorthNeighbor = { i, jplus, dSouth };
-					addPointHeap2D(inProcess, NorthNeighbor);
-				}
-				else {
-					if (dSouth < actionMapStr.imageDataPtr[indxSouth]) {
-						actionMapStr.imageDataPtr[indxSouth] = dSouth;
-						size_t pt_pos = getIndexFromHeap2D(inProcess, i, jplus);
-						if (pt_pos != -1) {
-							inProcess[pt_pos].arrival = dSouth;
-							heapifyUp2D(inProcess, pt_pos);
-						}
-					}
-				}
-			}
+		if (j < width_minus)
+		{
+			updateNeighbor2D(i, j + 1, length, width, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, inProcess);
 		}
 
 	}
 
 	key_points.push_back(seedPoint[1]);
-	std::cout << "The source Points are: " << std::endl;
-	for (int nb = 0; nb < key_points.size(); nb++) {
-		std::cout << "Point " << nb + 1 << " : " << key_points[nb].x << " " << key_points[nb].y << std::endl;
-	}
-
-	//id_keyPoint++;
-	string saving_csv = path_saving + to_string(id_keyPoint) + ".csv";
-	FILE* frontPoint;
-	if (fopen_s(&frontPoint, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(frontPoint, "x,y\n");
-	for (size_t i_n = 0; i_n < savingList.size(); i_n++) {
-		fprintf(frontPoint, "%f,%f\n", savingList[i_n].x, savingList[i_n].y);
-	}
-	savingList.clear();
-	fclose(frontPoint);
 
 	delete[] labelArray;
 
@@ -1814,6 +990,7 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 
 	//Define and array to follow up the label of each point
 	short* labelArray = new short[dim2D] { 0 };
+	dataType* potentialPtr = new dataType[dim2D] { 0 };
 
 	//Initialization : Proceed the sources points
 	//All the points are notProcessed ---> label = 3
@@ -1829,6 +1006,7 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 			distanceFuncPtr[i] = INFINITY;
 			labelArray[i] = 3;
 		}
+		potentialPtr[i] = 1.0; //for distance map the potential is set equal to 1.0
 	}
 
 	size_t length_minus = length - 1;
@@ -1845,116 +1023,21 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 
 			if (ctImageData.imageDataPtr[xd] == foregroundValue) {
 
-				//West
-				if (i > 0 && i < length && j >= 0 && j < width) {
-					size_t iminus = i - 1;
-					size_t indxWest = x_new(iminus, j, length);
-					short label = labelArray[indxWest];
-					if (label != 1) {
-						x = selectX(distanceFuncPtr, length, width, iminus, j);
-						y = selectY(distanceFuncPtr, length, width, iminus, j);
-						coefSpeed = 1.0;
-						dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-						pointFastMarching2D WestNeighbor = { iminus, j, dWest};
-						if (label == 3) {
-							distanceFuncPtr[indxWest] = dWest;
-							labelArray[indxWest] = 2;
-							addPointHeap2D(inProcess, WestNeighbor);
-						}
-						else {
-							if (dWest < distanceFuncPtr[indxWest]) {
-								distanceFuncPtr[indxWest] = dWest;
-								size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
-								if (pIndex != -1) {
-									heapifyUp2D(inProcess, pIndex);
-								}
-							}
-						}
-					}
+				if (i > 0)
+				{
+					updateNeighbor2D(i - 1, j, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 				}
-
-				//East
-				if (i >= 0 && i < length_minus && j >= 0 && j < width) {
-					size_t iplus = i + 1;
-					size_t indxEast = x_new(iplus, j, length);
-					short label = labelArray[indxEast];
-					if (label != 1) {
-						x = selectX(distanceFuncPtr, length, width, iplus, j);
-						y = selectY(distanceFuncPtr, length, width, iplus, j);
-						coefSpeed = 1.0;
-						dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-						pointFastMarching2D EastNeighbor = { iplus, j, dEast};
-						if (label == 3) {
-							distanceFuncPtr[indxEast] = dEast;
-							labelArray[indxEast] = 2;
-							addPointHeap2D(inProcess, EastNeighbor);
-						}
-						else {
-							if (dEast < distanceFuncPtr[indxEast]) {
-								distanceFuncPtr[indxEast] = dEast;
-								size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
-								if (pIndex != -1) {
-									heapifyUp2D(inProcess, pIndex);
-								}
-							}
-						}
-					}
+				if (i < length_minus)
+				{
+					updateNeighbor2D(i + 1, j, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 				}
-
-				//North
-				if (j > 0 && j < width && i >= 0 && i < length) {
-					size_t jminus = j - 1;
-					size_t indxNorth = x_new(i, jminus, length);
-					short label = labelArray[indxNorth];
-					if (label != 1) {
-						x = selectX(distanceFuncPtr, length, width, i, jminus);
-						y = selectY(distanceFuncPtr, length, width, i, jminus);
-						coefSpeed = 1.0;
-						dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-						pointFastMarching2D NorthNeighbor = { i, jminus, dNorth};
-						if (label == 3) {
-							distanceFuncPtr[indxNorth] = dNorth;
-							labelArray[indxNorth] = 2;
-							addPointHeap2D(inProcess, NorthNeighbor);
-						}
-						else {
-							if (dNorth < distanceFuncPtr[indxNorth]) {
-								distanceFuncPtr[indxNorth] = dNorth;
-								size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
-								if (pIndex != -1) {
-									heapifyUp2D(inProcess, pIndex);
-								}
-							}
-						}
-					}
+				if (j > 0)
+				{
+					updateNeighbor2D(i, j - 1, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 				}
-
-				//South
-				if (j >= 0 && j < width_minus && i >= 0 && i < length) {
-					size_t jplus = j + 1;
-					size_t indxSouth = x_new(i, jplus, length);
-					short label = labelArray[indxSouth];
-					if (label != 1) {
-						x = selectX(distanceFuncPtr, length, width, i, jplus);
-						y = selectY(distanceFuncPtr, length, width, i, jplus);
-						coefSpeed = 1.0;
-						dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-						pointFastMarching2D SouthNeighbor = { i, jplus, dSouth};
-						if (label == 3) {
-							distanceFuncPtr[indxSouth] = dSouth;
-							labelArray[indxSouth] = 2;
-							addPointHeap2D(inProcess, SouthNeighbor);
-						}
-						else {
-							if (dSouth < distanceFuncPtr[indxSouth]) {
-								distanceFuncPtr[indxSouth] = dSouth;
-								size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
-								if (pIndex != -1) {
-									heapifyUp2D(inProcess, pIndex);
-								}
-							}
-						}
-					}
+				if (j < width_minus)
+				{
+					updateNeighbor2D(i, j + 1, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 				}
 
 			}
@@ -1976,117 +1059,21 @@ bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFunc
 		}
 
 		deleteRootHeap2D(inProcess);
-
-		//West
-		if (i > 0 && i < length && j >= 0 && j < width) {
-			size_t iminus = i - 1;
-			size_t indxWest = x_new(iminus, j, length);
-			short label = labelArray[indxWest];
-			if (label != 1) {
-				x = selectX(distanceFuncPtr, length, width, iminus, j);
-				y = selectY(distanceFuncPtr, length, width, iminus, j);
-				coefSpeed = 1.0;
-				dWest = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D WestNeighbor = { iminus, j, dWest};
-				if (label == 3) {
-					distanceFuncPtr[indxWest] = dWest;
-					labelArray[indxWest] = 2;
-					addPointHeap2D(inProcess, WestNeighbor);
-				}
-				else {
-					if (dWest < distanceFuncPtr[indxWest]) {
-						distanceFuncPtr[indxWest] = dWest;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iminus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i > 0)
+		{
+			updateNeighbor2D(i - 1, j, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//East
-		if (i >= 0 && i < length_minus && j >= 0 && j < width) {
-			size_t iplus = i + 1;
-			size_t indxEast = x_new(iplus, j, length);
-			short label = labelArray[indxEast];
-			if (label != 1) {
-				x = selectX(distanceFuncPtr, length, width, iplus, j);
-				y = selectY(distanceFuncPtr, length, width, iplus, j);
-				coefSpeed = 1.0;
-				dEast = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D EastNeighbor = { iplus, j, dEast };
-				if (label == 3) {
-					distanceFuncPtr[indxEast] = dEast;
-					labelArray[indxEast] = 2;
-					addPointHeap2D(inProcess, EastNeighbor);
-				}
-				else {
-					if (dEast < distanceFuncPtr[indxEast]) {
-						distanceFuncPtr[indxEast] = dEast;
-						size_t pIndex = getIndexFromHeap2D(inProcess, iplus, j);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (i < length_minus)
+		{
+			updateNeighbor2D(i + 1, j, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//North
-		if (j > 0 && j < width && i >= 0 && i < length) {
-			size_t jminus = j - 1;
-			size_t indxNorth = x_new(i, jminus, length);
-			short label = labelArray[indxNorth];
-			if (label != 1) {
-				x = selectX(distanceFuncPtr, length, width, i, jminus);
-				y = selectY(distanceFuncPtr, length, width, i, jminus);
-				coefSpeed = 1.0;
-				dNorth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D NorthNeighbor = { i, jminus, dNorth };
-				if (label == 3) {
-					distanceFuncPtr[indxNorth] = dNorth;
-					labelArray[indxNorth] = 2;
-					addPointHeap2D(inProcess, NorthNeighbor);
-				}
-				else {
-					if (dNorth < distanceFuncPtr[indxNorth]) {
-						distanceFuncPtr[indxNorth] = dNorth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jminus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j > 0)
+		{
+			updateNeighbor2D(i, j - 1, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 		}
-
-		//South
-		if (j >= 0 && j < width_minus && i >= 0 && i < length) {
-			size_t jplus = j + 1;
-			size_t indxSouth = x_new(i, jplus, length);
-			short label = labelArray[indxSouth];
-			if (label != 1) {
-				x = selectX(distanceFuncPtr, length, width, i, jplus);
-				y = selectY(distanceFuncPtr, length, width, i, jplus);
-				coefSpeed = 1.0;
-				dataType dSouth = solve2dQuadratic(x, y, coefSpeed, spacing);
-				pointFastMarching2D SouthNeighbor = { i, jplus, dSouth };
-				if (label == 3) {
-					distanceFuncPtr[indxSouth] = dSouth;
-					labelArray[indxSouth] = 2;
-					addPointHeap2D(inProcess, SouthNeighbor);
-				}
-				else {
-					if (dSouth < distanceFuncPtr[indxSouth]) {
-						distanceFuncPtr[indxSouth] = dSouth;
-						size_t pIndex = getIndexFromHeap2D(inProcess, i, jplus);
-						if (pIndex != -1) {
-							heapifyUp2D(inProcess, pIndex);
-						}
-					}
-				}
-			}
+		if (j < width_minus)
+		{
+			updateNeighbor2D(i, j + 1, length, width, distanceFuncPtr, potentialPtr, labelArray, spacing, inProcess);
 		}
 
 	}
