@@ -719,7 +719,7 @@ bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront
 	return true;
 }
 
-bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving) {
+bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving) {
 
 	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
 		return false;
@@ -1366,6 +1366,66 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 		mass = sqrt(mass);
 	}
 	std::cout << "Convergence is reached after : " << count_iteration << " iterations and the mass is : " << mass << std::endl;
+
+	delete[] previousSolution;
+
+	return true;
+}
+
+bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration) {
+
+	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
+		return false;
+
+	size_t length = ctImageData.height;
+	size_t width = ctImageData.width;
+	size_t i, j, k, x;
+
+	size_t length_ext = length + 2;
+	size_t width_ext = length + 2;
+	size_t i_ext, j_ext, k_ext, x_ext;
+
+	dataType* previousSolution = new dataType[length_ext * width_ext] {0};
+	if(previousSolution == NULL)
+	{
+		return false;
+	}
+
+
+	double mass = 1.0;
+	dataType hx = ctImageData.spacing.sx;
+	dataType hy = ctImageData.spacing.sy;
+	dataType value = 0.0;
+
+	dataType hx_2 = 1.0 / (hx * hx);
+	dataType hy_2 = 1.0 / (hy * hy);
+
+	dataType tau = hx * hy / (2.0 * sqrt(hx * hx + hy * hy));
+	std::cout << "tau = " << tau << std::endl;
+
+	size_t count_iteration = 0;
+	dataType w = 0.0;
+	size_t xd;
+
+	while (mass > tolerance && count_iteration < max_iteration) {
+		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
+		reflection2D(previousSolution, length_ext, width_ext);
+		count_iteration++;
+		mass = 0.0;
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+				xd = x_new(i_ext, j_ext, length_ext);
+				value = previousSolution[xd];
+				w = potential[xd];
+				distancePtr[x_new(i, j, length)] = value + w * tau - tau * sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
+					+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value)));
+				//Compute the mass
+				mass += pow(previousSolution[x_new(i_ext, j_ext, length_ext)] - distancePtr[x_new(i, j, length)], 2);
+			}
+		}
+		mass = sqrt(mass);		
+	}
+	std::cout << "Iteration: " << count_iteration << ", Mass: " << mass << std::endl;
 
 	delete[] previousSolution;
 

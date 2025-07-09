@@ -132,7 +132,7 @@ using namespace std;
 
 	bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
-	bool frontPropagationWithKeyPointDetection(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving);
+	bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving);
 
 	/// <summary>
 	/// compute arrival time for each point in given image, given starting point and given local speed
@@ -173,6 +173,8 @@ using namespace std;
 	bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
 	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
+
+	bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration);
 
 	/// <summary>
 	/// discretization in x-direction
