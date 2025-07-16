@@ -4724,22 +4724,22 @@ int main() {
 	dataType* firstAction = new dataType[dim2D]{ 0 };
 	dataType* secondAction = new dataType[dim2D]{ 0 };
 
-	//loading_path = inputPath + "raw/slice/slice_aorta.raw";
-	loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
-	
-	const dataType sigma = 2.0;
-	gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
-	rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
+	////loading_path = inputPath + "raw/slice/slice_aorta.raw";
+	//loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
+	//
+	//const dataType sigma = 2.0;
+	//gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
+	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
 
-	storing_path = outputPath + "input_retinal_image.raw";
-	manageRAWFile2D<dataType>(smoothedImage, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "input_retinal_image.raw";
+	//manageRAWFile2D<dataType>(smoothedImage, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	//int scale = 0;
 	//storing_path = outputPath + "input_3D_view.vtk";
 	//save2DImageAs3Dvtk(smoothedImage, Length, Width, (char*)storing_path.c_str(), scale);
 
-	Point2D* endPoints = new Point2D[3];
+	Point2D* endPoints = new Point2D[2];
 	
 	////Aorta End Points
 	//endPoints[0] = { 272.0, 289.0 };
@@ -4749,9 +4749,9 @@ int main() {
 	//endPoints[0] = { 261.0, 238.0 };
 	//endPoints[1] = { 194.0, 197.0 };
 
-	////Retinal image End Points
-	//endPoints[0] = { 188.0, 64.0 };
-	//endPoints[1] = { 370.0, 320.0 };
+	//Retinal image End Points
+	endPoints[0] = { 188.0, 64.0 };
+	endPoints[1] = { 370.0, 320.0 };
 	//endPoints[2] = { 0.0, 0.0 };
 
 	////Retinal image End Points second Tests
@@ -4761,9 +4761,9 @@ int main() {
 	////endPoints[1] = { 470.0, 343.0 };
 	//endPoints[2] = { 0.0, 0.0 };
 
-	endPoints[0] = { 170.0, 12.0 };
-	endPoints[1] = { 500.0, 433.0 };
-	endPoints[2] = { 0.0, 0.0 };
+	//endPoints[0] = { 170.0, 12.0 };
+	//endPoints[1] = { 500.0, 433.0 };
+	////endPoints[2] = { 0.0, 0.0 };
 
 	////Save the end points in files
 	//FILE* end_points_file;
@@ -4789,33 +4789,47 @@ int main() {
 		radius
 	};
 	Image_Data2D toPotentialStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
-	computePotential(toPotentialStr, potential, endPoints, parameters);
+	//computePotential(toPotentialStr, potential, endPoints, parameters);
 
 	////Manually set the potential values
 	//Point2D grad;
 	//for(i = 0; i < Length; i++) {
 	//	for(j = 0; j < Width; j++) {
-	//		getGradient2D(imageData, Width, Length, i, j, spacing, &grad);
-	//		dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
-	//		potential[x_new(i, j, Length)] = 1.0 / (1.0 + 1.0 * norm_grad);
+	//		//getGradient2D(imageData, Width, Length, i, j, spacing, &grad);
+	//		//dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
+	//		potential[x_new(i, j, Length)] = 1.0;// / (1.0 + 1.0 * norm_grad);
 	//	}
 	//}
 
-	//storing_path = outputPath + "potential.raw";
-	//manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential.raw";
+	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
-	const double LengthKeyPoints = 70.0;
-	vector<Point2D> key_points;
+	//const double LengthKeyPoints = 70.0;
+	//vector<Point2D> key_points;
 
 	Image_Data2D toActionStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
-	storing_path = outputPath + "partial action/csv/action_";
+	//storing_path = outputPath + "partial action/csv/action_";
 	//partialFrontPropagation2D(toActionStr, action, potential, endPoints, storing_path);
-	fastMarching2D(toActionStr, action, potential, endPoints);
+	//fastMarching2D(toActionStr, action, potential, endPoints);
 	//doubleFrontPropagation2D(toActionStr, firstAction, secondAction, potential, endPoints, storing_path);
 	//frontPropagationWithKeyPointDetection(toActionStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
+	
+	clock_t start, end;
 
-	storing_path = outputPath + "action.raw";
-	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//start = clock();
+	fastMarching2D(toActionStr, action, potential, endPoints);
+	//end = clock();
+	//double laps = (end - start);// / CLOCKS_PER_SEC;
+	//std::cout << "execution time : " << CLOCKS_PER_SEC << std::endl;
+
+	//start = clock();
+	//rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.01, 5000);
+	//end = clock();
+	//double laps = (end - start) / CLOCKS_PER_SEC;
+	//std::cout << "execution time : " << laps << std::endl;
+
+	//storing_path = outputPath + "rt_action.raw";
+	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	////Save the key points in files
 	//FILE* key_points_file;
@@ -4859,21 +4873,21 @@ int main() {
 	//	return false;
 	//}
 	//fprintf(end_points_file, "x,y\n");
-	//for(size_t it = 0; it < 3; it++) {
+	//for(size_t it = 0; it < 2; it++) {
 	//	fprintf(end_points_file, "%f,%f\n", endPoints[it].x, endPoints[it].y);
 	//}
 	//fclose(end_points_file);
 
-	Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
-	vector<Point2D> path_points;
-	//Image_Data2D toExtractPath = { Length, Width, firstAction, iOrigin, spacing, orientation2D };
-	Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
+	//Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
+	//vector<Point2D> path_points;
+	////Image_Data2D toExtractPath = { Length, Width, firstAction, iOrigin, spacing, orientation2D };
+	//Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
 
-	Point2D* firstSection = new Point2D[2];
-	firstSection[0] = endPoints[0];
-	firstSection[1] = endPoints[1];
-	//shortestPath2d(toExtractPath, firstSection, path_points, parameters_path);
-	shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
+	////Point2D* firstSection = new Point2D[2];
+	////firstSection[0] = endPoints[0];
+	////firstSection[1] = endPoints[1];
+	////shortestPath2d(toExtractPath, firstSection, path_points, parameters_path);
+	//shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
 
 	//Point2D* secondSection = new Point2D[2];
 	//secondSection[0] = endPoints[1];
@@ -4881,19 +4895,19 @@ int main() {
 	//toExtractPath.imageDataPtr = secondAction;
 	////shortestPath2d(toExtractPath, secondSection, path_points, parameters_path);
 
-	//Save the end points in files
-	FILE* path_points_file;
-	//string save_path_file = outputPath + "double_path_points.csv";
-	string save_path_file = outputPath + "partial_path_points.csv";
-	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(path_points_file, "x,y\n");
-	for(size_t it = 0; it < path_points.size(); it++) {
-		fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
-	}
-	fclose(path_points_file);
+	////Save the end points in files
+	//FILE* path_points_file;
+	////string save_path_file = outputPath + "double_path_points.csv";
+	//string save_path_file = outputPath + "rt_path_points_1.csv";
+	//if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(path_points_file, "x,y\n");
+	//for(size_t it = 0; it < path_points.size(); it++) {
+	//	fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
+	//}
+	//fclose(path_points_file);
 
 	//delete[] firstSection;
 	//delete[] secondSection;
@@ -4942,12 +4956,101 @@ int main() {
 	//storing_path = outputPath + "potential_3D_view.vtk";
 	//save2DImageAs3Dvtk(potential, Length, Width, (char*)storing_path.c_str(), scale);
 
+	//dataType* actionFM = new dataType[dim2D]{ 0 };
+	//dataType* actionRT = new dataType[dim2D]{ 0 };
+	//storing_path = outputPath + "action_fm.raw";
+	//manageRAWFile2D<dataType>(actionFM, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "action_rt.raw";
+	//manageRAWFile2D<dataType>(actionRT, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	//dataType mean_diff = 0.0;
+	//for(i = 0; i < dim2D; i++)
+	//{
+	//	mean_diff += pow(actionFM[i] - actionRT[i], 2);
+	//}
+	//mean_diff  /= (dataType)dim2D;
+	//std::cout << "The mean diff is : " << mean_diff << std::endl;
+	//delete[] actionFM;
+	//delete[] actionRT;
+
+	/*
+	//
+	vector<Point2D> fm, rt;
+	dataType x, y;
+
+	FILE* path_file_FM;
+	loading_path = outputPath + "fm_path_points.csv";
+	if (fopen_s(&path_file_FM, loading_path.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	while (feof(path_file_FM) == 0) {
+		fscanf_s(path_file_FM, "%f", &x);
+		fscanf_s(path_file_FM, ",");
+		fscanf_s(path_file_FM, "%f", &y);
+		fscanf_s(path_file_FM, "\n");
+		Point2D pt = { x, y };
+		fm.push_back(pt);
+	}
+	fclose(path_file_FM);
+
+	FILE* path_file_RT;
+	loading_path = outputPath + "rt_path_points.csv";
+	if (fopen_s(&path_file_RT, loading_path.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	while (feof(path_file_RT) == 0) {
+		fscanf_s(path_file_RT, "%f", &x);
+		fscanf_s(path_file_RT, ",");
+		fscanf_s(path_file_RT, "%f", &y);
+		fscanf_s(path_file_RT, "\n");
+		Point2D pt = { x, y };
+		rt.push_back(pt);
+	}
+	fclose(path_file_RT);
+
+	dataType H_fm = 0.0;
+	for(i = 0; i < fm.size(); i++)
+	{
+		dataType min_fm = 1000000;
+		for(j = 0; j < rt.size(); j++)
+		{
+			dataType d = getPoint2DDistance(fm[i], rt[j]);
+			if(min_fm > d)
+			{
+				min_fm = d;
+			}
+		}
+		if (min_fm > H_fm) {
+			H_fm = min_fm;
+		}
+	}
+
+	dataType H_rt = 0.0;
+	for (i = 0; i < rt.size(); i++)
+	{
+		dataType min_rt = 1000000;
+		for (j = 0; j < fm.size(); j++)
+		{
+			dataType d = getPoint2DDistance(rt[i], fm[j]);
+			if (min_rt > d)
+			{
+				min_rt = d;
+			}
+		}
+		if (min_rt > H_rt) {
+			H_rt = min_rt;
+		}
+	}
+	std::cout << "FM : " << H_fm / (dataType)fm.size() << std::endl;
+	std::cout << "RT : " << H_rt / (dataType)rt.size() << std::endl;
+	*/
+
 	delete[] endPoints;
 	delete[] imageData;
 	delete[] smoothedImage;
 	delete[] potential;
 	delete[] action;
-	
 
 	/*
 	const size_t Length = 50, Width = 50, Height = 50;
