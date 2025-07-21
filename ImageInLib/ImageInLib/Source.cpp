@@ -3,6 +3,7 @@
 #include <vector>
 #include <string.h> 
 #include <time.h>
+#include <cmath>
 
 #include "common_math.h"
 #include <template_functions.h>
@@ -32,7 +33,6 @@ int main() {
 	the origins. We also define the orientation matrix in 2D/3D
 	needed when we need to perform interpolation.
 	*/
-	
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
@@ -4724,16 +4724,17 @@ int main() {
 	dataType* firstAction = new dataType[dim2D]{ 0 };
 	dataType* secondAction = new dataType[dim2D]{ 0 };
 
-	////loading_path = inputPath + "raw/slice/slice_aorta.raw";
-	//loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
-	//manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
-	//
+	loading_path = inputPath + "raw/slice/slice_aorta.raw";
+	////loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
+	//manageRAWFile2D<dataType>(smoothedImage, Length, Width, loading_path.c_str(), LOAD_DATA, false);
+	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
+	
 	//const dataType sigma = 2.0;
 	//gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
 	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
 
-	//storing_path = outputPath + "input_retinal_image.raw";
-	//manageRAWFile2D<dataType>(smoothedImage, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = outputPath + "input_retinal_image.raw";
+	manageRAWFile2D<dataType>(smoothedImage, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	//int scale = 0;
 	//storing_path = outputPath + "input_3D_view.vtk";
@@ -4741,18 +4742,22 @@ int main() {
 
 	Point2D* endPoints = new Point2D[2];
 	
-	////Aorta End Points
-	//endPoints[0] = { 272.0, 289.0 };
-	//endPoints[1] = { 273.0, 238.0 };
+	//Aorta End Points
+	endPoints[0] = { 240.0, 209.0 };
+	endPoints[1] = { 182.0, 340.0 };
+
+	////End Points Distance Map
+	//endPoints[0] = { 0.0, 0.0 };
+	//endPoints[1] = { 511.0, 511.0 };
 
 	////Segment liver slice
 	//endPoints[0] = { 261.0, 238.0 };
 	//endPoints[1] = { 194.0, 197.0 };
 
-	//Retinal image End Points
-	endPoints[0] = { 188.0, 64.0 };
-	endPoints[1] = { 370.0, 320.0 };
-	//endPoints[2] = { 0.0, 0.0 };
+	////Retinal image End Points
+	//endPoints[0] = { 188.0, 64.0 };
+	//endPoints[1] = { 370.0, 320.0 };
+	////endPoints[2] = { 0.0, 0.0 };
 
 	////Retinal image End Points second Tests
 	//endPoints[1] = { 181.0, 50.0 };
@@ -4780,29 +4785,29 @@ int main() {
 
 	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0} };
 	Point2D iOrigin = { 0.0, 0.0 };
-	PixelSpacing spacing = { 1.0, 1.0 };
+	PixelSpacing spacing = { 0.001, 0.001 };
 	double radius = 1.0;
 	Potential_Parameters parameters{
 		100, //edge detector coefficient
 		0.4, //threshold
-		0.1,//epsilon
+		0.01,//epsilon
 		radius
 	};
 	Image_Data2D toPotentialStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
-	//computePotential(toPotentialStr, potential, endPoints, parameters);
+	computePotential(toPotentialStr, potential, endPoints, parameters);
 
 	////Manually set the potential values
 	//Point2D grad;
 	//for(i = 0; i < Length; i++) {
 	//	for(j = 0; j < Width; j++) {
-	//		//getGradient2D(imageData, Width, Length, i, j, spacing, &grad);
+	//		//getGradient2D(smoothedImage, Width, Length, i, j, spacing, &grad);
 	//		//dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
-	//		potential[x_new(i, j, Length)] = 1.0;// / (1.0 + 1.0 * norm_grad);
+	//		potential[x_new(i, j, Length)] = 1.0;//exp(-2.0 * norm_grad);// / (1.0 + 1.0 * norm_grad);
 	//	}
 	//}
 
 	storing_path = outputPath + "potential.raw";
-	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	//const double LengthKeyPoints = 70.0;
 	//vector<Point2D> key_points;
@@ -4816,11 +4821,13 @@ int main() {
 	
 	clock_t start, end;
 
-	//start = clock();
+	////start = clock();
 	fastMarching2D(toActionStr, action, potential, endPoints);
+	//partialFrontPropagation2D(toActionStr, action, potential, endPoints, storing_path);
 	//end = clock();
 	//double laps = (end - start);// / CLOCKS_PER_SEC;
 	//std::cout << "execution time : " << CLOCKS_PER_SEC << std::endl;
+
 
 	//start = clock();
 	//rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.01, 5000);
@@ -4828,8 +4835,9 @@ int main() {
 	//double laps = (end - start) / CLOCKS_PER_SEC;
 	//std::cout << "execution time : " << laps << std::endl;
 
-	//storing_path = outputPath + "rt_action.raw";
-	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "partial_action.raw";
+	storing_path = outputPath + "partial_action.raw";
+	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	////Save the key points in files
 	//FILE* key_points_file;
@@ -4867,7 +4875,7 @@ int main() {
 
 	////Save the end points in files
 	//FILE* end_points_file;
-	//string file_points = outputPath + "end_points_eye.csv";
+	//string file_points = outputPath + "end_points_aorta.csv";
 	//if (fopen_s(&end_points_file, file_points.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
@@ -4898,7 +4906,7 @@ int main() {
 	////Save the end points in files
 	//FILE* path_points_file;
 	////string save_path_file = outputPath + "double_path_points.csv";
-	//string save_path_file = outputPath + "rt_path_points_1.csv";
+	//string save_path_file = outputPath + "path_points.csv";
 	//if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;

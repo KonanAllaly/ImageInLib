@@ -72,7 +72,7 @@ dataType upwindFiniteDifference2dY(dataType* actionPtr, const size_t length, con
 	return min(j_minus, j_plus);
 }
 
-dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
+dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, size_t indx, size_t indy, FILE* pFile) {
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType P_2 = P * P;
@@ -150,6 +150,8 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h) {
 			}
 		}
 		else {
+			fprintf(pFile, "%d,%d\n", indx, indy);
+			//return INFINITY;
 			return (dataType)(min(X + hx * P, Y + hy * P));
 		}
 	}
@@ -335,7 +337,7 @@ int getIndexFromHeap2D(vector<pointFastMarching2D>& in_Process, size_t i, size_t
 
 void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
 	dataType* action, dataType* potential, short* labelArray,
-	PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand)
+	PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand, FILE* pFile)
 {
 
 	if (ind_x >= length || ind_y >= width)
@@ -345,7 +347,8 @@ void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
 	dataType ux = upwindFiniteDifference2dX(action, length, width, ind_x, ind_y);
 	dataType uy = upwindFiniteDifference2dY(action, length, width, ind_x, ind_y);
 	dataType coefSpeed = potential[neighborIndx];
-	dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+	//dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing);
+	dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing, ind_x, ind_y, pFile);
 	pointFastMarching2D neighbor = { ind_x, ind_y, solution };
 	if (labelArray[neighborIndx] == 3) {
 		addPointHeap2D(narrowBand, neighbor);
@@ -385,6 +388,14 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 		labelArray[k] = 3;
 	}
 
+	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant.csv";
+	FILE* dFile;
+	if (fopen_s(&dFile, path_discriminant.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(dFile, "x,y\n");
+
 	size_t i = (size_t)seedPoints[0].x;
 	size_t j = (size_t)seedPoints[0].y;
 	size_t currentIndx = x_new(i, j, length);
@@ -394,25 +405,25 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 	if (i > 0)
 	{
 		if( labelArray[x_new(i - 1, j, length)] != 1 ) {
-			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 		}
 	}
 	if (i < length_minus)
 	{
 		if (labelArray[x_new(i + 1, j, length)] != 1) {
-			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 		}
 	}
 	if (j > 0)
 	{
 		if (labelArray[x_new(i, j - 1, length)] != 1) {
-			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 		}
 	}
 	if (j < width_minus)
 	{
 		if (labelArray[x_new(i, j + 1, length)] != 1) {
-			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 		}
 	}
 	
@@ -430,29 +441,31 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 		if (i > 0)
 		{
 			if (labelArray[x_new(i - 1, j, length)] != 1) {
-				updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+				updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 			}
 		}
 		if (i < length_minus)
 		{
 			if (labelArray[x_new(i + 1, j, length)] != 1) {
-				updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+				updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 			}
 		}
 		if (j > 0)
 		{
 			if (labelArray[x_new(i, j - 1, length)] != 1) {
-				updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+				updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 			}
 		}
 		if (j < width_minus)
 		{
 			if (labelArray[x_new(i, j + 1, length)] != 1) {
-				updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+				updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
 			}
 		}
 
 	}
+
+	fclose(dFile);
 
 	delete[] labelArray;
 }
@@ -487,24 +500,40 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		labelArray[k] = 3;
 	}
 
+	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_partial.csv";
+	FILE* dFile;
+	if (fopen_s(&dFile, path_discriminant.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(dFile, "x,y\n");
+
 	distancePtr[currentIndx] = 0.0;
 	labelArray[currentIndx] = 1;
 
 	if(i > 0)
 	{
-		updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+		if(labelArray[x_new(i - 1, j, length)] != 1) {
+			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+		}
 	}
 	if (i < length_minus)
 	{
-		updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+		if(labelArray[x_new(i + 1, j, length)] != 1) {
+			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+		}
 	}
 	if (j > 0)
 	{
-		updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+		if(labelArray[x_new(i, j - 1, length)] != 1) {
+			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+		}
 	}
 	if (j < width_minus)
 	{
-		updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+		if(labelArray[x_new(i, j + 1, length)] != 1) {
+			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+		}
 	}
 
 	size_t seedI = endPoints[1].x, seedJ = endPoints[1].y, seedIndex = x_new(seedI, seedJ, length);
@@ -526,26 +555,36 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 
 		if (i > 0)
 		{
-			updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			if( labelArray[x_new(i - 1, j, length)] != 1) {
+				updateNeighbor2D(i - 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+			}
 		}
 		if (i < length_minus)
 		{
-			updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			if (labelArray[x_new(i + 1, j, length)] != 1) {
+				updateNeighbor2D(i + 1, j, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+			}
 		}
 		if (j > 0)
 		{
-			updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			if (labelArray[x_new(i, j - 1, length)] != 1) {
+				updateNeighbor2D(i, j - 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+			}
 		}
 		if (j < width_minus)
 		{
-			updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess);
+			if (labelArray[x_new(i, j + 1, length)] != 1) {
+				updateNeighbor2D(i, j + 1, length, width, distancePtr, potentialPtr, labelArray, spacing, inProcess, dFile);
+			}
 		}
 	}
+
+	fclose(dFile);
 
 	//Set the distance of the end point to the maximum value
 	for(i = 0; i < dim2D; i++) {
 		if (labelArray[i] == 3) {
-			distancePtr[i] = max_save_action + 1;
+			distancePtr[i] = max_save_action + 0.1;
 		}
 	}
 	inProcess.clear();
@@ -553,6 +592,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	delete[] labelArray;
 }
 
+/*
 bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath) {
 
 	if (imageData.imageDataPtr == NULL || actionFirstFront == NULL || actionSecondFront == NULL || potentialPtr == NULL || endPoints == NULL) {
@@ -1466,31 +1506,31 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 	}
 	
 
-	/*
-	while (mass > tolerance && count_iteration < max_iteration) {
-		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
-		reflection2D(previousSolution, length_ext, width_ext);
-		count_iteration++;
-		mass = 0.0;
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				xd = x_new(i_ext, j_ext, length_ext);
-				x = x_new(i, j, length);
-				if(x != indx_seed)
-				{
-					value = previousSolution[xd];
-					w = potential[x];
-					distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
-						+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
-				}
-				////Compute the mass
-				//mass += pow(previousSolution[xd] - distancePtr[x], 2);
-				mass += abs(previousSolution[xd] - distancePtr[x]);
-			}
-		}
-		//mass = sqrt(mass);
-	}
-	*/
+	
+	//while (mass > tolerance && count_iteration < max_iteration) {
+	//	copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
+	//	reflection2D(previousSolution, length_ext, width_ext);
+	//	count_iteration++;
+	//	mass = 0.0;
+	//	for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+	//		for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+	//			xd = x_new(i_ext, j_ext, length_ext);
+	//			x = x_new(i, j, length);
+	//			if(x != indx_seed)
+	//			{
+	//				value = previousSolution[xd];
+	//				w = potential[x];
+	//				distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
+	//					+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
+	//			}
+	//			////Compute the mass
+	//			//mass += pow(previousSolution[xd] - distancePtr[x], 2);
+	//			mass += abs(previousSolution[xd] - distancePtr[x]);
+	//		}
+	//	}
+	//	//mass = sqrt(mass);
+	//}
+	
 	std::cout << "Iteration: " << count_iteration << ", Mass: " << mass << std::endl;
 
 	delete[] previousSolution;
@@ -1498,6 +1538,7 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	return true;
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //=================== Functions for the 3D Fast Marching and Path Tracking ==============================

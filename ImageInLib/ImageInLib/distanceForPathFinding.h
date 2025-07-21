@@ -71,7 +71,7 @@ using namespace std;
 	/// <param name="Y">coefficient related to the second variable</param>
 	/// <param name="W">additional coefficient</param>
 	/// <returns></returns>
-	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h);
+	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, size_t indx, size_t indy, FILE* pFile);
 
 	/// <summary>
 	/// swap two given points 
@@ -117,7 +117,7 @@ using namespace std;
 
 	void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
 		dataType* action, dataType* potential, short* labelArray,
-		PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand);
+		PixelSpacing spacing, vector<pointFastMarching2D>& narrowBand, FILE* pFile);
 
 	/// <summary>
 	/// 
@@ -130,9 +130,9 @@ using namespace std;
 	/// <returns></returns>
 	bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
-	bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
+	//bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
-	bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving);
+	//bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType* potentialFuncPtr, Point2D* seedPoint, const double LengthKeyPoints, vector<Point2D>& key_points, std::string path_saving);
 
 	/// <summary>
 	/// compute arrival time for each point in given image, given starting point and given local speed
@@ -164,17 +164,17 @@ using namespace std;
 	/// <param name="path_points">Reference to a vector where the computed shortest path points will be stored.</param>
 	/// <param name="parameters">Additional parameters controlling the pathfinding algorithm.</param>
 	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
-	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
+	//bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
 
-	bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
+	//bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
-	bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFuncPtr, dataType foregroundValue);
+	//bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFuncPtr, dataType foregroundValue);
 
-	bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
+	//bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 
-	bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
+	//bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
-	bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration);
+	//bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration);
 
 	/// <summary>
 	/// discretization in x-direction
