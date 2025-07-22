@@ -128,7 +128,7 @@ using namespace std;
 	/// <param name="endPoints"></param>
 	/// <param name="savingPath"></param>
 	/// <returns></returns>
-	bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints, string savingPath);
+	bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints);
 
 	//bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath);
 
@@ -164,16 +164,12 @@ using namespace std;
 	/// <param name="path_points">Reference to a vector where the computed shortest path points will be stored.</param>
 	/// <param name="parameters">Additional parameters controlling the pathfinding algorithm.</param>
 	/// <returns>True if a valid shortest path is found; otherwise, false.</returns>
-	//bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
+	bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters);
 
 	//bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
-
 	//bool fastMarchingForDistanceMap(Image_Data2D ctImageData, dataType* distanceFuncPtr, dataType foregroundValue);
-
 	//bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
-
 	//bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
-
 	//bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration);
 
 	/// <summary>
@@ -187,7 +183,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
+	dataType upwindFiniteDifferenceX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in y-direction
@@ -200,7 +196,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
+	dataType upwindFiniteDifferenceY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// discretization in z-direction
@@ -213,7 +209,7 @@ using namespace std;
 	/// <param name="J">coordinate in x direction</param>
 	/// <param name="K">coordinate in z direction</param>
 	/// <returns></returns>
-	dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
+	dataType upwindFiniteDifferenceZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k);
 
 	/// <summary>
 	/// swap 3D variables
@@ -259,7 +255,7 @@ using namespace std;
 
 	void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
 		dataType** action, dataType** potential, short** labelArray,
-		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, FILE* pFile);
+		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand);
 
 	/// <summary>
 	/// compute speed (potential) in each point
@@ -273,7 +269,6 @@ using namespace std;
 	/// <returns></returns>
 	bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters);
 
-	
 	/// <summary>
 	/// find the shortest path between two given points
 	/// </summary>
@@ -299,7 +294,7 @@ using namespace std;
 	/// <param name="W">The right-hand side or source term for the equation.</param>
 	/// <param name="h">The spacing between voxels in each dimension.</param>
 	/// <returns>The computed solution for the 3D quadratic equation at the current voxel.</returns>
-	dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h, size_t indx, size_t indy, size_t indz, FILE* pFile);
+	dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h);
 
 	/// <summary>
 	/// Performs partial front propagation on image data and optionally saves the resulting path.

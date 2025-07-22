@@ -219,20 +219,20 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
 	}
 
-	//Find max difference
-	dataType maxDiff = 0.0;
-	for (i = 0; i < dim2D; i++) {
-		if (potentialFuncPtr[i] > maxDiff) {
-			maxDiff = potentialFuncPtr[i];
-		}
-	}
+	////Find max difference
+	//dataType maxDiff = 0.0;
+	//for (i = 0; i < dim2D; i++) {
+	//	if (potentialFuncPtr[i] > maxDiff) {
+	//		maxDiff = potentialFuncPtr[i];
+	//	}
+	//}
 	
 	//Normalization
 	dataType weight = 0.0;
 	for (i = 0; i < dim2D; i++) {
 		//weight = 1.0 / (1.0 + 2.0 * distanceMap[i]);
 		//potentialFuncPtr[i] = (parameters.eps + potentialFuncPtr[i] / maxDiff) * weight;
-		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / maxDiff;
+		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i];// / maxDiff;
 	}
 
 	delete[] distanceMap;
@@ -470,7 +470,7 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 	delete[] labelArray;
 }
 
-bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints, string savingPath) {
+bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, dataType* potentialPtr, Point2D* endPoints) {
 
 	const size_t length = imageData.height;
 	const size_t width = imageData.width;
@@ -500,7 +500,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 		labelArray[k] = 3;
 	}
 
-	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_partial.csv";
+	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant.csv";
 	FILE* dFile;
 	if (fopen_s(&dFile, path_discriminant.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -954,6 +954,7 @@ bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType
 
 	return true;
 }
+*/
 
 bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters) {
 
@@ -994,6 +995,7 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Po
 	return true;
 }
 
+/*
 bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL) {
@@ -1544,62 +1546,62 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 //=================== Functions for the 3D Fast Marching and Path Tracking ==============================
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-dataType select3dX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+dataType upwindFiniteDifferenceX(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z) {
 
 	dataType x_minus, x_plus;
-	if(i == 0) {
+	if(x == 0) {
 		x_minus = INFINITY;
 	}
 	else {
-		x_minus = actionPtr[k][x_new(i - 1, j, length)];
+		x_minus = actionPtr[z][x_new(x - 1, y, length)];
 	}
-	if(i == length - 1) {
+	if(x >= length - 1) {
 		x_plus = INFINITY;
 	}
 	else {
-		x_plus = actionPtr[k][x_new(i + 1, j, length)];
+		x_plus = actionPtr[z][x_new(x + 1, y, length)];
 	}
 	return min(x_minus, x_plus);
 }
 
-dataType select3dY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+dataType upwindFiniteDifferenceY(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z) {
 
 	dataType y_minus, y_plus;
-	if(j == 0) {
+	if(y == 0) {
 		y_minus = INFINITY;
 	}
 	else {
-		y_minus = actionPtr[k][x_new(i, j - 1, length)];
+		y_minus = actionPtr[z][x_new(x, y - 1, length)];
 	}
-	if(j == width - 1) {
+	if(y >= width - 1) {
 		y_plus = INFINITY;
 	}
 	else {
-		y_plus = actionPtr[k][x_new(i, j + 1, length)];
+		y_plus = actionPtr[z][x_new(x, y + 1, length)];
 	}
 	return min(y_minus, y_plus);
 }
 
-dataType select3dZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k) {
+dataType upwindFiniteDifferenceZ(dataType** actionPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z) {
 	
-	size_t xd = x_new(i, j, length);
+	size_t xd = x_new(x, y, length);
 	dataType z_minus, z_plus;
-	if(k == 0) {
+	if(z == 0) {
 		z_minus = INFINITY;
 	}
 	else {
-		z_minus = actionPtr[k - 1][xd];
+		z_minus = actionPtr[z - 1][xd];
 	}
-	if(k == height - 1) {
+	if(z >= height - 1) {
 		z_plus = INFINITY;
 	}
 	else {
-		z_plus = actionPtr[k + 1][xd];
+		z_plus = actionPtr[z + 1][xd];
 	}
 	return min(z_minus, z_plus);
 }
 
-dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h, size_t indx, size_t indy, size_t indz, FILE* pFile) {
+dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h) {
 
 	if (h.sx <= 0 || h.sy <= 0 || h.sz <= 0) {
 		std::cout << "Error: Voxel spacing must be positive." << std::endl;
@@ -1609,9 +1611,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 		std::cout << "Error: Propagation speed must be positive." << std::endl;
 		return INFINITY; // Return a large value or handle the error appropriately
 	}
-
-	Point3D origin = { -250, -250, -876.5 };
-	OrientationMatrix orientation = { {1.0, 0, 0}, {0, 1.0, 0}, {0, 0, 1.0} };
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType P_2 = P * P;
@@ -1696,8 +1695,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 			}
 		}
 		else {
-			Point3D pSave = {indx, indy, indz};
-			pSave = getRealCoordFromImageCoord3D(pSave, origin, h, orientation);
 			return (dataType)(min(X + h.sx * P, Y + h.sy * P));
 		}
 	}
@@ -1717,8 +1714,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 			}
 		}
 		else {
-			Point3D pSave = { indx, indy, indz };
-			pSave = getRealCoordFromImageCoord3D(pSave, origin, h, orientation);
 			return (dataType)(min(X + h.sx * P, Z + h.sz * P));
 		}
 	}
@@ -1738,8 +1733,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 			}
 		}
 		else {
-			Point3D pSave = { indx, indy, indz };
-			pSave = getRealCoordFromImageCoord3D(pSave, origin, h, orientation);
 			return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
 		}
 	}
@@ -1759,8 +1752,6 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 			}
 		}
 		else {
-			Point3D pSave = { indx, indy, indz };
-			pSave = getRealCoordFromImageCoord3D(pSave, origin, h, orientation);
 			return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
 		}
 	}
@@ -1883,19 +1874,18 @@ int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t
 
 void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
 	dataType** action, dataType** potential, short** labelArray,
-	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, FILE* pFile)
+	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand)
 {
 
 	if (ind_x >= length || ind_y >= width || ind_z >= height)
 		return;
 
 	size_t xd = x_new(ind_x, ind_y, length);
-	dataType ux = select3dX(action, length, width, height, ind_x, ind_y, ind_z);
-	dataType uy = select3dY(action, length, width, height, ind_x, ind_y, ind_z);
-	dataType uz = select3dZ(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType ux = upwindFiniteDifferenceX(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uy = upwindFiniteDifferenceY(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uz = upwindFiniteDifferenceZ(action, length, width, height, ind_x, ind_y, ind_z);
 	dataType coefSpeed = potential[ind_z][xd];
-	//dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
-	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing, ind_x, ind_y, ind_z, pFile);
+	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
 	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, solution };
 	if (labelArray[ind_z][xd] == 3) {
 		addPointHeap3D(narrowBand, neighbor);
@@ -2183,14 +2173,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		return false; // Memory allocation failed
 	}
 
-	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_p3.csv";
-	FILE* dFile;
-	if (fopen_s(&dFile, path_discriminant.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(dFile, "x,y,z\n");
-
 	//Initialization
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
@@ -2217,37 +2199,37 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	if (k > 0) 
 	{
 		if(labelArray[k - 1][currentIndx] != 1) {
-			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 	if (k < (height - 1))
 	{
 		if(labelArray[k + 1][currentIndx] != 1) {
-			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 	if (i > 0)
 	{
 		if(labelArray[k][x_new(i - 1, j, length)] != 1) {
-			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 	if (i < (length - 1))
 	{
 		if(labelArray[k][x_new(i + 1, j, length)] != 1) {
-			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 	if (j > 0)
 	{
 		if (labelArray[k][x_new(i, j - 1, length)] != 1) {
-			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 	if (j < (width - 1))
 	{
 		if (labelArray[k][x_new(i, j + 1, length)] != 1) {
-			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
 
@@ -2287,37 +2269,37 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		if (k > 0)
 		{
 			if (labelArray[k - 1][currentIndx] != 1) {
-				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (k < (height - 1))
 		{
 			if (labelArray[k + 1][currentIndx] != 1) {
-				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (i > 0)
 		{
 			if (labelArray[k][x_new(i - 1, j, length)] != 1) {
-				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (i < (length - 1))
 		{
 			if (labelArray[k][x_new(i + 1, j, length)] != 1) {
-				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (j > 0)
 		{
 			if (labelArray[k][x_new(i, j - 1, length)] != 1) {
-				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (j < (width - 1))
 		{
 			if (labelArray[k][x_new(i, j + 1, length)] != 1) {
-				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, dFile);
+				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		
@@ -2336,7 +2318,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	}
 	delete[] labelArray;
 
-	fclose(dFile);
 	return true;
 
 }

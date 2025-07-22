@@ -39,7 +39,7 @@ int main() {
 	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -67,7 +67,7 @@ int main() {
 	//	}
 	//}
 	*/
-	
+
 	//========================= Detect Heart region =========================================
 	
 	/*
@@ -4012,9 +4012,12 @@ int main() {
 		actionFirstFront[k] = new dataType[dim2D]{ 0 };
 		actionSecondFront[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "raw/filtered/New/filtered_p6.raw";
-	////loading_path = inputPath + "raw/filtered/filteredGMC_p5.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	////loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//loading_path = inputPath + "raw/filtered/filteredGMC_p3.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//storing_path = outputPath + "input_p3.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	//const dataType sigma = 2.0;
 	//copyDataToAnotherArray(ctContainer->dataPointer, toSmoothImageData, Height, Length, Width);
@@ -4029,9 +4032,9 @@ int main() {
 	//Point3D seed1 = { 257, 254, 249 };
 	//Point3D seed2 = { 257, 243, 350 };
 
-	////Patient 3
-	//Point3D seed1 = { 268, 230, 116 };
-	//Point3D seed2 = { 266, 221, 218 };
+	//Patient 3
+	Point3D seed1 = { 268, 230, 116 };
+	Point3D seed2 = { 266, 221, 218 };
 	
 	////Patient 4
 	//Point3D seed1 = { 280, 229, 135 };
@@ -4041,9 +4044,9 @@ int main() {
 	//Point3D seed1 = { 265, 243, 471 };
 	//Point3D seed2 = { 239, 225, 625 };
 
-	//Patient 6
-	Point3D seed1 = { 250, 298, 258 };
-	Point3D seed2 = { 268, 288, 443 };
+	////Patient 6
+	//Point3D seed1 = { 250, 298, 258 };
+	//Point3D seed2 = { 268, 288, 443 };
 
 	Point3D* endPoints = new Point3D[3];
 	endPoints[0] = seed1;
@@ -4057,10 +4060,10 @@ int main() {
 		radius
 	};
 	Image_Data inputImageStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	compute3DPotential(inputImageStr, potential, endPoints, parameters);
+	//compute3DPotential(inputImageStr, potential, endPoints, parameters);
 	
-	storing_path = outputPath + "potential_p6.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = outputPath + "potential_p3.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	////Draw initial seed ball
 	//string saving_ball = outputPath + "initial_ball_p1.csv";
@@ -4085,48 +4088,25 @@ int main() {
 	//}
 	//fclose(initial_ball);
 
-	//Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	Image_Data actionMapStr = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	storing_path = outputPath + "update path finding/p6/csv/action_";
-	//partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	////fastMarching3dWithSpacing(inputImageStr, action, potential, seed1);
-	
-	doubleFrontPropagation(actionMapStr, actionFirstFront, actionSecondFront, potential, endPoints, storing_path);
+	Image_Data actionMapStr = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
+	storing_path = outputPath + "";
+	partialFrontPropagation(actionMapStr, potential, endPoints);
 
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			action[k][i] = min(actionFirstFront[k][i], actionSecondFront[k][i]);
-		}
-	}
-	
-	//vector<Point3D> key_points;
-	//const double LengthKeyPoints = 35;
-	//storing_path = outputPath + "action_map.raw";
-	//frontPropagationWithKeyPointDetection(actionMapStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
-	//storing_path = outputPath + "update path finding/action_map_p6_test2.raw";
-	////storing_path = outputPath + "update path finding/action_map_test2.raw";
-	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//////Save the keys points in files
-	//string saving_csv = outputPath + "seed_p1.csv";
-	//key_points.push_back(seed1);
-	//key_points.push_back(seed2);
-	////string saving_csv = outputPath + "key_points_p1.csv";
-	//FILE* f_key_point;
-	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+	//////Save the end points in files
+	//string saving_csv = outputPath + "endPoints_p3.csv";
+	//FILE* f_end_points;
+	//if (fopen_s(&f_end_points, saving_csv.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
 	//}
-	//for (int n = 0; n < key_points.size(); n++) {
-	//	key_points[n] = getRealCoordFromImageCoord3D(key_points[n], ctOrigin, intSpacing, orientation);
-	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
-	//}
-	//fclose(f_key_point);
-	//key_points.clear();
+	//Point3D seed_save = getRealCoordFromImageCoord3D(seed1, ctOrigin, ctSpacing, orientation);
+	//fprintf(f_end_points, "%f,%f,%f\n", seed_save.x, seed_save.y, seed_save.z);
+	//seed_save = getRealCoordFromImageCoord3D(seed2, ctOrigin, ctSpacing, orientation);
+	//fprintf(f_end_points, "%f,%f,%f\n", seed_save.x, seed_save.y, seed_save.z);
+	//fclose(f_end_points);
 
-	//storing_path = outputPath + "p6/partial_action_map_p6.raw";
-	storing_path = outputPath + "p6/double_action_map_p6.raw";
-	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "action_map_p3.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	////Extract and save the path points
 	//dataType tau = 0.8, tolerance = 1.0;
@@ -4134,7 +4114,7 @@ int main() {
 	//vector<Point3D> path_points;
 	//shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	//FILE* path_file;
-	//storing_path = outputPath + "p6/path_points_p6.csv";
+	//storing_path = outputPath + "path_points_p3.csv";
 	//if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 	//	printf("Enable to open");
 	//	return false;
@@ -4712,7 +4692,6 @@ int main() {
 	delete[] differencedMap;
 	*/
 	
-	
 	//2D real images
 	const size_t Length = 512;
 	const size_t Width = 512;
@@ -4721,19 +4700,21 @@ int main() {
 	dataType* smoothedImage = new dataType[dim2D]{ 0 };
 	dataType* potential = new dataType[dim2D]{ 0 };
 	dataType* action = new dataType[dim2D]{ 0 };
-	dataType* firstAction = new dataType[dim2D]{ 0 };
-	dataType* secondAction = new dataType[dim2D]{ 0 };
 
-	loading_path = inputPath + "raw/slice/slice_aorta.raw";
+	//loading_path = inputPath + "raw/slice/slice_aorta.raw";
 	////loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
 	//manageRAWFile2D<dataType>(smoothedImage, Length, Width, loading_path.c_str(), LOAD_DATA, false);
 	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
 	
+	//storing_path = outputPath + "input_image_2D.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	//rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
+
 	//const dataType sigma = 2.0;
 	//gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
 	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
-
-	storing_path = outputPath + "input_retinal_image.raw";
+	
+	storing_path = outputPath + "smoothed.raw";
 	manageRAWFile2D<dataType>(smoothedImage, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	//int scale = 0;
@@ -4742,13 +4723,13 @@ int main() {
 
 	Point2D* endPoints = new Point2D[2];
 	
-	//Aorta End Points
-	endPoints[0] = { 240.0, 209.0 };
-	endPoints[1] = { 182.0, 340.0 };
+	////Aorta End Points
+	//endPoints[0] = { 240.0, 209.0 };
+	//endPoints[1] = { 182.0, 340.0 };
 
-	////End Points Distance Map
-	//endPoints[0] = { 0.0, 0.0 };
-	//endPoints[1] = { 511.0, 511.0 };
+	//End Points Distance Map
+	endPoints[0] = { 271.0, 186.0 };
+	endPoints[1] = { 181.0, 348.0 };
 
 	////Segment liver slice
 	//endPoints[0] = { 261.0, 238.0 };
@@ -4770,22 +4751,22 @@ int main() {
 	//endPoints[1] = { 500.0, 433.0 };
 	////endPoints[2] = { 0.0, 0.0 };
 
-	////Save the end points in files
-	//FILE* end_points_file;
-	//string file_points = outputPath + "end_points_eye.csv";
-	//if (fopen_s(&end_points_file, file_points.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(end_points_file, "x,y\n");
-	//for(size_t it = 0; it < 2; it++) {
-	//	fprintf(end_points_file, "%f,%f\n", endPoints[it].x, endPoints[it].y);
-	//}
-	//fclose(end_points_file);
+	//Save the end points in files
+	FILE* end_points_file;
+	string file_points = outputPath + "end_points.csv";
+	if (fopen_s(&end_points_file, file_points.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(end_points_file, "x,y\n");
+	for(size_t it = 0; it < 2; it++) {
+		fprintf(end_points_file, "%f,%f\n", endPoints[it].x, endPoints[it].y);
+	}
+	fclose(end_points_file);
 
 	OrientationMatrix2D orientation2D = { {1.0, 0.0}, {0.0, 1.0} };
 	Point2D iOrigin = { 0.0, 0.0 };
-	PixelSpacing spacing = { 0.001, 0.001 };
+	PixelSpacing spacing = { 1.0, 1.0 };
 	double radius = 1.0;
 	Potential_Parameters parameters{
 		100, //edge detector coefficient
@@ -4794,41 +4775,34 @@ int main() {
 		radius
 	};
 	Image_Data2D toPotentialStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
-	computePotential(toPotentialStr, potential, endPoints, parameters);
+	//computePotential(toPotentialStr, potential, endPoints, parameters);
 
-	////Manually set the potential values
-	//Point2D grad;
-	//for(i = 0; i < Length; i++) {
-	//	for(j = 0; j < Width; j++) {
-	//		//getGradient2D(smoothedImage, Width, Length, i, j, spacing, &grad);
-	//		//dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
-	//		potential[x_new(i, j, Length)] = 1.0;//exp(-2.0 * norm_grad);// / (1.0 + 1.0 * norm_grad);
-	//	}
-	//}
+	//Manually set the potential values
+	Point2D grad;
+	for(i = 0; i < Length; i++) {
+		for(j = 0; j < Width; j++) {
+			getGradient2D(smoothedImage, Width, Length, i, j, spacing, &grad);
+			dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
+			potential[x_new(i, j, Length)] = 1.0 / (2.5 * pow(norm_grad, 2) + 0.01);
+		}
+	}
 
-	storing_path = outputPath + "potential.raw";
+	storing_path = outputPath + "potential_v3.raw";
 	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	//const double LengthKeyPoints = 70.0;
 	//vector<Point2D> key_points;
 
 	Image_Data2D toActionStr = { Length, Width, smoothedImage, iOrigin, spacing, orientation2D };
-	//storing_path = outputPath + "partial action/csv/action_";
-	//partialFrontPropagation2D(toActionStr, action, potential, endPoints, storing_path);
-	//fastMarching2D(toActionStr, action, potential, endPoints);
-	//doubleFrontPropagation2D(toActionStr, firstAction, secondAction, potential, endPoints, storing_path);
-	//frontPropagationWithKeyPointDetection(toActionStr, potential, endPoints, LengthKeyPoints, key_points, storing_path);
+	partialFrontPropagation2D(toActionStr, action, potential, endPoints);
 	
-	clock_t start, end;
-
+	//clock_t start, end;
 	////start = clock();
-	fastMarching2D(toActionStr, action, potential, endPoints);
+	////fastMarching2D(toActionStr, action, potential, endPoints);
 	//partialFrontPropagation2D(toActionStr, action, potential, endPoints, storing_path);
 	//end = clock();
 	//double laps = (end - start);// / CLOCKS_PER_SEC;
 	//std::cout << "execution time : " << CLOCKS_PER_SEC << std::endl;
-
-
 	//start = clock();
 	//rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.01, 5000);
 	//end = clock();
@@ -4836,9 +4810,8 @@ int main() {
 	//std::cout << "execution time : " << laps << std::endl;
 
 	//storing_path = outputPath + "partial_action.raw";
-	storing_path = outputPath + "partial_action.raw";
-	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
+	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	
 	////Save the key points in files
 	//FILE* key_points_file;
 	//string file_key_points = outputPath + "key_points_eye.csv";
@@ -4851,71 +4824,25 @@ int main() {
 	//	fprintf(key_points_file, "%f,%f\n", key_points[it].x, key_points[it].y);
 	//}
 	//fclose(key_points_file);
-	
-	////Extract double action
-	//dataType max_value = 0.0;
-	//for(i = 0; i < dim2D; i++) {
-	//	if (firstAction[i] > max_value) {
-	//		max_value = firstAction[i];
-	//	}
-	//	if (secondAction[i] > max_value) {
-	//		max_value = secondAction[i];
-	//	}
-	//}
-	//for(i = 0; i < dim2D; i++) {
-	//	action[i] = min(firstAction[i],secondAction[i]);
-	//}
 
-	//std::cout << "Meeting point: " << endPoints[2].x << ", " << endPoints[2].y << std::endl;
-	//////storing_path = outputPath + "full_action_eye.raw";
-	//storing_path = outputPath + "double_action.raw";
-	//storing_path = outputPath + "partial_action.raw";
-	//storing_path = outputPath + "key_points_action.raw";
-	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
+	vector<Point2D> path_points;
+	Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
 
-	////Save the end points in files
-	//FILE* end_points_file;
-	//string file_points = outputPath + "end_points_aorta.csv";
-	//if (fopen_s(&end_points_file, file_points.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(end_points_file, "x,y\n");
-	//for(size_t it = 0; it < 2; it++) {
-	//	fprintf(end_points_file, "%f,%f\n", endPoints[it].x, endPoints[it].y);
-	//}
-	//fclose(end_points_file);
+	shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
 
-	//Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
-	//vector<Point2D> path_points;
-	////Image_Data2D toExtractPath = { Length, Width, firstAction, iOrigin, spacing, orientation2D };
-	//Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
-
-	////Point2D* firstSection = new Point2D[2];
-	////firstSection[0] = endPoints[0];
-	////firstSection[1] = endPoints[1];
-	////shortestPath2d(toExtractPath, firstSection, path_points, parameters_path);
-	//shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
-
-	//Point2D* secondSection = new Point2D[2];
-	//secondSection[0] = endPoints[1];
-	//secondSection[1] = endPoints[2];
-	//toExtractPath.imageDataPtr = secondAction;
-	////shortestPath2d(toExtractPath, secondSection, path_points, parameters_path);
-
-	////Save the end points in files
-	//FILE* path_points_file;
-	////string save_path_file = outputPath + "double_path_points.csv";
-	//string save_path_file = outputPath + "path_points.csv";
-	//if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(path_points_file, "x,y\n");
-	//for(size_t it = 0; it < path_points.size(); it++) {
-	//	fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
-	//}
-	//fclose(path_points_file);
+	//Save the end points in files
+	FILE* path_points_file;
+	string save_path_file = outputPath + "path_points.csv";
+	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(path_points_file, "x,y\n");
+	for(size_t it = 0; it < path_points.size(); it++) {
+		fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
+	}
+	fclose(path_points_file);
 
 	//delete[] firstSection;
 	//delete[] secondSection;
@@ -5059,7 +4986,7 @@ int main() {
 	delete[] smoothedImage;
 	delete[] potential;
 	delete[] action;
-
+	
 	/*
 	const size_t Length = 50, Width = 50, Height = 50;
 	size_t dim2D = Length * Width;
