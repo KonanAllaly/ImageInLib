@@ -28,10 +28,6 @@ extern "C" {
 
 	bool meanCurvatureTimeStep(Image_Data inputImageData, Filter_Parameters filterParameters);
 
-	//=================
-
-	bool geodesicMeanCurvatureRectangularTimeStep(Image_Data inputImageData, Filtering_Parameters filterParameters);
-
 	bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filtering_parameters);
 
 #endif // !HEAT_QUATION_H

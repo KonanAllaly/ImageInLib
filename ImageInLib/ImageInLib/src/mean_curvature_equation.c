@@ -1,8 +1,3 @@
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4.0D Image Segmentation Methods
-* Language:  C
-*/
 #include <stdio.h> // Standard lib for input and output functions
 #include <stdlib.h>
 #include <math.h> // Maths functions i.e. pow, sin, cos
