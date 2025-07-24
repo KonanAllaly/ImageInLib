@@ -16,6 +16,8 @@
 #include "enhancement.h"
 #include "eigen_systems.h"
 
+#include "../src/heat_equation.h"
+
 int main() {
 
 	string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
@@ -36,7 +38,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	/*
+	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -55,18 +57,18 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 
-	////Find min and max
-	//dataType minValue = 1000000.0, maxValue = -1000000.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			dataType value = ctContainer->dataPointer[k][x_new(i, j, Length)];
-	//			if (value < minValue) minValue = value;
-	//			if (value > maxValue) maxValue = value;
-	//		}
-	//	}
-	//}
-	*/
+	//Find min and max
+	dataType minValue = 1000000.0, maxValue = -1000000.0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				dataType value = ctContainer->dataPointer[k][x_new(i, j, Length)];
+				if (value < minValue) minValue = value;
+				if (value > maxValue) maxValue = value;
+			}
+		}
+	}
+	
 
 	//========================= Detect Heart region =========================================
 	
@@ -4692,6 +4694,7 @@ int main() {
 	delete[] differencedMap;
 	*/
 	
+	/*
 	//2D real images
 	const size_t Length = 512;
 	const size_t Width = 512;
@@ -4907,85 +4910,85 @@ int main() {
 	//delete[] actionFM;
 	//delete[] actionRT;
 
-	/*
+
+	
+	////
+	//vector<Point2D> fm, rt;
+	//dataType x, y;
+	//FILE* path_file_FM;
+	//loading_path = outputPath + "fm_path_points.csv";
+	//if (fopen_s(&path_file_FM, loading_path.c_str(), "r") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//while (feof(path_file_FM) == 0) {
+	//	fscanf_s(path_file_FM, "%f", &x);
+	//	fscanf_s(path_file_FM, ",");
+	//	fscanf_s(path_file_FM, "%f", &y);
+	//	fscanf_s(path_file_FM, "\n");
+	//	Point2D pt = { x, y };
+	//	fm.push_back(pt);
+	//}
+	//fclose(path_file_FM);
+	//FILE* path_file_RT;
+	//loading_path = outputPath + "rt_path_points.csv";
+	//if (fopen_s(&path_file_RT, loading_path.c_str(), "r") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//while (feof(path_file_RT) == 0) {
+	//	fscanf_s(path_file_RT, "%f", &x);
+	//	fscanf_s(path_file_RT, ",");
+	//	fscanf_s(path_file_RT, "%f", &y);
+	//	fscanf_s(path_file_RT, "\n");
+	//	Point2D pt = { x, y };
+	//	rt.push_back(pt);
+	//}
+	//fclose(path_file_RT);
 	//
-	vector<Point2D> fm, rt;
-	dataType x, y;
-
-	FILE* path_file_FM;
-	loading_path = outputPath + "fm_path_points.csv";
-	if (fopen_s(&path_file_FM, loading_path.c_str(), "r") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	while (feof(path_file_FM) == 0) {
-		fscanf_s(path_file_FM, "%f", &x);
-		fscanf_s(path_file_FM, ",");
-		fscanf_s(path_file_FM, "%f", &y);
-		fscanf_s(path_file_FM, "\n");
-		Point2D pt = { x, y };
-		fm.push_back(pt);
-	}
-	fclose(path_file_FM);
-
-	FILE* path_file_RT;
-	loading_path = outputPath + "rt_path_points.csv";
-	if (fopen_s(&path_file_RT, loading_path.c_str(), "r") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	while (feof(path_file_RT) == 0) {
-		fscanf_s(path_file_RT, "%f", &x);
-		fscanf_s(path_file_RT, ",");
-		fscanf_s(path_file_RT, "%f", &y);
-		fscanf_s(path_file_RT, "\n");
-		Point2D pt = { x, y };
-		rt.push_back(pt);
-	}
-	fclose(path_file_RT);
-
-	dataType H_fm = 0.0;
-	for(i = 0; i < fm.size(); i++)
-	{
-		dataType min_fm = 1000000;
-		for(j = 0; j < rt.size(); j++)
-		{
-			dataType d = getPoint2DDistance(fm[i], rt[j]);
-			if(min_fm > d)
-			{
-				min_fm = d;
-			}
-		}
-		if (min_fm > H_fm) {
-			H_fm = min_fm;
-		}
-	}
-
-	dataType H_rt = 0.0;
-	for (i = 0; i < rt.size(); i++)
-	{
-		dataType min_rt = 1000000;
-		for (j = 0; j < fm.size(); j++)
-		{
-			dataType d = getPoint2DDistance(rt[i], fm[j]);
-			if (min_rt > d)
-			{
-				min_rt = d;
-			}
-		}
-		if (min_rt > H_rt) {
-			H_rt = min_rt;
-		}
-	}
-	std::cout << "FM : " << H_fm / (dataType)fm.size() << std::endl;
-	std::cout << "RT : " << H_rt / (dataType)rt.size() << std::endl;
-	*/
+	//dataType H_fm = 0.0;
+	//for(i = 0; i < fm.size(); i++)
+	//{
+	//	dataType min_fm = 1000000;
+	//	for(j = 0; j < rt.size(); j++)
+	//	{
+	//		dataType d = getPoint2DDistance(fm[i], rt[j]);
+	//		if(min_fm > d)
+	//		{
+	//			min_fm = d;
+	//		}
+	//	}
+	//	if (min_fm > H_fm) {
+	//		H_fm = min_fm;
+	//	}
+	//}
+	//
+	//dataType H_rt = 0.0;
+	//for (i = 0; i < rt.size(); i++)
+	//{
+	//	dataType min_rt = 1000000;
+	//	for (j = 0; j < fm.size(); j++)
+	//	{
+	//		dataType d = getPoint2DDistance(rt[i], fm[j]);
+	//		if (min_rt > d)
+	//		{
+	//			min_rt = d;
+	//		}
+	//	}
+	//	if (min_rt > H_rt) {
+	//		H_rt = min_rt;
+	//	}
+	//}
+	//std::cout << "FM : " << H_fm / (dataType)fm.size() << std::endl;
+	//std::cout << "RT : " << H_rt / (dataType)rt.size() << std::endl;
+	
 
 	delete[] endPoints;
 	delete[] imageData;
 	delete[] smoothedImage;
 	delete[] potential;
 	delete[] action;
+	*/
 	
 	/*
 	const size_t Length = 50, Width = 50, Height = 50;
@@ -6526,6 +6529,43 @@ int main() {
 
 	free(ctContainer);
 	*/
+
+	//==================== Test filtering with rectangular grid ==================
+
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
+
+	storing_path = outputPath + "input.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	Image_Data toFiltereing = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+	Filter_Parameters filtering_parameters =
+	{
+		0.25,// timeStepSize;
+		1.0,// h not used here
+		1.0,// sigma not used here
+		0,// edge_detector_coefficient not used here
+		1.4,// omega_c;
+		0.001,// tolerance;
+		0,// eps2 not used here
+		0,// coef not used here
+		1,// linked to sigma and not used here
+		2,//number of time step;
+		100// max number of iteration;
+	};
+	heatImplicitRectangularScheme(toFiltereing, filtering_parameters);
+
+	storing_path = outputPath + "filtered_2.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+	}
+	delete[] imageData;
 
 	return EXIT_SUCCESS;
 }
