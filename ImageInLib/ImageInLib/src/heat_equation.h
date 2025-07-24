@@ -35,7 +35,7 @@ extern "C" {
 	*/
 	void heatImplicitScheme(Image_Data toImplicitImage, const Filter_Parameters implicitParameters);
 
-	void heatExplicitRectangularScheme(Image_Data toExplicitImage, const Filtering_Parameters explicitParameters);
+	void heatImplicitRectangularScheme(Image_Data toExplicitImage, const Filter_Parameters explicitParameters);
 	//==============================================================================
 	
 	//2D Functions
