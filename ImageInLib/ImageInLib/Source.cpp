@@ -17,6 +17,7 @@
 #include "eigen_systems.h"
 
 #include "../src/heat_equation.h"
+#include "segmentation2d.h"
 
 int main() {
 
@@ -38,7 +39,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	
+	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -68,7 +69,7 @@ int main() {
 			}
 		}
 	}
-	
+	*/
 
 	//========================= Detect Heart region =========================================
 	
@@ -3708,7 +3709,7 @@ int main() {
 	//delete[] maskAorta;
 	//free(ctContainer);
 
-	//==================== Compute Hausdoff distance and Ratio ===========================
+	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
 	dataType img_f, n0, n1, n2, nmg, x, y, z, ptmg, ptid, scal;
@@ -3997,7 +3998,7 @@ int main() {
 	fclose(file_hausdoff);
 	*/
 
-	//==================== Test Potential function =======================================
+	//==================== Test Potential function ====================================================
 	
 	/*
 	dataType** imageData = new dataType * [Height];
@@ -5129,7 +5130,7 @@ int main() {
 	delete[] difference;
 	*/
 
-	//==================== Aorta bifurcation detection ===================================
+	//==================== Aorta bifurcation detection ================================================
 	
 	/*
 	const size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx)* Height);
@@ -5297,7 +5298,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Filter out points with no neighbors in previous and next slice ==============
+	//==================== Filter out points with no neighbors in previous and next slice =============
 
 	/*
 	string current_slice;// = outputPath + "test_slice/centers_slice_378.csv";
@@ -6290,7 +6291,7 @@ int main() {
 	}
 	*/
 
-	//==================== Hough Transform in Lung region =========================
+	//==================== Hough Transform in Lung region =============================================
 
 	/*
 	dataType** imageData = new dataType * [Height];
@@ -6436,7 +6437,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Hough Transform with optimization =====================
+	//==================== Hough Transform with optimization ==========================================
 
 	/*
 	dataType** imageData = new dataType * [Height];
@@ -6530,8 +6531,9 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Test filtering with rectangular grid ==================
+	//==================== Test filtering with rectangular grid =======================================
 
+	/*
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		imageData[k] = new dataType[dim2D]{ 0 };
@@ -6566,6 +6568,76 @@ int main() {
 		delete[] imageData[k];
 	}
 	delete[] imageData;
+	*/
 
+	//==================== Test segmentation 2D =======================================================
+
+	const size_t Length = 512, Width = 512;
+	const size_t dim2D = Length * Width;
+	dataType* imageData = new dataType[dim2D] {0};
+	dataType* initialSegment = new dataType[dim2D]{ 0 };
+	//copyDataToAnother2dArray(ctContainer->dataPointer[186], imageData, Length, Width);
+
+	storing_path = outputPath + "input.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
+
+	Image_Data2D imageDataStr = { Length, Width, imageData, {0.0, 0.0}, {1.171875, 1.171875}, {{1.0, 0.0},{0.0, 1.0}} };
+	const Filter_Parameters implicitParameters
+	{
+		0.2,// timeStepSize;
+		1.171875,// h;
+		1.0,// sigma;
+		1000,// edge detector coefficient;
+		1.4,// omega_c;
+		1e-3,// tolerance;
+		1e-6,// eps2;
+		1e-6,// coef;
+		1,// p;
+		3,// timeStepsNum;
+		1000// maxNumberOfSolverIteration;
+	};
+	
+	//heatImplicit2dScheme(imageDataStr, implicitParameters);
+	//storing_path = outputPath + "filtered.raw";
+	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	Point2D* center = new Point2D[1];
+	center[0] = {165.0, 279.0};
+	dataType v = 0.5, R = 30.0;
+	generateInitialSegmentationFunction(initialSegment, Length, Width, center, v, R);
+	//storing_path = outputPath + "seg00.raw";
+	//manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), STORE_DATA, false);
+
+	dataType h = 1.171875;
+	Segmentation_Parameters segmentation_parms
+	{
+		50, // Maximum number of Gauss-Seidel iterations
+		4000, // constant K in the Perona-Malik function G for the image
+		1e-6, // epsilon is the regularization factor (Evans-Spruck)
+		2000,// Number of current time step
+		2000,// Maximum number of time step
+		10, // Kind of writing density
+		1e-6, // Tolerance for stopping of the segmentation process
+		0.25, //tau
+		h, //h
+		1.2, //omega_c
+		1e-6, // gauss seidelTolerance;
+		1.0,// coef_conv;
+		0.1//coef_dif;
+	};
+	//string segmentPath = outputPath + "seg/segment_";
+	//subsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
+	
+	//string segmentPath = outputPath + "seg/gsubsurf/segment_";
+	string segmentPath = outputPath + "seg/gsubsurf_iioe/segment_";
+	//gsubsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
+	gsubsurf_iioe(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
+
+	delete[] center;
+	delete[] imageData;
+	delete[] initialSegment;
+	
+	//free(ctContainer);
 	return EXIT_SUCCESS;
 }

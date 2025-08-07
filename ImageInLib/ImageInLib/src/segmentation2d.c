@@ -1,7 +1,3 @@
-/*
-* Author : Konan Allaly
-* Purpose : Updates for the INFLANET Project
-*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +12,8 @@ dataType l2norm(dataType* arrayPtr1, dataType* arrayPtr2, const size_t height, c
 	dataType hh = h * h;
 
 	for (i = 0; i < height * width; i++) {
-		sumPower += (dataType)((pow(arrayPtr1[i] - arrayPtr2[i], 2) * hh));
+		//sumPower += (dataType)((pow(arrayPtr1[i] - arrayPtr2[i], 2) * hh));
+		sumPower += (dataType)(pow(arrayPtr1[i] - arrayPtr2[i], 2));
 	}
 	norm = sqrt(sumPower);
 
@@ -50,7 +47,7 @@ bool rescaleToZeroOne2d(dataType* imageDataPtr, const size_t height, const size_
 	return true;
 }
 
-bool generateInitialSegmentationFunction(dataType* imageDataPtr, const size_t height, const size_t width, point2d* center, dataType v, dataType R)
+bool generateInitialSegmentationFunction(dataType* imageDataPtr, const size_t height, const size_t width, Point2D* center, dataType v, dataType R)
 {
 	size_t i, j;
 	int dx, dy;
@@ -91,9 +88,9 @@ bool set2dDirichletBoundaryCondition(dataType* imageDataPtr, const size_t height
 	return true;
 }
 
-bool computeNormOfGradientDiamondCells(dataType* arrayPtr, neighPtrs neigbours, const size_t height, const size_t width, dataType h) {
+bool computeNormOfGradientDiamondCells(dataType* imageDataPtr, neighPtrs neigbours, const size_t height, const size_t width, dataType h) {
 
-	size_t i, j, i_ext, j_ext, currentIndx;
+	size_t i, j, i_ext, j_ext, xd;
 	const size_t height_ext = height + 2, width_ext = width + 2;
 	size_t dim2D_ext = height_ext * width_ext;
 
@@ -101,7 +98,7 @@ bool computeNormOfGradientDiamondCells(dataType* arrayPtr, neighPtrs neigbours, 
 	if (extendedArray == NULL)
 		return false;
 
-	copyDataTo2dExtendedArea(arrayPtr, extendedArray, height, width);
+	copyDataTo2dExtendedArea(imageDataPtr, extendedArray, height, width);
 	reflection2D(extendedArray, height_ext, width_ext);
 
 	dataType uP, uN, uNW, uNE, uS, uSW, uSE, uW, uE;
@@ -115,7 +112,7 @@ bool computeNormOfGradientDiamondCells(dataType* arrayPtr, neighPtrs neigbours, 
 			size_t jplus = j_ext + 1;
 			size_t jminus = j_ext - 1;
 
-			currentIndx = x_new(i, j, height);
+			xd = x_new(i, j, height);
 			uP = extendedArray[x_new(i_ext, j_ext, height_ext)];
 			uE = extendedArray[x_new(iplus, j_ext, height_ext)];
 			uW = extendedArray[x_new(iminus, j_ext, height_ext)];
@@ -129,22 +126,22 @@ bool computeNormOfGradientDiamondCells(dataType* arrayPtr, neighPtrs neigbours, 
 			//East
 			ux = (uE - uP) / h;
 			uy = (uNE + uN - uS - uSE) / (4.0 * h);
-			neigbours.East[currentIndx] = sqrt(ux * ux + uy * uy);
+			neigbours.East[xd] = sqrt(ux * ux + uy * uy);
 
 			//West
 			ux = (uP - uW) / h;
 			uy = (uNW + uN - uSW - uS) / (4.0 * h);
-			neigbours.West[currentIndx] = sqrt(ux * ux + uy * uy);
+			neigbours.West[xd] = sqrt(ux * ux + uy * uy);
 
 			//North
 			ux = (uNE + uE - uNW - uW) / (4.0 * h);
 			uy = (uN - uP) / h;
-			neigbours.North[currentIndx] = sqrt(ux * ux + uy * uy);
+			neigbours.North[xd] = sqrt(ux * ux + uy * uy);
 
 			//South
 			ux = (uSE + uE - uSW - uW) / (4.0 * h);
 			uy = (uP - uS) / h;
-			neigbours.South[currentIndx] = sqrt(ux * ux + uy * uy);
+			neigbours.South[xd] = sqrt(ux * ux + uy * uy);
 		}
 	}
 
@@ -205,11 +202,11 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 
 	heatImplicit2dScheme(imageData, smooth_parms);
 
-	//Save filtered image
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_filtered.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	store2dRawData(imageData.imageDataPtr, height, width, name, flags);
+	////Save filtered image
+	//strcpy_s(name, sizeof name, segmentPath);
+	//sprintf_s(name_ending, sizeof(name_ending), "_filtered.raw");
+	//strcat_s(name, sizeof(name), name_ending);
+	//store2dRawData(imageData.imageDataPtr, height, width, name, flags);
 
 	dataType* uNorth = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* uSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -218,7 +215,7 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 	if (uNorth == NULL || uSouth == NULL || uEast == NULL || uWest == NULL)
 		return false;
 
-	neighPtrs  U;
+	neighPtrs U;
 	U.West = uWest;
 	U.East = uEast;
 	U.North = uNorth;
@@ -228,77 +225,34 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 	dataType* gSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* gEast = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* gWest = (dataType*)malloc(sizeof(dataType) * dim2D);
-	dataType* gAverage = (dataType*)malloc(sizeof(dataType) * dim2D);
-	if (gNorth == NULL || gSouth == NULL || gEast == NULL || gWest == NULL || gAverage == NULL)
+	if (gNorth == NULL || gSouth == NULL || gEast == NULL || gWest == NULL)
 		return false;
 
+	//Norm of gradient computed on input image for edge detector
 	computeNormOfGradientDiamondCells(imageData.imageDataPtr, U, height, width, h);
+
+	////visualize edge detector
+	//dataType* edgeAverage = (dataType*)malloc(sizeof(dataType) * dim2D);
 
 	dataType current = 0.0;
 	for (i = 0; i < height; i++) {
 		for (j = 0; j < width; j++) {
-
 			size_t currentIndx = x_new(i, j, height);
-
-			//gEast[currentIndx] = gradientFunction(pow(U.East[currentIndx], 2), coef_edge_detector);
-			//gWest[currentIndx] = gradientFunction(pow(U.West[currentIndx], 2), coef_edge_detector);
-			//gNorth[currentIndx] = gradientFunction(pow(U.North[currentIndx], 2), coef_edge_detector);
-			//gSouth[currentIndx] = gradientFunction(pow(U.South[currentIndx], 2), coef_edge_detector);
-
-			dataType edge_value = gradientFunction(U.East[currentIndx], coef_edge_detector);
-			if (edge_value <= 0.15) {
-				gEast[currentIndx] = edge_value;
-			}
-			else {
-				gEast[currentIndx] = 1.0;
-			}
-
-			edge_value = gradientFunction(U.West[currentIndx], coef_edge_detector);
-			if (edge_value <= 0.15) {
-				gWest[currentIndx] = edge_value;
-			}
-			else {
-				gWest[currentIndx] = 1.0;
-			}
-
-			edge_value = gradientFunction(U.North[currentIndx], coef_edge_detector);
-			if (edge_value <= 0.15) {
-				gNorth[currentIndx] = edge_value;
-			}
-			else {
-				gNorth[currentIndx] = 1.0;
-			}
-
-			edge_value = gradientFunction(U.South[currentIndx], coef_edge_detector);
-			if (edge_value <= 0.15) {
-				gSouth[currentIndx] = edge_value;
-			}
-			else {
-				gSouth[currentIndx] = 1.0;
-			}
-			
-			//gEast[currentIndx] = gradientFunction(U.East[currentIndx], coef_edge_detector);
-			//gWest[currentIndx] = gradientFunction(U.West[currentIndx], coef_edge_detector);
-			//gNorth[currentIndx] = gradientFunction(U.North[currentIndx], coef_edge_detector);
-			//gSouth[currentIndx] = gradientFunction(U.South[currentIndx], coef_edge_detector);
-
-			//current = (dataType)(((gEast[currentIndx] + gWest[currentIndx] + gNorth[currentIndx] + gSouth[currentIndx]) / 4.0));
-			//if (current < 0.015) {
-			//	gAverage[currentIndx] = current;//1.0;
-			//}
-			//else {
-			//	gAverage[currentIndx] = 0.0;
-			//}
-			////gAverage[currentIndx] = current;
+			gEast[currentIndx] = gradientFunction(pow(U.East[currentIndx], 2), coef_edge_detector);
+			gWest[currentIndx] = gradientFunction(pow(U.West[currentIndx], 2), coef_edge_detector);
+			gNorth[currentIndx] = gradientFunction(pow(U.North[currentIndx], 2), coef_edge_detector);
+			gSouth[currentIndx] = gradientFunction(pow(U.South[currentIndx], 2), coef_edge_detector);
+			//edgeAverage[currentIndx] = (dataType)((gEast[currentIndx] + gWest[currentIndx] + gNorth[currentIndx] + gSouth[currentIndx]) / 4.0);
 		}
 	}
 
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	store2dRawData(gAverage, height, width, name, flags);
+	////Save edge detector
+	//strcpy_s(name, sizeof name, segmentPath);
+	//sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
+	//strcat_s(name, sizeof(name), name_ending);
+	//store2dRawData(edgeAverage, height, width, name, flags);
+	//free(edgeAverage);
 
-	//exit(0);
 
 	dataType* coefNorth = (dataType*)malloc(sizeof(dataType) * dim2D);
 	dataType* coefSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
@@ -349,12 +303,12 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
 
-					size_t currentIndx = x_new(i, j, height);
+					size_t xd = x_new(i, j, height);
 					size_t currentIndx_ext = x_new(i_ext, j_ext, height_ext);
 
-					gauss_seidel_coef = (dataType)((previousSolPtr[currentIndx_ext] + coefEast[currentIndx] * gaussSeidelPtr[x_new(i_ext + 1, j_ext, height_ext)] + coefNorth[currentIndx] * gaussSeidelPtr[x_new(i_ext, j_ext - 1, height_ext)]
-						+ coefWest[currentIndx] * gaussSeidelPtr[x_new(i_ext - 1, j_ext, height_ext)] + coefSouth[currentIndx] * gaussSeidelPtr[x_new(i_ext, j_ext + 1, height_ext)])
-						/ (1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]));
+					gauss_seidel_coef = (dataType)((previousSolPtr[currentIndx_ext] + coefEast[xd] * gaussSeidelPtr[x_new(i_ext + 1, j_ext, height_ext)] + coefNorth[xd] * gaussSeidelPtr[x_new(i_ext, j_ext - 1, height_ext)]
+						+ coefWest[xd] * gaussSeidelPtr[x_new(i_ext - 1, j_ext, height_ext)] + coefSouth[xd] * gaussSeidelPtr[x_new(i_ext, j_ext + 1, height_ext)])
+						/ (1 + coefEast[xd] + coefNorth[xd] + coefWest[xd] + coefSouth[xd]));
 
 					gaussSeidelPtr[currentIndx_ext] = gaussSeidelPtr[currentIndx_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[currentIndx_ext]);
 				}
@@ -364,12 +318,12 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
 
-					size_t currentIndx = x_new(i, j, height);
+					size_t xd = x_new(i, j, height);
 					size_t currentIndx_ext = x_new(i_ext, j_ext, height_ext);
 
-					error_gauss_seidel += (dataType)(pow((1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]) * gaussSeidelPtr[currentIndx_ext]
-						- (coefEast[currentIndx] * gaussSeidelPtr[x_new(i_ext + 1, j_ext, height_ext)] + coefNorth[currentIndx] * gaussSeidelPtr[x_new(i_ext, j_ext - 1, height_ext)]
-							+ coefWest[currentIndx] * gaussSeidelPtr[x_new(i_ext - 1, j_ext, height_ext)] + coefSouth[currentIndx] * gaussSeidelPtr[x_new(i_ext, j_ext + 1, height_ext)]) - previousSolPtr[currentIndx_ext], 2) * h * h);
+					error_gauss_seidel += (dataType)(pow((1 + coefEast[xd] + coefNorth[xd] + coefWest[xd] + coefSouth[xd]) * gaussSeidelPtr[currentIndx_ext]
+						- (coefEast[xd] * gaussSeidelPtr[x_new(i_ext + 1, j_ext, height_ext)] + coefNorth[xd] * gaussSeidelPtr[x_new(i_ext, j_ext - 1, height_ext)]
+							+ coefWest[xd] * gaussSeidelPtr[x_new(i_ext - 1, j_ext, height_ext)] + coefSouth[xd] * gaussSeidelPtr[x_new(i_ext, j_ext + 1, height_ext)]) - previousSolPtr[currentIndx_ext], 2));
 				}
 			}
 		} while (cpt < maxIter && error_gauss_seidel > tol);
@@ -400,19 +354,19 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > tol);
 
-	FILE* file_peak;
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "final_segment.csv");
-	strcat_s(name, sizeof(name), name_ending);
-	if (fopen_s(&file_peak, name, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_peak, "x,y\n");
-	for (i = 0; i < dim2D; i++) {
-		fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
-	}
-	fclose(file_peak);
+	//FILE* file_peak;
+	//strcpy_s(name, sizeof name, segmentPath);
+	//sprintf_s(name_ending, sizeof(name_ending), "final_segment.csv");
+	//strcat_s(name, sizeof(name), name_ending);
+	//if (fopen_s(&file_peak, name, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_peak, "x,y\n");
+	//for (i = 0; i < dim2D; i++) {
+	//	fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
+	//}
+	//fclose(file_peak);
 
 	free(uNorth);
 	free(uSouth);
@@ -423,7 +377,6 @@ bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segme
 	free(gSouth);
 	free(gEast);
 	free(gWest);
-	free(gAverage);
 
 	free(coefNorth);
 	free(coefSouth);
@@ -470,7 +423,7 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 	if (edgeDetectorPtr == NULL)
 		return false;
 
-	neighPtrs  uCoef;
+	neighPtrs uCoef;
 	uCoef.West = uWest;
 	uCoef.East = uEast;
 	uCoef.North = uNorth;
@@ -521,30 +474,30 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 			size_t currentIndx = x_new(i, j, height);
 
 			if (i == 0) {
-				vEast[currentIndx] = -adv * ((edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[currentIndx]) / (2 * h));
+				vEast[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[currentIndx]);
 				vWest[currentIndx] = -vEast[currentIndx];
 			}
 			else {
 				if (i == height - 1) {
-					vEast[currentIndx] = -adv * ((edgeDetectorPtr[currentIndx] - edgeDetectorPtr[x_new(i - 1, j, height)]) / (2 * h));
+					vEast[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[currentIndx] - edgeDetectorPtr[x_new(i - 1, j, height)]);
 					vWest[currentIndx] = -vEast[currentIndx];
 				}
 				else {
-					vEast[currentIndx] = -adv * ((edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]) / (2 * h));
+					vEast[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
 					vWest[currentIndx] = -vEast[currentIndx];
 				}
 			}
 			if (j == 0) {
-				vSouth[currentIndx] = -adv * ((edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[currentIndx]) / (2 * h));
+				vSouth[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[currentIndx]);
 				vNorth[currentIndx] = -vSouth[currentIndx];
 			}
 			else {
 				if (j == width - 1) {
-					vSouth[currentIndx] = -adv * ((edgeDetectorPtr[currentIndx] - edgeDetectorPtr[x_new(i, j - 1, height)]) / (2 * h));
+					vSouth[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[currentIndx] - edgeDetectorPtr[x_new(i, j - 1, height)]);
 					vNorth[currentIndx] = -vSouth[currentIndx];
 				}
 				else {
-					vSouth[currentIndx] = -adv * ((edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]) / (2 * h));
+					vSouth[currentIndx] = -adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
 					vNorth[currentIndx] = -vSouth[currentIndx];
 				}
 			}
@@ -571,13 +524,11 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 			for (j = 0; j < width; j++) {
 				size_t currentIndx = x_new(i, j, height);
 				average_norm_gradient = (dataType)((uCoef.East[currentIndx] + uCoef.West[currentIndx] + uCoef.North[currentIndx] + uCoef.South[currentIndx]) / 4.0);
-				u_average = sqrt(average_norm_gradient * average_norm_gradient + eps * eps);
-
-				//Explicit for advection
-				coefEast[currentIndx] = (dataType)(coef_tau * (-min(vEast[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.East[currentIndx])));
-				coefNorth[currentIndx] = (dataType)(coef_tau * (-min(vNorth[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.North[currentIndx])));
-				coefWest[currentIndx] = (dataType)(coef_tau * (-min(vWest[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.West[currentIndx])));
-				coefSouth[currentIndx] = (dataType)(coef_tau * (-min(vSouth[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.South[currentIndx])));
+				u_average = sqrt(average_norm_gradient * average_norm_gradient + eps);
+				coefEast[currentIndx] = (dataType)(coef_tau * (-fmin(vEast[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.East[currentIndx])));
+				coefNorth[currentIndx] = (dataType)(coef_tau * (-fmin(vNorth[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.North[currentIndx])));
+				coefWest[currentIndx] = (dataType)(coef_tau * (-fmin(vWest[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.West[currentIndx])));
+				coefSouth[currentIndx] = (dataType)(coef_tau * (-fmin(vSouth[currentIndx], 0) + diff * edgeDetectorPtr[currentIndx] * u_average * (1.0 / uCoef.South[currentIndx])));
 			}
 		}
 
@@ -598,7 +549,6 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 					size_t currentIndx = x_new(i, j, height);
 					size_t currentIndx_ext = x_new(i_ext, j_ext, height_ext);
 
-					//explicit for advection term
 					gauss_seidel_coef = (dataType)((previousSolPtr[currentIndx_ext] + coefEast[currentIndx] * gaussSeidelPtr[x_new(iplus, j_ext, height_ext)]
 						+ coefWest[currentIndx] * gaussSeidelPtr[x_new(iminus, j_ext, height_ext)] + coefNorth[currentIndx] * gaussSeidelPtr[x_new(i_ext, jminus, height_ext)]
 						+ coefSouth[currentIndx] * gaussSeidelPtr[x_new(i_ext, jplus, height_ext)]) / (1 + coefEast[currentIndx] + coefWest[currentIndx] +
@@ -619,15 +569,14 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 					size_t currentIndx = x_new(i, j, height);
 					size_t currentIndx_ext = x_new(i_ext, j_ext, height_ext);
 
-					//Explicit for advection term
 					error_gauss_seidel += (dataType)(pow((1 + coefEast[currentIndx] + coefWest[currentIndx] + coefNorth[currentIndx] + coefSouth[currentIndx]) * gaussSeidelPtr[currentIndx_ext]
 						- (coefEast[currentIndx] * gaussSeidelPtr[x_new(iplus, j_ext, height_ext)]
 							+ coefWest[currentIndx] * gaussSeidelPtr[x_new(iminus, j_ext, height_ext)] + coefNorth[currentIndx] * gaussSeidelPtr[x_new(i_ext, jminus, height_ext)]
-							+ coefSouth[currentIndx] * gaussSeidelPtr[x_new(i_ext, jplus, height_ext)]) - previousSolPtr[currentIndx_ext], 2) * h * h);
+							+ coefSouth[currentIndx] * gaussSeidelPtr[x_new(i_ext, jplus, height_ext)]) - previousSolPtr[currentIndx_ext], 2));
 				}
 			}
 
-		} while (cpt < maxIter && error_gauss_seidel > 0.000001);
+		} while (cpt < maxIter && error_gauss_seidel > 0.001);
 
 		//rescall to data range 0-1
 		rescaleToZeroOne2d(gaussSeidelPtr, height_ext, width_ext);
@@ -653,19 +602,19 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
 
-	FILE* file_peak;
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "final_segment_v1.csv");
-	strcat_s(name, sizeof(name), name_ending);
-	if (fopen_s(&file_peak, name, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_peak, "x,y\n");
-	for (i = 0; i < dim2D; i++) {
-		fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
-	}
-	fclose(file_peak);
+	//FILE* file_peak;
+	//strcpy_s(name, sizeof name, segmentPath);
+	//sprintf_s(name_ending, sizeof(name_ending), "final_segment_v1.csv");
+	//strcat_s(name, sizeof(name), name_ending);
+	//if (fopen_s(&file_peak, name, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_peak, "x,y\n");
+	//for (i = 0; i < dim2D; i++) {
+	//	fprintf(file_peak, "%d,%f\n", i, segmentationPtr[i]);
+	//}
+	//fclose(file_peak);
 
 	free(uNorth);
 	free(uSouth);
@@ -683,6 +632,273 @@ bool gsubsurf(Image_Data2D imageData, dataType* initialSegment, const char* segm
 	free(coefSouth);
 	free(coefEast);
 	free(coefWest);
+
+	free(segmentationPtr);
+	free(gaussSeidelPtr);
+	free(previousSolPtr);
+
+	return true;
+}
+
+bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
+{
+	size_t i, j, i_ext, j_ext;
+	const size_t height = imageData.height, width = imageData.width;
+	const size_t height_ext = height + 2, width_ext = width + 2;
+	size_t dim2D = height * width, dim2D_ext = height_ext * width_ext;
+
+	dataType tau = seg_parms.tau, h = seg_parms.h;
+	dataType tol = seg_parms.segTolerance, omega = seg_parms.omega_c;
+	dataType coef_edge_detector = seg_parms.coef, eps = seg_parms.eps2;
+	dataType coef_tau = tau / (h * h), gauss_seidel_coef = 0.0;
+	dataType diff = seg_parms.coef_dif, adv = seg_parms.coef_conv;
+	size_t maxIter = seg_parms.maxNoGSIteration;
+
+	dataType* segmentationPtr = (dataType*)malloc(sizeof(dataType) * dim2D);
+
+	dataType* gaussSeidelPtr = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+	dataType* previousSolPtr = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+
+	if (segmentationPtr == NULL || gaussSeidelPtr == NULL || previousSolPtr == NULL)
+		return false;
+
+	neighPtrs uCoef;
+	uCoef.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uCoef.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uCoef.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uCoef.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (uCoef.North == NULL || uCoef.East == NULL || uCoef.West == NULL || uCoef.South == NULL)
+		return false;
+
+	neighPtrs uGrad;
+	uGrad.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uGrad.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uGrad.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	uGrad.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (uGrad.North == NULL || uGrad.East == NULL || uGrad.West == NULL || uGrad.South == NULL)
+		return false;
+
+	neighPtrs normGrad;
+	normGrad.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	normGrad.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	normGrad.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	normGrad.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (normGrad.North == NULL || normGrad.East == NULL || normGrad.West == NULL || normGrad.South == NULL)
+		return false;
+
+	dataType* edgeDetectorPtr = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (edgeDetectorPtr == NULL)
+		return false;
+
+	dataType* vNorth = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* vSouth = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* vEast = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* vWest = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (vNorth == NULL || vSouth == NULL || vEast == NULL || vWest == NULL)
+		return false;
+	
+	dataType current, average_norm_gradient, average_gFunction;
+	dataType u_average;
+
+	heatImplicit2dScheme(imageData, smooth_parms);
+
+	//compute g function
+	computeNormOfGradientDiamondCells(imageData.imageDataPtr, uGrad, height, width, h);
+	for (i = 0; i < dim2D; i++) 
+	{
+		average_gFunction = (dataType)((uGrad.East[i] + uGrad.West[i] + uGrad.North[i] + uGrad.South[i]) / 4.0);
+		edgeDetectorPtr[i] = gradientFunction(average_gFunction * average_gFunction, coef_edge_detector);
+	}
+
+	//Array for name construction
+	char name[350];
+	char name_ending[100];
+	Storage_Flags flags = { false,false };
+
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store2dRawData(edgeDetectorPtr, height, width, name, flags);
+
+	//compute gradient of edge detector function
+	// v_pq = -w_a * m(e_pq) * G_pq;
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < width; j++) {
+			size_t xd = x_new(i, j, height);
+
+			if (i == 0) 
+			{
+				vEast[xd] = - adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
+				vWest[xd] = 0.0;//-vEast[xd];
+			}
+			else if (i == height - 1) 
+			{
+				vWest[xd] = - adv * 0.5 * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+				vEast[xd] = 0.0;//-vEast[xd];
+			}
+			else 
+			{
+				vEast[xd] = - adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+				vWest[xd] = -vEast[xd];
+			}
+
+			if(j == 0) 
+			{
+				vSouth[xd] = - adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
+				vNorth[xd] = 0;//-vSouth[xd];
+			}
+			else if (j == width - 1) 
+			{
+				vNorth[xd] = - adv * 0.5 * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+				vSouth[xd] = 0.0;//-vNorth[xd];
+			}
+			else
+			{
+				vSouth[xd] = - adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+				vNorth[xd] = -vSouth[xd];
+			}
+
+		}
+	}
+
+	copyDataToAnother2dArray(initialSegment, segmentationPtr, height, width);
+	copyDataTo2dExtendedArea(initialSegment, previousSolPtr, height, width);
+	set2dDirichletBoundaryCondition(previousSolPtr, height_ext, width_ext);
+
+	//set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
+	//copyDataTo2dExtendedArea(initialSegment, gaussSeidelPtr, height, width);
+
+	//initialization
+	for (i = 0; i < dim2D_ext; i++) {
+		gaussSeidelPtr[i] = 0.0;
+	}
+
+	//segmentation loop
+	size_t number_time_step = 0;
+	dataType error_segmentation = 0.0;
+	do {
+		number_time_step++;
+
+		computeNormOfGradientDiamondCells(segmentationPtr, normGrad, height, width, h);
+		epsilonRegularization(normGrad, height, width, eps);
+
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++) {
+				size_t xd = x_new(i, j, height);
+				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
+				u_average = sqrt(average_norm_gradient * average_norm_gradient + eps);
+
+				uCoef.East[xd] = coef_tau * (0.5 * fmax(vEast[xd],0) + diff * u_average * edgeDetectorPtr[xd] * (1.0 / normGrad.East[xd]));
+				uCoef.West[xd] = coef_tau * (0.5 * fmax(vWest[xd], 0) + diff * u_average * edgeDetectorPtr[xd] * (1.0 / normGrad.West[xd]));
+				uCoef.North[xd] = coef_tau * (0.5 * fmax(vNorth[xd], 0) + diff * u_average * edgeDetectorPtr[xd] * (1.0 / normGrad.North[xd]));
+				uCoef.South[xd] = coef_tau * (0.5 * fmax(vSouth[xd], 0) + diff * u_average * edgeDetectorPtr[xd] * (1.0 / normGrad.South[xd]));
+
+			}
+		}
+
+		//gauss seidel for segmentation function
+		size_t cpt = 0;
+
+		dataType error_gauss_seidel = 0.0;
+		do {
+			cpt++;
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+					size_t ind_east = x_new(i_ext + 1, j_ext, height_ext);
+					size_t ind_west = x_new(i_ext - 1, j_ext, height_ext);
+					size_t ind_north = x_new(i_ext, j_ext - 1, height_ext);
+					size_t ind_south = x_new(i_ext, j_ext + 1, height_ext);
+					size_t xd = x_new(i, j, height);
+					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
+			
+					dataType v_east = 0.5 * fmin(vEast[xd], 0);
+					dataType v_west = 0.5 * fmin(vWest[xd], 0);
+					dataType v_north = 0.5 * fmin(vNorth[xd], 0);
+					dataType v_south = 0.5 * fmin(vSouth[xd], 0);
+					dataType denominator = 1.0 + uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd];
+
+					gauss_seidel_coef = (dataType)(((1.0 - (v_east + v_west + v_north + v_south)) * previousSolPtr[xd_ext]
+						+ (v_east * previousSolPtr[ind_east] + v_west * previousSolPtr[ind_west] + v_south * previousSolPtr[ind_south] + v_north * previousSolPtr[ind_north])
+						+ (uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west]
+							+ uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south]))
+						/ denominator);
+					gaussSeidelPtr[xd_ext] = gaussSeidelPtr[xd_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[xd_ext]);
+				}
+			}
+
+			error_gauss_seidel = 0.0;
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+					size_t ind_east = x_new(i_ext + 1, j_ext, height_ext);
+					size_t ind_west = x_new(i_ext - 1, j_ext, height_ext);
+					size_t ind_north = x_new(i_ext, j_ext - 1, height_ext);
+					size_t ind_south = x_new(i_ext, j_ext + 1, height_ext);
+					size_t xd = x_new(i, j, height);
+					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
+
+					dataType v_east = 0.5 * fmin(vEast[xd], 0);
+					dataType v_west = 0.5 * fmin(vWest[xd], 0);
+					dataType v_north = 0.5 * fmin(vNorth[xd], 0);
+					dataType v_south = 0.5 * fmin(vSouth[xd], 0);
+
+					dataType u1 = (1.0 + uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd]) * gaussSeidelPtr[xd_ext];
+					dataType u2 = (1 - (v_east + v_west + v_north + v_south)) * previousSolPtr[xd_ext];
+					dataType u3 = v_east * previousSolPtr[ind_east] + v_west * previousSolPtr[ind_west] + v_south * previousSolPtr[ind_south] + v_north * previousSolPtr[ind_north];
+					dataType u4 = uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west] + uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south];
+						
+					error_gauss_seidel += pow(u1 - u2 - u3 - u4, 2);
+				}
+			}
+
+		} while (cpt < maxIter && error_gauss_seidel > 0.001);
+
+		//rescall to data range 0-1
+		rescaleToZeroOne2d(gaussSeidelPtr, height_ext, width_ext);
+
+		//compute L2-norm
+		error_segmentation = l2norm(gaussSeidelPtr, previousSolPtr, height_ext, width_ext, h);
+
+		set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
+
+		copyDataToAnother2dArray(gaussSeidelPtr, previousSolPtr, height_ext, width_ext);
+
+		//copy to reduce array
+		copyDataTo2dReducedArea(segmentationPtr, gaussSeidelPtr, height, width);
+
+		//save the solution
+		if (number_time_step % seg_parms.mod == 0) {
+			strcpy_s(name, sizeof name, segmentPath);
+			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", number_time_step);
+			strcat_s(name, sizeof(name), name_ending);
+			store2dRawData(segmentationPtr, height, width, name, flags);
+			printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
+		}
+
+	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+
+	free(edgeDetectorPtr);
+
+	free(vNorth);
+	free(vSouth);
+	free(vEast);
+	free(vWest);
+
+	free(uCoef.North);
+	free(uCoef.South);
+	free(uCoef.East);
+	free(uCoef.West);
+
+	free(uGrad.North);
+	free(uGrad.South);
+	free(uGrad.East);
+	free(uGrad.West);
+
+	free(normGrad.North);
+	free(normGrad.South);
+	free(normGrad.East);
+	free(normGrad.West);
 
 	free(segmentationPtr);
 	free(gaussSeidelPtr);
