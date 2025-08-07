@@ -1,8 +1,4 @@
-/*
-* Author: Konan ALLALY
-* Purpose: INFLANET project - Image Processing in Nuclear Medicine (2D/3D)
-* Language:  C
-*/
+
 #include <stdio.h> // Standard lib for input and output functions
 #include <stdlib.h>
 #include <time.h>
