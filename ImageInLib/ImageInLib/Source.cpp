@@ -6613,18 +6613,18 @@ int main() {
 	Segmentation_Parameters segmentation_parms
 	{
 		50, // Maximum number of Gauss-Seidel iterations
-		4000, // constant K in the Perona-Malik function G for the image
+		9000, // constant K in the Perona-Malik function G for the image
 		1e-6, // epsilon is the regularization factor (Evans-Spruck)
-		2000,// Number of current time step
-		2000,// Maximum number of time step
+		5000,// Number of current time step
+		5000,// Maximum number of time step
 		10, // Kind of writing density
 		1e-6, // Tolerance for stopping of the segmentation process
-		0.25, //tau
+		5.0 * h, //tau
 		h, //h
-		1.2, //omega_c
+		1.4, //omega_c
 		1e-6, // gauss seidelTolerance;
-		1.0,// coef_conv;
-		0.1//coef_dif;
+		1.0,// coef_conv;// controle advection
+		0.4//coef_dif; // controle curvature
 	};
 	//string segmentPath = outputPath + "seg/segment_";
 	//subsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
