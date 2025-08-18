@@ -18,6 +18,7 @@
 
 #include "../src/heat_equation.h"
 #include "segmentation2d.h"
+#include "../src/segmentation3d_gsubsurf.h"
 
 int main() {
 

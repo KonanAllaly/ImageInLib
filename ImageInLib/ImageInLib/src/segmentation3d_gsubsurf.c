@@ -1,4 +1,3 @@
-
 #include <stdio.h> // Standard lib for input and output functions
 #include <stdlib.h>
 #include <time.h>
@@ -22,10 +21,6 @@
 #include "ctype.h"
 #include "filter_params.h"
 #include "vtk_params.h"
-
-// Local Function Prototype
-
-// Functions for 3D Images
 
 bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, unsigned char* outputPathPtr) {
 
@@ -209,7 +204,6 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	segmentationFunction.width = width;
 	segmentationFunction.imageDataPtr = segmFuntionPtr;
 	
-	
 	//loop for segmentation time steps	
 	i = 1;
 	do
@@ -249,7 +243,6 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
-
 	fclose(error_file);
 
 	for (i = 0; i < height; i++)
@@ -381,89 +374,7 @@ bool generalizedGFunctionForImageToBeSegmented(Image_Data inputImageData, dataTy
 		{
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
 			{
-				// 2D to 1D representation for i, j
-				x_ext = x_new(i_ext, j_ext, length_ext);
-				x = x_new(i, j, length);
-				iminus1 = i_ext - 1;
-				iplus1 = i_ext + 1;
-				jplus1 = j_ext + 1;
-				jminus1 = j_ext - 1;
-				kplus1 = k_ext + 1;
-				kminus1 = k_ext - 1;
-
-				//values of voxels in the extended data container for presmoothed image
-				u = extendedCoefPtr[k_ext][x_ext];
-				uN = extendedCoefPtr[k_ext][x_new(i_ext, jminus1, length_ext)];
-				uS = extendedCoefPtr[k_ext][x_new(i_ext, jplus1, length_ext)];
-				uE = extendedCoefPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
-				uW = extendedCoefPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
-				uNW = extendedCoefPtr[k_ext][x_new(iminus1, jminus1, length_ext)];
-				uNE = extendedCoefPtr[k_ext][x_new(iplus1, jminus1, length_ext)];
-				uSE = extendedCoefPtr[k_ext][x_new(iplus1, jplus1, length_ext)];
-				uSW = extendedCoefPtr[k_ext][x_new(iminus1, jplus1, length_ext)];
-				Tu = extendedCoefPtr[kminus1][x_ext];
-				TuN = extendedCoefPtr[kminus1][x_new(i_ext, jminus1, length_ext)];
-				TuS = extendedCoefPtr[kminus1][x_new(i_ext, jplus1, length_ext)];
-				TuE = extendedCoefPtr[kminus1][x_new(i_ext + 1, j_ext, length_ext)];
-				TuW = extendedCoefPtr[kminus1][x_new(i_ext - 1, j_ext, length_ext)];
-				TuNW = extendedCoefPtr[kminus1][x_new(iminus1, jminus1, length_ext)];
-				TuNE = extendedCoefPtr[kminus1][x_new(iplus1, jminus1, length_ext)];
-				TuSE = extendedCoefPtr[kminus1][x_new(iplus1, jplus1, length_ext)];
-				TuSW = extendedCoefPtr[kminus1][x_new(iminus1, jplus1, length_ext)];
-				Bu = extendedCoefPtr[kplus1][x_ext];
-				BuN = extendedCoefPtr[kplus1][x_new(i_ext, jminus1, length_ext)];
-				BuS = extendedCoefPtr[kplus1][x_new(i_ext, jplus1, length_ext)];
-				BuE = extendedCoefPtr[kplus1][x_new(i_ext + 1, j_ext, length_ext)];
-				BuW = extendedCoefPtr[kplus1][x_new(i_ext - 1, j_ext, length_ext)];
-				BuNW = extendedCoefPtr[kplus1][x_new(iminus1, jminus1, length_ext)];
-				BuNE = extendedCoefPtr[kplus1][x_new(iplus1, jminus1, length_ext)];
-				BuSE = extendedCoefPtr[kplus1][x_new(iplus1, jplus1, length_ext)];
-				BuSW = extendedCoefPtr[kplus1][x_new(iminus1, jplus1, length_ext)];
-
-				//calculation of coefficients in the presmooted image data
-
-				// Calculation of coefficients in East direction
-				ux = (uE - u) / h;
-				uy = ((uN + uNE) - (uS + uSE)) / quotient;
-				uz = ((Tu + TuE) - (Bu + BuE)) / quotient;
-				norm_image_smoothed_e = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				// Calculation of coefficients in West direction
-				ux = (uW - u) / h;
-				uy = ((uNW + uN) - (uSW + uS)) / quotient;
-				uz = ((TuW + Tu) - (BuW + Bu)) / quotient;
-				norm_image_smoothed_w = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				// Calculation of coefficients in North direction
-				ux = ((uNE + uE) - (uNW + uW)) / quotient;
-				uy = (uN - u) / h;
-				uz = ((TuN + Tu) - (BuN + Bu)) / quotient;
-				norm_image_smoothed_n = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				// Calculation of coefficients in South direction
-				ux = ((uE + uSE) - (uW + uSW)) / quotient;
-				uy = (uS - u) / h;
-				uz = ((TuS + Tu) - (BuS + Bu)) / quotient;
-				norm_image_smoothed_s = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				// Calculation of coefficients in Top direction
-				ux = ((TuE + uE) - (TuW + uW)) / quotient;
-				uy = ((TuN + uN) - (TuS + uS)) / quotient;
-				uz = (Tu - u) / h;
-				norm_image_smoothed_t = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				// Calculation of coefficients in Bottom direction
-				ux = ((BuW + uW) - (BuE + uE)) / quotient;
-				uy = ((BuN + uN) - (BuS + uS)) / quotient;
-				uz = (Bu - u) / h;
-				norm_image_smoothed_b = sqrt((ux * ux) + (uy * uy) + (uz * uz));
-
-				norm_image_smoothed_average = (dataType)((norm_image_smoothed_e + norm_image_smoothed_w + norm_image_smoothed_n + norm_image_smoothed_s +
-					norm_image_smoothed_t + norm_image_smoothed_b) / 6.0);
-
-				edgeGradientPtr[k][x] = gradientFunction(norm_image_smoothed_average * norm_image_smoothed_average, segParameters.coef);
 				
-
 			}
 		}
 	}
@@ -768,6 +679,791 @@ bool generalizedSubsurfSegmentationTimeStep(dataType** prevSol_extPtr, dataType*
 			}
 		}
 	}
+
+	return true;
+}
+
+bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t length, const size_t width, const size_t height, VoxelSpacing spacing, Coefficient_Pointers nGrad)
+{
+	if(imageData == NULL || nGrad.e_Ptr == NULL || nGrad.w_Ptr == NULL ||
+		nGrad.s_Ptr == NULL || nGrad.n_Ptr == NULL ||
+		nGrad.t_Ptr == NULL || nGrad.b_Ptr == NULL)
+	{
+		return false; // Memory allocation failed
+	}
+
+	size_t i, j, k;
+	size_t i_ext, j_ext, k_ext;
+
+	dataType h = spacing.sx; //Let us first consider isotropic spacing
+
+	size_t length_ext = length + 2;
+	size_t width_ext = width + 2;
+	size_t height_ext = height + 2;
+
+	dataType** extendedCoefPtr = (dataType**)malloc(sizeof(dataType*) * height_ext );
+	for( k = 0; k < height_ext; k++)
+	{
+		extendedCoefPtr[k] = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
+		if(extendedCoefPtr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	//Copy to extended area
+	for(k = 0, k_ext = 1; k < height; k++, k_ext++)
+	{
+		for(i = 0, i_ext = 1; i < length; i++, i_ext++)
+		{
+			for(j = 0, j_ext = 1; j < width; j++, j_ext++)
+			{
+				extendedCoefPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = imageData[k][x_new(i, j, length)];
+			}
+		}
+	}
+	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext); // Reflect the data in the extended area
+
+	// Calculate the norm of gradient in diamond cell
+	size_t x, x_ext;
+	size_t iminus1, iplus1, jminus1, jplus1, kminus1, kplus1;
+	dataType u, uN, uS, uE, uW, uNW, uNE, uSE, uSW;
+	dataType Tu, TuN, TuS, TuE, TuW, TuNW, TuNE, TuSE, TuSW;
+	dataType Bu, BuN, BuS, BuE, BuW, BuNW, BuNE, BuSE, BuSW;
+	dataType ux, uy, uz;
+	dataType quotient = (dataType)(4.0 * h);
+	for(k = 0, k_ext = 1; k < height; k++, k_ext++)
+	{
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+		{
+			for (j = 0, j_ext = 1; j < width; i++, j_ext++)
+			{
+				x_ext = x_new(i_ext, j_ext, length_ext);
+				x = x_new(i, j, length);
+				iminus1 = i_ext - 1;
+				iplus1 = i_ext + 1;
+				jplus1 = j_ext + 1;
+				jminus1 = j_ext - 1;
+				kplus1 = k_ext + 1;
+				kminus1 = k_ext - 1;
+
+				//values of voxels in the extended data container for presmoothed image
+				u = extendedCoefPtr[k_ext][x_ext];
+				uN = extendedCoefPtr[k_ext][x_new(i_ext, jminus1, length_ext)];
+				uS = extendedCoefPtr[k_ext][x_new(i_ext, jplus1, length_ext)];
+				uE = extendedCoefPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
+				uW = extendedCoefPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
+				uNW = extendedCoefPtr[k_ext][x_new(iminus1, jminus1, length_ext)];
+				uNE = extendedCoefPtr[k_ext][x_new(iplus1, jminus1, length_ext)];
+				uSE = extendedCoefPtr[k_ext][x_new(iplus1, jplus1, length_ext)];
+				uSW = extendedCoefPtr[k_ext][x_new(iminus1, jplus1, length_ext)];
+				Tu = extendedCoefPtr[kminus1][x_ext];
+				TuN = extendedCoefPtr[kminus1][x_new(i_ext, jminus1, length_ext)];
+				TuS = extendedCoefPtr[kminus1][x_new(i_ext, jplus1, length_ext)];
+				TuE = extendedCoefPtr[kminus1][x_new(i_ext + 1, j_ext, length_ext)];
+				TuW = extendedCoefPtr[kminus1][x_new(i_ext - 1, j_ext, length_ext)];
+				TuNW = extendedCoefPtr[kminus1][x_new(iminus1, jminus1, length_ext)];
+				TuNE = extendedCoefPtr[kminus1][x_new(iplus1, jminus1, length_ext)];
+				TuSE = extendedCoefPtr[kminus1][x_new(iplus1, jplus1, length_ext)];
+				TuSW = extendedCoefPtr[kminus1][x_new(iminus1, jplus1, length_ext)];
+				Bu = extendedCoefPtr[kplus1][x_ext];
+				BuN = extendedCoefPtr[kplus1][x_new(i_ext, jminus1, length_ext)];
+				BuS = extendedCoefPtr[kplus1][x_new(i_ext, jplus1, length_ext)];
+				BuE = extendedCoefPtr[kplus1][x_new(i_ext + 1, j_ext, length_ext)];
+				BuW = extendedCoefPtr[kplus1][x_new(i_ext - 1, j_ext, length_ext)];
+				BuNW = extendedCoefPtr[kplus1][x_new(iminus1, jminus1, length_ext)];
+				BuNE = extendedCoefPtr[kplus1][x_new(iplus1, jminus1, length_ext)];
+				BuSE = extendedCoefPtr[kplus1][x_new(iplus1, jplus1, length_ext)];
+				BuSW = extendedCoefPtr[kplus1][x_new(iminus1, jplus1, length_ext)];
+
+				// Calculation of coefficients in East direction
+				ux = (uE - u) / h;
+				uy = ((uN + uNE) - (uS + uSE)) / quotient;
+				uz = ((Tu + TuE) - (Bu + BuE)) / quotient;
+				nGrad.e_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+
+				// Calculation of coefficients in West direction
+				ux = (uW - u) / h;
+				uy = ((uNW + uN) - (uSW + uS)) / quotient;
+				uz = ((TuW + Tu) - (BuW + Bu)) / quotient;
+				nGrad.w_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+
+				// Calculation of coefficients in North direction
+				ux = ((uNE + uE) - (uNW + uW)) / quotient;
+				uy = (uN - u) / h;
+				uz = ((TuN + Tu) - (BuN + Bu)) / quotient;
+				nGrad.n_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+
+				// Calculation of coefficients in South direction
+				ux = ((uE + uSE) - (uW + uSW)) / quotient;
+				uy = (uS - u) / h;
+				uz = ((TuS + Tu) - (BuS + Bu)) / quotient;
+				nGrad.s_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+
+				// Calculation of coefficients in Top direction
+				ux = ((TuE + uE) - (TuW + uW)) / quotient;
+				uy = ((TuN + uN) - (TuS + uS)) / quotient;
+				uz = (Tu - u) / h;
+				nGrad.t_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+
+				// Calculation of coefficients in Bottom direction
+				ux = ((BuW + uW) - (BuE + uE)) / quotient;
+				uy = ((BuN + uN) - (BuS + uS)) / quotient;
+				uz = (Bu - u) / h;
+				nGrad.b_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+			}
+		}
+	}
+
+	for(k = 0; k < (height + 2); k++)
+	{
+		free(extendedCoefPtr[k]);
+	}
+	free(extendedCoefPtr);
+	return true;
+}
+
+bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
+{
+
+	size_t i, j, k, x;
+	size_t i_ext, j_ext, k_ext, x_ext;
+	size_t kplus1, kminus1, iminus1, iplus1, jminus1, jplus1;
+
+	VoxelSpacing spacing = imageData.spacing;
+	
+	const size_t height = imageData.height;
+	const size_t height_ext = height + 2;
+
+	const size_t length = imageData.length;
+	const size_t length_ext = length + 2;
+	
+	const size_t width = imageData.width;
+	const size_t width_ext = width + 2;
+	
+	size_t dim2D = height * width;
+	size_t dim2D_ext = height_ext * width_ext;
+
+	dataType tau = seg_parms.tau, h = seg_parms.h;
+	dataType mp = imageData.spacing.sx * imageData.spacing.sy * imageData.spacing.sz;
+	dataType tol = seg_parms.segTolerance, omega = seg_parms.omega_c;
+	dataType coef_edge_detector = seg_parms.coef, eps = seg_parms.eps2;
+	dataType coef_tau = tau;
+	dataType diff = seg_parms.coef_dif, adv = seg_parms.coef_conv;
+	size_t maxIter = seg_parms.maxNoGSIteration;
+
+	dataType** segmentationPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** edgeDetectorPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** gaussSeidelPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
+	dataType** previousSolPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
+	for (k = 0; k < height_ext; k++) 
+	{
+		if(k < height) 
+		{
+			segmentationPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+			edgeDetectorPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+			if (segmentationPtr[k] == NULL || edgeDetectorPtr[k] == NULL) 
+			{
+				return false; // Memory allocation failed
+			}
+		}
+		gaussSeidelPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+		previousSolPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+	}
+	if (segmentationPtr == NULL || edgeDetectorPtr == NULL || gaussSeidelPtr == NULL || previousSolPtr == NULL)
+	{
+		return false;
+	}
+	
+	Coefficient_Pointers coefPtrs;
+	coefPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k  = 0; k < height; k++) 
+	{
+		coefPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (coefPtrs.e_Ptr[k] == NULL || coefPtrs.w_Ptr[k] == NULL || coefPtrs.n_Ptr[k] == NULL ||
+			coefPtrs.s_Ptr[k] == NULL || coefPtrs.t_Ptr[k] == NULL || coefPtrs.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	Coefficient_Pointers vPtrs;
+	vPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++) 
+	{
+		vPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (vPtrs.e_Ptr[k] == NULL || vPtrs.w_Ptr[k] == NULL || vPtrs.n_Ptr[k] == NULL ||
+			vPtrs.s_Ptr[k] == NULL || vPtrs.t_Ptr[k] == NULL || vPtrs.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	Coefficient_Pointers gPtrs;
+	gPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++) 
+	{
+		gPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (gPtrs.e_Ptr[k] == NULL || gPtrs.w_Ptr[k] == NULL || gPtrs.n_Ptr[k] == NULL ||
+			gPtrs.s_Ptr[k] == NULL || gPtrs.t_Ptr[k] == NULL || gPtrs.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	a_out.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_out.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_out.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_out.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_out.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_out.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++) 
+	{
+		a_out.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_out.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_out.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_out.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_out.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_out.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (a_out.e_Ptr[k] == NULL || a_out.w_Ptr[k] == NULL || a_out.n_Ptr[k] == NULL ||
+			a_out.s_Ptr[k] == NULL || a_out.t_Ptr[k] == NULL || a_out.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	a_in.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_in.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_in.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_in.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_in.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	a_in.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++) 
+	{
+		a_in.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_in.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_in.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_in.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_in.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		a_in.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (a_in.e_Ptr[k] == NULL || a_in.w_Ptr[k] == NULL || a_in.n_Ptr[k] == NULL ||
+			a_in.s_Ptr[k] == NULL || a_in.t_Ptr[k] == NULL || a_in.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	theta_out.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	theta_out.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	theta_out.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	theta_out.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	theta_out.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	theta_out.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++) 
+	{
+		theta_out.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		theta_out.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		theta_out.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		theta_out.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		theta_out.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		theta_out.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (theta_out.e_Ptr[k] == NULL || theta_out.w_Ptr[k] == NULL || theta_out.n_Ptr[k] == NULL ||
+			theta_out.s_Ptr[k] == NULL || theta_out.t_Ptr[k] == NULL || theta_out.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	//Initialization
+	for(k = 0; k < height; k++)
+	{
+		for(i = 0; i < dim2D; i++)
+		{
+			segmentationPtr[k][i] = 0.0;
+			edgeDetectorPtr[k][i] = 0.0;
+			coefPtrs.e_Ptr[k][i] = 0.0;
+			coefPtrs.w_Ptr[k][i] = 0.0;
+			coefPtrs.n_Ptr[k][i] = 0.0;
+			coefPtrs.s_Ptr[k][i] = 0.0;
+			coefPtrs.t_Ptr[k][i] = 0.0;
+			coefPtrs.b_Ptr[k][i] = 0.0;
+			vPtrs.e_Ptr[k][i] = 0.0;
+			vPtrs.w_Ptr[k][i] = 0.0;
+			vPtrs.n_Ptr[k][i] = 0.0;
+			vPtrs.s_Ptr[k][i] = 0.0;
+			vPtrs.t_Ptr[k][i] = 0.0;
+			vPtrs.b_Ptr[k][i] = 0.0;
+			gPtrs.e_Ptr[k][i] = 0.0;
+			gPtrs.w_Ptr[k][i] = 0.0;
+			gPtrs.n_Ptr[k][i] = 0.0;
+			gPtrs.s_Ptr[k][i] = 0.0;
+			gPtrs.t_Ptr[k][i] = 0.0;
+			gPtrs.b_Ptr[k][i] = 0.0;
+			a_out.e_Ptr[k][i] = 0.0;
+			a_out.w_Ptr[k][i] = 0.0;
+			a_out.n_Ptr[k][i] = 0.0;
+			a_out.s_Ptr[k][i] = 0.0;
+			a_out.t_Ptr[k][i] = 0.0;
+			a_out.b_Ptr[k][i] = 0.0;
+			a_in.e_Ptr[k][i] = 0.0;
+			a_in.w_Ptr[k][i] = 0.0;
+			a_in.n_Ptr[k][i] = 0.0;
+			a_in.s_Ptr[k][i] = 0.0;
+			a_in.t_Ptr[k][i] = 0.0;
+			a_in.b_Ptr[k][i] = 0.0;
+			theta_out.e_Ptr[k][i] = 0.0;
+			theta_out.w_Ptr[k][i] = 0.0;
+			theta_out.n_Ptr[k][i] = 0.0;
+			theta_out.s_Ptr[k][i] = 0.0;
+			theta_out.t_Ptr[k][i] = 0.0;
+			theta_out.b_Ptr[k][i] = 0.0;;
+		}
+	}
+
+	dataType gauss_seidel_coef = 0.0;
+
+	dataType current = 0.0, average_norm_gradient = 0.0, average_gFunction = 0.0;
+	dataType u_average = 0.0;
+
+	//smoothing
+	heatImplicitRectangularScheme(imageData, smooth_parms);
+
+	//compute the morm of gradient for the edge detector
+	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, spacing, gPtrs);
+
+	//compute the edge detector
+	dataType value_gF_e, value_gF_w, value_gF_n, value_gF_s, value_gF_t, value_gF_b, average_value;
+	for(k = 0; k < height; k++)
+	{
+		for(i = 0; i < length; i++)
+		{
+			for(j = 0; j < width; j++)
+			{
+				x = x_new(i, j, length);
+				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), seg_parms.coef);
+				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
+				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), seg_parms.coef);
+			}
+		}
+	}
+
+	//Array for name construction
+	char name[350];
+	char name_ending[100];
+	Storage_Flags flags = { false,false };
+
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store2dRawData(edgeDetectorPtr, height, width, name, flags);
+
+	/*
+	//compute gradient of edge detector function
+	// v_pq = -w_a * m(e_pq) * G_pq;
+	dataType vpe, vpw, vpn, vps;
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < width; j++) {
+			size_t xd = x_new(i, j, height);
+
+			if (i == 0) {
+				vpe = adv * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
+				vpw = -vpe;
+			}
+			else {
+				if (i == height - 1) {
+					vpw = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+					vpe = -vpw;
+				}
+				else {
+					vpe = adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+					vpw = -vpe;
+				}
+			}
+			if (j == 0) {
+				vps = adv * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
+				vpn = -vps;
+			}
+			else {
+				if (j == width - 1) {
+					vpn = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+					vps = -vpn;
+				}
+				else {
+					vps = adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+					vpn = -vps;
+				}
+			}
+
+			a_in.East[xd] = fmax(vpe, 0);
+			a_in.West[xd] = fmax(vpw, 0);
+			a_in.North[xd] = fmax(vpn, 0);
+			a_in.South[xd] = fmax(vps, 0);
+
+			a_out.East[xd] = fmin(vpe, 0);
+			a_out.West[xd] = fmin(vpw, 0);
+			a_out.North[xd] = fmin(vpn, 0);
+			a_out.South[xd] = fmin(vps, 0);
+		}
+	}
+
+	copyDataToAnother2dArray(initialSegment, segmentationPtr, height, width);
+	copyDataTo2dExtendedArea(initialSegment, previousSolPtr, height, width);
+	set2dDirichletBoundaryCondition(previousSolPtr, height_ext, width_ext);
+
+	set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
+	copyDataTo2dExtendedArea(initialSegment, gaussSeidelPtr, height, width);
+
+	//segmentation loop
+	size_t number_time_step = 0;
+	dataType error_segmentation = 0.0;
+	dataType mp = h * h;
+	dataType u1 = 0.0, u2 = 0.0, u3 = 0.0, u4 = 0.0;
+	dataType u_p_min = 0.0, u_p_max = 0.0;
+	dataType u_p = 0.0, u_east = 0.0, u_west = 0.0, u_north = 0.0, u_south = 0.0;
+	do {
+		number_time_step++;
+
+		computeNormOfGradientDiamondCells(segmentationPtr, normGrad, height, width, h);
+		epsilonRegularization(normGrad, height, width, eps);
+
+		for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+				size_t xd = x_new(i, j, height);
+
+				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
+				u_average = sqrt(pow(average_norm_gradient, 2) + eps);
+
+				dataType n_out = -(sign_elt(a_out.East[xd]) + sign_elt(a_out.West[xd]) + sign_elt(a_out.North[xd]) + sign_elt(a_out.South[xd]));
+
+				if (n_out == 0)
+				{
+					theta_out.East[xd] = 0.5;
+					theta_out.West[xd] = 0.5;
+					theta_out.North[xd] = 0.5;
+					theta_out.South[xd] = 0.5;
+				}
+				else
+				{
+					u_p = previousSolPtr[x_new(i_ext, j_ext, height_ext)];
+					u_east = previousSolPtr[x_new(i_ext + 1, j_ext, height_ext)];
+					u_west = previousSolPtr[x_new(i_ext - 1, j_ext, height_ext)];
+					u_north = previousSolPtr[x_new(i_ext, j_ext - 1, height_ext)];
+					u_south = previousSolPtr[x_new(i_ext, j_ext + 1, height_ext)];
+					u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+					u_p_max = getMaxInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+
+					//East
+					if (a_out.East[xd] * (u_east - u_p) == 0)
+					{
+						theta_out.East[xd] = 0.5;
+					}
+					else if (a_out.East[xd] * (u_east - u_p) > 0)
+					{
+						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+						theta_out.East[xd] = fmin(0.5, value);
+					}
+					else
+					{
+						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+						theta_out.East[xd] = fmin(0.5, value);
+					}
+
+					//West
+					if (a_out.West[xd] * (u_west - u_p) == 0)
+					{
+						theta_out.West[xd] = 0.5;
+					}
+					else if (a_out.West[xd] * (u_west - u_p) > 0)
+					{
+						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+						theta_out.West[xd] = fmin(0.5, value);
+					}
+					else
+					{
+						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+						theta_out.West[xd] = fmin(0.5, value);
+					}
+
+					//North
+					if (a_out.North[xd] * (u_north - u_p) == 0)
+					{
+						theta_out.North[xd] = 0.5;
+					}
+					else if (a_out.North[xd] * (u_north - u_p) > 0)
+					{
+						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+						theta_out.North[xd] = fmin(0.5, value);
+					}
+					else
+					{
+						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+						theta_out.North[xd] = fmin(0.5, value);
+					}
+
+					//South
+					if (a_out.South[xd] * (u_south - u_p) == 0)
+					{
+						theta_out.South[xd] = 0.5;
+					}
+					else if (a_out.South[xd] * (u_south - u_p) > 0)
+					{
+						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+						theta_out.South[xd] = fmin(0.5, value);
+					}
+					else
+					{
+						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+						theta_out.South[xd] = fmin(0.5, value);
+					}
+				}
+
+				uCoef.East[xd] = (dataType)((1 - theta_out.East[xd]) * a_in.East[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.East[xd]);
+				uCoef.West[xd] = (dataType)((1 - theta_out.West[xd]) * a_in.West[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.West[xd]);
+				uCoef.North[xd] = (dataType)((1 - theta_out.North[xd]) * a_in.North[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.North[xd]);
+				uCoef.South[xd] = (dataType)((1 - theta_out.South[xd]) * a_in.South[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.South[xd]);
+			}
+		}
+
+		//gauss seidel for segmentation function
+		size_t cpt = 0;
+
+		dataType error_gauss_seidel = 0.0;
+		do {
+			cpt++;
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+					size_t ind_east = x_new(i_ext + 1, j_ext, height_ext);
+					size_t ind_west = x_new(i_ext - 1, j_ext, height_ext);
+					size_t ind_north = x_new(i_ext, j_ext - 1, height_ext);
+					size_t ind_south = x_new(i_ext, j_ext + 1, height_ext);
+					size_t xd = x_new(i, j, height);
+					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
+
+					gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.East[xd] * a_out.East[xd] + theta_out.West[xd] * a_out.West[xd]
+						+ theta_out.North[xd] * a_out.North[xd] + theta_out.South[xd] * a_out.South[xd])) * previousSolPtr[xd_ext]
+						+ coef_tau * (theta_out.East[xd] * a_out.East[xd] * previousSolPtr[ind_east]
+							+ theta_out.West[xd] * a_out.West[xd] * previousSolPtr[ind_west]
+							+ theta_out.North[xd] * a_out.North[xd] * previousSolPtr[ind_north]
+							+ theta_out.South[xd] * a_out.South[xd] * previousSolPtr[ind_south])
+						+ coef_tau * (uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west]
+							+ uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south]))
+						/ (1.0 + coef_tau * (uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd])));
+					gaussSeidelPtr[xd_ext] = gaussSeidelPtr[xd_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[xd_ext]);
+				}
+			}
+
+			error_gauss_seidel = 0.0;
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+
+					size_t ind_east = x_new(i_ext + 1, j_ext, height_ext);
+					size_t ind_west = x_new(i_ext - 1, j_ext, height_ext);
+					size_t ind_north = x_new(i_ext, j_ext - 1, height_ext);
+					size_t ind_south = x_new(i_ext, j_ext + 1, height_ext);
+					size_t xd = x_new(i, j, height);
+					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
+
+					u1 = (1.0 + coef_tau * (uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd])) * gaussSeidelPtr[xd_ext];
+					u2 = (1 - coef_tau * (theta_out.East[xd] * a_out.East[xd] + theta_out.West[xd] * a_out.West[xd]
+						+ theta_out.North[xd] * a_out.North[xd] + theta_out.South[xd] * a_out.South[xd])) * previousSolPtr[xd_ext];
+					u3 = coef_tau * (theta_out.East[xd] * a_out.East[xd] * previousSolPtr[ind_east]
+						+ theta_out.West[xd] * a_out.West[xd] * previousSolPtr[ind_west]
+						+ theta_out.North[xd] * a_out.North[xd] * previousSolPtr[ind_north]
+						+ theta_out.South[xd] * a_out.South[xd] * previousSolPtr[ind_south]);
+					u4 = coef_tau * (uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west]
+						+ uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south]);
+					error_gauss_seidel += pow(u1 - u2 - u3 - u4, 2);
+				}
+			}
+
+		} while (cpt < maxIter && error_gauss_seidel > 0.001);
+
+		//rescall to data range 0-1
+		rescaleToZeroOne2d(gaussSeidelPtr, height_ext, width_ext);
+
+		//compute L2-norm
+		error_segmentation = l2norm(gaussSeidelPtr, previousSolPtr, height_ext, width_ext, h);
+
+		set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
+
+		copyDataToAnother2dArray(gaussSeidelPtr, previousSolPtr, height_ext, width_ext);
+
+		//copy to reduce array
+		copyDataTo2dReducedArea(segmentationPtr, gaussSeidelPtr, height, width);
+
+		//save the solution
+		if (number_time_step % seg_parms.mod == 0) {
+			strcpy_s(name, sizeof name, segmentPath);
+			sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%03zd.raw", number_time_step);
+			strcat_s(name, sizeof(name), name_ending);
+			store2dRawData(segmentationPtr, height, width, name, flags);
+			printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
+		}
+
+	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+
+	free(edgeDetectorPtr);
+
+	free(uCoef.North);
+	free(uCoef.South);
+	free(uCoef.East);
+	free(uCoef.West);
+
+	free(uGrad.North);
+	free(uGrad.South);
+	free(uGrad.East);
+	free(uGrad.West);
+
+	free(normGrad.North);
+	free(normGrad.South);
+	free(normGrad.East);
+	free(normGrad.West);
+
+	free(segmentationPtr);
+	free(gaussSeidelPtr);
+	free(previousSolPtr);
+
+	free(a_in.East);
+	free(a_in.West);
+	free(a_in.North);
+	free(a_in.South);
+
+	free(a_out.East);
+	free(a_out.West);
+	free(a_out.North);
+	free(a_out.South);
+
+	free(theta_out.East);
+	free(theta_out.West);
+	free(theta_out.North);
+	free(theta_out.South);
+	*/
+
+	for (k = 0; k < height_ext; k++) 
+	{
+		if(k < height) 
+		{
+			free(segmentationPtr[k]);
+			free(edgeDetectorPtr[k]);
+			free(coefPtrs.e_Ptr[k]);
+			free(coefPtrs.w_Ptr[k]);
+			free(coefPtrs.n_Ptr[k]);
+			free(coefPtrs.s_Ptr[k]);
+			free(coefPtrs.t_Ptr[k]);
+			free(coefPtrs.b_Ptr[k]);
+			free(vPtrs.e_Ptr[k]);
+			free(vPtrs.w_Ptr[k]);
+			free(vPtrs.n_Ptr[k]);
+			free(vPtrs.s_Ptr[k]);
+			free(vPtrs.t_Ptr[k]);
+			free(vPtrs.b_Ptr[k]);
+			free(gPtrs.e_Ptr[k]);
+			free(gPtrs.w_Ptr[k]);
+			free(gPtrs.n_Ptr[k]);
+			free(gPtrs.s_Ptr[k]);
+			free(gPtrs.t_Ptr[k]);
+			free(gPtrs.b_Ptr[k]);
+			free(a_out.e_Ptr[k]);
+			free(a_out.w_Ptr[k]);
+			free(a_out.n_Ptr[k]);
+			free(a_out.s_Ptr[k]);
+			free(a_out.t_Ptr[k]);
+			free(a_out.b_Ptr[k]);
+			free(a_in.e_Ptr[k]);
+			free(a_in.w_Ptr[k]);
+			free(a_in.n_Ptr[k]);
+			free(a_in.s_Ptr[k]);
+			free(a_in.t_Ptr[k]);
+			free(a_in.b_Ptr[k]);
+			free(theta_out.e_Ptr[k]);
+			free(theta_out.w_Ptr[k]);
+			free(theta_out.n_Ptr[k]);
+			free(theta_out.s_Ptr[k]);
+			free(theta_out.t_Ptr[k]);
+			free(theta_out.b_Ptr[k]);
+		}
+		free(previousSolPtr[k]);
+		free(gaussSeidelPtr[k]);
+	}
+	free(segmentationPtr);
+	free(edgeDetectorPtr);
+	free(coefPtrs.e_Ptr);
+	free(coefPtrs.w_Ptr);
+	free(coefPtrs.n_Ptr);
+	free(coefPtrs.s_Ptr);
+	free(coefPtrs.t_Ptr);
+	free(coefPtrs.b_Ptr);
+	free(vPtrs.e_Ptr);
+	free(vPtrs.w_Ptr);
+	free(vPtrs.n_Ptr);
+	free(vPtrs.s_Ptr);
+	free(vPtrs.t_Ptr);
+	free(vPtrs.b_Ptr);
+	free(gPtrs.e_Ptr);
+	free(gPtrs.w_Ptr);
+	free(gPtrs.n_Ptr);
+	free(gPtrs.s_Ptr);
+	free(gPtrs.t_Ptr);
+	free(gPtrs.b_Ptr);
+	free(a_out.e_Ptr);
+	free(a_out.w_Ptr);
+	free(a_out.n_Ptr);
+	free(a_out.s_Ptr);
+	free(a_out.t_Ptr);
+	free(a_out.b_Ptr);
+	free(a_in.e_Ptr);
+	free(a_in.w_Ptr);
+	free(a_in.n_Ptr);
+	free(a_in.s_Ptr);
+	free(a_in.t_Ptr);
+	free(a_in.b_Ptr);
+	free(theta_out.e_Ptr);
+	free(theta_out.w_Ptr);
+	free(theta_out.n_Ptr);
+	free(theta_out.s_Ptr);
+	free(theta_out.t_Ptr);
+	free(theta_out.b_Ptr);
+	free(previousSolPtr);
+	free(gaussSeidelPtr);
 
 	return true;
 }
