@@ -17,8 +17,6 @@ extern "C" {
 		dataType* South;
 	} neighPtrs;
 
-	dataType sign_elt(const dataType x);
-
 	void initialize2dArrayWithZero(dataType* arrayPtr, const size_t height, const size_t width);
 
 	dataType getMinInNeighborhood(dataType* imageDataPtr, const size_t height, const size_t width, const size_t i, const size_t j);

@@ -226,6 +226,8 @@ extern "C" {
 	/// <returns></returns>
 	BoundingBox3D findBoundingBox3D(Point3D point, const size_t length, const size_t width, const size_t height, double radius, double offset);
 
+	dataType signum(const dataType x);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus

@@ -1,25 +1,8 @@
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h> 
 #include <math.h>
 #include "segmentation2d.h"
-
-dataType sign_elt(const dataType x)
-{
-	if(x > 0)
-	{
-		return 1.0;
-	}
-	else if(x < 0)
-	{
-		return -1.0;
-	}
-	else
-	{
-		return 0.0;
-	}
-}
 
 void initialize2dArrayWithZero(dataType* arrayPtr, const size_t height, const size_t width)
 {
@@ -1049,7 +1032,7 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
 				u_average = sqrt(pow(average_norm_gradient,2) + eps);
 
-				dataType n_out = -(sign_elt(a_out.East[xd]) + sign_elt(a_out.West[xd]) + sign_elt(a_out.North[xd]) + sign_elt(a_out.South[xd]));
+				dataType n_out = -(signum(a_out.East[xd]) + signum(a_out.West[xd]) + signum(a_out.North[xd]) + signum(a_out.South[xd]));
 				
 				if (n_out == 0) 
 				{

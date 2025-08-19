@@ -710,6 +710,22 @@ bool getGradient3D(Image_Data imageDataStr, const size_t ind_x, const size_t ind
 
 	return true;
 }
+//==============================================================================
+dataType signum(const dataType x)
+{
+	if (x > 0)
+	{
+		return 1.0;
+	}
+	else if (x < 0)
+	{
+		return -1.0;
+	}
+	else
+	{
+		return 0.0;
+	}
+}
 
 
 
