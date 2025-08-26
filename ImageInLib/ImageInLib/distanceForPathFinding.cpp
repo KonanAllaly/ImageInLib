@@ -96,7 +96,6 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, si
 		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return solution;
 			if (solution > Y) {
 				return solution;
 			}
@@ -118,7 +117,6 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, si
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return solution;
 			if (solution > X)
 			{
 				return solution;
@@ -141,7 +139,6 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, si
 		if (delta >= 0)
 		{
 			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
-			//return solution;
 			if (solution > max(X, Y)) {
 				return solution;
 			}
@@ -151,7 +148,6 @@ dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, si
 		}
 		else {
 			fprintf(pFile, "%d,%d\n", indx, indy);
-			//return INFINITY;
 			return (dataType)(min(X + hx * P, Y + hy * P));
 		}
 	}
@@ -217,22 +213,23 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 
 	for (i = 0; i < dim2D; i++) {
 		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
+		//potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal1);
 	}
 
-	////Find max difference
-	//dataType maxDiff = 0.0;
-	//for (i = 0; i < dim2D; i++) {
-	//	if (potentialFuncPtr[i] > maxDiff) {
-	//		maxDiff = potentialFuncPtr[i];
-	//	}
-	//}
+	//Find max difference
+	dataType maxDiff = 0.0;
+	for (i = 0; i < dim2D; i++) {
+		if (potentialFuncPtr[i] > maxDiff) {
+			maxDiff = potentialFuncPtr[i];
+		}
+	}
 	
 	//Normalization
 	dataType weight = 0.0;
 	for (i = 0; i < dim2D; i++) {
 		//weight = 1.0 / (1.0 + 2.0 * distanceMap[i]);
 		//potentialFuncPtr[i] = (parameters.eps + potentialFuncPtr[i] / maxDiff) * weight;
-		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i];// / maxDiff;
+		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / maxDiff;
 	}
 
 	delete[] distanceMap;
@@ -347,7 +344,6 @@ void updateNeighbor2D(size_t ind_x, size_t ind_y, size_t length, size_t width,
 	dataType ux = upwindFiniteDifference2dX(action, length, width, ind_x, ind_y);
 	dataType uy = upwindFiniteDifference2dY(action, length, width, ind_x, ind_y);
 	dataType coefSpeed = potential[neighborIndx];
-	//dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing);
 	dataType solution = solve2dQuadratic(ux, uy, coefSpeed, spacing, ind_x, ind_y, pFile);
 	pointFastMarching2D neighbor = { ind_x, ind_y, solution };
 	if (labelArray[neighborIndx] == 3) {
@@ -1435,6 +1431,7 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 
 	return true;
 }
+*/
 
 bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration) {
 
@@ -1475,11 +1472,24 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 	dataType tau = 0.5 * min(hx, hy);
 	std::cout << "tau = " << tau << std::endl;
 
+	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/action_evolution.csv";
+	FILE* pFile;
+	if (fopen_s(&pFile, path_discriminant.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(pFile, "ID, pt1, pt2, pt3, pt4\n");
+	
+	size_t pt1 = x_new(276, 227, length);
+	size_t pt2 = x_new(332, 265, length);
+	size_t pt3 = x_new(337, 226, length);
+	size_t pt4 = x_new(384, 327, length);
+
 	size_t count_iteration = 0;
 	dataType w = 0.0, ind_res;
 	size_t nb_pt_processed = 1;
 
-	
+	/*
 	while (nb_pt_processed > 0 && count_iteration < max_iteration) {
 		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
 		reflection2D(previousSolution, length_ext, width_ext);
@@ -1497,7 +1507,7 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 					w = potential[x];
 					distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
 						+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
-
+	
 					ind_res = fabs(previousSolution[xd] - distancePtr[x]);
 					if (ind_res <= tolerance) {
 						status[x] = true;
@@ -1506,32 +1516,32 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 			}
 		}	
 	}
-	
+	*/
 
-	
-	//while (mass > tolerance && count_iteration < max_iteration) {
-	//	copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
-	//	reflection2D(previousSolution, length_ext, width_ext);
-	//	count_iteration++;
-	//	mass = 0.0;
-	//	for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-	//		for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-	//			xd = x_new(i_ext, j_ext, length_ext);
-	//			x = x_new(i, j, length);
-	//			if(x != indx_seed)
-	//			{
-	//				value = previousSolution[xd];
-	//				w = potential[x];
-	//				distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
-	//					+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
-	//			}
-	//			////Compute the mass
-	//			//mass += pow(previousSolution[xd] - distancePtr[x], 2);
-	//			mass += abs(previousSolution[xd] - distancePtr[x]);
-	//		}
-	//	}
-	//	//mass = sqrt(mass);
-	//}
+	while (mass > tolerance && count_iteration < max_iteration) {
+		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
+		reflection2D(previousSolution, length_ext, width_ext);
+		count_iteration++;
+		mass = 0.0;
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+				xd = x_new(i_ext, j_ext, length_ext);
+				x = x_new(i, j, length);
+				if(x != indx_seed)
+				{
+					value = previousSolution[xd];
+					distancePtr[x] = value + tau * (potential[x] - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
+						+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
+				}
+				////Compute the mass
+				mass += pow(previousSolution[xd] - distancePtr[x], 2);
+				//mass += abs(previousSolution[xd] - distancePtr[x]);
+			}
+		}
+		mass = sqrt(mass);
+		fprintf(pFile, "%d,%f,%f,%f,%f\n", count_iteration, distancePtr[pt1], distancePtr[pt2], distancePtr[pt3], distancePtr[pt4]);
+	}
+	fclose(pFile);
 	
 	std::cout << "Iteration: " << count_iteration << ", Mass: " << mass << std::endl;
 
@@ -1540,7 +1550,6 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	return true;
 }
-*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //=================== Functions for the 3D Fast Marching and Path Tracking ==============================
