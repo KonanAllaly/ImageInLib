@@ -22,6 +22,567 @@
 #include "filter_params.h"
 #include "vtk_params.h"
 
+dataType getMinInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k)
+{
+
+	//dataType u = imageDataPtr[k][x_new(i, j, length)];
+	//dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+	//dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+	//dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+	//dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+	//dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+	//dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+	//dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+	//dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+	//dataType Tu = imageDataPtr[kminus1][xd];
+	//dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+	//dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+	//dataType TuE = imageDataPtr[kminus1][x_new(i + 1, j, length)];
+	//dataType TuW = imageDataPtr[kminus1][x_new(i - 1, j, length)];
+	//dataType TuNW = imageDataPtr[kminus1][x_new(iminus1, jminus1, length)];
+	//dataType TuNE = imageDataPtr[kminus1][x_new(iplus1, jminus1, length)];
+	//dataType TuSE = imageDataPtr[kminus1][x_new(iplus1, jplus1, length)];
+	//dataType TuSW = imageDataPtr[kminus1][x_new(iminus1, jplus1, length)];
+	//dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+	//dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+	//dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+	//dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+	//dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+	//dataType BuNW = imageDataPtr[kplus1][x_new(iminus1, jminus1, length)];
+	//dataType BuNE = imageDataPtr[kplus1][x_new(iplus1, jminus1, length)];
+	//dataType BuSE = imageDataPtr[kplus1][x_new(iplus1, jplus1, length)];
+	//dataType BuSW = imageDataPtr[kplus1][x_new(iminus1, jplus1, length)];
+
+	if(k == 0)
+	{
+		size_t kplus1 = k + 1;
+		if (i == 0)
+		{
+			size_t iplus1 = i + 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuSE = imageDataPtr[kplus1][x_new(iplus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uS,fmin(uE, uSE)));
+				dataType m2 = fmin(Bu,fmin(BuS,fmin(BuE,BuSE)));
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuNE = imageDataPtr[kplus1][x_new(iplus1, jminus1, length)];
+				dataType m1 = fmin(u,fmin(uN,fmin(uE,uNE)));
+				dataType m2 = fmin(Bu,fmin(BuN,fmin(BuE, BuNE)));
+				return fmin(m1, m2);
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuNE = imageDataPtr[kplus1][x_new(iplus1, jminus1, length)];
+				dataType BuSE = imageDataPtr[kplus1][x_new(iplus1, jplus1, length)];
+				dataType m1 = fmin(u,fmin(uN,fmin(uS,uE)));
+				dataType m2 = fmin(uNE,fmin(uSE,fmin(Bu,BuN)));
+				dataType m3 = fmin(BuS,fmin(BuE,fmin(BuNE,BuSE)));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else if (i == length - 1)
+		{
+			size_t iminus1 = i - 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuSW = imageDataPtr[kplus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u,fmin(uS,fmin(uW,uSW)));
+				dataType m2 = fmin(Bu,fmin(BuS,fmin(BuW,BuSW)));
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuNW = imageDataPtr[kplus1][x_new(iminus1, jminus1, length)];
+				dataType m1 = fmin(u,fmin(uN,fmin(uW,uNW)));
+				dataType m2 = fmin(Bu,fmin(BuN,fmin(BuW,BuNW)));
+				return fmin(m1, m2);
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuNW = imageDataPtr[kplus1][x_new(iminus1, jminus1, length)];
+				dataType BuSW = imageDataPtr[kplus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u,fmin(uN,fmin(uS,uW)));
+				dataType m2 = fmin(uNW,fmin(uSW,fmin(Bu,BuN)));
+				dataType m3 = fmin(BuS,fmin(BuW,fmin(BuNW,BuSW)));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else
+		{
+			size_t iminus1 = i - 1;
+			size_t iplus1 = i + 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuSE = imageDataPtr[kplus1][x_new(iplus1, jplus1, length)];
+				dataType BuSW = imageDataPtr[kplus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u,fmin(uS,fmin(uE,uW)));
+				dataType m2 = fmin(uSE,fmin(uSW,fmin(Bu,BuS)));
+				dataType m3 = fmin(BuE,fmin(BuW,fmin(BuSE,BuSW)));
+				return fmin(m1, fmin(m2,m3));
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuNW = imageDataPtr[kplus1][x_new(iminus1, jminus1, length)];
+				dataType BuNE = imageDataPtr[kplus1][x_new(iplus1, jminus1, length)];
+				dataType m1 = fmin(u,fmin(uN,fmin(uE,uW)));
+				dataType m2 = fmin(uNW,fmin(uNE,fmin(Bu,BuN)));
+				dataType m3 = fmin(BuE, fmin(BuW, fmin(BuNW, BuNE)));
+				return fmin(m1, fmin(m2,m3));
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Bu = imageDataPtr[kplus1][x_new(i, j, length)];
+				dataType BuN = imageDataPtr[kplus1][x_new(i, jminus1, length)];
+				dataType BuS = imageDataPtr[kplus1][x_new(i, jplus1, length)];
+				dataType BuE = imageDataPtr[kplus1][x_new(iplus1, j, length)];
+				dataType BuW = imageDataPtr[kplus1][x_new(iminus1, j, length)];
+				dataType BuNW = imageDataPtr[kplus1][x_new(iminus1, jminus1, length)];
+				dataType BuNE = imageDataPtr[kplus1][x_new(iplus1, jminus1, length)];
+				dataType BuSE = imageDataPtr[kplus1][x_new(iplus1, jplus1, length)];
+				dataType BuSW = imageDataPtr[kplus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uN,fmin(uS,fmin(uE, fmin(uW,uNW)))));
+				dataType m2 = fmin(uNE, fmin(uSE, fmin(uSW, fmin(Bu, fmin(BuN,BuS)))));
+				dataType m3 = fmin(BuE,fmin(BuW,fmin(BuNW,fmin(BuNE,fmin(BuSE,BuSW)))));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+	}
+	else if (k == height - 1) 
+	{
+		size_t kminus1 = k - 1;
+		if (i == 0)
+		{
+			size_t iplus1 = i + 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuSE = imageDataPtr[kminus1][x_new(iplus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uS, fmin(uE, uSE)));
+				dataType m2 = fmin(Tu, fmin(TuS, fmin(TuE, TuSE)));
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuNE = imageDataPtr[kminus1][x_new(iplus1, jminus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uE, uNE)));
+				dataType m2 = fmin(Tu, fmin(TuN, fmin(TuE, TuNE)));
+				return fmin(m1, m2);
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuNE = imageDataPtr[kminus1][x_new(iplus1, jminus1, length)];
+				dataType TuSE = imageDataPtr[kminus1][x_new(iplus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uS, uE)));
+				dataType m2 = fmin(uNE, fmin(uSE, fmin(Tu, TuN)));
+				dataType m3 = fmin(TuS, fmin(TuE, fmin(TuNE, TuSE)));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else if (i == length - 1)
+		{
+			size_t iminus1 = i - 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuSW = imageDataPtr[kminus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uS, fmin(uW, uSW)));
+				dataType m2 = fmin(Tu, fmin(TuS, fmin(TuW, TuSW)));
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuNW = imageDataPtr[kminus1][x_new(iminus1, jminus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uW, uNW)));
+				dataType m2 = fmin(Tu, fmin(TuN, fmin(TuW, TuNW)));
+				return fmin(m1, m2);
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuNW = imageDataPtr[kminus1][x_new(iminus1, jminus1, length)];
+				dataType TuSW = imageDataPtr[kminus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uS, uW)));
+				dataType m2 = fmin(uNW, fmin(uSW, fmin(Tu, TuN)));
+				dataType m3 = fmin(TuS, fmin(TuW, fmin(TuNW, TuSW)));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else
+		{
+			size_t iminus1 = i - 1;
+			size_t iplus1 = i + 1;
+			if (j == 0)
+			{
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuSE = imageDataPtr[kminus1][x_new(iplus1, jplus1, length)];
+				dataType TuSW = imageDataPtr[kminus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uS, fmin(uE, uW)));
+				dataType m2 = fmin(uSE, fmin(uSW, fmin(Tu, TuS)));
+				dataType m3 = fmin(TuE, fmin(TuW, fmin(TuSE, TuSW)));
+				return fmin(m1, fmin(m2, m3));
+			}
+			else if (j == width - 1)
+			{
+				size_t jminus1 = j - 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuNW = imageDataPtr[kminus1][x_new(iminus1, jminus1, length)];
+				dataType TuNE = imageDataPtr[kminus1][x_new(iplus1, jminus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uE, uW)));
+				dataType m2 = fmin(uNW, fmin(uNE, fmin(Tu, TuN)));
+				dataType m3 = fmin(TuE, fmin(TuW, fmin(TuNW, TuNE)));
+				return fmin(m1, fmin(m2, m3));
+			}
+			else
+			{
+				size_t jminus1 = j - 1;
+				size_t jplus1 = j + 1;
+
+				dataType u = imageDataPtr[k][x_new(i, j, length)];
+				dataType uN = imageDataPtr[k][x_new(i, jminus1, length)];
+				dataType uS = imageDataPtr[k][x_new(i, jplus1, length)];
+				dataType uE = imageDataPtr[k][x_new(iplus1, j, length)];
+				dataType uW = imageDataPtr[k][x_new(iminus1, j, length)];
+				dataType uNW = imageDataPtr[k][x_new(iminus1, jminus1, length)];
+				dataType uNE = imageDataPtr[k][x_new(iplus1, jminus1, length)];
+				dataType uSE = imageDataPtr[k][x_new(iplus1, jplus1, length)];
+				dataType uSW = imageDataPtr[k][x_new(iminus1, jplus1, length)];
+				dataType Tu = imageDataPtr[kminus1][x_new(i, j, length)];
+				dataType TuN = imageDataPtr[kminus1][x_new(i, jminus1, length)];
+				dataType TuS = imageDataPtr[kminus1][x_new(i, jplus1, length)];
+				dataType TuE = imageDataPtr[kminus1][x_new(iplus1, j, length)];
+				dataType TuW = imageDataPtr[kminus1][x_new(iminus1, j, length)];
+				dataType TuNW = imageDataPtr[kminus1][x_new(iminus1, jminus1, length)];
+				dataType TuNE = imageDataPtr[kminus1][x_new(iplus1, jminus1, length)];
+				dataType TuSE = imageDataPtr[kminus1][x_new(iplus1, jplus1, length)];
+				dataType TuSW = imageDataPtr[kminus1][x_new(iminus1, jplus1, length)];
+				dataType m1 = fmin(u, fmin(uN, fmin(uS, fmin(uE, fmin(uW, uNW)))));
+				dataType m2 = fmin(uNE, fmin(uSE, fmin(uSW, fmin(Tu, fmin(TuN, TuS)))));
+				dataType m3 = fmin(TuE, fmin(TuW, fmin(TuNW, fmin(TuNE, fmin(TuSE, TuSW)))));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+	}
+	//else
+	//{
+		/*
+		if (i == 0)
+		{
+			if (j == 0)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i + 1, j + 1, height)]);
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i + 1, j - 1, height)]);
+				return fmin(m1, m2);
+			}
+			else
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i + 1, j - 1, height)]);
+				dataType m3 = fmin(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i + 1, j + 1, height)]);
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else if (i == height - 1)
+		{
+			if (j == 0)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]);
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]);
+				return fmin(m1, m2);
+			}
+			else
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]);
+				dataType m3 = fmin(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]);
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		else
+		{
+			if (j == 0)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], fmin(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+				dataType m2 = fmin(imageDataPtr[x_new(i, j + 1, height)], fmin(imageDataPtr[x_new(i + 1, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]));
+				return fmin(m1, m2);
+			}
+			else if (j == width - 1)
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], fmin(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], fmin(imageDataPtr[x_new(i + 1, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]));
+				return fmin(m1, m2);
+			}
+			else
+			{
+				dataType m1 = fmin(imageDataPtr[x_new(i, j, height)], fmin(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+				dataType m2 = fmin(imageDataPtr[x_new(i, j - 1, height)], fmin(imageDataPtr[x_new(i + 1, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]));
+				dataType m3 = fmin(imageDataPtr[x_new(i, j + 1, height)], fmin(imageDataPtr[x_new(i + 1, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]));
+				return fmin(m1, fmin(m2, m3));
+			}
+		}
+		*/
+	//}
+
+}
+
+/*
+dataType getMaxInNeighborhood3D(dataType* imageDataPtr, const size_t height, const size_t width, const size_t i, const size_t j)
+{
+	if (i == 0)
+	{
+		if (j == 0)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i + 1, j + 1, height)]);
+			return fmax(m1, m2);
+		}
+		else if (j == width - 1)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i + 1, j - 1, height)]);
+			return fmax(m1, m2);
+		}
+		else
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i + 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i + 1, j - 1, height)]);
+			dataType m3 = fmax(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i + 1, j + 1, height)]);
+			return fmax(m1, fmax(m2, m3));
+		}
+	}
+	else if (i == height - 1)
+	{
+		if (j == 0)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]);
+			return fmax(m1, m2);
+		}
+		else if (j == width - 1)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]);
+			return fmax(m1, m2);
+		}
+		else
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], imageDataPtr[x_new(i - 1, j, height)]);
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]);
+			dataType m3 = fmax(imageDataPtr[x_new(i, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]);
+			return fmax(m1, fmax(m2, m3));
+		}
+	}
+	else
+	{
+		if (j == 0)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], fmax(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+			dataType m2 = fmax(imageDataPtr[x_new(i, j + 1, height)], fmax(imageDataPtr[x_new(i + 1, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]));
+			return fmax(m1, m2);
+		}
+		else if (j == width - 1)
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], fmax(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], fmax(imageDataPtr[x_new(i + 1, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]));
+			return fmax(m1, m2);
+		}
+		else
+		{
+			dataType m1 = fmax(imageDataPtr[x_new(i, j, height)], fmax(imageDataPtr[x_new(i + 1, j, height)], imageDataPtr[x_new(i - 1, j, height)]));
+			dataType m2 = fmax(imageDataPtr[x_new(i, j - 1, height)], fmax(imageDataPtr[x_new(i + 1, j - 1, height)], imageDataPtr[x_new(i - 1, j - 1, height)]));
+			dataType m3 = fmax(imageDataPtr[x_new(i, j + 1, height)], fmax(imageDataPtr[x_new(i + 1, j + 1, height)], imageDataPtr[x_new(i - 1, j + 1, height)]));
+			return fmax(m1, fmax(m2, m3));
+		}
+	}
+}
+*/
+
 bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, unsigned char* outputPathPtr) {
 
 	if (inputImageData.imageDataPtr == NULL || initialSegment == NULL || outputPathPtr == NULL)
@@ -692,8 +1253,8 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 		return false; // Memory allocation failed
 	}
 
-	size_t i, j, k;
-	size_t i_ext, j_ext, k_ext;
+	size_t i, j, k, x;
+	size_t i_ext, j_ext, k_ext, x_ext;
 
 	dataType h = spacing.sx; //Let us first consider isotropic spacing
 
@@ -725,7 +1286,6 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 	reflection3D(extendedCoefPtr, height_ext, length_ext, width_ext); // Reflect the data in the extended area
 
 	// Calculate the norm of gradient in diamond cell
-	size_t x, x_ext;
 	size_t iminus1, iplus1, jminus1, jplus1, kminus1, kplus1;
 	dataType u, uN, uS, uE, uW, uNW, uNE, uSE, uSW;
 	dataType Tu, TuN, TuS, TuE, TuW, TuNW, TuNE, TuSE, TuSW;
@@ -736,7 +1296,7 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 	{
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++)
 		{
-			for (j = 0, j_ext = 1; j < width; i++, j_ext++)
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
 			{
 				x_ext = x_new(i_ext, j_ext, length_ext);
 				x = x_new(i, j, length);
@@ -820,6 +1380,7 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 		free(extendedCoefPtr[k]);
 	}
 	free(extendedCoefPtr);
+
 	return true;
 }
 
@@ -845,7 +1406,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	size_t dim2D_ext = height_ext * width_ext;
 
 	dataType tau = seg_parms.tau, h = seg_parms.h;
-	dataType mp = imageData.spacing.sx * imageData.spacing.sy * imageData.spacing.sz;
 	dataType tol = seg_parms.segTolerance, omega = seg_parms.omega_c;
 	dataType coef_edge_detector = seg_parms.coef, eps = seg_parms.eps2;
 	dataType coef_tau = tau;
@@ -874,6 +1434,81 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	{
 		return false;
 	}
+
+	Coefficient_Pointers gPtrs;
+	gPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for (k = 0; k < height; k++)
+	{
+		gPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (gPtrs.e_Ptr[k] == NULL || gPtrs.w_Ptr[k] == NULL || gPtrs.n_Ptr[k] == NULL ||
+			gPtrs.s_Ptr[k] == NULL || gPtrs.t_Ptr[k] == NULL || gPtrs.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
+	//Intitialization
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < dim2D; i++)
+		{
+			segmentationPtr[k][i] = 0.0;
+			edgeDetectorPtr[k][i] = 0.0;
+			gPtrs.e_Ptr[k][i] = 0.0;
+			gPtrs.w_Ptr[k][i] = 0.0;
+			gPtrs.n_Ptr[k][i] = 0.0;
+			gPtrs.s_Ptr[k][i] = 0.0;
+			gPtrs.t_Ptr[k][i] = 0.0;
+			gPtrs.b_Ptr[k][i] = 0.0;
+		}
+	}
+
+	//smoothing
+	heatImplicitRectangularScheme(imageData, smooth_parms);
+
+	//compute the morm of gradient for the edge detector
+	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, spacing, gPtrs);
+
+	//compute the edge detector
+	dataType value_gF_e, value_gF_w, value_gF_n, value_gF_s, value_gF_t, value_gF_b, average_value;
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < length; i++)
+		{
+			for (j = 0; j < width; j++)
+			{
+				x = x_new(i, j, length);
+				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), seg_parms.coef);
+				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
+				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), seg_parms.coef);
+			}
+		}
+	}
+
+	//Array for name construction
+	char name[350];
+	char name_ending[100];
+	Storage_Flags flags = { false,false };
+
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
 	
 	Coefficient_Pointers coefPtrs;
 	coefPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -897,51 +1532,29 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	Coefficient_Pointers vPtrs;
-	vPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	vPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	vPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	vPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	vPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	vPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	Coefficient_Pointers normGrad;
+	normGrad.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	normGrad.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	normGrad.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	normGrad.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	normGrad.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	normGrad.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	for(k = 0; k < height; k++) 
 	{
-		vPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		vPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		vPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		vPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		vPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		vPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		if (vPtrs.e_Ptr[k] == NULL || vPtrs.w_Ptr[k] == NULL || vPtrs.n_Ptr[k] == NULL ||
-			vPtrs.s_Ptr[k] == NULL || vPtrs.t_Ptr[k] == NULL || vPtrs.b_Ptr[k] == NULL)
+		normGrad.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		normGrad.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		normGrad.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		normGrad.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		normGrad.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		normGrad.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (normGrad.e_Ptr[k] == NULL || normGrad.w_Ptr[k] == NULL || normGrad.n_Ptr[k] == NULL ||
+			normGrad.s_Ptr[k] == NULL || normGrad.t_Ptr[k] == NULL || normGrad.b_Ptr[k] == NULL)
 		{
 			return false; // Memory allocation failed
 		}
 	}
 
-	Coefficient_Pointers gPtrs;
-	gPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	gPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	gPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	gPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	gPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	gPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	for(k = 0; k < height; k++) 
-	{
-		gPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		gPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		gPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		gPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		gPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		gPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		if (gPtrs.e_Ptr[k] == NULL || gPtrs.w_Ptr[k] == NULL || gPtrs.n_Ptr[k] == NULL ||
-			gPtrs.s_Ptr[k] == NULL || gPtrs.t_Ptr[k] == NULL || gPtrs.b_Ptr[k] == NULL)
-		{
-			return false; // Memory allocation failed
-		}
-	}
-
-	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	Coefficient_Pointers a_out;
 	a_out.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	a_out.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	a_out.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -963,7 +1576,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	Coefficient_Pointers a_in;
 	a_in.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	a_in.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	a_in.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -985,7 +1598,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	Coefficient_Pointers coefPtrs, vPtrs, gPtrs, a_out, a_in, theta_out;
+	Coefficient_Pointers theta_out;
 	theta_out.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	theta_out.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	theta_out.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -1012,26 +1625,18 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	{
 		for(i = 0; i < dim2D; i++)
 		{
-			segmentationPtr[k][i] = 0.0;
-			edgeDetectorPtr[k][i] = 0.0;
 			coefPtrs.e_Ptr[k][i] = 0.0;
 			coefPtrs.w_Ptr[k][i] = 0.0;
 			coefPtrs.n_Ptr[k][i] = 0.0;
 			coefPtrs.s_Ptr[k][i] = 0.0;
 			coefPtrs.t_Ptr[k][i] = 0.0;
 			coefPtrs.b_Ptr[k][i] = 0.0;
-			vPtrs.e_Ptr[k][i] = 0.0;
-			vPtrs.w_Ptr[k][i] = 0.0;
-			vPtrs.n_Ptr[k][i] = 0.0;
-			vPtrs.s_Ptr[k][i] = 0.0;
-			vPtrs.t_Ptr[k][i] = 0.0;
-			vPtrs.b_Ptr[k][i] = 0.0;
-			gPtrs.e_Ptr[k][i] = 0.0;
-			gPtrs.w_Ptr[k][i] = 0.0;
-			gPtrs.n_Ptr[k][i] = 0.0;
-			gPtrs.s_Ptr[k][i] = 0.0;
-			gPtrs.t_Ptr[k][i] = 0.0;
-			gPtrs.b_Ptr[k][i] = 0.0;
+			normGrad.e_Ptr[k][i] = 0.0;
+			normGrad.w_Ptr[k][i] = 0.0;
+			normGrad.n_Ptr[k][i] = 0.0;
+			normGrad.s_Ptr[k][i] = 0.0;
+			normGrad.t_Ptr[k][i] = 0.0;
+			normGrad.b_Ptr[k][i] = 0.0;
 			a_out.e_Ptr[k][i] = 0.0;
 			a_out.w_Ptr[k][i] = 0.0;
 			a_out.n_Ptr[k][i] = 0.0;
@@ -1053,215 +1658,227 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	dataType gauss_seidel_coef = 0.0;
-
-	dataType current = 0.0, average_norm_gradient = 0.0, average_gFunction = 0.0;
-	dataType u_average = 0.0;
-
-	//smoothing
-	heatImplicitRectangularScheme(imageData, smooth_parms);
-
-	//compute the morm of gradient for the edge detector
-	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, spacing, gPtrs);
-
-	//compute the edge detector
-	dataType value_gF_e, value_gF_w, value_gF_n, value_gF_s, value_gF_t, value_gF_b, average_value;
-	for(k = 0; k < height; k++)
-	{
-		for(i = 0; i < length; i++)
-		{
-			for(j = 0; j < width; j++)
-			{
-				x = x_new(i, j, length);
-				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), seg_parms.coef);
-				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
-				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), seg_parms.coef);
-			}
-		}
-	}
-
-	//Array for name construction
-	char name[350];
-	char name_ending[100];
-	Storage_Flags flags = { false,false };
-
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	store2dRawData(edgeDetectorPtr, height, width, name, flags);
-
-	/*
 	//compute gradient of edge detector function
 	// v_pq = -w_a * m(e_pq) * G_pq;
-	dataType vpe, vpw, vpn, vps;
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			size_t xd = x_new(i, j, height);
+	dataType vpe, vpw, vpn, vps, vpt, vpb;
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < length; i++) 
+		{
+			for (j = 0; j < width; j++) 
+			{
+				size_t xd = x_new(i, j, length);
 
-			if (i == 0) {
-				vpe = adv * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
-				vpw = -vpe;
-			}
-			else {
-				if (i == height - 1) {
-					vpw = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i - 1, j, height)]);
-					vpe = -vpw;
-				}
-				else {
-					vpe = adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+				if (i == 0) {
+					vpe = adv * (edgeDetectorPtr[k][x_new(i + 1, j, length)] - edgeDetectorPtr[k][xd]);
 					vpw = -vpe;
 				}
-			}
-			if (j == 0) {
-				vps = adv * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
-				vpn = -vps;
-			}
-			else {
-				if (j == width - 1) {
-					vpn = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i, j - 1, height)]);
-					vps = -vpn;
-				}
 				else {
-					vps = adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+					if (i == length - 1) {
+						vpw = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k][x_new(i - 1, j, length)]);
+						vpe = -vpw;
+					}
+					else {
+						vpe = adv * 0.5 * (edgeDetectorPtr[k][x_new(i + 1, j, length)] - edgeDetectorPtr[k][x_new(i - 1, j, length)]);
+						vpw = -vpe;
+					}
+				}
+				if (j == 0) {
+					vps = adv * (edgeDetectorPtr[k][x_new(i, j + 1, length)] - edgeDetectorPtr[k][xd]);
 					vpn = -vps;
 				}
+				else {
+					if (j == width - 1) {
+						vpn = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k][x_new(i, j - 1, length)]);
+						vps = -vpn;
+					}
+					else {
+						vps = adv * 0.5 * (edgeDetectorPtr[k][x_new(i, j + 1, length)] - edgeDetectorPtr[k][x_new(i, j - 1, length)]);
+						vpn = -vps;
+					}
+				}
+				if (k == 0) {
+					vpb = adv * (edgeDetectorPtr[k + 1][xd] - edgeDetectorPtr[k][xd]);
+					vpt = -vpb;
+				}
+				else {
+					if (k == height - 1) {
+						vpb = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k - 1][xd]);
+						vpt = -vpb;
+					}
+					else {
+						vpb = adv * 0.5 * (edgeDetectorPtr[k + 1][xd] - edgeDetectorPtr[k - 1][xd]);
+						vpt = -vpb;
+					}
+				}
+
+				a_in.e_Ptr[k][xd] = fmax(vpe, 0);
+				a_in.w_Ptr[k][xd] = fmax(vpw, 0);
+				a_in.n_Ptr[k][xd] = fmax(vpn, 0);
+				a_in.s_Ptr[k][xd] = fmax(vps, 0);
+				a_in.t_Ptr[k][xd] = fmax(vpt, 0);
+				a_in.b_Ptr[k][xd] = fmax(vpb, 0);
+
+				a_out.e_Ptr[k][xd] = fmin(vpe, 0);
+				a_out.w_Ptr[k][xd] = fmin(vpw, 0);
+				a_out.n_Ptr[k][xd] = fmin(vpn, 0);
+				a_out.s_Ptr[k][xd] = fmin(vps, 0);
+				a_out.t_Ptr[k][xd] = fmin(vpt, 0);
+				a_out.b_Ptr[k][xd] = fmin(vpb, 0);
 			}
-
-			a_in.East[xd] = fmax(vpe, 0);
-			a_in.West[xd] = fmax(vpw, 0);
-			a_in.North[xd] = fmax(vpn, 0);
-			a_in.South[xd] = fmax(vps, 0);
-
-			a_out.East[xd] = fmin(vpe, 0);
-			a_out.West[xd] = fmin(vpw, 0);
-			a_out.North[xd] = fmin(vpn, 0);
-			a_out.South[xd] = fmin(vps, 0);
 		}
 	}
-
-	copyDataToAnother2dArray(initialSegment, segmentationPtr, height, width);
-	copyDataTo2dExtendedArea(initialSegment, previousSolPtr, height, width);
-	set2dDirichletBoundaryCondition(previousSolPtr, height_ext, width_ext);
-
-	set2dDirichletBoundaryCondition(gaussSeidelPtr, height_ext, width_ext);
-	copyDataTo2dExtendedArea(initialSegment, gaussSeidelPtr, height, width);
+	
+	copyDataToAnotherArray(initialSegment, segmentationPtr, height, length, width);
+	
+	//Copy to extended area
+	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
+	{
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+		{
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
+			{
+				previousSolPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = initialSegment[k][x_new(i, j, length)];
+				gaussSeidelPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = initialSegment[k][x_new(i, j, length)];
+			}
+		}
+	}
+	setBoundaryToZeroDirichletBC(previousSolPtr, length_ext, width_ext, height_ext);
+	setBoundaryToZeroDirichletBC(gaussSeidelPtr, length_ext, width_ext, height_ext);
 
 	//segmentation loop
 	size_t number_time_step = 0;
 	dataType error_segmentation = 0.0;
-	dataType mp = h * h;
 	dataType u1 = 0.0, u2 = 0.0, u3 = 0.0, u4 = 0.0;
 	dataType u_p_min = 0.0, u_p_max = 0.0;
-	dataType u_p = 0.0, u_east = 0.0, u_west = 0.0, u_north = 0.0, u_south = 0.0;
+	dataType u_p = 0.0, u_east = 0.0, u_west = 0.0, u_north = 0.0, u_south = 0.0, u_top = 0.0, u_bottom = 0.0;
+	dataType mp = imageData.spacing.sx * imageData.spacing.sy * imageData.spacing.sz;
+	dataType average_norm_gradient = 0.0, u_average;
+
 	do {
 		number_time_step++;
 
-		computeNormOfGradientDiamondCells(segmentationPtr, normGrad, height, width, h);
-		epsilonRegularization(normGrad, height, width, eps);
+		computeNormOfGradientDiamondCell3D(segmentationPtr, length, width, height, spacing, gPtrs);
 
-		for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				size_t xd = x_new(i, j, height);
+		for (k = 0, k_ext = 1; k < height; k++, k_ext++) 
+		{
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+					size_t xd = x_new(i, j, height);
 
-				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
-				u_average = sqrt(pow(average_norm_gradient, 2) + eps);
+					//epsilon regularization
+					normGrad.e_Ptr[k][xd] = sqrt(pow(gPtrs.e_Ptr[i][xd], 2) + eps);
+					normGrad.w_Ptr[k][xd] = sqrt(pow(gPtrs.w_Ptr[i][xd], 2) + eps);
+					normGrad.n_Ptr[k][xd] = sqrt(pow(gPtrs.n_Ptr[i][xd], 2) + eps);
+					normGrad.s_Ptr[k][xd] = sqrt(pow(gPtrs.s_Ptr[i][xd], 2) + eps);
+					normGrad.t_Ptr[k][xd] = sqrt(pow(gPtrs.t_Ptr[i][xd], 2) + eps);
+					normGrad.b_Ptr[k][xd] = sqrt(pow(gPtrs.b_Ptr[i][xd], 2) + eps);
 
-				dataType n_out = -(sign_elt(a_out.East[xd]) + sign_elt(a_out.West[xd]) + sign_elt(a_out.North[xd]) + sign_elt(a_out.South[xd]));
+					average_norm_gradient = (dataType)((normGrad.e_Ptr[k][xd] + normGrad.w_Ptr[k][xd] + normGrad.n_Ptr[k][xd] + normGrad.s_Ptr[k][xd] + normGrad.t_Ptr[k][xd] + normGrad.b_Ptr[k][xd]) / 6.0);
+					u_average = sqrt(pow(average_norm_gradient, 2) + eps);
 
-				if (n_out == 0)
-				{
-					theta_out.East[xd] = 0.5;
-					theta_out.West[xd] = 0.5;
-					theta_out.North[xd] = 0.5;
-					theta_out.South[xd] = 0.5;
+					dataType n_out = -(signum(a_out.e_Ptr[k][xd]) + signum(a_out.w_Ptr[k][xd]) + signum(a_out.n_Ptr[k][xd]) + signum(a_out.s_Ptr[k][xd]) + signum(a_out.t_Ptr[k][xd]) + signum(a_out.b_Ptr[k][xd]));
+
+					if (n_out == 0)
+					{
+						theta_out.e_Ptr[k][xd] = 0.5;
+						theta_out.w_Ptr[k][xd] = 0.5;
+						theta_out.s_Ptr[k][xd] = 0.5;
+						theta_out.n_Ptr[k][xd] = 0.5;
+						theta_out.t_Ptr[k][xd] = 0.5;
+						theta_out.b_Ptr[k][xd] = 0.5;
+					}
+					else
+					{
+						x_ext = x_new(i_ext, j_ext, length_ext);
+
+						u_p = previousSolPtr[k][x_ext];
+						u_east = previousSolPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
+						u_west = previousSolPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
+						u_north = previousSolPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)];
+						u_south = previousSolPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)];
+						u_top = previousSolPtr[k_ext - 1][x_ext];
+						u_bottom = previousSolPtr[k_ext + 1][x_ext];
+						//u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+						//u_p_max = getMaxInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+
+						/*
+						//East
+						if (a_out.East[xd] * (u_east - u_p) == 0)
+						{
+							theta_out.East[xd] = 0.5;
+						}
+						else if (a_out.East[xd] * (u_east - u_p) > 0)
+						{
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+							theta_out.East[xd] = fmin(0.5, value);
+						}
+						else
+						{
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+							theta_out.East[xd] = fmin(0.5, value);
+						}
+
+						//West
+						if (a_out.West[xd] * (u_west - u_p) == 0)
+						{
+							theta_out.West[xd] = 0.5;
+						}
+						else if (a_out.West[xd] * (u_west - u_p) > 0)
+						{
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+							theta_out.West[xd] = fmin(0.5, value);
+						}
+						else
+						{
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+							theta_out.West[xd] = fmin(0.5, value);
+						}
+
+						//North
+						if (a_out.North[xd] * (u_north - u_p) == 0)
+						{
+							theta_out.North[xd] = 0.5;
+						}
+						else if (a_out.North[xd] * (u_north - u_p) > 0)
+						{
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+							theta_out.North[xd] = fmin(0.5, value);
+						}
+						else
+						{
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+							theta_out.North[xd] = fmin(0.5, value);
+						}
+
+						//South
+						if (a_out.South[xd] * (u_south - u_p) == 0)
+						{
+							theta_out.South[xd] = 0.5;
+						}
+						else if (a_out.South[xd] * (u_south - u_p) > 0)
+						{
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+							theta_out.South[xd] = fmin(0.5, value);
+						}
+						else
+						{
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+							theta_out.South[xd] = fmin(0.5, value);
+						}
+						*/
+					}
+
+					//uCoef.East[xd] = (dataType)((1 - theta_out.East[xd]) * a_in.East[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.East[xd]);
+					//uCoef.West[xd] = (dataType)((1 - theta_out.West[xd]) * a_in.West[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.West[xd]);
+					//uCoef.North[xd] = (dataType)((1 - theta_out.North[xd]) * a_in.North[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.North[xd]);
+					//uCoef.South[xd] = (dataType)((1 - theta_out.South[xd]) * a_in.South[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.South[xd]);
+
 				}
-				else
-				{
-					u_p = previousSolPtr[x_new(i_ext, j_ext, height_ext)];
-					u_east = previousSolPtr[x_new(i_ext + 1, j_ext, height_ext)];
-					u_west = previousSolPtr[x_new(i_ext - 1, j_ext, height_ext)];
-					u_north = previousSolPtr[x_new(i_ext, j_ext - 1, height_ext)];
-					u_south = previousSolPtr[x_new(i_ext, j_ext + 1, height_ext)];
-					u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
-					u_p_max = getMaxInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
-
-					//East
-					if (a_out.East[xd] * (u_east - u_p) == 0)
-					{
-						theta_out.East[xd] = 0.5;
-					}
-					else if (a_out.East[xd] * (u_east - u_p) > 0)
-					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
-						theta_out.East[xd] = fmin(0.5, value);
-					}
-					else
-					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
-						theta_out.East[xd] = fmin(0.5, value);
-					}
-
-					//West
-					if (a_out.West[xd] * (u_west - u_p) == 0)
-					{
-						theta_out.West[xd] = 0.5;
-					}
-					else if (a_out.West[xd] * (u_west - u_p) > 0)
-					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
-						theta_out.West[xd] = fmin(0.5, value);
-					}
-					else
-					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
-						theta_out.West[xd] = fmin(0.5, value);
-					}
-
-					//North
-					if (a_out.North[xd] * (u_north - u_p) == 0)
-					{
-						theta_out.North[xd] = 0.5;
-					}
-					else if (a_out.North[xd] * (u_north - u_p) > 0)
-					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
-						theta_out.North[xd] = fmin(0.5, value);
-					}
-					else
-					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
-						theta_out.North[xd] = fmin(0.5, value);
-					}
-
-					//South
-					if (a_out.South[xd] * (u_south - u_p) == 0)
-					{
-						theta_out.South[xd] = 0.5;
-					}
-					else if (a_out.South[xd] * (u_south - u_p) > 0)
-					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
-						theta_out.South[xd] = fmin(0.5, value);
-					}
-					else
-					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
-						theta_out.South[xd] = fmin(0.5, value);
-					}
-				}
-
-				uCoef.East[xd] = (dataType)((1 - theta_out.East[xd]) * a_in.East[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.East[xd]);
-				uCoef.West[xd] = (dataType)((1 - theta_out.West[xd]) * a_in.West[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.West[xd]);
-				uCoef.North[xd] = (dataType)((1 - theta_out.North[xd]) * a_in.North[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.North[xd]);
-				uCoef.South[xd] = (dataType)((1 - theta_out.South[xd]) * a_in.South[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.South[xd]);
 			}
 		}
 
+		/*
 		//gauss seidel for segmentation function
 		size_t cpt = 0;
 
@@ -1338,8 +1955,11 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			store2dRawData(segmentationPtr, height, width, name, flags);
 			printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
 		}
+		*/
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+
+	/*
 
 	free(edgeDetectorPtr);
 
@@ -1384,24 +2004,24 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		{
 			free(segmentationPtr[k]);
 			free(edgeDetectorPtr[k]);
-			free(coefPtrs.e_Ptr[k]);
-			free(coefPtrs.w_Ptr[k]);
-			free(coefPtrs.n_Ptr[k]);
-			free(coefPtrs.s_Ptr[k]);
-			free(coefPtrs.t_Ptr[k]);
-			free(coefPtrs.b_Ptr[k]);
-			free(vPtrs.e_Ptr[k]);
-			free(vPtrs.w_Ptr[k]);
-			free(vPtrs.n_Ptr[k]);
-			free(vPtrs.s_Ptr[k]);
-			free(vPtrs.t_Ptr[k]);
-			free(vPtrs.b_Ptr[k]);
 			free(gPtrs.e_Ptr[k]);
 			free(gPtrs.w_Ptr[k]);
 			free(gPtrs.n_Ptr[k]);
 			free(gPtrs.s_Ptr[k]);
 			free(gPtrs.t_Ptr[k]);
 			free(gPtrs.b_Ptr[k]);
+			free(coefPtrs.e_Ptr[k]);
+			free(coefPtrs.w_Ptr[k]);
+			free(coefPtrs.n_Ptr[k]);
+			free(coefPtrs.s_Ptr[k]);
+			free(coefPtrs.t_Ptr[k]);
+			free(coefPtrs.b_Ptr[k]);
+			free(normGrad.e_Ptr[k]);
+			free(normGrad.w_Ptr[k]);
+			free(normGrad.n_Ptr[k]);
+			free(normGrad.s_Ptr[k]);
+			free(normGrad.t_Ptr[k]);
+			free(normGrad.b_Ptr[k]);
 			free(a_out.e_Ptr[k]);
 			free(a_out.w_Ptr[k]);
 			free(a_out.n_Ptr[k]);
@@ -1426,24 +2046,26 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	}
 	free(segmentationPtr);
 	free(edgeDetectorPtr);
-	free(coefPtrs.e_Ptr);
-	free(coefPtrs.w_Ptr);
-	free(coefPtrs.n_Ptr);
-	free(coefPtrs.s_Ptr);
-	free(coefPtrs.t_Ptr);
-	free(coefPtrs.b_Ptr);
-	free(vPtrs.e_Ptr);
-	free(vPtrs.w_Ptr);
-	free(vPtrs.n_Ptr);
-	free(vPtrs.s_Ptr);
-	free(vPtrs.t_Ptr);
-	free(vPtrs.b_Ptr);
+	free(previousSolPtr);
+	free(gaussSeidelPtr);
 	free(gPtrs.e_Ptr);
 	free(gPtrs.w_Ptr);
 	free(gPtrs.n_Ptr);
 	free(gPtrs.s_Ptr);
 	free(gPtrs.t_Ptr);
 	free(gPtrs.b_Ptr);
+	free(coefPtrs.e_Ptr);
+	free(coefPtrs.w_Ptr);
+	free(coefPtrs.n_Ptr);
+	free(coefPtrs.s_Ptr);
+	free(coefPtrs.t_Ptr);
+	free(coefPtrs.b_Ptr);
+	free(normGrad.e_Ptr);
+	free(normGrad.w_Ptr);
+	free(normGrad.n_Ptr);
+	free(normGrad.s_Ptr);
+	free(normGrad.t_Ptr);
+	free(normGrad.b_Ptr);
 	free(a_out.e_Ptr);
 	free(a_out.w_Ptr);
 	free(a_out.n_Ptr);
@@ -1462,8 +2084,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	free(theta_out.s_Ptr);
 	free(theta_out.t_Ptr);
 	free(theta_out.b_Ptr);
-	free(previousSolPtr);
-	free(gaussSeidelPtr);
 
 	return true;
 }
