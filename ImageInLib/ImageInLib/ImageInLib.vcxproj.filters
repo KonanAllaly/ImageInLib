@@ -350,6 +350,9 @@
     <ClCompile Include="src\eigen_systems.c">
       <Filter>Source Files\Linear Algebra</Filter>
     </ClCompile>
+    <ClCompile Include="src\percentile.c">
+      <Filter>Source Files\Statistics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -522,6 +525,9 @@
     </ClInclude>
     <ClInclude Include="include\eigen_systems.h">
       <Filter>Header Files\Linear Algebra</Filter>
+    </ClInclude>
+    <ClInclude Include="include\percentile.h">
+      <Filter>Header Files\Statistics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
