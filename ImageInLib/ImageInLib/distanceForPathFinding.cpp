@@ -13,6 +13,7 @@
 #include "../src/heat_equation.h"
 #include "hough_transform.h"
 #include "../src/distance_function.h"
+#include "percentile.h"
 
 #define BIG_VALUE INFINITY
 
@@ -176,6 +177,9 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	Point2D grad_vector;
 	PixelSpacing fVolume = imageDataStr.spacing;
 
+	dataType* arraySorted = new dataType[dim2D];
+	copyDataToAnother2dArray(imageDataStr.imageDataPtr, arraySorted, length, width);
+
 	//for (i = 0; i < length; i++) 
 	//{
 	//	for (j = 0; j < width; j++) 
@@ -223,25 +227,33 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 			maxDiff = potentialFuncPtr[i];
 		}
 	}
-	
+	std::cout << "MaxDiff = " << maxDiff << std::endl;
+
+	//quickSort(arraySorted, 0, dim2D - 1);
+	//size_t index = (size_t)round((95 / 100.0) * (dim2D - 1));
+	//dataType factor = arraySorted[index];
+	//double percentile = 95.0;
+	//dataType factor = 0.596723;//computePercentile(arraySorted, length, width, percentile);
+	//std::cout << "Percentile 95 = " << factor << std::endl;
+
 	//Normalization
 	dataType weight = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		//weight = 1.0 / (1.0 + 2.0 * distanceMap[i]);
-		//potentialFuncPtr[i] = (parameters.eps + potentialFuncPtr[i] / maxDiff) * weight;
 		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / maxDiff;
+		//if(factor != 0.0)
+		//{
+		//	potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / factor;
+		//}
+		//else {
+		//	potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i];
+		//}
 	}
 
 	delete[] distanceMap;
 	delete[] edgeImage;
+	delete[] arraySorted;
 
 	return true;
-}
-
-void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b) {
-	pointFastMarching2D temp = *a;
-	*a = *b;
-	*b = temp;
 }
 
 void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos) {
@@ -274,7 +286,7 @@ void heapifyDown2D(vector<pointFastMarching2D>& in_Process, int pos) {
 	}
 
 	if (current != pos) {
-		swap2dPoints(&in_Process[pos], &in_Process[current]);
+		swap_elts(&in_Process[pos], &in_Process[current], sizeof(pointFastMarching2D));
 		heapifyDown2D(in_Process, current);
 	}
 }
@@ -293,7 +305,7 @@ void heapifyUp2D(vector<pointFastMarching2D>& in_Process, int i) {
 	}
 
 	if (current != i) {
-		swap2dPoints(&in_Process[current], &in_Process[i]);
+		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching2D));
 		heapifyUp2D(in_Process, current);
 	}
 
@@ -309,11 +321,16 @@ void heapifyVector2D(vector<pointFastMarching2D>& in_Process) {
 }
 
 void deleteRootHeap2D(vector<pointFastMarching2D>& in_Process) {
-	//we use type int for indexes because we do operations like pos--
 	int l = in_Process.size();
-	swap2dPoints(&in_Process[0], &in_Process[l - 1]);
-	in_Process.pop_back();
-	heapifyDown2D(in_Process, 0);
+	if(l > 1)
+	{
+		swap_elts(&in_Process[0], &in_Process[l - 1], sizeof(pointFastMarching2D));
+		in_Process.pop_back();
+		heapifyDown2D(in_Process, 0);
+	}
+	else if(l == 1) {
+		in_Process.pop_back();
+	}
 }
 
 void addPointHeap2D(vector<pointFastMarching2D>& in_Process, pointFastMarching2D point) {

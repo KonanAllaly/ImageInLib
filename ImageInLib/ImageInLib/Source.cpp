@@ -15,6 +15,7 @@
 
 #include "enhancement.h"
 #include "eigen_systems.h"
+#include "percentile.h"
 
 #include "../src/heat_equation.h"
 #include "segmentation2d.h"
@@ -4693,8 +4694,8 @@ int main() {
 
 	////loading_path = inputPath + "raw/slice/slice_aorta.raw";
 	loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
-	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
+	//manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
+	//rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
 	
 	//storing_path = outputPath + "input_image_2D.raw";
 	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
@@ -4713,14 +4714,14 @@ int main() {
 		5,//number of time step;
 		100// max number of iteration;
 	};
-	heatImplicit2dScheme(imageDataStr, filtering_parameters);
+	//heatImplicit2dScheme(imageDataStr, filtering_parameters);
 
 	//const dataType sigma = 1.0;
 	//gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
 	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
 	
 	storing_path = outputPath + "filtered.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	//int scale = 0;
 	//storing_path = outputPath + "input_3D_view.vtk";
@@ -4782,7 +4783,7 @@ int main() {
 		radius
 	};
 	Image_Data2D toPotentialStr = { Length, Width, imageData, iOrigin, spacing, orientation2D };
-	computePotential(toPotentialStr, potential, endPoints, parameters);
+	//computePotential(toPotentialStr, potential, endPoints, parameters);
 
 	////Manually set the potential values
 	//Point2D grad;
@@ -4794,16 +4795,16 @@ int main() {
 	//	}
 	//}
 
-	storing_path = outputPath + "potential_old.raw";
-	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential_v2.raw";
+	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	//const double LengthKeyPoints = 70.0;
 	//vector<Point2D> key_points;
 
 	Image_Data2D toActionStr = { Length, Width, imageData, iOrigin, spacing, orientation2D };
 	//partialFrontPropagation2D(toActionStr, action, potential, endPoints);
-	//fastMarching2D(toActionStr, action, potential, endPoints);
-	rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.0001, 5000);
+	fastMarching2D(toActionStr, action, potential, endPoints);
+	//rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.0001, 5000);
 	
 	//clock_t start, end;
 	////start = clock();
@@ -4818,7 +4819,7 @@ int main() {
 	//double laps = (end - start) / CLOCKS_PER_SEC;
 	//std::cout << "execution time : " << laps << std::endl;
 
-	storing_path = outputPath + "actionRT.raw";
+	storing_path = outputPath + "action.raw";
 	//storing_path = outputPath + "actionFM.raw";
 	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
@@ -4828,8 +4829,8 @@ int main() {
 	shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
 
 	FILE* path_points_file;
-	string save_path_file = outputPath + "path_points_RT.csv";
-	//string save_path_file = outputPath + "path_points_FM.csv";
+	//string save_path_file = outputPath + "path_points_RT.csv";
+	string save_path_file = outputPath + "path_points_FM.csv";
 	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -4984,6 +4985,7 @@ int main() {
 	delete[] smoothedImage;
 	delete[] potential;
 	delete[] action;
+	
 	
 	/*
 	const size_t Length = 50, Width = 50, Height = 50;
@@ -6635,5 +6637,6 @@ int main() {
 	*/
 	
 	//free(ctContainer);
+
 	return EXIT_SUCCESS;
 }

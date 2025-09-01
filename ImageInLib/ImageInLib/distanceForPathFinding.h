@@ -73,12 +73,12 @@ using namespace std;
 	/// <returns></returns>
 	dataType solve2dQuadratic(dataType X, dataType Y, dataType P, PixelSpacing h, size_t indx, size_t indy, FILE* pFile);
 
-	/// <summary>
-	/// swap two given points 
-	/// </summary>
-	/// <param name="a">first point</param>
-	/// <param name="b">second point</param>
-	void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b);
+	///// <summary>
+	///// swap two given points 
+	///// </summary>
+	///// <param name="a">first point</param>
+	///// <param name="b">second point</param>
+	//void swap2dPoints(pointFastMarching2D* a, pointFastMarching2D* b);
 
 	/// <summary>
 	/// heap operation from top to down
