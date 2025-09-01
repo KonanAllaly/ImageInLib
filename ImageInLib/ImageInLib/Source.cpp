@@ -41,7 +41,7 @@ int main() {
 	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	/*
+	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
@@ -59,7 +59,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	*/
+	
 	////Find min and max
 	//dataType minValue = 1000000.0, maxValue = -1000000.0;
 	//for (k = 0; k < Height; k++) {
@@ -3388,14 +3388,18 @@ int main() {
 	
 	//==================== 3D image ======================================================
 	
-	////input image
-	//dataType** imageData = new dataType * [Height];
-	//for (k = 0; k < Height; k++) {
-	//	imageData[k] = new dataType[dim2D]{ 0 };
-	//}
-	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-	//Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+	//input image
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+	loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	dataType minNeighboorhoodIntensity = getMinInNeighborhood3D(imageData, Length, Width, Height, 0, 511, 203);
+	std::cout << "Min intensity in neighborhood = " << minNeighboorhoodIntensity << std::endl;
+	
 	/*
 	//std::cout << "============ Interpolated ================ " << std::endl;
 	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
@@ -3497,6 +3501,13 @@ int main() {
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
 	Image_Data croppedImageData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
 	*/
+
+	for (k = 0; k < Height; k++) 
+	{
+		delete[] imageData[k];
+	}
+	delete[] imageData;
+	free(ctContainer);
 
 	////==================================================================================
 
@@ -3696,6 +3707,7 @@ int main() {
 	//delete[] imageData;
 	free(ctContainer);
 	*/
+
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
@@ -4682,7 +4694,7 @@ int main() {
 	delete[] differencedMap;
 	*/
 	
-	
+	/*
 	//2D real images
 	const size_t Length = 512;
 	const size_t Width = 512;
@@ -4840,6 +4852,7 @@ int main() {
 		fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
 	}
 	fclose(path_points_file);
+	*/
 
 	////Save a sequence of path points
 	//size_t id_save = 0;
@@ -4980,12 +4993,13 @@ int main() {
 	//std::cout << "FM : " << H_fm / (dataType)fm.size() << std::endl;
 	//std::cout << "RT : " << H_rt / (dataType)rt.size() << std::endl;
 	
+	/*
 	delete[] endPoints;
 	delete[] imageData;
 	delete[] smoothedImage;
 	delete[] potential;
 	delete[] action;
-	
+	*/
 	
 	/*
 	const size_t Length = 50, Width = 50, Height = 50;
