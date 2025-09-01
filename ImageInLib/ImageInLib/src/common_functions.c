@@ -726,8 +726,18 @@ dataType signum(const dataType x)
 		return 0.0;
 	}
 }
-
-
-
-
+//==============================================================================
+void swap_elts(void* a, void* b, size_t size_of_elt)
+{
+	void* temp = malloc(size_of_elt);
+	if (temp == NULL) {
+		// Handle memory allocation failure
+		exit(EXIT_FAILURE);
+	}
+	memcpy(temp, a, size_of_elt);
+	memcpy(a, b, size_of_elt);
+	memcpy(b, temp, size_of_elt);
+	free(temp);
+	temp = NULL;
+}
 

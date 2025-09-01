@@ -228,6 +228,8 @@ extern "C" {
 
 	dataType signum(const dataType x);
 
+	void swap_elts(void* a, void* b, size_t size_of_elt);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus
