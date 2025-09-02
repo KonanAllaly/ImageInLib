@@ -15,6 +15,7 @@
 #include "data_initialization.h"
 #include "edgedetection.h"
 #include "data_storage.h"
+#include "data_load.h"
 #include "common_functions.h"
 #include "setting_boundary_values.h"
 
@@ -2319,14 +2320,14 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			for (j = 0; j < width; j++)
 			{
 				x = x_new(i, j, length);
-				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), seg_parms.coef);
-				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), seg_parms.coef);
+				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), coef_edge_detector);
 				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
-				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), seg_parms.coef);
+				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), coef_edge_detector);
 			}
 		}
 	}
@@ -2337,9 +2338,11 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	Storage_Flags flags = { false,false };
 
 	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	//sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_old.raw");
 	strcat_s(name, sizeof(name), name_ending);
-	store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
+	//store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
+	load3dDataArrayD(edgeDetectorPtr, length, width, height, name);
 
 	Coefficient_Pointers uCoef;
 	uCoef.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -2451,7 +2454,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	/*
 	//Initialization
 	for(k = 0; k < height; k++)
 	{
@@ -2840,7 +2842,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
-	*/
 
 	for (k = 0; k < height_ext; k++) 
 	{

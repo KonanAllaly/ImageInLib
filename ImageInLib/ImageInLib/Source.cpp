@@ -3480,11 +3480,9 @@ int main() {
 	
 	dataType** imageCrop = new dataType * [height];
 	dataType** initialSegment = new dataType * [height];
-	dataType** maskSegment = new dataType * [height];
 	for (k = 0; k < height; k++) {
 		imageCrop[k] = new dataType[length * width]{ 0 };
 		initialSegment[k] = new dataType[length * width]{ 0 };
-		maskSegment[k] = new dataType[length * width]{ 0 };
 	}
 	
 	//size_t k_n = 0, i_n = 0, j_n = 0;
@@ -3640,7 +3638,7 @@ int main() {
 	dataType h = ctSpacing.sx;
 	Segmentation_Parameters segParameters = {
 		30,//Maximum number of Gauss-Seidel iterations
-		10000000,//edge detector coef
+		10000,//edge detector coef
 		0.000001,//epsilon is the regularization factor (Evans-Spruck)
 		5000,//Number of current time step
 		5000,//Maximum number of time step
@@ -3669,6 +3667,8 @@ int main() {
 	};
 
 	Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	Point3D* centers = new Point3D[1];
+	centers[0] = { 0.0, 0.0, 0.0 };
 
 	storing_path = outputPath + "initial_segment_p1.raw";
 	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
@@ -3676,6 +3676,7 @@ int main() {
 	storing_path = outputPath + "seg/";
 	//generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
 	generalizedSubsurf_iioe(segmentInputData, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
+	//subsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, centers, 1, (unsigned char*)storing_path.c_str());
 	
 	//double cpu_start = clock();
 	//generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
@@ -3687,11 +3688,9 @@ int main() {
 	for (k = 0; k < height; k++) {
 		delete[] imageCrop[k];
 		delete[] initialSegment[k];
-		delete[] maskSegment[k];
 	}
 	delete[] imageCrop;
 	delete[] initialSegment;
-	delete[] maskSegment;
 	
 	//for (k = 0; k < hauteur; k++) {
 	//	delete[] interpolatedImage[k];

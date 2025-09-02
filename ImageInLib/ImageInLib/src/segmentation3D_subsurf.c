@@ -116,18 +116,32 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	CoefPtrs.t_Ptr = t_Ptr;
 	CoefPtrs.b_Ptr = b_Ptr;
 
-	//generate initial segmentation function
-	//generateInitialSegmentationFunctionForMultipleCentres(segmFuntionPtr, length, width, height, centers, 0.5, 15, no_of_centers);
+	//generate or copy the initial segmentation function
 	copyDataToAnotherArray(initialSegment, segmFuntionPtr, height, length, width);
 
 	//compute coefficients from presmoothed image
 	gFunctionForImageToBeSegmented(inputImageData, prevSol_extPtr, GPtrs, segParameters, explicit_lhe_Parameters);
 
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			dataType average_value = (GbPtr[k][i] + GtPtr[k][i] + GsPtr[k][i] + GnPtr[k][i] + GwPtr[k][i] + GePtr[k][i]) / 6.0;
+			imageToBeSegPtr[k][i] = gradientFunction(average_value * average_value, segParameters.coef);;
+		}
+	}
+
 	//Array for name construction
 	unsigned char name[350];
 	unsigned char name_ending[100];
 	Storage_Flags flags = {false,false};
+	
+	strcpy_s(name, sizeof name, outputPathPtr);
+	sprintf_s(name_ending, sizeof(name_ending), "edge_detector_subsurf.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store3dDataArrayD(imageToBeSegPtr, length, width, height, name, flags);
 
+	/*
 	//loop for segmentation time steps
 	i = 1;
 	do
@@ -158,6 +172,7 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 
 	//printf("finish: Segmentation tolerance is %lf\n", segParameters.segTolerance);
+	*/
 
 	for (i = 0; i < height; i++)
 	{
