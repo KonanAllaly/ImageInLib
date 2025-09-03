@@ -141,7 +141,7 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	strcat_s(name, sizeof(name), name_ending);
 	store3dDataArrayD(imageToBeSegPtr, length, width, height, name, flags);
 
-	/*
+	
 	//loop for segmentation time steps
 	i = 1;
 	do
@@ -172,7 +172,7 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	} while ((i <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 
 	//printf("finish: Segmentation tolerance is %lf\n", segParameters.segTolerance);
-	*/
+	
 
 	for (i = 0; i < height; i++)
 	{
