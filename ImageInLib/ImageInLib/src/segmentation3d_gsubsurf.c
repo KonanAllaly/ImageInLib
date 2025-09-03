@@ -2614,6 +2614,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 
 	dataType norm_grad_e, norm_grad_w, norm_grad_n, norm_grad_s, norm_grad_t, norm_grad_b;
 	size_t ind_east, ind_west, ind_north, ind_south;
+	dataType numerator_max, numerator_min;
 	
 	
 	do {
@@ -2655,6 +2656,8 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						u_p = previousSolPtr[k_ext][x_ext];
 						u_p_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
 						u_p_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
+						numerator_max = mp * (u_p_max - u_p);
+						numerator_min = mp * (u_p_min - u_p);
 
 						//East
 						dataType diff_east = previousSolPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] - u_p;
@@ -2664,12 +2667,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.e_Ptr[k][x] * diff_east > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2681,12 +2684,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.w_Ptr[k][x] * diff_west > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2698,12 +2701,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.n_Ptr[k][x] * diff_north > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2715,12 +2718,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.s_Ptr[k][x] * diff_south > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2732,12 +2735,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.t_Ptr[k][x] * diff_top > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2749,12 +2752,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.b_Ptr[k][x] * diff_bottom > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
+							dataType value = numerator_max / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
+							dataType value = numerator_min / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 					}
