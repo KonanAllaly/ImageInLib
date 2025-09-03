@@ -2455,6 +2455,20 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
+	dataType** n_out_ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for (k = 0; k < height; k++) 
+	{
+		n_out_ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (n_out_ptr[k] == NULL) 
+		{
+			return false; // Memory allocation failed
+		}
+	}
+	if(n_out_ptr == NULL)
+	{
+		return false;
+	}
+
 	//Initialization
 	for(k = 0; k < height; k++)
 	{
@@ -2489,7 +2503,8 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			theta_out.n_Ptr[k][i] = 0.0;
 			theta_out.s_Ptr[k][i] = 0.0;
 			theta_out.t_Ptr[k][i] = 0.0;
-			theta_out.b_Ptr[k][i] = 0.0;;
+			theta_out.b_Ptr[k][i] = 0.0;
+			n_out_ptr[k][i] = 0.0;
 		}
 	}
 
@@ -2560,6 +2575,8 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 				a_out.s_Ptr[k][x] = fmin(vps, 0);
 				a_out.t_Ptr[k][x] = fmin(vpt, 0);
 				a_out.b_Ptr[k][x] = fmin(vpb, 0);
+
+				n_out_ptr[k][x] = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
 			}
 		}
 	}
@@ -2621,9 +2638,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					average_norm_gradient = (norm_grad_e + norm_grad_w + norm_grad_n + norm_grad_s + norm_grad_t + norm_grad_b) / 6.0;
 					u_average = sqrt(average_norm_gradient * average_norm_gradient + eps);
 
-					dataType n_out = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
-
-					if (n_out == 0)
+					if (n_out_ptr[k][x] == 0)
 					{
 						theta_out.e_Ptr[k][x] = 0.5;
 						theta_out.w_Ptr[k][x] = 0.5;
@@ -2653,12 +2668,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.e_Ptr[k][x] * (u_east - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.e_Ptr[k][x] * (u_east - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * (u_east - u_p));
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.e_Ptr[k][x] * (u_east - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * (u_east - u_p));
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2669,12 +2684,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.w_Ptr[k][x] * (u_west - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.w_Ptr[k][x] * (u_west - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * (u_west - u_p));
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.w_Ptr[k][x] * (u_west - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * (u_west - u_p));
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2685,12 +2700,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.n_Ptr[k][x] * (u_north - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.n_Ptr[k][x] * (u_north - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * (u_north - u_p));
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.n_Ptr[k][x] * (u_north - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * (u_north - u_p));
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2701,12 +2716,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.s_Ptr[k][x] * (u_south - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.s_Ptr[k][x] * (u_south - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * (u_south - u_p));
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.s_Ptr[k][x] * (u_south - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * (u_south - u_p));
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2717,12 +2732,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.t_Ptr[k][x] * (u_top - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.t_Ptr[k][x] * (u_top - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * (u_top - u_p));
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.t_Ptr[k][x] * (u_top - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * (u_top - u_p));
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 
@@ -2733,12 +2748,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						}
 						else if (a_out.b_Ptr[k][x] * (u_bottom - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * (u_bottom - u_p));
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * (u_bottom - u_p));
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 					}
@@ -2895,6 +2910,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			free(theta_out.s_Ptr[k]);
 			free(theta_out.t_Ptr[k]);
 			free(theta_out.b_Ptr[k]);
+			free(n_out_ptr[k]);	
 		}
 		free(previousSolPtr[k]);
 		free(gaussSeidelPtr[k]);
@@ -2945,6 +2961,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	free(theta_out.s_Ptr);
 	free(theta_out.t_Ptr);
 	free(theta_out.b_Ptr);
+	free(n_out_ptr);
 
 	return true;
 }
