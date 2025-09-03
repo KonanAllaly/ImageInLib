@@ -2189,7 +2189,6 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 
 bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
-
 	size_t i, j, k, x;
 	size_t i_ext, j_ext, k_ext, x_ext;
 	size_t kplus1, kminus1, iminus1, iplus1, jminus1, jplus1;
@@ -2572,8 +2571,10 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		{
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
 			{
-				previousSolPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = initialSegment[k][x_new(i, j, length)];
-				gaussSeidelPtr[k_ext][x_new(i_ext, j_ext, length_ext)] = initialSegment[k][x_new(i, j, length)];
+				x = x_new(i, j, length);
+				x_ext = x_new(i_ext, j_ext, length_ext);
+				previousSolPtr[k_ext][x_ext] = initialSegment[k][x];
+				gaussSeidelPtr[k_ext][x_ext] = initialSegment[k][x];
 			}
 		}
 	}
@@ -2604,29 +2605,29 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			{
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
 				{
-					size_t xd = x_new(i, j, length);
+					x = x_new(i, j, length);
 
 					//epsilon regularization
-					norm_grad_e = sqrt(pow(segPtrs.e_Ptr[i][xd], 2) + eps);
-					norm_grad_w = sqrt(pow(segPtrs.w_Ptr[i][xd], 2) + eps);
-					norm_grad_n = sqrt(pow(segPtrs.n_Ptr[i][xd], 2) + eps);
-					norm_grad_s = sqrt(pow(segPtrs.s_Ptr[i][xd], 2) + eps);
-					norm_grad_t = sqrt(pow(segPtrs.t_Ptr[i][xd], 2) + eps);
-					norm_grad_b = sqrt(pow(segPtrs.b_Ptr[i][xd], 2) + eps);
+					norm_grad_e = sqrt(pow(segPtrs.e_Ptr[k][x], 2) + eps);
+					norm_grad_w = sqrt(pow(segPtrs.w_Ptr[k][x], 2) + eps);
+					norm_grad_n = sqrt(pow(segPtrs.n_Ptr[k][x], 2) + eps);
+					norm_grad_s = sqrt(pow(segPtrs.s_Ptr[k][x], 2) + eps);
+					norm_grad_t = sqrt(pow(segPtrs.t_Ptr[k][x], 2) + eps);
+					norm_grad_b = sqrt(pow(segPtrs.b_Ptr[k][x], 2) + eps);
 
 					average_norm_gradient = (norm_grad_e + norm_grad_w + norm_grad_n + norm_grad_s + norm_grad_t + norm_grad_b) / 6.0;
 					u_average = sqrt(pow(average_norm_gradient, 2) + eps);
 
-					dataType n_out = -(signum(a_out.e_Ptr[k][xd]) + signum(a_out.w_Ptr[k][xd]) + signum(a_out.n_Ptr[k][xd]) + signum(a_out.s_Ptr[k][xd]) + signum(a_out.t_Ptr[k][xd]) + signum(a_out.b_Ptr[k][xd]));
+					dataType n_out = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
 
 					if (n_out == 0)
 					{
-						theta_out.e_Ptr[k][xd] = 0.5;
-						theta_out.w_Ptr[k][xd] = 0.5;
-						theta_out.s_Ptr[k][xd] = 0.5;
-						theta_out.n_Ptr[k][xd] = 0.5;
-						theta_out.t_Ptr[k][xd] = 0.5;
-						theta_out.b_Ptr[k][xd] = 0.5;
+						theta_out.e_Ptr[k][x] = 0.5;
+						theta_out.w_Ptr[k][x] = 0.5;
+						theta_out.s_Ptr[k][x] = 0.5;
+						theta_out.n_Ptr[k][x] = 0.5;
+						theta_out.t_Ptr[k][x] = 0.5;
+						theta_out.b_Ptr[k][x] = 0.5;
 					}
 					else
 					{
@@ -2642,110 +2643,109 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						u_p_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
 						u_p_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
 
-						
 						//East
-						if (a_out.e_Ptr[k][xd] * (u_east - u_p) == 0)
+						if (a_out.e_Ptr[k][x] * (u_east - u_p) == 0)
 						{
-							theta_out.e_Ptr[k][xd] = 0.5;
+							theta_out.e_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.e_Ptr[k][xd] * (u_east - u_p) > 0)
+						else if (a_out.e_Ptr[k][x] * (u_east - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.e_Ptr[k][xd] * (u_east - u_p));
-							theta_out.e_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.e_Ptr[k][x] * (u_east - u_p));
+							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.e_Ptr[k][xd] * (u_east - u_p));
-							theta_out.e_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.e_Ptr[k][x] * (u_east - u_p));
+							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//West
-						if (a_out.w_Ptr[k][xd] * (u_west - u_p) == 0)
+						if (a_out.w_Ptr[k][x] * (u_west - u_p) == 0)
 						{
-							theta_out.w_Ptr[k][xd] = 0.5;
+							theta_out.w_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.w_Ptr[k][xd] * (u_west - u_p) > 0)
+						else if (a_out.w_Ptr[k][x] * (u_west - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.w_Ptr[k][xd] * (u_west - u_p));
-							theta_out.w_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.w_Ptr[k][x] * (u_west - u_p));
+							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.w_Ptr[k][xd] * (u_west - u_p));
-							theta_out.w_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.w_Ptr[k][x] * (u_west - u_p));
+							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//North
-						if (a_out.n_Ptr[k][xd] * (u_north - u_p) == 0)
+						if (a_out.n_Ptr[k][x] * (u_north - u_p) == 0)
 						{
-							theta_out.n_Ptr[k][xd] = 0.5;
+							theta_out.n_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.n_Ptr[k][xd] * (u_north - u_p) > 0)
+						else if (a_out.n_Ptr[k][x] * (u_north - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.n_Ptr[k][xd] * (u_north - u_p));
-							theta_out.n_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.n_Ptr[k][x] * (u_north - u_p));
+							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.n_Ptr[k][xd] * (u_north - u_p));
-							theta_out.n_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.n_Ptr[k][x] * (u_north - u_p));
+							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//South
-						if (a_out.s_Ptr[k][xd] * (u_south - u_p) == 0)
+						if (a_out.s_Ptr[k][x] * (u_south - u_p) == 0)
 						{
-							theta_out.s_Ptr[k][xd] = 0.5;
+							theta_out.s_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.s_Ptr[k][xd] * (u_south - u_p) > 0)
+						else if (a_out.s_Ptr[k][x] * (u_south - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.s_Ptr[k][xd] * (u_south - u_p));
-							theta_out.s_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.s_Ptr[k][x] * (u_south - u_p));
+							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.s_Ptr[k][xd] * (u_south - u_p));
-							theta_out.s_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.s_Ptr[k][x] * (u_south - u_p));
+							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//Top
-						if (a_out.t_Ptr[k][xd] * (u_top - u_p) == 0)
+						if (a_out.t_Ptr[k][x] * (u_top - u_p) == 0)
 						{
-							theta_out.t_Ptr[k][xd] = 0.5;
+							theta_out.t_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.t_Ptr[k][xd] * (u_top - u_p) > 0)
+						else if (a_out.t_Ptr[k][x] * (u_top - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.t_Ptr[k][xd] * (u_top - u_p));
-							theta_out.t_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.t_Ptr[k][x] * (u_top - u_p));
+							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.t_Ptr[k][xd] * (u_top - u_p));
-							theta_out.t_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.t_Ptr[k][x] * (u_top - u_p));
+							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//Bottom
-						if (a_out.b_Ptr[k][xd] * (u_bottom - u_p) == 0)
+						if (a_out.b_Ptr[k][x] * (u_bottom - u_p) == 0)
 						{
-							theta_out.b_Ptr[k][xd] = 0.5;
+							theta_out.b_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.b_Ptr[k][xd] * (u_bottom - u_p) > 0)
+						else if (a_out.b_Ptr[k][x] * (u_bottom - u_p) > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.b_Ptr[k][xd] * (u_bottom - u_p));
-							theta_out.b_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.b_Ptr[k][xd] * (u_bottom - u_p));
-							theta_out.b_Ptr[k][xd] = fmin(0.5, value);
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 					}
 
-					uCoef.e_Ptr[k][xd] = (dataType)((1 - theta_out.e_Ptr[k][xd]) * a_in.e_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_e);
-					uCoef.w_Ptr[k][xd] = (dataType)((1 - theta_out.w_Ptr[k][xd]) * a_in.w_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_w);
-					uCoef.n_Ptr[k][xd] = (dataType)((1 - theta_out.n_Ptr[k][xd]) * a_in.n_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_n);
-					uCoef.s_Ptr[k][xd] = (dataType)((1 - theta_out.s_Ptr[k][xd]) * a_in.s_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_s);
-					uCoef.t_Ptr[k][xd] = (dataType)((1 - theta_out.t_Ptr[k][xd]) * a_in.t_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_t);
-					uCoef.b_Ptr[k][xd] = (dataType)((1 - theta_out.b_Ptr[k][xd]) * a_in.b_Ptr[k][xd] + diff * u_average * edgeDetectorPtr[k][xd] / norm_grad_b);
+					uCoef.e_Ptr[k][x] = (dataType)((1 - theta_out.e_Ptr[k][x]) * a_in.e_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_e);
+					uCoef.w_Ptr[k][x] = (dataType)((1 - theta_out.w_Ptr[k][x]) * a_in.w_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_w);
+					uCoef.n_Ptr[k][x] = (dataType)((1 - theta_out.n_Ptr[k][x]) * a_in.n_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_n);
+					uCoef.s_Ptr[k][x] = (dataType)((1 - theta_out.s_Ptr[k][x]) * a_in.s_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_s);
+					uCoef.t_Ptr[k][x] = (dataType)((1 - theta_out.t_Ptr[k][x]) * a_in.t_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_t);
+					uCoef.b_Ptr[k][x] = (dataType)((1 - theta_out.b_Ptr[k][x]) * a_in.b_Ptr[k][x] + diff * u_average * edgeDetectorPtr[k][x] / norm_grad_b);
 				}
 			}
 		}
