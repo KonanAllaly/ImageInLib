@@ -2770,7 +2770,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		
 		//gauss seidel for segmentation function
 		size_t cpt = 0;
-
 		dataType error_gauss_seidel = 0.0;
 		do {
 			cpt++;
@@ -2784,23 +2783,23 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						size_t ind_west = x_new(i_ext - 1, j_ext, length_ext);
 						size_t ind_north = x_new(i_ext, j_ext - 1, length_ext);
 						size_t ind_south = x_new(i_ext, j_ext + 1, length_ext);
-						size_t xd = x_new(i, j, length);
-						size_t xd_ext = x_new(i_ext, j_ext, length_ext);
+						x = x_new(i, j, length);
+						x_ext = x_new(i_ext, j_ext, length_ext);
 
-						gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.e_Ptr[k][xd] * a_out.e_Ptr[k][xd] + theta_out.w_Ptr[k][xd] * a_out.w_Ptr[k][xd]
-							+ theta_out.n_Ptr[k][xd] * a_out.n_Ptr[k][xd] + theta_out.s_Ptr[k][xd] * a_out.s_Ptr[k][xd]
-							+ theta_out.t_Ptr[k][xd] * a_out.t_Ptr[k][xd] + theta_out.b_Ptr[k][xd] * a_out.b_Ptr[k][xd])) * previousSolPtr[k_ext][xd_ext]
-							+ coef_tau * (theta_out.e_Ptr[k][xd] * a_out.e_Ptr[k][xd] * previousSolPtr[k_ext][ind_east]
-								+ theta_out.w_Ptr[k][xd] * a_out.w_Ptr[k][xd] * previousSolPtr[k_ext][ind_west]
-								+ theta_out.n_Ptr[k][xd] * a_out.n_Ptr[k][xd] * previousSolPtr[k_ext][ind_north]
-								+ theta_out.s_Ptr[k][xd] * a_out.s_Ptr[k][xd] * previousSolPtr[k_ext][ind_south]
-								+ theta_out.t_Ptr[k][xd] * a_out.t_Ptr[k][xd] * previousSolPtr[k_ext - 1][x_ext]
-								+ theta_out.b_Ptr[k][xd] * a_out.b_Ptr[k][xd] * previousSolPtr[k_ext + 1][x_ext])
-							+ coef_tau * (uCoef.e_Ptr[k][xd] * gaussSeidelPtr[k_ext][ind_east] + uCoef.w_Ptr[k][xd] * gaussSeidelPtr[k_ext][ind_west] + uCoef.n_Ptr[k][xd] * gaussSeidelPtr[k_ext][ind_north]
-								+ uCoef.s_Ptr[k][xd] * gaussSeidelPtr[k_ext][ind_south] + uCoef.t_Ptr[k][xd] * gaussSeidelPtr[k_ext - 1][x_ext] + uCoef.b_Ptr[k][xd] * gaussSeidelPtr[k_ext + 1][x_ext]))
-							/ (1.0 + coef_tau * (uCoef.e_Ptr[k][xd] + uCoef.w_Ptr[k][xd] + uCoef.n_Ptr[k][xd] + uCoef.s_Ptr[k][xd] + uCoef.t_Ptr[k][xd] + uCoef.b_Ptr[k][xd])));
+						gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] + theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x]
+							+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] + theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x]
+							+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] + theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x])) * previousSolPtr[k_ext][x_ext]
+							+ coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] * previousSolPtr[k_ext][ind_east]
+								+ theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x] * previousSolPtr[k_ext][ind_west]
+								+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] * previousSolPtr[k_ext][ind_north]
+								+ theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x] * previousSolPtr[k_ext][ind_south]
+								+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] * previousSolPtr[k_ext - 1][x_ext]
+								+ theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x] * previousSolPtr[k_ext + 1][x_ext])
+							+ coef_tau * (uCoef.e_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_east] + uCoef.w_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_west] + uCoef.n_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_north]
+								+ uCoef.s_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_south] + uCoef.t_Ptr[k][x] * gaussSeidelPtr[k_ext - 1][x_ext] + uCoef.b_Ptr[k][x] * gaussSeidelPtr[k_ext + 1][x_ext]))
+							/ (1.0 + coef_tau * (uCoef.e_Ptr[k][x] + uCoef.w_Ptr[k][x] + uCoef.n_Ptr[k][x] + uCoef.s_Ptr[k][x] + uCoef.t_Ptr[k][x] + uCoef.b_Ptr[k][x])));
 
-						gaussSeidelPtr[k_ext][xd_ext] = gaussSeidelPtr[k_ext][xd_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[k_ext][xd_ext]);
+						gaussSeidelPtr[k_ext][x_ext] = gaussSeidelPtr[k_ext][x_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[k_ext][x_ext]);
 					}
 				}
 			}
