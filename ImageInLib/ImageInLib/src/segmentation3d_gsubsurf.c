@@ -2848,7 +2848,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		//compute L2-norm
 		error_segmentation = l2normD(previousSolPtr, gaussSeidelPtr, length_ext, width_ext, height_ext, h);
 
-		copyDataToAnotherArray(gaussSeidelPtr, segmentationPtr, height, length, width);
+		copyDataToAnotherArray(gaussSeidelPtr, previousSolPtr, height, length, width);
 
 		//copy to reduce array
 		copyDataToReducedArea(segmentationPtr, gaussSeidelPtr, height, length, width);
