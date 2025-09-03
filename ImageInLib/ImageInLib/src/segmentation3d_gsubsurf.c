@@ -2143,37 +2143,37 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 				ux = (uE - u) / h;
 				uy = ((uN + uNE) - (uS + uSE)) / quotient;
 				uz = ((Tu + TuE) - (Bu + BuE)) / quotient;
-				nGrad.e_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.e_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 
 				// Calculation of coefficients in West direction
 				ux = (uW - u) / h;
 				uy = ((uNW + uN) - (uSW + uS)) / quotient;
 				uz = ((TuW + Tu) - (BuW + Bu)) / quotient;
-				nGrad.w_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.w_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 
 				// Calculation of coefficients in North direction
 				ux = ((uNE + uE) - (uNW + uW)) / quotient;
 				uy = (uN - u) / h;
 				uz = ((TuN + Tu) - (BuN + Bu)) / quotient;
-				nGrad.n_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.n_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 
 				// Calculation of coefficients in South direction
 				ux = ((uE + uSE) - (uW + uSW)) / quotient;
 				uy = (uS - u) / h;
 				uz = ((TuS + Tu) - (BuS + Bu)) / quotient;
-				nGrad.s_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.s_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 
 				// Calculation of coefficients in Top direction
 				ux = ((TuE + uE) - (TuW + uW)) / quotient;
 				uy = ((TuN + uN) - (TuS + uS)) / quotient;
 				uz = (Tu - u) / h;
-				nGrad.t_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.t_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 
 				// Calculation of coefficients in Bottom direction
 				ux = ((BuW + uW) - (BuE + uE)) / quotient;
 				uy = ((BuN + uN) - (BuS + uS)) / quotient;
 				uz = (Bu - u) / h;
-				nGrad.b_Ptr[k][x] = sqrt((ux * ux) + (uy * uy) + (uz * uz));
+				nGrad.b_Ptr[k][x] = ux * ux + uy * uy + uz * uz;
 			}
 		}
 	}
@@ -2303,6 +2303,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
+	/*
 	////smoothing
 	//heatImplicitRectangularScheme(imageData, smooth_parms);
 	heatImplicitScheme(imageData, smooth_parms);
@@ -2319,17 +2320,18 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			for (j = 0; j < width; j++)
 			{
 				x = x_new(i, j, length);
-				value_gF_e = gradientFunction(pow(gPtrs.e_Ptr[k][x], 2), coef_edge_detector);
-				value_gF_w = gradientFunction(pow(gPtrs.w_Ptr[k][x], 2), coef_edge_detector);
-				value_gF_n = gradientFunction(pow(gPtrs.n_Ptr[k][x], 2), coef_edge_detector);
-				value_gF_s = gradientFunction(pow(gPtrs.s_Ptr[k][x], 2), coef_edge_detector);
-				value_gF_t = gradientFunction(pow(gPtrs.t_Ptr[k][x], 2), coef_edge_detector);
-				value_gF_b = gradientFunction(pow(gPtrs.b_Ptr[k][x], 2), coef_edge_detector);
+				value_gF_e = gradientFunction(gPtrs.e_Ptr[k][x], coef_edge_detector);
+				value_gF_w = gradientFunction(gPtrs.w_Ptr[k][x], coef_edge_detector);
+				value_gF_n = gradientFunction(gPtrs.n_Ptr[k][x], coef_edge_detector);
+				value_gF_s = gradientFunction(gPtrs.s_Ptr[k][x], coef_edge_detector);
+				value_gF_t = gradientFunction(gPtrs.t_Ptr[k][x], coef_edge_detector);
+				value_gF_b = gradientFunction(gPtrs.b_Ptr[k][x], coef_edge_detector);
 				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
-				edgeDetectorPtr[k][x] = gradientFunction(pow(average_value, 2), coef_edge_detector);
+				edgeDetectorPtr[k][x] = gradientFunction(average_value * average_value, coef_edge_detector);
 			}
 		}
 	}
+	*/
 
 	//Array for name construction
 	char name[350];
@@ -2337,7 +2339,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	Storage_Flags flags = { false,false };
 
 	strcpy_s(name, sizeof name, segmentPath);
-	//sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	//sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_new.raw");
 	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_old.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	//store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
@@ -2500,15 +2502,15 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		{
 			for (j = 0; j < width; j++) 
 			{
-				size_t xd = x_new(i, j, length);
+				x = x_new(i, j, length);
 
 				if (i == 0) {
-					vpe = adv * (edgeDetectorPtr[k][x_new(i + 1, j, length)] - edgeDetectorPtr[k][xd]);
+					vpe = adv * (edgeDetectorPtr[k][x_new(i + 1, j, length)] - edgeDetectorPtr[k][x]);
 					vpw = -vpe;
 				}
 				else {
 					if (i == length - 1) {
-						vpw = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k][x_new(i - 1, j, length)]);
+						vpw = adv * (edgeDetectorPtr[k][x] - edgeDetectorPtr[k][x_new(i - 1, j, length)]);
 						vpe = -vpw;
 					}
 					else {
@@ -2517,12 +2519,12 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					}
 				}
 				if (j == 0) {
-					vps = adv * (edgeDetectorPtr[k][x_new(i, j + 1, length)] - edgeDetectorPtr[k][xd]);
+					vps = adv * (edgeDetectorPtr[k][x_new(i, j + 1, length)] - edgeDetectorPtr[k][x]);
 					vpn = -vps;
 				}
 				else {
 					if (j == width - 1) {
-						vpn = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k][x_new(i, j - 1, length)]);
+						vpn = adv * (edgeDetectorPtr[k][x] - edgeDetectorPtr[k][x_new(i, j - 1, length)]);
 						vps = -vpn;
 					}
 					else {
@@ -2531,37 +2533,38 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					}
 				}
 				if (k == 0) {
-					vpb = adv * (edgeDetectorPtr[k + 1][xd] - edgeDetectorPtr[k][xd]);
+					vpb = adv * (edgeDetectorPtr[k + 1][x] - edgeDetectorPtr[k][x]);
 					vpt = -vpb;
 				}
 				else {
 					if (k == height - 1) {
-						vpb = adv * (edgeDetectorPtr[k][xd] - edgeDetectorPtr[k - 1][xd]);
+						vpb = adv * (edgeDetectorPtr[k][x] - edgeDetectorPtr[k - 1][x]);
 						vpt = -vpb;
 					}
 					else {
-						vpb = adv * 0.5 * (edgeDetectorPtr[k + 1][xd] - edgeDetectorPtr[k - 1][xd]);
+						vpb = adv * 0.5 * (edgeDetectorPtr[k + 1][x] - edgeDetectorPtr[k - 1][x]);
 						vpt = -vpb;
 					}
 				}
 
-				a_in.e_Ptr[k][xd] = fmax(vpe, 0);
-				a_in.w_Ptr[k][xd] = fmax(vpw, 0);
-				a_in.n_Ptr[k][xd] = fmax(vpn, 0);
-				a_in.s_Ptr[k][xd] = fmax(vps, 0);
-				a_in.t_Ptr[k][xd] = fmax(vpt, 0);
-				a_in.b_Ptr[k][xd] = fmax(vpb, 0);
+				a_in.e_Ptr[k][x] = fmax(vpe, 0);
+				a_in.w_Ptr[k][x] = fmax(vpw, 0);
+				a_in.n_Ptr[k][x] = fmax(vpn, 0);
+				a_in.s_Ptr[k][x] = fmax(vps, 0);
+				a_in.t_Ptr[k][x] = fmax(vpt, 0);
+				a_in.b_Ptr[k][x] = fmax(vpb, 0);
 
-				a_out.e_Ptr[k][xd] = fmin(vpe, 0);
-				a_out.w_Ptr[k][xd] = fmin(vpw, 0);
-				a_out.n_Ptr[k][xd] = fmin(vpn, 0);
-				a_out.s_Ptr[k][xd] = fmin(vps, 0);
-				a_out.t_Ptr[k][xd] = fmin(vpt, 0);
-				a_out.b_Ptr[k][xd] = fmin(vpb, 0);
+				a_out.e_Ptr[k][x] = fmin(vpe, 0);
+				a_out.w_Ptr[k][x] = fmin(vpw, 0);
+				a_out.n_Ptr[k][x] = fmin(vpn, 0);
+				a_out.s_Ptr[k][x] = fmin(vps, 0);
+				a_out.t_Ptr[k][x] = fmin(vpt, 0);
+				a_out.b_Ptr[k][x] = fmin(vpb, 0);
 			}
 		}
 	}
 	
+	//Copy initial segmentation into segmentation array
 	copyDataToAnotherArray(initialSegment, segmentationPtr, height, length, width);
 	
 	//Copy to extended area
@@ -2594,11 +2597,11 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 
 	dataType norm_grad_e, norm_grad_w, norm_grad_n, norm_grad_s, norm_grad_t, norm_grad_b;
 	
+	
 	do {
 		number_time_step++;
 
 		computeNormOfGradientDiamondCell3D(segmentationPtr, length, width, height, h, segPtrs);
-
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++) 
 		{
 			for (i = 0, i_ext = 1; i < length; i++, i_ext++) 
@@ -2608,15 +2611,15 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					x = x_new(i, j, length);
 
 					//epsilon regularization
-					norm_grad_e = sqrt(pow(segPtrs.e_Ptr[k][x], 2) + eps);
-					norm_grad_w = sqrt(pow(segPtrs.w_Ptr[k][x], 2) + eps);
-					norm_grad_n = sqrt(pow(segPtrs.n_Ptr[k][x], 2) + eps);
-					norm_grad_s = sqrt(pow(segPtrs.s_Ptr[k][x], 2) + eps);
-					norm_grad_t = sqrt(pow(segPtrs.t_Ptr[k][x], 2) + eps);
-					norm_grad_b = sqrt(pow(segPtrs.b_Ptr[k][x], 2) + eps);
+					norm_grad_e = sqrt(segPtrs.e_Ptr[k][x] + eps);
+					norm_grad_w = sqrt(segPtrs.w_Ptr[k][x] + eps);
+					norm_grad_n = sqrt(segPtrs.n_Ptr[k][x] + eps);
+					norm_grad_s = sqrt(segPtrs.s_Ptr[k][x] + eps);
+					norm_grad_t = sqrt(segPtrs.t_Ptr[k][x] + eps);
+					norm_grad_b = sqrt(segPtrs.b_Ptr[k][x] + eps);
 
 					average_norm_gradient = (norm_grad_e + norm_grad_w + norm_grad_n + norm_grad_s + norm_grad_t + norm_grad_b) / 6.0;
-					u_average = sqrt(pow(average_norm_gradient, 2) + eps);
+					u_average = sqrt(average_norm_gradient * average_norm_gradient + eps);
 
 					dataType n_out = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
 
@@ -2633,7 +2636,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					{
 						x_ext = x_new(i_ext, j_ext, length_ext);
 
-						u_p = previousSolPtr[k][x_ext];
+						u_p = previousSolPtr[k_ext][x_ext];
 						u_east = previousSolPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
 						u_west = previousSolPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
 						u_north = previousSolPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)];
@@ -2842,6 +2845,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+	
 
 	for (k = 0; k < height_ext; k++) 
 	{
