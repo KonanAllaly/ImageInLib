@@ -2652,108 +2652,108 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						x_ext = x_new(i_ext, j_ext, length_ext);
 
 						u_p = previousSolPtr[k_ext][x_ext];
-						u_east = previousSolPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)];
-						u_west = previousSolPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)];
-						u_north = previousSolPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)];
-						u_south = previousSolPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)];
-						u_top = previousSolPtr[k_ext - 1][x_ext];
-						u_bottom = previousSolPtr[k_ext + 1][x_ext];
 						u_p_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
 						u_p_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
 
 						//East
-						if (a_out.e_Ptr[k][x] * (u_east - u_p) == 0)
+						dataType diff_east = previousSolPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] - u_p;
+						if (a_out.e_Ptr[k][x] * diff_east == 0)
 						{
 							theta_out.e_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.e_Ptr[k][x] * (u_east - u_p) > 0)
+						else if (a_out.e_Ptr[k][x] * diff_east > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * (u_east - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * (u_east - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.e_Ptr[k][x] * diff_east);
 							theta_out.e_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//West
-						if (a_out.w_Ptr[k][x] * (u_west - u_p) == 0)
+						dataType diff_west = previousSolPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] - u_p;
+						if (a_out.w_Ptr[k][x] * diff_west == 0)
 						{
 							theta_out.w_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.w_Ptr[k][x] * (u_west - u_p) > 0)
+						else if (a_out.w_Ptr[k][x] * diff_west > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * (u_west - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * (u_west - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.w_Ptr[k][x] * diff_west);
 							theta_out.w_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//North
-						if (a_out.n_Ptr[k][x] * (u_north - u_p) == 0)
+						dataType diff_north = previousSolPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] - u_p;
+						if (a_out.n_Ptr[k][x] * diff_north == 0)
 						{
 							theta_out.n_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.n_Ptr[k][x] * (u_north - u_p) > 0)
+						else if (a_out.n_Ptr[k][x] * diff_north > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * (u_north - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * (u_north - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.n_Ptr[k][x] * diff_north);
 							theta_out.n_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//South
-						if (a_out.s_Ptr[k][x] * (u_south - u_p) == 0)
+						dataType diff_south = previousSolPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)] - u_p;
+						if (a_out.s_Ptr[k][x] * diff_south == 0)
 						{
 							theta_out.s_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.s_Ptr[k][x] * (u_south - u_p) > 0)
+						else if (a_out.s_Ptr[k][x] * diff_south > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * (u_south - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * (u_south - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.s_Ptr[k][x] * diff_south);
 							theta_out.s_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//Top
-						if (a_out.t_Ptr[k][x] * (u_top - u_p) == 0)
+						dataType diff_top = previousSolPtr[k_ext - 1][x_ext] - u_p;
+						if (a_out.t_Ptr[k][x] * diff_top == 0)
 						{
 							theta_out.t_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.t_Ptr[k][x] * (u_top - u_p) > 0)
+						else if (a_out.t_Ptr[k][x] * diff_top > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * (u_top - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * (u_top - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.t_Ptr[k][x] * diff_top);
 							theta_out.t_Ptr[k][x] = fmin(0.5, value);
 						}
 
 						//Bottom
-						if (a_out.b_Ptr[k][x] * (u_bottom - u_p) == 0)
+						dataType diff_bottom = previousSolPtr[k_ext + 1][x_ext] - u_p;
+						if (a_out.b_Ptr[k][x] * diff_bottom == 0)
 						{
 							theta_out.b_Ptr[k][x] = 0.5;
 						}
-						else if (a_out.b_Ptr[k][x] * (u_bottom - u_p) > 0)
+						else if (a_out.b_Ptr[k][x] * diff_bottom > 0)
 						{
-							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							dataType value = (mp * (u_p_max - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 						else
 						{
-							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * (u_bottom - u_p));
+							dataType value = (mp * (u_p_min - u_p)) / (tau * n_out_ptr[k][x] * a_out.b_Ptr[k][x] * diff_bottom);
 							theta_out.b_Ptr[k][x] = fmin(0.5, value);
 						}
 					}
