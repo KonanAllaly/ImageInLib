@@ -42,100 +42,151 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	dataType** gauss_seidelPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
 	dataType** prevSol_extPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
-
-	dataType** imageToBeSegPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** segmFuntionPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** edgeGradientPtr = (dataType**)malloc(sizeof(dataType*) * height);
-
-	dataType** e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
-
-	dataType** VePtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** VwPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** VnPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** VsPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** VtPtr = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** VbPtr = (dataType**)malloc(sizeof(dataType*) * height);
-
-	//checks if the memory was allocated
-	if (gauss_seidelPtr == NULL || prevSol_extPtr == NULL || imageToBeSegPtr == NULL || segmFuntionPtr == NULL || edgeGradientPtr == NULL ||
-		e_Ptr == NULL || w_Ptr == NULL || n_Ptr == NULL || s_Ptr == NULL || t_Ptr == NULL || b_Ptr == NULL ||
-		VePtr == NULL || VwPtr == NULL || VnPtr == NULL || VsPtr == NULL || VtPtr == NULL || VbPtr == NULL)
-		return false;
-	for (i = 0; i < height; i++)
-	{
-		imageToBeSegPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		segmFuntionPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		edgeGradientPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-
-		e_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		w_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		n_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		s_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		t_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		b_Ptr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-
-		VePtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		VwPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		VnPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		VsPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		VtPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		VbPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
-
-		//checks if the memory was allocated
-		if (imageToBeSegPtr[i] == NULL || segmFuntionPtr[i] == NULL || edgeGradientPtr[i] == NULL || e_Ptr[i] == NULL
-			|| w_Ptr[i] == NULL || n_Ptr[i] == NULL || s_Ptr[i] == NULL || t_Ptr[i] == NULL || b_Ptr[i] == NULL
-			|| VePtr[i] == NULL || VwPtr[i] == NULL || VnPtr == NULL || VsPtr == NULL || VtPtr == NULL || VbPtr == NULL)
-			return false;
-	}
-
 	for (i = 0; i < height_ext; i++)
 	{
 		gauss_seidelPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
 		prevSol_extPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
-		//checks if the memory was allocated
 		if (gauss_seidelPtr[i] == NULL || prevSol_extPtr[i] == NULL)
 			return false;
 	}
+	if (gauss_seidelPtr == NULL || prevSol_extPtr == NULL)
+		return false;
 
-	//Initialize the arrays to avoid unwanted values
-	initialize3dArrayD(gauss_seidelPtr, length_ext, width_ext, height_ext, 0.0);
-	initialize3dArrayD(prevSol_extPtr, length_ext, width_ext, height_ext, 0.0);
+	dataType** segmFuntionPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** edgeGradientPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	for (i = 0; i < height; i++)
+	{
+		segmFuntionPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		edgeGradientPtr[i] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (segmFuntionPtr[i] == NULL || edgeGradientPtr[i] == NULL)
+			return false;
+	}
+	if (segmFuntionPtr == NULL || edgeGradientPtr == NULL)
+		return false;
 
 	Coefficient_Pointers CoefPtrs;
-	CoefPtrs.e_Ptr = e_Ptr;
-	CoefPtrs.w_Ptr = w_Ptr;
-	CoefPtrs.n_Ptr = n_Ptr;
-	CoefPtrs.s_Ptr = s_Ptr;
-	CoefPtrs.t_Ptr = t_Ptr;
-	CoefPtrs.b_Ptr = b_Ptr;
+	CoefPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	CoefPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	CoefPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	CoefPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	CoefPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	CoefPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for (k = 0; k < height; k++)
+	{
+		CoefPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		CoefPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		CoefPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		CoefPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		CoefPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		CoefPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (CoefPtrs.e_Ptr[k] == NULL || CoefPtrs.w_Ptr[k] == NULL || CoefPtrs.n_Ptr[k] == NULL
+			|| CoefPtrs.s_Ptr[k] == NULL || CoefPtrs.t_Ptr[k] == NULL || CoefPtrs.b_Ptr[k] == NULL)
+		{
+			return false;
+		}
+	}
+	if (CoefPtrs.e_Ptr == NULL || CoefPtrs.w_Ptr == NULL || CoefPtrs.n_Ptr == NULL
+		|| CoefPtrs.s_Ptr == NULL || CoefPtrs.t_Ptr == NULL || CoefPtrs.b_Ptr == NULL)
+	{
+		return false;
+	}
 
-	Gradient_Pointers VPtrs;
-	VPtrs.GePtr = VePtr;
-	VPtrs.GwPtr = VwPtr;
-	VPtrs.GnPtr = VnPtr;
-	VPtrs.GsPtr = VsPtr;
-	VPtrs.GtPtr = VtPtr;
-	VPtrs.GbPtr = VbPtr;
+	Gradient_Pointers vPtrs;
+	vPtrs.GePtr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.GwPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.GnPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.GsPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.GtPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	vPtrs.GbPtr = (dataType**)malloc(sizeof(dataType*) * height);
+	for (k = 0; k < height; k++)
+	{
+		vPtrs.GePtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.GwPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.GnPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.GsPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.GtPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		vPtrs.GbPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (vPtrs.GePtr[k] == NULL || vPtrs.GwPtr[k] == NULL || vPtrs.GnPtr[k] == NULL
+			|| vPtrs.GsPtr[k] == NULL || vPtrs.GtPtr[k] == NULL || vPtrs.GbPtr[k] == NULL)
+		{
+			return false;
+		}
+	}
+	if (vPtrs.GePtr == NULL || vPtrs.GwPtr == NULL || vPtrs.GnPtr == NULL
+		|| vPtrs.GsPtr == NULL || vPtrs.GtPtr == NULL || vPtrs.GbPtr == NULL)
+	{
+		return false;
+	}
+
+	Coefficient_Pointers gPtrs;
+	gPtrs.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	gPtrs.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++)
+	{
+		gPtrs.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		gPtrs.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if(gPtrs.e_Ptr[k] == NULL || gPtrs.w_Ptr[k] == NULL || gPtrs.n_Ptr[k] == NULL
+			|| gPtrs.s_Ptr[k] == NULL || gPtrs.t_Ptr[k] == NULL || gPtrs.b_Ptr[k] == NULL)
+		{
+			return false;
+		}
+	}
+	if (gPtrs.e_Ptr == NULL || gPtrs.w_Ptr == NULL || gPtrs.n_Ptr == NULL
+		|| gPtrs.s_Ptr == NULL || gPtrs.t_Ptr == NULL || gPtrs.b_Ptr == NULL)
+	{
+		return false;
+	}
+
+	//Initialization
+	for(k = 0; k < height; k++)
+	{
+		for (i = 0; i < dim2D; i++)
+		{
+			segmFuntionPtr[k][i] = 0.0;
+			edgeGradientPtr[k][i] = 0.0;
+			CoefPtrs.e_Ptr[k][i] = 0.0;
+			CoefPtrs.w_Ptr[k][i] = 0.0;
+			CoefPtrs.n_Ptr[k][i] = 0.0;
+			CoefPtrs.s_Ptr[k][i] = 0.0;
+			CoefPtrs.t_Ptr[k][i] = 0.0;
+			CoefPtrs.b_Ptr[k][i] = 0.0;
+			vPtrs.GePtr[k][i] = 0.0;
+			vPtrs.GwPtr[k][i] = 0.0;
+			vPtrs.GnPtr[k][i] = 0.0;
+			vPtrs.GsPtr[k][i] = 0.0;
+			vPtrs.GtPtr[k][i] = 0.0;
+			vPtrs.GbPtr[k][i] = 0.0;
+			gPtrs.e_Ptr[k][i] = 0.0;
+			gPtrs.w_Ptr[k][i] = 0.0;
+			gPtrs.n_Ptr[k][i] = 0.0;
+			gPtrs.s_Ptr[k][i] = 0.0;
+			gPtrs.t_Ptr[k][i] = 0.0;
+			gPtrs.b_Ptr[k][i] = 0.0;
+		}
+	}
 
 	//Array for name construction
 	unsigned char  name[500];
 	unsigned char  name_ending[200];
 	Storage_Flags flags = { false,false };
 	
-	size_t k_n, i_n, j_n, xd_n;
-	for (k = 0, k_n = 1; k < height; k++, k_n++) {
-		for (i = 0, i_n = 1; i < length; i++, i_n++) {
-			for (j = 0, j_n = 1; j < width; j++, j_n++) {
+	size_t k_ext, i_ext, j_ext, xd_ext;
+	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
 				xd = x_new(i, j, length);
-				xd_n = x_new(i_n, j_n, length_ext);
+				xd_ext = x_new(i_ext, j_ext, length_ext);
 				segmFuntionPtr[k][xd] = initialSegment[k][xd];
-				gauss_seidelPtr[k_n][xd_n] = initialSegment[k][xd];
-				prevSol_extPtr[k_n][xd_n] = initialSegment[k][xd];
+				gauss_seidelPtr[k_ext][xd_ext] = initialSegment[k][xd];
+				prevSol_extPtr[k_ext][xd_ext] = initialSegment[k][xd];
 			}
 		}
 	}
@@ -144,8 +195,86 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	setBoundaryToZeroDirichletBC(gauss_seidelPtr, length_ext, width_ext, height_ext);
 	setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
+	////smoothing
+	//heatImplicitRectangularScheme(imageData, smooth_parms);
+	heatImplicitScheme(inputImageData, explicit_lhe_Parameters);
+
+	//compute the morm of gradient for the edge detector
+	computeNormOfGradientDiamondCell3D(inputImageData.imageDataPtr, length, width, height, h, gPtrs);
+
+	//edge detection
+	dataType average_g_grad = 0.0;
+	dataType vpe, vpw, vpn, vps, vpt, vpb;
+	for(k = 0; k < height; k++)
+	{
+		for(i = 0; i < height; i++)
+		{
+			for(j = 0; j < width; j++)
+			{
+				xd = x_new(i, j, length);
+				average_g_grad = (sqrt(gPtrs.e_Ptr[k][xd]) + sqrt(gPtrs.w_Ptr[k][xd]) + sqrt(gPtrs.n_Ptr[k][xd]) + 
+					sqrt(gPtrs.s_Ptr[k][xd]) + sqrt(gPtrs.t_Ptr[k][xd]) + sqrt(gPtrs.b_Ptr[k][xd])) / 6.0;
+				edgeGradientPtr[k][xd] = gradientFunction(average_g_grad * average_g_grad, segParameters.coef);
+
+				if (i == 0)
+				{
+					vpe = coef_conv * (edgeGradientPtr[k][x_new(i + 1, j, length)] - edgeGradientPtr[k][xd]);
+					vpw = -vpe;
+				}
+				else if (i == length - 1)
+				{
+					vpw = coef_conv * (edgeGradientPtr[k][xd] - edgeGradientPtr[k][x_new(i - 1, j, length)]);
+					vpe = -vpw;
+				}
+				else {
+					vpe = coef_conv * 0.5 * (edgeGradientPtr[k][x_new(i + 1, j, length)] - edgeGradientPtr[k][x_new(i - 1, j, length)]);
+					vpw = -vpe;
+				}
+
+				if (j == 0)
+				{
+					vps = coef_conv * (edgeGradientPtr[k][x_new(i, j + 1, length)] - edgeGradientPtr[k][xd]);
+					vpn = -vps;
+				}
+				else if (j == width - 1)
+				{
+					vpn = coef_conv * (edgeGradientPtr[k][xd] - edgeGradientPtr[k][x_new(i, j - 1, length)]);
+					vps = -vpn;
+				}
+				else
+				{
+					vps = coef_conv * 0.5 * (edgeGradientPtr[k][x_new(i, j + 1, length)] - edgeGradientPtr[k][x_new(i, j - 1, length)]);
+					vpn = -vps;
+				}
+
+				if (k == 0)
+				{
+					vpb = coef_conv * (edgeGradientPtr[k + 1][xd] - edgeGradientPtr[k][xd]);
+					vpt = -vpb;
+				}
+				else if (k == height - 1)
+				{
+					vpb = coef_conv * (edgeGradientPtr[k][xd] - edgeGradientPtr[k - 1][xd]);
+					vpt = -vpb;
+				}
+				else {
+					vpb = coef_conv * 0.5 * (edgeGradientPtr[k + 1][xd] - edgeGradientPtr[k - 1][xd]);
+					vpt = -vpb;
+				}
+
+				vPtrs.GePtr[k][xd] = fmin(vpe, 0.0);
+				vPtrs.GwPtr[k][xd] = fmin(vpw, 0.0);
+				vPtrs.GnPtr[k][xd] = fmin(vpn, 0.0);
+				vPtrs.GsPtr[k][xd] = fmin(vps, 0.0);
+				vPtrs.GtPtr[k][xd] = fmin(vpt, 0.0);
+				vPtrs.GbPtr[k][xd] = fmin(vpb, 0.0);
+
+			}
+		}
+	}
+
 	//compute coefficients from presmoothed image
-	generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
+	//generalizedGFunctionForImageToBeSegmented(inputImageData, edgeGradientPtr, VPtrs, segParameters, explicit_lhe_Parameters);
 
 	bool isFileSaved;
 	strcpy_s(name, sizeof name, outputPathPtr);
@@ -165,33 +294,12 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		printf("The file was not saved\n");
 		return false;
 	}
-	
-	//i = 0;
-	//strcpy_s(name, sizeof name, outputPathPtr);
-	//sprintf_s(name_ending, sizeof(name_ending), "_seg_func_%05zd.raw", i);
-	//strcat_s(name, sizeof(name), name_ending);
-	//isFileSaved = manageFile(initialSegment, length, width, height, name, STORE_DATA_RAW, BINARY_DATA, flags);
-	//if (isFileSaved == false) {
-	//	printf("The file was not saved\n");
-	//	return false;
-	//}
-
-	//FILE* error_file;
-	//strcpy_s(name, sizeof name, outputPathPtr);
-	//sprintf_s(name_ending, sizeof(name_ending), "_l2_norm.csv");
-	//strcat_s(name, sizeof(name), name_ending);
-	//if (fopen_s(&error_file, name, "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(error_file, "ID,distance\n");
 
 	Image_Data segmentationFunction;
 	segmentationFunction.height = height;
 	segmentationFunction.length = length;
 	segmentationFunction.width = width;
 	segmentationFunction.imageDataPtr = segmFuntionPtr;
-	
 	
 	//loop for segmentation time steps	
 	size_t number_time_step = 0;
@@ -202,7 +310,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 		////calcution of coefficients
-		generalizedGaussSeidelCoefficients(segmentationFunction, edgeGradientPtr, CoefPtrs, VPtrs, segParameters);
+		generalizedGaussSeidelCoefficients(segmentationFunction, edgeGradientPtr, CoefPtrs, vPtrs, segParameters);
 
 		// Call to function that will evolve segmentation function in each discrete time step
 		generalizedSubsurfSegmentationTimeStep(prevSol_extPtr, gauss_seidelPtr, segmentationFunction, segParameters, CoefPtrs);
@@ -229,46 +337,39 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 		}
 	} while ((number_time_step <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
-
 	//fclose(error_file);
 
 	for (i = 0; i < height; i++)
 	{
-		free(imageToBeSegPtr[i]);
 		free(segmFuntionPtr[i]);
 		free(edgeGradientPtr[i]);
-
-		free(e_Ptr[i]);
-		free(w_Ptr[i]);
-		free(n_Ptr[i]);
-		free(s_Ptr[i]);
-		free(t_Ptr[i]);
-		free(b_Ptr[i]);
-
-		free(VePtr[i]);
-		free(VwPtr[i]);
-		free(VnPtr[i]);
-		free(VsPtr[i]);
-		free(VtPtr[i]);
-		free(VbPtr[i]);
+		free(gPtrs.e_Ptr[i]);
+		free(gPtrs.w_Ptr[i]);
+		free(gPtrs.n_Ptr[i]);
+		free(gPtrs.s_Ptr[i]);
+		free(gPtrs.t_Ptr[i]);
+		free(gPtrs.b_Ptr[i]);
+		free(vPtrs.GePtr[i]);
+		free(vPtrs.GwPtr[i]);
+		free(vPtrs.GnPtr[i]);
+		free(vPtrs.GsPtr[i]);
+		free(vPtrs.GtPtr[i]);
+		free(vPtrs.GbPtr[i]);
 	}
-	free(imageToBeSegPtr);
 	free(segmFuntionPtr);
 	free(edgeGradientPtr);
-
-	free(e_Ptr);
-	free(w_Ptr);
-	free(n_Ptr);
-	free(s_Ptr);
-	free(t_Ptr);
-	free(b_Ptr);
-
-	free(VePtr);
-	free(VwPtr);
-	free(VnPtr);
-	free(VsPtr);
-	free(VtPtr);
-	free(VbPtr);
+	free(gPtrs.e_Ptr);
+	free(gPtrs.w_Ptr);
+	free(gPtrs.n_Ptr);
+	free(gPtrs.s_Ptr);
+	free(gPtrs.t_Ptr);
+	free(gPtrs.b_Ptr);
+	free(vPtrs.GePtr);
+	free(vPtrs.GwPtr);
+	free(vPtrs.GnPtr);
+	free(vPtrs.GsPtr);
+	free(vPtrs.GtPtr);
+	free(vPtrs.GbPtr);
 
 	for (i = 0; i < height_ext; i++)
 	{
@@ -596,12 +697,12 @@ bool generalizedGaussSeidelCoefficients(Image_Data segmentationData, dataType** 
 
 				//evaluation of norm of gradient of image at each voxel, norm of gradient of presmoothed
 				//image at each voxel face and reciprocal of norm of gradient of image at each voxel face
-				CoefPtrs.e_Ptr[k][x] = (dataType)(-min(VPtrs.GePtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_e));
-				CoefPtrs.w_Ptr[k][x] = (dataType)(-min(VPtrs.GwPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_w));
-				CoefPtrs.n_Ptr[k][x] = (dataType)(-min(VPtrs.GnPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_n));
-				CoefPtrs.s_Ptr[k][x] = (dataType)(-min(VPtrs.GsPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_s));
-				CoefPtrs.t_Ptr[k][x] = (dataType)(-min(VPtrs.GtPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_t));
-				CoefPtrs.b_Ptr[k][x] = (dataType)(-min(VPtrs.GbPtr[k][x],0) + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_b));
+				CoefPtrs.e_Ptr[k][x] = (dataType)(-VPtrs.GePtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_e));
+				CoefPtrs.w_Ptr[k][x] = (dataType)(-VPtrs.GwPtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_w));
+				CoefPtrs.n_Ptr[k][x] = (dataType)(-VPtrs.GnPtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_n));
+				CoefPtrs.s_Ptr[k][x] = (dataType)(-VPtrs.GsPtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_s));
+				CoefPtrs.t_Ptr[k][x] = (dataType)(-VPtrs.GtPtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_t));
+				CoefPtrs.b_Ptr[k][x] = (dataType)(-VPtrs.GbPtr[k][x] + coef_dif * voxel_coef * edgeGradientPtr[k][x] * (1.0 / orig_b));
 
 			}
 		}
@@ -2230,6 +2331,10 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 		gaussSeidelPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
 		previousSolPtr[k] = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
+		if(gaussSeidelPtr[k] == NULL || previousSolPtr[k] == NULL)
+		{
+			return false;
+		}
 	}
 	if (segmentationPtr == NULL || edgeDetectorPtr == NULL || gaussSeidelPtr == NULL || previousSolPtr == NULL)
 	{
@@ -2279,70 +2384,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			return false; // Memory allocation failed
 		}
 	}
-
-	//Intitialization
-	for (k = 0; k < height; k++)
-	{
-		for (i = 0; i < dim2D; i++)
-		{
-			segmentationPtr[k][i] = 0.0;
-			edgeDetectorPtr[k][i] = 0.0;
-			gPtrs.e_Ptr[k][i] = 0.0;
-			gPtrs.w_Ptr[k][i] = 0.0;
-			gPtrs.n_Ptr[k][i] = 0.0;
-			gPtrs.s_Ptr[k][i] = 0.0;
-			gPtrs.t_Ptr[k][i] = 0.0;
-			gPtrs.b_Ptr[k][i] = 0.0;
-			segPtrs.e_Ptr[k][i] = 0.0;
-			segPtrs.w_Ptr[k][i] = 0.0;
-			segPtrs.n_Ptr[k][i] = 0.0;
-			segPtrs.s_Ptr[k][i] = 0.0;
-			segPtrs.t_Ptr[k][i] = 0.0;
-			segPtrs.b_Ptr[k][i] = 0.0;
-		}
-	}
-
-	
-	////smoothing
-	//heatImplicitRectangularScheme(imageData, smooth_parms);
-	heatImplicitScheme(imageData, smooth_parms);
-
-	//compute the morm of gradient for the edge detector
-	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, h, gPtrs);
-
-	//compute the edge detector : 1 / (1 + s^2), s = (1 / card(N_p)) * sum(|I_smooth_q|)
-	dataType value_gF_e, value_gF_w, value_gF_n, value_gF_s, value_gF_t, value_gF_b, average_value;
-	for (k = 0; k < height; k++)
-	{
-		for (i = 0; i < length; i++)
-		{
-			for (j = 0; j < width; j++)
-			{
-				x = x_new(i, j, length);
-				value_gF_e = gradientFunction(gPtrs.e_Ptr[k][x], coef_edge_detector);
-				value_gF_w = gradientFunction(gPtrs.w_Ptr[k][x], coef_edge_detector);
-				value_gF_n = gradientFunction(gPtrs.n_Ptr[k][x], coef_edge_detector);
-				value_gF_s = gradientFunction(gPtrs.s_Ptr[k][x], coef_edge_detector);
-				value_gF_t = gradientFunction(gPtrs.t_Ptr[k][x], coef_edge_detector);
-				value_gF_b = gradientFunction(gPtrs.b_Ptr[k][x], coef_edge_detector);
-				average_value = (value_gF_e + value_gF_w + value_gF_n + value_gF_s + value_gF_t + value_gF_b) / 6.0;
-				edgeDetectorPtr[k][x] = gradientFunction(average_value * average_value, coef_edge_detector);
-			}
-		}
-	}
-	
-
-	//Array for name construction
-	char name[350];
-	char name_ending[100];
-	Storage_Flags flags = { false,false };
-
-	strcpy_s(name, sizeof name, segmentPath);
-	//sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_new.raw");
-	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_old.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	//store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
-	load3dDataArrayD(edgeDetectorPtr, length, width, height, name);
 
 	Coefficient_Pointers uCoef;
 	uCoef.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -2497,6 +2538,20 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	{
 		for(i = 0; i < dim2D; i++)
 		{
+			segmentationPtr[k][i] = 0.0;
+			edgeDetectorPtr[k][i] = 0.0;
+			gPtrs.e_Ptr[k][i] = 0.0;
+			gPtrs.w_Ptr[k][i] = 0.0;
+			gPtrs.n_Ptr[k][i] = 0.0;
+			gPtrs.s_Ptr[k][i] = 0.0;
+			gPtrs.t_Ptr[k][i] = 0.0;
+			gPtrs.b_Ptr[k][i] = 0.0;
+			segPtrs.e_Ptr[k][i] = 0.0;
+			segPtrs.w_Ptr[k][i] = 0.0;
+			segPtrs.n_Ptr[k][i] = 0.0;
+			segPtrs.s_Ptr[k][i] = 0.0;
+			segPtrs.t_Ptr[k][i] = 0.0;
+			segPtrs.b_Ptr[k][i] = 0.0;
 			uCoef.e_Ptr[k][i] = 0.0;
 			uCoef.w_Ptr[k][i] = 0.0;
 			uCoef.n_Ptr[k][i] = 0.0;
@@ -2538,7 +2593,15 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	//compute gradient of edge detector function
+	////smoothing
+	//heatImplicitRectangularScheme(imageData, smooth_parms);
+	heatImplicitScheme(imageData, smooth_parms);
+
+	//compute the morm of gradient for the edge detector
+	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, h, gPtrs);
+
+	//compute the edge detector : 1 / (1 + s^2), s = (1 / card(N_p)) * sum(|I_smooth_q|)
+	dataType average_value = 0.0;
 	// v_pq = -w_a * m(e_pq) * G_pq;
 	dataType vpe, vpw, vpn, vps, vpt, vpb;
 	for (k = 0; k < height; k++) 
@@ -2548,6 +2611,10 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			for (j = 0; j < width; j++) 
 			{
 				x = x_new(i, j, length);
+
+				average_value = (gPtrs.e_Ptr[k][x] + gPtrs.w_Ptr[k][x] + gPtrs.n_Ptr[k][x] +
+					gPtrs.s_Ptr[k][x] + gPtrs.t_Ptr[k][x] + gPtrs.b_Ptr[k][x]) / 6.0;
+				edgeDetectorPtr[k][x] = gradientFunction(average_value * average_value, coef_edge_detector);
 
 				if (i == 0) 
 				{
@@ -2616,6 +2683,16 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			}
 		}
 	}
+
+	//Array for name construction
+	char name[350];
+	char name_ending[100];
+	Storage_Flags flags = { false,false };
+
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_iioe.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
 	
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 	{
@@ -2646,7 +2723,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	dataType gauss_seidel_coef = 0.0;
 	dataType norm_grad_e, norm_grad_w, norm_grad_n, norm_grad_s, norm_grad_t, norm_grad_b;
 	size_t ind_east, ind_west, ind_north, ind_south;
-	dataType numerator_max, numerator_min;
+	dataType numerator_max = 0.0, numerator_min = 0.0;
 	size_t count_gauss_seidel_iteration = 0;
 	dataType error_gauss_seidel = 0.0;
 	dataType prod_pq = 0.0, prod_qp = 0.0;
@@ -2654,6 +2731,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	
 	do {
 		number_time_step++;
+		
 		computeNormOfGradientDiamondCell3D(segmentationPtr, length, width, height, h, segPtrs);
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++) 
 		{
@@ -2664,16 +2742,17 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 					x = x_new(i, j, length);
 					x_ext = x_new(i_ext, j_ext, length_ext);
 
-					//epsilon regularization
-					norm_grad_e = sqrt(segPtrs.e_Ptr[k][x] + eps);
-					norm_grad_w = sqrt(segPtrs.w_Ptr[k][x] + eps);
-					norm_grad_n = sqrt(segPtrs.n_Ptr[k][x] + eps);
-					norm_grad_s = sqrt(segPtrs.s_Ptr[k][x] + eps);
-					norm_grad_t = sqrt(segPtrs.t_Ptr[k][x] + eps);
-					norm_grad_b = sqrt(segPtrs.b_Ptr[k][x] + eps);
-
-					average_norm_gradient = (norm_grad_e + norm_grad_w + norm_grad_n + norm_grad_s + norm_grad_t + norm_grad_b) / 6.0;
+					average_norm_gradient = (segPtrs.e_Ptr[k][x] + segPtrs.w_Ptr[k][x] + segPtrs.n_Ptr[k][x] + 
+						segPtrs.s_Ptr[k][x] + segPtrs.t_Ptr[k][x] + segPtrs.b_Ptr[k][x]) / 6.0;
 					u_average = sqrt(average_norm_gradient * average_norm_gradient + eps);
+
+					//epsilon regularization
+					segPtrs.e_Ptr[k][x] = sqrt(segPtrs.e_Ptr[k][x] + eps);
+					segPtrs.w_Ptr[k][x] = sqrt(segPtrs.w_Ptr[k][x] + eps);
+					segPtrs.n_Ptr[k][x] = sqrt(segPtrs.n_Ptr[k][x] + eps);
+					segPtrs.s_Ptr[k][x] = sqrt(segPtrs.s_Ptr[k][x] + eps);
+					segPtrs.t_Ptr[k][x] = sqrt(segPtrs.t_Ptr[k][x] + eps);
+					segPtrs.b_Ptr[k][x] = sqrt(segPtrs.b_Ptr[k][x] + eps);
 
 					u_p = previousSolPtr[k_ext][x_ext];
 					u_p_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext);
@@ -2914,32 +2993,15 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 						
 					}
 
-					uCoef.e_Ptr[k][x] = (dataType)(theta_in.e_Ptr[k][x] * a_in.e_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_e);
-					uCoef.w_Ptr[k][x] = (dataType)(theta_in.w_Ptr[k][x] * a_in.w_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_w);
-					uCoef.n_Ptr[k][x] = (dataType)(theta_in.n_Ptr[k][x] * a_in.n_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_n);
-					uCoef.s_Ptr[k][x] = (dataType)(theta_in.s_Ptr[k][x] * a_in.s_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_s);
-					uCoef.t_Ptr[k][x] = (dataType)(theta_in.t_Ptr[k][x] * a_in.t_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_t);
-					uCoef.b_Ptr[k][x] = (dataType)(theta_in.b_Ptr[k][x] * a_in.b_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / norm_grad_b);
+					uCoef.e_Ptr[k][x] = theta_in.e_Ptr[k][x] * a_in.e_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.e_Ptr[k][x];
+					uCoef.w_Ptr[k][x] = theta_in.w_Ptr[k][x] * a_in.w_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.w_Ptr[k][x];
+					uCoef.n_Ptr[k][x] = theta_in.n_Ptr[k][x] * a_in.n_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.n_Ptr[k][x];
+					uCoef.s_Ptr[k][x] = theta_in.s_Ptr[k][x] * a_in.s_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.s_Ptr[k][x];
+					uCoef.t_Ptr[k][x] = theta_in.t_Ptr[k][x] * a_in.t_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.t_Ptr[k][x];
+					uCoef.b_Ptr[k][x] = theta_in.b_Ptr[k][x] * a_in.b_Ptr[k][x] + diff * h * u_average * edgeDetectorPtr[k][x] / segPtrs.b_Ptr[k][x];
 				}
 			}
 		}
-
-		//Copy to extended area
-		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
-		{
-			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
-			{
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++)
-				{
-					x = x_new(i, j, length);
-					x_ext = x_new(i_ext, j_ext, length_ext);
-					previousSolPtr[k_ext][x_ext] = segmentationPtr[k][x];
-					gaussSeidelPtr[k_ext][x_ext] = segmentationPtr[k][x];
-				}
-			}
-		}
-		setBoundaryToZeroDirichletBC(previousSolPtr, length_ext, width_ext, height_ext);
-		setBoundaryToZeroDirichletBC(gaussSeidelPtr, length_ext, width_ext, height_ext);
 		
 		//gauss seidel for segmentation function
 		count_gauss_seidel_iteration = 0;
@@ -3015,6 +3077,9 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		
 		//compute L2-norm
 		error_segmentation = l2normD(previousSolPtr, gaussSeidelPtr, length_ext, width_ext, height_ext, h);
+
+		setBoundaryToZeroDirichletBC(gaussSeidelPtr, length_ext, width_ext, height_ext);
+		copyDataToAnotherArray(gaussSeidelPtr, previousSolPtr, height_ext, length_ext, width_ext);
 
 		//copy to reduce array
 		copyDataToReducedArea(segmentationPtr, gaussSeidelPtr, height, length, width);
