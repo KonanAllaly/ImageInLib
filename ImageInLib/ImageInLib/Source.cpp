@@ -3387,7 +3387,7 @@ int main() {
 	*/
 	
 	//==================== 3D image ======================================================
-	
+	/*
 	//input image
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
@@ -3401,7 +3401,7 @@ int main() {
 	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, minValue, maxValue);
 
 	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	
+	*/
 	/*
 	//std::cout << "============ Interpolated ================ " << std::endl;
 	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
@@ -3421,7 +3421,7 @@ int main() {
 	*/
 	
 	//==========================================================
-	
+	/*
 	//p1
 	//Croping
 	size_t i_min = 200;
@@ -3502,7 +3502,7 @@ int main() {
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
 	Image_Data croppedImageData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
-	
+	*/
 	//for (k = 0; k < Height; k++) 
 	//{
 	//	delete[] imageData[k];
@@ -3634,7 +3634,7 @@ int main() {
 	*/
 
 	//==================== GSUBSURF ======================================================
-
+	/*
 	dataType h = ctSpacing.sx;
 	Segmentation_Parameters segParameters = {
 		30,//Maximum number of Gauss-Seidel iterations
@@ -3702,7 +3702,7 @@ int main() {
 	}
 	delete[] imageData;
 	free(ctContainer);
-	
+	*/
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
@@ -6577,22 +6577,23 @@ int main() {
 
 	//==================== Test segmentation 2D =======================================================
 
-	/*
-	const size_t Length = 512, Width = 512;
-	const size_t dim2D = Length * Width;
+	
+	//const size_t Length = 512, Width = 512;
+	//const size_t dim2D = Length * Width;
 	dataType* imageData = new dataType[dim2D] {0};
 	dataType* initialSegment = new dataType[dim2D]{ 0 };
-	//copyDataToAnother2dArray(ctContainer->dataPointer[186], imageData, Length, Width);
+	copyDataToAnother2dArray(ctContainer->dataPointer[186], imageData, Length, Width);
 
 	storing_path = outputPath + "input.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
 	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
 
-	Image_Data2D imageDataStr = { Length, Width, imageData, {0.0, 0.0}, {1.171875, 1.171875}, {{1.0, 0.0},{0.0, 1.0}} };
+	Image_Data2D imageDataStr = { Length, Width, imageData, {0.0, 0.0}, {1.0, 1.0}, {{1.0, 0.0},{0.0, 1.0}} };
+	dataType h = 1.0;
 	const Filter_Parameters implicitParameters
 	{
 		0.2,// timeStepSize;
-		1.171875,// h;
+		h,// h;
 		1.0,// sigma;
 		1000,// edge detector coefficient;
 		1.4,// omega_c;
@@ -6615,14 +6616,13 @@ int main() {
 	//storing_path = outputPath + "seg00.raw";
 	//manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-	dataType h = 1.171875;
 	Segmentation_Parameters segmentation_parms
 	{
 		50, // Maximum number of Gauss-Seidel iterations
 		9000, // constant K in the Perona-Malik function G for the image
 		1e-6, // epsilon is the regularization factor (Evans-Spruck)
-		5000,// Number of current time step
-		5000,// Maximum number of time step
+		2000,// Number of current time step
+		2000,// Maximum number of time step
 		10, // Kind of writing density
 		1e-6, // Tolerance for stopping of the segmentation process
 		5.0 * h, //tau
@@ -6636,16 +6636,15 @@ int main() {
 	//subsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
 	
 	//string segmentPath = outputPath + "seg/gsubsurf/segment_";
-	string segmentPath = outputPath + "seg/gsubsurf_iioe/segment_";
+	string segmentPath = outputPath + "seg/segment_";
 	//gsubsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
 	gsubsurf_iioe(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
 
 	delete[] center;
 	delete[] imageData;
 	delete[] initialSegment;
-	*/
 	
-	//free(ctContainer);
+	free(ctContainer);
 
 	return EXIT_SUCCESS;
 }
