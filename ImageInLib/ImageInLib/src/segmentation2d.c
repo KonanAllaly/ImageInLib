@@ -831,7 +831,8 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	uGrad.South = (dataType*)malloc(sizeof(dataType) * dim2D);
 	uGrad.East = (dataType*)malloc(sizeof(dataType) * dim2D);
 	uGrad.West = (dataType*)malloc(sizeof(dataType) * dim2D);
-	if (uGrad.North == NULL || uGrad.East == NULL || uGrad.West == NULL || uGrad.South == NULL)
+	if (uGrad.North == NULL || uGrad.East == NULL || 
+		uGrad.West == NULL || uGrad.South == NULL)
 	{
 		return false;
 	}
@@ -841,64 +842,105 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	normGrad.South = (dataType*)malloc(sizeof(dataType) * dim2D);
 	normGrad.East = (dataType*)malloc(sizeof(dataType) * dim2D);
 	normGrad.West = (dataType*)malloc(sizeof(dataType) * dim2D);
-	if (normGrad.North == NULL || normGrad.East == NULL || normGrad.West == NULL || normGrad.South == NULL)
+	if (normGrad.North == NULL || normGrad.East == NULL || 
+		normGrad.West == NULL || normGrad.South == NULL)
 	{
 		return false;
 	}
-
-	neighPtrs a_out;
-	a_out.East = (dataType*)malloc(sizeof(dataType) * dim2D);
-	a_out.West = (dataType*)malloc(sizeof(dataType) * dim2D);
-	a_out.North = (dataType*)malloc(sizeof(dataType) * dim2D);
-	a_out.South = (dataType*)malloc(sizeof(dataType) * dim2D);
 
 	neighPtrs a_in;
 	a_in.East = (dataType*)malloc(sizeof(dataType) * dim2D);
 	a_in.West = (dataType*)malloc(sizeof(dataType) * dim2D);
 	a_in.North = (dataType*)malloc(sizeof(dataType) * dim2D);
 	a_in.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (a_in.East == NULL || a_in.West == NULL ||
+		a_in.North == NULL || a_in.South == NULL)
+	{
+		return false;
+	}
+
+	neighPtrs a_out_pq;
+	a_out_pq.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_pq.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_pq.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_pq.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (a_out_pq.East == NULL || a_out_pq.West == NULL ||
+		a_out_pq.North == NULL || a_out_pq.South == NULL)
+	{
+		return false;
+	}
+
+	neighPtrs a_out_qp;
+	a_out_qp.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_qp.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_qp.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	a_out_qp.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (a_out_qp.East == NULL || a_out_qp.West == NULL ||
+		a_out_qp.North == NULL || a_out_qp.South == NULL)
+	{
+		return false;
+	}
 
 	neighPtrs theta_out;
 	theta_out.East = (dataType*)malloc(sizeof(dataType) * dim2D);
 	theta_out.West = (dataType*)malloc(sizeof(dataType) * dim2D);
 	theta_out.North = (dataType*)malloc(sizeof(dataType) * dim2D);
 	theta_out.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if (theta_out.East == NULL || theta_out.West == NULL || 
+		theta_out.North == NULL || theta_out.South == NULL)
+	{
+		return false;
+	}
 
-	initialize2dArrayWithZero(segmentationPtr, height, width);
-	initialize2dArrayWithZero(edgeDetectorPtr, height, width);
-	
-	initialize2dArrayWithZero(gaussSeidelPtr, height_ext, width_ext);
-	initialize2dArrayWithZero(previousSolPtr, height_ext, width_ext);
-	
-	initialize2dArrayWithZero(uCoef.North, height, width);
-	initialize2dArrayWithZero(uCoef.South, height, width);
-	initialize2dArrayWithZero(uCoef.East, height, width);
-	initialize2dArrayWithZero(uCoef.West, height, width);
+	neighPtrs theta_in;
+	theta_in.East = (dataType*)malloc(sizeof(dataType) * dim2D);
+	theta_in.West = (dataType*)malloc(sizeof(dataType) * dim2D);
+	theta_in.North = (dataType*)malloc(sizeof(dataType) * dim2D);
+	theta_in.South = (dataType*)malloc(sizeof(dataType) * dim2D);
+	if(theta_in.East == NULL || theta_in.West == NULL || 
+		theta_in.North == NULL || theta_in.South == NULL)
+	{
+		return false;
+	}
 
-	initialize2dArrayWithZero(uGrad.North, height, width);
-	initialize2dArrayWithZero(uGrad.South, height, width);
-	initialize2dArrayWithZero(uGrad.East, height, width);
-	initialize2dArrayWithZero(uGrad.West, height, width);
+	dataType* n_out_pq = (dataType*)malloc(sizeof(dataType) * dim2D);
+	dataType* n_out_qp = (dataType*)malloc(sizeof(dataType) * dim2D);
 
-	initialize2dArrayWithZero(normGrad.North, height, width);
-	initialize2dArrayWithZero(normGrad.South, height, width);
-	initialize2dArrayWithZero(normGrad.East, height, width);
-	initialize2dArrayWithZero(normGrad.West, height, width);
-
-	initialize2dArrayWithZero(a_out.East, height, width);
-	initialize2dArrayWithZero(a_out.West, height, width);
-	initialize2dArrayWithZero(a_out.North, height, width);
-	initialize2dArrayWithZero(a_out.South, height, width);
-
-	initialize2dArrayWithZero(a_in.East, height, width);
-	initialize2dArrayWithZero(a_in.West, height, width);
-	initialize2dArrayWithZero(a_in.North, height, width);
-	initialize2dArrayWithZero(a_in.South, height, width);
-
-	initialize2dArrayWithZero(theta_out.East, height, width);
-	initialize2dArrayWithZero(theta_out.West, height, width);
-	initialize2dArrayWithZero(theta_out.North, height, width);
-	initialize2dArrayWithZero(theta_out.South, height, width);
+	for (i = 0; i < dim2D; i++) 
+	{
+		segmentationPtr[i] = 0.0;
+		edgeDetectorPtr[i] = 0.0;
+		uCoef.North[i] = 0.0;
+		uCoef.South[i] = 0.0;
+		uCoef.East[i] = 0.0;
+		uCoef.West[i] = 0.0;
+		uGrad.North[i] = 0.0;
+		uGrad.South[i] = 0.0;
+		uGrad.East[i] = 0.0;
+		uGrad.West[i] = 0.0;
+		normGrad.North[i] = 0.0;
+		normGrad.South[i] = 0.0;
+		normGrad.East[i] = 0.0;
+		normGrad.West[i] = 0.0;
+		a_in.East[i] = 0.0;
+		a_in.West[i] = 0.0;
+		a_in.North[i] = 0.0;
+		a_in.South[i] = 0.0;
+		a_out_pq.East[i] = 0.0;
+		a_out_pq.West[i] = 0.0;
+		a_out_pq.North[i] = 0.0;
+		a_out_pq.South[i] = 0.0;
+		a_out_qp.East[i] = 0.0;
+		a_out_qp.West[i] = 0.0;
+		a_out_qp.North[i] = 0.0;
+		a_out_qp.South[i] = 0.0;
+		theta_out.East[i] = 0.0;
+		theta_out.West[i] = 0.0;
+		theta_out.North[i] = 0.0;
+		theta_out.South[i] = 0.0;
+		n_out_pq[i] = 0.0;
+		n_out_qp[i] = 0.0;
+	}
 
 	dataType current = 0.0, average_norm_gradient = 0.0, average_gFunction = 0.0;
 	dataType u_average = 0.0;
@@ -930,67 +972,36 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 		for (j = 0; j < width; j++) {
 			size_t xd = x_new(i, j, height);
 
-			/*
-			if(i == 0)
+			if (i == 0) 
 			{
-				vpw = 0.0;
-				vpe = diff * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
-			}
-			else if(i == height - 1)
-			{
-				vpe = 0.0;
-				vpw = diff * (edgeDetectorPtr[x_new(i - 1, j, height)] - edgeDetectorPtr[xd]);
-			}
-			else
-			{
-				vpe = diff * 0.5 * (edgeDetectorPtr[x_new(i - 1, j, height)] - edgeDetectorPtr[xd]);
-				vpw = diff * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
-			}
-
-			if (j == 0)
-			{
-				vpn = 0.0;
-				vps = diff * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
-			}
-			else if (j == width - 1)
-			{
-				vps = 0.0;
-				vpn = diff * (edgeDetectorPtr[x_new(i, j - 1, height)] - edgeDetectorPtr[xd]);
-			}
-			else
-			{
-				vpn = diff * 0.5 * (edgeDetectorPtr[x_new(i, j - 1, height)] - edgeDetectorPtr[xd]);
-				vps = diff * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
-			}
-			*/
-
-			if (i == 0) {
 				vpe = adv * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[xd]);
 				vpw = -vpe;
 			}
-			else {
-				if (i == height - 1) {
-					vpw = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i - 1, j, height)]);
-					vpe = -vpw;
-				}
-				else {
-					vpe = adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
-					vpw = -vpe;
-				}
+			else if (i == height - 1)
+			{
+				vpw = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+				vpe = -vpw;
 			}
-			if (j == 0) {
+			else 
+			{
+				vpe = adv * 0.5 * (edgeDetectorPtr[x_new(i + 1, j, height)] - edgeDetectorPtr[x_new(i - 1, j, height)]);
+				vpw = -vpe;
+			}
+
+			if (j == 0) 
+			{
 				vps = adv * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[xd]);
 				vpn = -vps;
 			}
-			else {
-				if (j == width - 1) {
-					vpn = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i, j - 1, height)]);
-					vps = -vpn;
-				}
-				else {
-					vps = adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
-					vpn = -vps;
-				}
+			else if (j == width - 1) 
+			{
+				vpn = adv * (edgeDetectorPtr[xd] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+				vps = -vpn;
+			}
+			else 
+			{
+				vps = adv * 0.5 * (edgeDetectorPtr[x_new(i, j + 1, height)] - edgeDetectorPtr[x_new(i, j - 1, height)]);
+				vpn = -vps;
 			}
 
 			a_in.East[xd] = fmax(vpe, 0);
@@ -998,14 +1009,23 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 			a_in.North[xd] = fmax(vpn, 0);
 			a_in.South[xd] = fmax(vps, 0);
 
-			a_out.East[xd] = fmin(vpe, 0);
-			a_out.West[xd] = fmin(vpw, 0);
-			a_out.North[xd] = fmin(vpn, 0);
-			a_out.South[xd] = fmin(vps, 0);
+			a_out_pq.East[xd] = fmin(vpe, 0);
+			a_out_pq.West[xd] = fmin(vpw, 0);
+			a_out_pq.North[xd] = fmin(vpn, 0);
+			a_out_pq.South[xd] = fmin(vps, 0);
+
+			a_out_qp.East[xd] = -a_in.East[xd];
+			a_out_qp.West[xd] = -a_in.West[xd];
+			a_out_qp.North[xd] = -a_in.North[xd];
+			a_out_qp.South[xd] = -a_in.South[xd];
+
+			n_out_pq[xd] = -(signum(a_out_pq.East[xd]) + signum(a_out_pq.West[xd]) + signum(a_out_pq.North[xd]) + signum(a_out_pq.South[xd]));
+			n_out_qp[xd] = -(signum(a_out_qp.East[xd]) + signum(a_out_qp.West[xd]) + signum(a_out_qp.North[xd]) + signum(a_out_qp.South[xd]));
 		}
 	}
 
 	copyDataToAnother2dArray(initialSegment, segmentationPtr, height, width);
+	
 	copyDataTo2dExtendedArea(initialSegment, previousSolPtr, height, width);
 	set2dDirichletBoundaryCondition(previousSolPtr, height_ext, width_ext);
 
@@ -1019,6 +1039,8 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	dataType u1 = 0.0, u2 = 0.0, u3 = 0.0, u4 = 0.0;
 	dataType u_p_min = 0.0, u_p_max = 0.0;
 	dataType u_p = 0.0, u_east = 0.0, u_west = 0.0, u_north = 0.0, u_south = 0.0;
+	dataType value = 0.0, prod_pq = 0.0, prod_qp = 0.0;
+	dataType numerator_max = 0.0, numerator_min = 0.0;
 	do {
 		number_time_step++;
 
@@ -1032,9 +1054,14 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
 				u_average = sqrt(pow(average_norm_gradient,2) + eps);
 
-				dataType n_out = -(signum(a_out.East[xd]) + signum(a_out.West[xd]) + signum(a_out.North[xd]) + signum(a_out.South[xd]));
+				u_p = previousSolPtr[x_new(i_ext, j_ext, height_ext)];
+				u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+				u_p_max = getMaxInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
+				numerator_max = mp * (u_p_max - u_p);
+				numerator_min = mp * (u_p_min - u_p);
 				
-				if (n_out == 0) 
+				//Compute theta_out_pq
+				if (n_out_pq[xd] == 0)
 				{
 					theta_out.East[xd] = 0.5;
 					theta_out.West[xd] = 0.5;
@@ -1043,83 +1070,158 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 				}
 				else 
 				{
-					u_p = previousSolPtr[x_new(i_ext, j_ext, height_ext)];
-					u_east = previousSolPtr[x_new(i_ext + 1, j_ext, height_ext)];
-					u_west = previousSolPtr[x_new(i_ext - 1, j_ext, height_ext)];
-					u_north = previousSolPtr[x_new(i_ext, j_ext - 1, height_ext)];
-					u_south = previousSolPtr[x_new(i_ext, j_ext + 1, height_ext)];
-					u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
-					u_p_max = getMaxInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);
-
 					//East
-					if (a_out.East[xd] * (u_east - u_p) == 0)
+					prod_pq = a_out_pq.East[xd] * (previousSolPtr[x_new(i_ext + 1, j_ext, height_ext)] - u_p);
+					if (prod_pq == 0)
 					{
 						theta_out.East[xd] = 0.5;
 					}
-					else if (a_out.East[xd] * (u_east - u_p) > 0)
+					else if (prod_pq > 0)
 					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+						value = numerator_max / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.East[xd] = fmin(0.5, value);
 					}
 					else
 					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.East[xd] * (u_east - u_p));
+						value = numerator_min / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.East[xd] = fmin(0.5, value);
 					}
 
 					//West
-					if (a_out.West[xd] * (u_west - u_p) == 0) 
+					prod_pq = a_out_pq.West[xd] * (previousSolPtr[x_new(i_ext - 1, j_ext, height_ext)] - u_p);
+					if (prod_pq == 0)
 					{
 						theta_out.West[xd] = 0.5;
 					}
-					else if (a_out.West[xd] * (u_west - u_p) > 0) 
+					else if (prod_pq > 0)
 					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+						value = numerator_max / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.West[xd] = fmin(0.5, value);
 					}
 					else 
 					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.West[xd] * (u_west - u_p));
+						value = numerator_min / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.West[xd] = fmin(0.5, value);
 					}
 
 					//North
-					if (a_out.North[xd] * (u_north - u_p) == 0) 
+					prod_pq = a_out_pq.North[xd] * (previousSolPtr[x_new(i_ext, j_ext - 1, height_ext)] - u_p);
+					if (prod_pq == 0)
 					{
 						theta_out.North[xd] = 0.5;
 					}
-					else if (a_out.North[xd] * (u_north - u_p) > 0) 
+					else if (prod_pq > 0)
 					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+						value = numerator_max / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.North[xd] = fmin(0.5, value);
 					}
 					else 
 					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.North[xd] * (u_north - u_p));
+						value = numerator_min / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.North[xd] = fmin(0.5, value);
 					}
 
 					//South
-					if (a_out.South[xd] * (u_south - u_p) == 0) 
+					prod_pq = a_out_pq.South[xd] * (previousSolPtr[x_new(i_ext, j_ext + 1, height_ext)] - u_p);
+					if (prod_pq == 0)
 					{
 						theta_out.South[xd] = 0.5;
 					}
-					else if (a_out.South[xd] * (u_south - u_p) > 0) 
+					else if (prod_pq > 0)
 					{
-						dataType value = (mp * (u_p_max - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+						value = numerator_max / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.South[xd] = fmin(0.5, value);
 					}
 					else 
 					{
-						dataType value = (mp * (u_p_min - u_p)) / (tau * n_out * a_out.South[xd] * (u_south - u_p));
+						value = numerator_min / (tau * n_out_pq[xd] * prod_pq);
 						theta_out.South[xd] = fmin(0.5, value);
 					}
 				}
+
+				//Compute thata_in_pq = 1 - theta_out_pq
+				if (n_out_qp[xd] == 0)
+				{
+					theta_in.East[xd] = 0.5;
+					theta_in.West[xd] = 0.5;
+					theta_in.North[xd] = 0.5;
+					theta_in.South[xd] = 0.5;
+				}
+				else
+				{
+					//East
+					prod_qp = a_out_qp.East[xd] * (u_p - previousSolPtr[x_new(i_ext + 1, j_ext, height_ext)]);
+					if (prod_qp == 0)
+					{
+						theta_in.East[xd] = 0.5;
+					}
+					else if (prod_qp > 0)
+					{
+						value = numerator_max / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.East[xd] = 1 - fmin(0.5, value);
+					}
+					else
+					{
+						value = numerator_min / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.East[xd] = 1 - fmin(0.5, value);
+					}
+
+					//West
+					prod_qp = a_out_qp.West[xd] * (u_p - previousSolPtr[x_new(i_ext - 1, j_ext, height_ext)]);
+					if (prod_qp == 0)
+					{
+						theta_in.West[xd] = 0.5;
+					}
+					else if (prod_qp > 0)
+					{
+						value = numerator_max / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.West[xd] = 1 - fmin(0.5, value);
+					}
+					else
+					{
+						value = numerator_min / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.West[xd] = 1 - fmin(0.5, value);
+					}
+
+					//North
+					prod_qp = a_out_qp.North[xd] * (u_p - previousSolPtr[x_new(i_ext, j_ext - 1, height_ext)]);
+					if (prod_qp == 0)
+					{
+						theta_in.North[xd] = 0.5;
+					}
+					else if (prod_qp > 0)
+					{
+						value = numerator_max / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.North[xd] = 1 - fmin(0.5, value);
+					}
+					else
+					{
+						value = numerator_min / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.North[xd] = 1 - fmin(0.5, value);
+					}
+
+					//South
+					prod_qp = a_out_qp.South[xd] * (u_p - previousSolPtr[x_new(i_ext, j_ext + 1, height_ext)]);
+					if (prod_qp == 0)
+					{
+						theta_in.South[xd] = 0.5;
+					}
+					else if (prod_qp > 0)
+					{
+						value = numerator_max / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.South[xd] = 1 - fmin(0.5, value);
+					}
+					else
+					{
+						value = numerator_min / (tau * n_out_qp[xd] * prod_qp);
+						theta_in.South[xd] = 1 - fmin(0.5, value);
+					}
+				}
 				
-				uCoef.East[xd] = (dataType)((1 - theta_out.East[xd]) * a_in.East[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.East[xd]);
-				uCoef.West[xd] = (dataType)((1 - theta_out.West[xd]) * a_in.West[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.West[xd]);
-				uCoef.North[xd] = (dataType)((1 - theta_out.North[xd]) * a_in.North[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.North[xd]);
-				uCoef.South[xd] = (dataType)((1 - theta_out.South[xd]) * a_in.South[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.South[xd]);
+				uCoef.East[xd] = (dataType)(theta_in.East[xd] * a_in.East[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.East[xd]);
+				uCoef.West[xd] = (dataType)(theta_in.West[xd] * a_in.West[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.West[xd]);
+				uCoef.North[xd] = (dataType)(theta_in.North[xd] * a_in.North[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.North[xd]);
+				uCoef.South[xd] = (dataType)(theta_in.South[xd] * a_in.South[xd] + diff * u_average * edgeDetectorPtr[xd] / normGrad.South[xd]);
 			}
 		}
 
@@ -1127,7 +1229,8 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 		size_t cpt = 0;
 
 		dataType error_gauss_seidel = 0.0;
-		do {
+		do 
+		{
 			cpt++;
 			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
@@ -1139,12 +1242,12 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 					size_t xd = x_new(i, j, height);
 					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
 
-					gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.East[xd] * a_out.East[xd] + theta_out.West[xd] * a_out.West[xd]
-						+ theta_out.North[xd] * a_out.North[xd] + theta_out.South[xd] * a_out.South[xd])) * previousSolPtr[xd_ext]
-						+ coef_tau * (theta_out.East[xd] * a_out.East[xd] * previousSolPtr[ind_east]
-							+ theta_out.West[xd] * a_out.West[xd] * previousSolPtr[ind_west]
-							+ theta_out.North[xd] * a_out.North[xd] * previousSolPtr[ind_north]
-							+ theta_out.South[xd] * a_out.South[xd] * previousSolPtr[ind_south])
+					gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.East[xd] * a_out_pq.East[xd] + theta_out.West[xd] * a_out_pq.West[xd]
+						+ theta_out.North[xd] * a_out_pq.North[xd] + theta_out.South[xd] * a_out_pq.South[xd])) * previousSolPtr[xd_ext]
+						+ coef_tau * (theta_out.East[xd] * a_out_pq.East[xd] * previousSolPtr[ind_east]
+							+ theta_out.West[xd] * a_out_pq.West[xd] * previousSolPtr[ind_west]
+							+ theta_out.North[xd] * a_out_pq.North[xd] * previousSolPtr[ind_north]
+							+ theta_out.South[xd] * a_out_pq.South[xd] * previousSolPtr[ind_south])
 						+ coef_tau * (uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west]
 							+ uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south]))
 						/ (1.0 + coef_tau * (uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd])));
@@ -1164,12 +1267,12 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 					size_t xd_ext = x_new(i_ext, j_ext, height_ext);
 
 					u1 = (1.0 + coef_tau * (uCoef.East[xd] + uCoef.West[xd] + uCoef.North[xd] + uCoef.South[xd])) * gaussSeidelPtr[xd_ext];
-					u2 = (1 - coef_tau * (theta_out.East[xd] * a_out.East[xd] + theta_out.West[xd] * a_out.West[xd] 
-						+ theta_out.North[xd] * a_out.North[xd] + theta_out.South[xd] * a_out.South[xd])) * previousSolPtr[xd_ext];
-					u3 = coef_tau * (theta_out.East[xd] * a_out.East[xd] * previousSolPtr[ind_east]
-						+ theta_out.West[xd] * a_out.West[xd] * previousSolPtr[ind_west]
-						+ theta_out.North[xd] * a_out.North[xd] * previousSolPtr[ind_north]
-						+ theta_out.South[xd] * a_out.South[xd] * previousSolPtr[ind_south]);
+					u2 = (1 - coef_tau * (theta_out.East[xd] * a_out_pq.East[xd] + theta_out.West[xd] * a_out_pq.West[xd]
+						+ theta_out.North[xd] * a_out_pq.North[xd] + theta_out.South[xd] * a_out_pq.South[xd])) * previousSolPtr[xd_ext];
+					u3 = coef_tau * (theta_out.East[xd] * a_out_pq.East[xd] * previousSolPtr[ind_east]
+						+ theta_out.West[xd] * a_out_pq.West[xd] * previousSolPtr[ind_west]
+						+ theta_out.North[xd] * a_out_pq.North[xd] * previousSolPtr[ind_north]
+						+ theta_out.South[xd] * a_out_pq.South[xd] * previousSolPtr[ind_south]);
 					u4 = coef_tau * (uCoef.East[xd] * gaussSeidelPtr[ind_east] + uCoef.West[xd] * gaussSeidelPtr[ind_west]
 						+ uCoef.North[xd] * gaussSeidelPtr[ind_north] + uCoef.South[xd] * gaussSeidelPtr[ind_south]);
 					error_gauss_seidel += pow(u1 - u2 - u3 - u4, 2);
@@ -1228,15 +1331,23 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	free(a_in.North);
 	free(a_in.South);
 
-	free(a_out.East);
-	free(a_out.West);
-	free(a_out.North);
-	free(a_out.South);
+	free(a_out_pq.East);
+	free(a_out_pq.West);
+	free(a_out_pq.North);
+	free(a_out_pq.South);
+
+	free(a_out_qp.East);
+	free(a_out_qp.West);
+	free(a_out_qp.North);
+	free(a_out_qp.South);
 
 	free(theta_out.East);
 	free(theta_out.West);
 	free(theta_out.North);
 	free(theta_out.South);
+
+	free(n_out_pq);
+	free(n_out_qp);
 
 	return true;
 }
