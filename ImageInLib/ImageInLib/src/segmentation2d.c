@@ -251,8 +251,7 @@ bool computeNormOfGradientDiamondCells(dataType* imageDataPtr, neighPtrs neigbou
 		return false;
 
 	copyDataTo2dExtendedArea(imageDataPtr, extendedArray, height, width);
-	//reflection2D(extendedArray, height_ext, width_ext);
-	set2dDirichletBoundaryCondition(extendedArray, height_ext, width_ext);
+	reflection2D(extendedArray, height_ext, width_ext);
 
 	dataType uP, uN, uNW, uNE, uS, uSW, uSE, uW, uE;
 	dataType ux, uy;
@@ -279,22 +278,22 @@ bool computeNormOfGradientDiamondCells(dataType* imageDataPtr, neighPtrs neigbou
 			//East
 			ux = (uE - uP) / h;
 			uy = (uNE + uN - uS - uSE) / (4.0 * h);
-			neigbours.East[xd] = sqrt(ux * ux + uy * uy);
+			neigbours.East[xd] = ux * ux + uy * uy;
 
 			//West
 			ux = (uP - uW) / h;
 			uy = (uNW + uN - uSW - uS) / (4.0 * h);
-			neigbours.West[xd] = sqrt(ux * ux + uy * uy);
+			neigbours.West[xd] = ux * ux + uy * uy;
 
 			//North
 			ux = (uNE + uE - uNW - uW) / (4.0 * h);
 			uy = (uN - uP) / h;
-			neigbours.North[xd] = sqrt(ux * ux + uy * uy);
+			neigbours.North[xd] = ux * ux + uy * uy;
 
 			//South
 			ux = (uSE + uE - uSW - uW) / (4.0 * h);
 			uy = (uP - uS) / h;
-			neigbours.South[xd] = sqrt(ux * ux + uy * uy);
+			neigbours.South[xd] = ux * ux + uy * uy;
 		}
 	}
 
@@ -942,17 +941,17 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 		n_out_qp[i] = 0.0;
 	}
 
-	dataType current = 0.0, average_norm_gradient = 0.0, average_gFunction = 0.0;
+	dataType current = 0.0, average_norm_gradient = 0.0, average_g = 0.0;
 	dataType u_average = 0.0;
 
 	heatImplicit2dScheme(imageData, smooth_parms);
 
-	//compute g function
+	//Compute g function : 1 / (1 + s^2), s = (1 / card(N_p)) * sum(|I_smooth_q|)
 	computeNormOfGradientDiamondCells(imageData.imageDataPtr, uGrad, height, width, h);
 	for (i = 0; i < dim2D; i++) 
 	{
-		average_gFunction = (dataType)((uGrad.East[i] + uGrad.West[i] + uGrad.North[i] + uGrad.South[i]) / 4.0);
-		edgeDetectorPtr[i] = gradientFunction(average_gFunction * average_gFunction, coef_edge_detector);
+		average_g = (dataType)((sqrt(uGrad.East[i]) + sqrt(uGrad.West[i]) + sqrt(uGrad.North[i]) + sqrt(uGrad.South[i])) / 4.0);
+		edgeDetectorPtr[i] = gradientFunction(average_g * average_g, coef_edge_detector);
 	}
 
 	//Array for name construction
@@ -961,10 +960,11 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	Storage_Flags flags = { false,false };
 
 	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edgeDetector.raw");
+	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_gsubsurf.raw");
 	strcat_s(name, sizeof(name), name_ending);
 	store2dRawData(edgeDetectorPtr, height, width, name, flags);
 
+	
 	//compute gradient of edge detector function
 	// v_pq = -w_a * m(e_pq) * G_pq;
 	dataType vpe, vpw, vpn, vps;
@@ -1004,22 +1004,28 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 				vpn = -vps;
 			}
 
+			//a_in_pq = max(v_pq, 0)
 			a_in.East[xd] = fmax(vpe, 0);
 			a_in.West[xd] = fmax(vpw, 0);
 			a_in.North[xd] = fmax(vpn, 0);
 			a_in.South[xd] = fmax(vps, 0);
 
+			//a_out_pq = min(v_pq, 0)
 			a_out_pq.East[xd] = fmin(vpe, 0);
 			a_out_pq.West[xd] = fmin(vpw, 0);
 			a_out_pq.North[xd] = fmin(vpn, 0);
 			a_out_pq.South[xd] = fmin(vps, 0);
 
+			//a_out_qp = -a_in_pq
 			a_out_qp.East[xd] = -a_in.East[xd];
 			a_out_qp.West[xd] = -a_in.West[xd];
 			a_out_qp.North[xd] = -a_in.North[xd];
 			a_out_qp.South[xd] = -a_in.South[xd];
 
+			//n_out_pq = -sum(sign(a_out_pq))
 			n_out_pq[xd] = -(signum(a_out_pq.East[xd]) + signum(a_out_pq.West[xd]) + signum(a_out_pq.North[xd]) + signum(a_out_pq.South[xd]));
+			
+			//n_out_qp = -sum(sign(a_out_qp))
 			n_out_qp[xd] = -(signum(a_out_qp.East[xd]) + signum(a_out_qp.West[xd]) + signum(a_out_qp.North[xd]) + signum(a_out_qp.South[xd]));
 		}
 	}
@@ -1044,15 +1050,24 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 	do {
 		number_time_step++;
 
+		//The return norm of gradient is |grad(u)|^2
 		computeNormOfGradientDiamondCells(segmentationPtr, normGrad, height, width, h);
-		epsilonRegularization(normGrad, height, width, eps);
 
 		for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
 				size_t xd = x_new(i, j, height);
-				
-				average_norm_gradient = (dataType)((normGrad.East[xd] + normGrad.West[xd] + normGrad.North[xd] + normGrad.South[xd]) / 4.0);
-				u_average = sqrt(pow(average_norm_gradient,2) + eps);
+
+				//Compute average of norm of gradient
+				average_norm_gradient = (pow(normGrad.East[xd],2) + pow(normGrad.West[xd],2) + 
+					pow(normGrad.North[xd],2) + pow(normGrad.South[xd],2) / 4.0);
+				u_average = sqrt(average_norm_gradient + eps);
+
+				//Epsilon regularization
+				//eps = eps2
+				normGrad.East[xd] = sqrt(normGrad.East[xd] + eps);
+				normGrad.West[xd] = sqrt(normGrad.West[xd] + eps);
+				normGrad.North[xd] = sqrt(normGrad.North[xd] + eps);
+				normGrad.South[xd] = sqrt(normGrad.South[xd] + eps);
 
 				u_p = previousSolPtr[x_new(i_ext, j_ext, height_ext)];
 				u_p_min = getMinInNeighborhood(previousSolPtr, height_ext, width_ext, i_ext, j_ext);

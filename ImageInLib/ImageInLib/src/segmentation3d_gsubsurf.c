@@ -2302,7 +2302,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 		}
 	}
 
-	/*
+	
 	////smoothing
 	//heatImplicitRectangularScheme(imageData, smooth_parms);
 	heatImplicitScheme(imageData, smooth_parms);
@@ -2310,7 +2310,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 	//compute the morm of gradient for the edge detector
 	computeNormOfGradientDiamondCell3D(imageData.imageDataPtr, length, width, height, h, gPtrs);
 
-	//compute the edge detector
+	//compute the edge detector : 1 / (1 + s^2), s = (1 / card(N_p)) * sum(|I_smooth_q|)
 	dataType value_gF_e, value_gF_w, value_gF_n, value_gF_s, value_gF_t, value_gF_b, average_value;
 	for (k = 0; k < height; k++)
 	{
@@ -2330,7 +2330,7 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 			}
 		}
 	}
-	*/
+	
 
 	//Array for name construction
 	char name[350];
