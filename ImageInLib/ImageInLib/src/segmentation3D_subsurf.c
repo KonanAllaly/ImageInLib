@@ -1,8 +1,3 @@
-/*
-* Author: Markjoe Olunna UBA
-* Purpose: ImageInLife project - 4D Image Segmentation Methods
-* Language:  C
-*/
 #include <stdio.h> // Standard lib for input and output functions
 #include <stdlib.h>
 #include <time.h>
@@ -122,14 +117,14 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	//compute coefficients from presmoothed image
 	gFunctionForImageToBeSegmented(inputImageData, prevSol_extPtr, GPtrs, segParameters, explicit_lhe_Parameters);
 
-	for (k = 0; k < height; k++) 
-	{
-		for (i = 0; i < dim2D; i++) 
-		{
-			dataType average_value = (GbPtr[k][i] + GtPtr[k][i] + GsPtr[k][i] + GnPtr[k][i] + GwPtr[k][i] + GePtr[k][i]) / 6.0;
-			imageToBeSegPtr[k][i] = gradientFunction(average_value * average_value, segParameters.coef);;
-		}
-	}
+	//for (k = 0; k < height; k++) 
+	//{
+	//	for (i = 0; i < dim2D; i++) 
+	//	{
+	//		dataType average_value = (GbPtr[k][i] + GtPtr[k][i] + GsPtr[k][i] + GnPtr[k][i] + GwPtr[k][i] + GePtr[k][i]) / 6.0;
+	//		imageToBeSegPtr[k][i] = gradientFunction(average_value * average_value, segParameters.coef);;
+	//	}
+	//}
 
 	//Array for name construction
 	unsigned char name[350];
@@ -141,7 +136,6 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 	strcat_s(name, sizeof(name), name_ending);
 	store3dDataArrayD(imageToBeSegPtr, length, width, height, name, flags);
 
-	
 	//loop for segmentation time steps
 	i = 1;
 	do
@@ -173,7 +167,6 @@ bool subsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, S
 
 	//printf("finish: Segmentation tolerance is %lf\n", segParameters.segTolerance);
 	
-
 	for (i = 0; i < height; i++)
 	{
 		free(imageToBeSegPtr[i]);
