@@ -3387,7 +3387,7 @@ int main() {
 	*/
 	
 	//==================== 3D image ======================================================
-	/*
+	
 	//input image
 	dataType** imageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
@@ -3400,28 +3400,26 @@ int main() {
 	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
 	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, minValue, maxValue);
 
-	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	*/
-	/*
-	//std::cout << "============ Interpolated ================ " << std::endl;
-	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	std::cout << "Interpolated Height = " << hauteur << std::endl;
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	std::cout << "Interpolated Spacing : (" << intSpacing.sx << ", " << intSpacing.sy << ", " << intSpacing.sz << ")" << std::endl;
+	//Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 	
-	dataType** interpolatedImage = new dataType * [hauteur];
-	for (k = 0; k < hauteur; k++) {
-		interpolatedImage[k] = new dataType[dim2D]{ 0 };
-	}
-	Image_Data interpolatedImageData = { hauteur, Length, Width, interpolatedImage, ctOrigin, intSpacing, orientation };
-	//imageInterpolation3D(inputImageData, interpolatedImageData, TRILINEAR);
+	////std::cout << "============ Interpolated ================ " << std::endl;
+	//size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
+	//std::cout << "Interpolated Height = " << hauteur << std::endl;
+	//VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	//std::cout << "Interpolated Spacing : (" << intSpacing.sx << ", " << intSpacing.sy << ", " << intSpacing.sz << ")" << std::endl;
+	//
+	//dataType** interpolatedImage = new dataType * [hauteur];
+	//for (k = 0; k < hauteur; k++) {
+	//	interpolatedImage[k] = new dataType[dim2D]{ 0 };
+	//}
+	//Image_Data interpolatedImageData = { hauteur, Length, Width, interpolatedImage, ctOrigin, intSpacing, orientation };
+	////imageInterpolation3D(inputImageData, interpolatedImageData, TRILINEAR);
+	//
+	//storing_path = outputPath + "interpolated_p1.raw";
+	////manageRAWFile3D<dataType>(interpolatedImage, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
 	
-	storing_path = outputPath + "interpolated_p1.raw";
-	//manageRAWFile3D<dataType>(interpolatedImage, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
-	*/
 	
-	//==========================================================
-	/*
+	std::cout << "============ Cropped ================ " << std::endl;
 	//p1
 	//Croping
 	size_t i_min = 200;
@@ -3431,6 +3429,7 @@ int main() {
 	size_t width = 150;
 	size_t height = 350; // 380 for new
 	
+	/*
 	////p2
 	////Croping
 	//size_t i_min = 190;
@@ -3473,8 +3472,8 @@ int main() {
 	//size_t length = 150;
 	//size_t width = 150;
 	//size_t height = 400;
-	
-	std::cout << "============ Cropped ================ " << std::endl;
+	*/
+
 	std::cout << "New dimensions : Length = " << length << ", Width = " << width << ", Height = " << height << std::endl;
 	std::cout << "Cropped Spacing : (" << ctSpacing.sx << ", " << ctSpacing.sy << ", " << ctSpacing.sx << ")" << std::endl;
 	
@@ -3502,7 +3501,7 @@ int main() {
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
 	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
 	Image_Data croppedImageData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
-	*/
+	
 	//for (k = 0; k < Height; k++) 
 	//{
 	//	delete[] imageData[k];
@@ -3632,32 +3631,30 @@ int main() {
 	//}
 	//fclose(path_value);
 	*/
-
-	//==================== GSUBSURF ======================================================
-	/*
+	
 	dataType h = ctSpacing.sx;
 	Segmentation_Parameters segParameters = {
 		30,//Maximum number of Gauss-Seidel iterations
-		10000,//edge detector coef
-		0.000001,//epsilon is the regularization factor (Evans-Spruck)
-		5000,//Number of current time step
-		5000,//Maximum number of time step
-		10,//saving frequency
+		100000,//edge detector coef
+		1e-6,//epsilon is the regularization factor (Evans-Spruck)
+		1000,//Number of current time step
+		1000,//Maximum number of time step
+		1,//saving frequency
 		1e-6,//segmentation tolerance
 		2 * h,//tau
 		h,//h
-		1.5,//omega_c
+		1.4,//omega_c
 		0.001,//tolerance
 		1.0,//convection coef
-		0.001,//diffusion coef
+		0.005,//diffusion coef
 	};
 	
 	Filter_Parameters smoothParameters = {
-		0.25 * ctSpacing.sx * ctSpacing.sx,//tau
+		0.2,//tau
 		h,//h
 		0.0,//sigma
 		0,//K--> we use heat implicit
-		1.5,//omega
+		1.4,//omega
 		0.001,//tolerance
 		0.0001,//eps 2
 		0.001,//coef
@@ -3673,9 +3670,9 @@ int main() {
 	storing_path = outputPath + "initial_segment_p1.raw";
 	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
-	storing_path = outputPath + "seg/";
-	//generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
-	generalizedSubsurf_iioe(segmentInputData, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
+	storing_path = outputPath + "seg/3D/O/";
+	generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
+	//generalizedSubsurf_iioe(segmentInputData, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
 	//subsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, centers, 1, (unsigned char*)storing_path.c_str());
 	
 	//double cpu_start = clock();
@@ -3702,7 +3699,7 @@ int main() {
 	}
 	delete[] imageData;
 	free(ctContainer);
-	*/
+	
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
@@ -6577,7 +6574,7 @@ int main() {
 
 	//==================== Test segmentation 2D =======================================================
 
-	
+	/*
 	//const size_t Length = 512, Width = 512;
 	//const size_t dim2D = Length * Width;
 	dataType* imageData = new dataType[dim2D] {0};
@@ -6647,6 +6644,7 @@ int main() {
 	delete[] initialSegment;
 	
 	free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }
