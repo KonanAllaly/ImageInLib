@@ -353,6 +353,9 @@
     <ClCompile Include="src\percentile.c">
       <Filter>Source Files\Statistics</Filter>
     </ClCompile>
+    <ClCompile Include="src\conmon_filtering.c">
+      <Filter>Source Files\Filtering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -528,6 +531,9 @@
     </ClInclude>
     <ClInclude Include="include\percentile.h">
       <Filter>Header Files\Statistics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\conmon_filtering.h">
+      <Filter>Header Files\Filtering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -19,6 +19,7 @@
     <ClCompile Include="src\common_functions.c" />
     <ClCompile Include="src\common_math.c" />
     <ClCompile Include="src\common_vtk.cpp" />
+    <ClCompile Include="src\conmon_filtering.c" />
     <ClCompile Include="src\cropping.c" />
     <ClCompile Include="src\data initialization version2.c" />
     <ClCompile Include="src\data_initialization.c" />
@@ -78,6 +79,7 @@
     <ClInclude Include="distanceForPathFinding.h" />
     <ClInclude Include="include\common_math.h" />
     <ClInclude Include="include\common_vtk.h" />
+    <ClInclude Include="include\conmon_filtering.h" />
     <ClInclude Include="include\cropping.h" />
     <ClInclude Include="include\distanceMaps.h" />
     <ClInclude Include="include\eigen_systems.h" />
