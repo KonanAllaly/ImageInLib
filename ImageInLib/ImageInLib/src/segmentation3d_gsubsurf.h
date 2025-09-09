@@ -21,6 +21,7 @@ extern "C" {
 
 	bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
 
+
 #ifdef __cplusplus
 }
 #endif
