@@ -405,13 +405,18 @@ bool generalizedGaussSeidelCoefficients(Image_Data segmentationData, dataType** 
 	dataType orig_e, orig_w, orig_n, orig_s, orig_t, orig_b;
 	dataType voxel_coef, average_face_coef;
 
+	if(height_ext < 3 || length_ext < 3 || width_ext < 3)
+	{
+		return false;
+	}	
 	dataType** extendedCoefPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
 	for (k = 0; k < height_ext; k++) {
 		extendedCoefPtr[k] = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
+		if (extendedCoefPtr[k] == NULL)
+			return false;
 	}
 	if (extendedCoefPtr == NULL)
 		return false;
-
 	//copy data to extended area which will be used in each time step
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
