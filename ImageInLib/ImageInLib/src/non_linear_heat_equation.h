@@ -30,6 +30,8 @@ extern "C" {
 
 	bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filtering_parameters);
 
+	bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters filterParameters);
+
 #endif // !HEAT_QUATION_H
 
 #ifdef __cplusplus

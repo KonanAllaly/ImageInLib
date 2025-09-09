@@ -2,12 +2,17 @@
 #include <stdlib.h>
 #include <math.h> // Maths functions i.e. pow, sin, cos
 #include <stdbool.h> // Boolean function bool
+
+#include "file.h"
+#include "data_storage.h"
+
 #include "heat_equation.h"
 #include "non_linear_heat_equation.h"
 #include "setting_boundary_values.h"
 #include "common_functions.h"
 #include "filter_params.h"
-#include "eigen_systems.h"
+#include "conmon_filtering.h"
+
 
 // Local Function Prototype
 
@@ -668,4 +673,299 @@ bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filterin
 	free(previous_Solution);
 	free(gauss_Seidel_Sol);
 	free(extended_image_data);
+}
+
+bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters filterParameters)
+{
+	//checks if the memory was allocated
+	if (inputImageData.imageDataPtr == NULL)
+		return false;
+
+	size_t k, i, j, x, steps = filterParameters.maxNumberOfSolverIteration;
+	size_t k_ext, j_ext, i_ext, x_ext;
+
+	dataType hx = inputImageData.spacing.sx;
+	dataType hy = inputImageData.spacing.sy;
+	dataType hz = inputImageData.spacing.sz;
+	dataType hx_2 = hx * hx;
+	dataType hy_2 = hy * hy;
+	dataType hz_2 = hz * hz;
+	dataType tau = filterParameters.timeStepSize;
+	dataType coef_edge = filterParameters.edge_detector_coefficient;
+	dataType eps2 = filterParameters.eps2;
+
+	// Error value used to check iteration
+	// sor - successive over relation value, used in Gauss-Seidel formula
+	dataType error, gauss_seidel;
+
+	// Prepare variables toExplicitImage.height, toExplicitImage.length, toExplicitImage.width
+	size_t height = inputImageData.height, length = inputImageData.length, width = inputImageData.width;
+	size_t dim2D = length * width;
+	size_t height_ext = height + 2;
+	size_t length_ext = length + 2;
+	size_t width_ext = width + 2;
+	
+	//Presmoothing step
+	dataType** presmoothedImage = (dataType**)malloc(sizeof(dataType*) * height);
+	if (presmoothedImage == NULL)
+	{
+		return false;
+	}
+	for(k = 0; k < height; k++)
+	{
+		presmoothedImage[k] = malloc(sizeof(dataType) * dim2D);
+		if (presmoothedImage[k] == NULL)
+		{
+			return false;
+		}
+	}
+
+	copyDataToAnotherArray(inputImageData.imageDataPtr, presmoothedImage, height, length, width);
+
+	Image_Data presmoothingData = {height, length, width, presmoothedImage, inputImageData.origin, inputImageData.spacing, inputImageData.orientation};
+
+	heatImplicitRectangularScheme(presmoothingData, filterParameters);
+
+	//save smoothed image
+	char path_saving [] = "C:/Users/Konan Allaly/Documents/Tests/output/smoothed.raw";
+	Storage_Flags flags = { false,false };
+	store3dDataArrayD(presmoothedImage, length, width, height, path_saving, flags);
+
+	// Compute edge detector coefficients on presmoothed image
+	Pointers_Neighbours norm_of_gradient;
+	norm_of_gradient.east = malloc(sizeof(dataType*) * height);
+	norm_of_gradient.west = malloc(sizeof(dataType*) * height);
+	norm_of_gradient.north = malloc(sizeof(dataType*) * height);
+	norm_of_gradient.south = malloc(sizeof(dataType*) * height);
+	norm_of_gradient.top = malloc(sizeof(dataType*) * height);
+	norm_of_gradient.bottom = malloc(sizeof(dataType*) * height);
+	for(k = 0; k < height; k++)
+	{
+		norm_of_gradient.east[k] = malloc(sizeof(dataType) * dim2D);
+		norm_of_gradient.west[k] = malloc(sizeof(dataType) * dim2D);
+		norm_of_gradient.north[k] = malloc(sizeof(dataType) * dim2D);
+		norm_of_gradient.south[k] = malloc(sizeof(dataType) * dim2D);
+		norm_of_gradient.top[k] = malloc(sizeof(dataType) * dim2D);
+		norm_of_gradient.bottom[k] = malloc(sizeof(dataType) * dim2D);
+		if (norm_of_gradient.east[k] == NULL || norm_of_gradient.west[k] == NULL || norm_of_gradient.north[k] == NULL ||
+			norm_of_gradient.south[k] == NULL || norm_of_gradient.top[k] == NULL || norm_of_gradient.bottom[k] == NULL)
+			return false;
+	}
+	if (norm_of_gradient.east == NULL || norm_of_gradient.west == NULL || norm_of_gradient.north == NULL ||
+		norm_of_gradient.south == NULL || norm_of_gradient.top == NULL || norm_of_gradient.bottom == NULL)
+		return false;
+	
+	//normOfGradientReducedDiamondCells(presmoothingData, norm_of_gradient);
+
+	//Copy to extended area
+	// Create temporary Image Data holder for Previous time step data - with extended boundary because of boundary condition
+	dataType** prevSolPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
+
+	// Create temporary Image Data holder for Current time step data - with extended boundary because of boundary condition
+	dataType** gauss_seidelPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
+
+	//checks if the memory was allocated
+	if (prevSolPtr == NULL || gauss_seidelPtr == NULL)
+		return false;
+	for (k = 0; k < height_ext; k++)
+	{
+		gauss_seidelPtr[k] = malloc(sizeof(dataType) * length_ext * width_ext);
+		prevSolPtr[k] = malloc(sizeof(dataType) * length_ext * width_ext);
+		//checks if the memory was allocated
+		if (gauss_seidelPtr[k] == NULL || prevSolPtr[k] == NULL)
+			return false;
+	}
+
+	//Copy the presmoothed image to the extended area
+	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
+	{
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+		{
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
+			{
+				x = x_new(i, j, length);
+				x_ext = x_new(i_ext, j_ext, length_ext);
+				prevSolPtr[k_ext][x_ext] = presmoothedImage[k][x];
+				gauss_seidelPtr[k_ext][x_ext] = presmoothedImage[k][x];
+			}
+		}
+	}
+
+	//perform reflection of the extended area to ensure zero Neumann boundary condition (for LHE)
+	reflection3D(prevSolPtr, height_ext, length_ext, width_ext);
+	reflection3D(gauss_seidelPtr, height_ext, length_ext, width_ext);
+
+	//Compute the coefficients for the original image
+	dataType** coefPtr_e = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** coefPtr_w = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** coefPtr_n = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** coefPtr_s = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** coefPtr_t = (dataType**)malloc(sizeof(dataType*) * height);
+	dataType** coefPtr_b = (dataType**)malloc(sizeof(dataType*) * height);
+	//checks if the memory was allocated
+	if (coefPtr_e == NULL || coefPtr_w == NULL || coefPtr_n == NULL || coefPtr_s == NULL || coefPtr_t == NULL ||
+		coefPtr_b == NULL)
+		return false;
+	for (k = 0; k < height; k++)
+	{
+		coefPtr_e[k] = malloc(sizeof(dataType) * dim2D);
+		coefPtr_w[k] = malloc(sizeof(dataType) * dim2D);
+		coefPtr_n[k] = malloc(sizeof(dataType) * dim2D);
+		coefPtr_s[k] = malloc(sizeof(dataType) * dim2D);
+		coefPtr_t[k] = malloc(sizeof(dataType) * dim2D);
+		coefPtr_b[k] = malloc(sizeof(dataType) * dim2D);
+		//checks if the memory was allocated
+		if (coefPtr_e[k] == NULL || coefPtr_w[k] == NULL || coefPtr_n[k] == NULL || coefPtr_s[k] == NULL ||
+			coefPtr_t[k] == NULL || coefPtr_b[k] == NULL)
+			return false;
+	}
+
+	//calculation of coefficients
+	dataType voxel_coef, average_face_coef;
+	dataType g_east, g_west, g_north, g_south, g_top, g_bottom;
+	dataType n_east, n_west, n_north, n_south, n_top, n_bottom;
+	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
+	{
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+		{
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++)
+			{
+				// 2D to 1D representation for i, j
+				x_ext = x_new(i_ext, j_ext, length_ext);
+				x = x_new(i, j, length);
+				
+				//edge detector function at each voxel face
+				g_east = gradientFunction(norm_of_gradient.east[k][i], coef_edge);
+				g_west = gradientFunction(norm_of_gradient.west[k][i], coef_edge);
+				g_north = gradientFunction(norm_of_gradient.north[k][i], coef_edge);
+				g_south = gradientFunction(norm_of_gradient.south[k][i], coef_edge);
+				g_top = gradientFunction(norm_of_gradient.top[k][i], coef_edge);
+				g_bottom = gradientFunction(norm_of_gradient.bottom[k][i], coef_edge);
+
+				//epsilon regularization
+				n_east = sqrt(norm_of_gradient.west[k][x] + eps2);
+				n_west = sqrt(norm_of_gradient.west[k][x] + eps2);
+				n_north = sqrt(norm_of_gradient.north[k][x] + eps2);
+				n_south = sqrt(norm_of_gradient.south[k][x] + eps2);
+				n_top = sqrt(norm_of_gradient.top[k][x] + eps2);
+				n_bottom = sqrt(norm_of_gradient.bottom[k][x] + eps2);
+
+				//average of the norm of gradient at the voxel faces
+				average_face_coef = (dataType)((n_east + n_west + n_north + n_south + n_top + n_bottom) / 6.0);
+				voxel_coef = (dataType)sqrt(pow(average_face_coef, 2) + eps2);
+
+				//evaluation of norm of gradient of image at each voxel, norm of gradient of presmoothed
+				//image at each voxel face and reciprocal of norm of gradient of image at each voxel face
+				coefPtr_e[k][x] = (dataType)(tau * voxel_coef * g_east / (n_east * hx_2));
+				coefPtr_w[k][x] = (dataType)(tau * voxel_coef * g_west / (n_west * hx_2));
+				coefPtr_n[k][x] = (dataType)(tau * voxel_coef * g_north / (n_north * hy_2));
+				coefPtr_s[k][x] = (dataType)(tau * voxel_coef * g_south / (n_south * hy_2));
+				coefPtr_t[k][x] = (dataType)(tau * voxel_coef * g_top / (n_top * hz_2));
+				coefPtr_b[k][x] = (dataType)(tau * voxel_coef * g_bottom / (n_bottom * hz_2));
+			}
+		}
+	}
+
+	// The Implicit Scheme Evaluation
+	size_t count_iteration = 0; // Steps counter
+	do
+	{
+		count_iteration++;
+		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
+		{
+			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+			{
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++)
+				{
+					// 2D to 1D representation for i, j
+					x_ext = x_new(i_ext, j_ext, length_ext);
+					x = x_new(i, j, length);
+
+					// Begin Gauss-Seidel Formula Evaluation
+					gauss_seidel = (prevSolPtr[k_ext][x_ext] + ((coefPtr_e[k][x] * gauss_seidelPtr[k_ext][x_ext + 1])
+						+ (coefPtr_w[k][x] * gauss_seidelPtr[k_ext][x_ext - 1])
+						+ (coefPtr_s[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)])
+						+ (coefPtr_n[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)])
+						+ (coefPtr_b[k][x] * gauss_seidelPtr[k_ext + 1][x_ext])
+						+ (coefPtr_t[k][x] * gauss_seidelPtr[k_ext - 1][x_ext]))) /
+						(1 + coefPtr_e[k][x] + coefPtr_w[k][x] + coefPtr_n[k][x]
+							+ coefPtr_s[k][x] + coefPtr_t[k][x] + coefPtr_b[k][x]);
+
+					// SOR implementation using Gauss-Seidel
+					gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] +
+						filterParameters.omega_c * (gauss_seidel - gauss_seidelPtr[k_ext][x_ext]);
+				}
+			}
+		}
+
+		// Error Evaluation
+		error = 0.0; // Initialize
+		for (k = 0, k_ext = 1; k < height; k++, k_ext++)
+		{
+			for (i = 0, i_ext = 1; i < length; i++, i_ext++)
+			{
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++)
+				{
+					// 2D to 1D representation for i, j
+					x_ext = x_new(i_ext, j_ext, length_ext);
+					x = x_new(i, j, length);
+
+					error += (dataType)pow(gauss_seidelPtr[k_ext][x_ext] * (1 + coefPtr_e[k][x]
+						+ coefPtr_w[k][x] + coefPtr_n[k][x] + coefPtr_s[k][x]
+						+ coefPtr_t[k][x] + coefPtr_b[k][x])
+						- ((coefPtr_e[k][x] * gauss_seidelPtr[k_ext][x_ext + 1])
+							+ (coefPtr_w[k][x] * gauss_seidelPtr[k_ext][x_ext - 1])
+							+ (coefPtr_s[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)])
+							+ (coefPtr_n[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)])
+							+ (coefPtr_b[k][x] * gauss_seidelPtr[k_ext + 1][x_ext])
+							+ (coefPtr_t[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])) - prevSolPtr[k_ext][x_ext], 2);
+				}
+			}
+		}
+	} while (error > filterParameters.tolerance && count_iteration < filterParameters.maxNumberOfSolverIteration);
+	printf("The number of iterations is %zd\n", count_iteration);
+	printf("Error is %e\n", error);
+
+	//Copy the current time step to original data holder after timeStepsNum
+	copyDataToReducedArea(inputImageData.imageDataPtr, gauss_seidelPtr, height, length, width);
+	
+
+	for (k = 0; k < height_ext; k++) 
+	{
+		if(k < height)
+		{
+			free(presmoothedImage[k]);
+			free(norm_of_gradient.east[k]);
+			free(norm_of_gradient.west[k]);
+			free(norm_of_gradient.north[k]);
+			free(norm_of_gradient.south[k]);
+			free(norm_of_gradient.top[k]);
+			free(norm_of_gradient.bottom[k]);
+			free(coefPtr_e[k]);
+			free(coefPtr_w[k]);
+			free(coefPtr_n[k]);
+			free(coefPtr_s[k]);
+			free(coefPtr_t[k]);
+			free(coefPtr_b[k]);
+		}
+		free(prevSolPtr[k]);
+		free(gauss_seidelPtr[k]);
+	}
+	free(presmoothedImage);
+	free(norm_of_gradient.east);
+	free(norm_of_gradient.west);
+	free(norm_of_gradient.north);
+	free(norm_of_gradient.south);
+	free(norm_of_gradient.top);
+	free(norm_of_gradient.bottom);
+	free(coefPtr_e);
+	free(coefPtr_w);
+	free(coefPtr_n);
+	free(coefPtr_s);
+	free(coefPtr_t);
+	free(coefPtr_b);
+	free(prevSolPtr);
+	free(gauss_seidelPtr);
+
+	return true;
 }
