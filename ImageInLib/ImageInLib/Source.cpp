@@ -20,6 +20,7 @@
 #include "../src/heat_equation.h"
 #include "segmentation2d.h"
 #include "../src/segmentation3d_gsubsurf.h"
+#include "../src/non_linear_heat_equation.h"
 
 int main() {
 
@@ -60,17 +61,17 @@ int main() {
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	
-	////Find min and max
-	//dataType minValue = 1000000.0, maxValue = -1000000.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			dataType value = ctContainer->dataPointer[k][x_new(i, j, Length)];
-	//			if (value < minValue) minValue = value;
-	//			if (value > maxValue) maxValue = value;
-	//		}
-	//	}
-	//}
+	//Find min and max
+	dataType minValue = 1000000.0, maxValue = -1000000.0;
+	for (k = 0; k < Height; k++) {
+		for (i = 0; i < Length; i++) {
+			for (j = 0; j < Width; j++) {
+				dataType value = ctContainer->dataPointer[k][x_new(i, j, Length)];
+				if (value < minValue) minValue = value;
+				if (value > maxValue) maxValue = value;
+			}
+		}
+	}
 	
 	//========================= Detect Heart region =========================================
 	
@@ -740,113 +741,6 @@ int main() {
 	delete[] shape_aorta_ct;
 
 	free(petContainer);
-	*/
-
-	//======================== Filtering ===================================================
-	
-	/*
-	dataType** imageData = new dataType * [Height];
-	dataType** filtered = new dataType * [Height];
-	dataType** edgeDetector = new dataType * [Height];
-	dataType** gradX = new dataType * [Height];
-	dataType** gradY = new dataType * [Height];
-	dataType** gradZ = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-		filtered[k] = new dataType[dim2D]{ 0 };
-		edgeDetector[k] = new dataType[dim2D]{ 0 };
-		gradX[k] = new dataType[dim2D]{ 0 };
-		gradY[k] = new dataType[dim2D]{ 0 };
-		gradZ[k] = new dataType[dim2D]{ 0 };
-	}
-
-	//Shift + copy
-	for (k = 0; k < Height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			imageData[k][i] = ctContainer->dataPointer[k][i];
-		}
-	}
-	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, minData, maxData);
-
-	//storing_path = outputPath + "rescal.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-
-	size_t hauteur = (size_t)((ctSpacing.sz / ctSpacing.sx) * Height);
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-
-	dataType** interpolate = new dataType * [hauteur];
-	for (k = 0; k < hauteur; k++) {
-		interpolate[k] = new dataType[dim2D]{ 0 };
-	}
-
-	Image_Data interpolateImageData = { hauteur, Length, Width, interpolate, ctOrigin, intSpacing, orientation };
-
-	imageInterpolation3D(inputImageData, interpolateImageData, NEAREST_NEIGHBOR);
-
-	storing_path = outputPath + "interpolate.raw";
-	manageRAWFile3D<dataType>(interpolate, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
-
-	dataType K = 1000;
-	Filter_Parameters filter_parameters{
-		1.5 * ctSpacing.sx,//tau
-		ctSpacing.sx,//h
-		0.0,//sigma
-		K,//edge detector coefficient
-		1.5,//omega_c
-		1e-3,//tolerance
-		1e-6,//epsilon2
-		1e-6,//coef
-		1,//p
-		1,//number of time step
-		100,// max solver iteration
-	};
-
-	geodesicMeanCurvatureTimeStep(interpolateImageData, filter_parameters);
-
-	Image_Data filteredImageData = { Height, Length, Width, filtered, ctOrigin, ctSpacing, orientation };
-	imageInterpolation3D(interpolateImageData, filteredImageData, NEAREST_NEIGHBOR);
-	
-	storing_path = outputPath + "filtered.raw";
-	manageRAWFile3D<dataType>(filtered, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	////Compute edge detector
-	//compute3dImageGradient(filtered, gradX, gradY, gradZ, Length, Width, Height, ctSpacing);
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < Length; i++) {
-	//		for (j = 0; j < Width; j++) {
-	//			xd = x_new(i, j, Length);
-	//			dataType norm_grad = gradX[k][xd] * gradX[k][xd] + gradY[k][xd] * gradY[k][xd] + gradZ[k][xd] * gradZ[k][xd];
-	//			edgeDetector[k][xd] = gradientFunction(norm_grad, 20000);
-	//		}
-	//	}
-	//}
-
-	//storing_path = outputPath + "edge_detector.raw";
-	//manageRAWFile3D<dataType>(edgeDetector, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] filtered[k];
-		delete[] edgeDetector[k];
-		delete[] gradX[k];
-		delete[] gradY[k];
-		delete[] gradZ[k];
-	}
-	delete[] imageData;
-	delete[] filtered;
-	delete[] edgeDetector;
-	delete[] gradX;
-	delete[] gradY;
-	delete[] gradZ;
-
-	for (k = 0; k < hauteur; k++) {
-		delete[] interpolate[k];
-	}
-	delete[] interpolate;
-
-	free(ctContainer);
 	*/
 	
 	//======================== Segment the Liver ===========================================
@@ -3289,117 +3183,17 @@ int main() {
 	*/
 
 	//==================== GSUBSURF with Peak function ===================================
-
-	/*
-	//=================== 2D image ==============================
 	
-	
-	//const size_t Length = 512, Width = 512;
-	//size_t dim2D = Length * Width;
-	
-	dataType* imageData = new dataType[dim2D]{ 0 };
-	dataType* initialSegment = new dataType[dim2D]{ 0 };
-
-	//loading_path = inputPath + "raw/slice/image2.raw";
-	//manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
-	//rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
-
-	copyDataToAnother2dArray(ctContainer->dataPointer[263], imageData, Length, Width);
-	rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
-
-	dataType v = 1.0;
-	dataType radius = 20;
-	Point2D sSeed = { 294, 317 };//new
-	double pDistance = 0.0;
-	dataType value = 0.0;
-
-	//copy points to file
-	string saving_csv = outputPath + "peak_function_v2.csv";
-	FILE* file_peak;
-	if (fopen_s(&file_peak, saving_csv.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_peak, "x,y\n");
-	
-	for (i = 0; i < Length; i++) {
-		for (j = 0; j < Width; j++) {
-			xd = x_new(i, j, Length);
-			Point2D current_point = { i, j };
-			pDistance = getPoint2DDistance(sSeed, current_point);
-			if (pDistance <= radius) {
-				value = 1.0 / (pDistance + v);
-			}
-			else {
-				value = 0;//1.0 / (radius + v);
-			}
-			fprintf(file_peak, "%d,%f\n", xd, value);
-			initialSegment[xd] = value;
-		}
-	}
-	fclose(file_peak);
-
-	storing_path = outputPath + "initialSegment_v2.raw";
-	manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-	storing_path = outputPath + "loaded_new.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
-
-	const Filter_Parameters smoothing_parameters = {
-		0.25,//tau
-		1.171875,//h
-		0.0,//sigma
-		0,//K--> we use heat implicit
-		1.4,//omega
-		0.001,//tolerance
-		0.001,//eps 2
-		0.001,//coef
-		1,//p
-		5,//time step number
-		100,//max solver iteration
-	};
-
-	Segmentation_Parameters segmentation_parameters = {
-		200,//max iteration number
-		10000,//edge detector coef
-		0.0001,//eps 2
-		100,//number of current time step
-		1000,//number of time step
-		10,//saving frequency
-		0.000001,//segmentation tolerance
-		0.1,//tau
-		1.171875,//h
-		1.4,//omega_c
-		0.01,//tolerance
-		1.0,//convection coef
-		0.1//diffusion coef
-	};
-
-	Image_Data2D inputImageData = {Length, Width, imageData};
-	
-	//storing_path = outputPath + "segmentation/2d slice/";
-	//subsurf(inputImageData, initialSegment, storing_path.c_str(), smoothing_parameters, segmentation_parameters);
-	storing_path = outputPath + "segmentation/2d slice/gsubsurf/";
-	gsubsurf(inputImageData, initialSegment, storing_path.c_str(), smoothing_parameters, segmentation_parameters);
-
-	delete[] imageData;
-	delete[] initialSegment;
-	*/
-	
-	//==================== 3D image ======================================================
-	
-	//input image
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
+	////input image
+	//dataType** imageData = new dataType * [Height];
+	//for (k = 0; k < Height; k++) {
+	//	imageData[k] = new dataType[dim2D]{ 0 };
+	//}
 	
 	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
 	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
 	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, minValue, maxValue);
-
 	//Image_Data inputImageData = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 	
 	////std::cout << "============ Interpolated ================ " << std::endl;
@@ -3419,15 +3213,16 @@ int main() {
 	////manageRAWFile3D<dataType>(interpolatedImage, Length, Width, hauteur, storing_path.c_str(), STORE_DATA, false);
 	
 	
-	std::cout << "============ Cropped ================ " << std::endl;
-	//p1
-	//Croping
-	size_t i_min = 200;
-	size_t j_min = 200;
-	size_t k_min = 275; // 240 for new 
-	size_t length = 150;
-	size_t width = 150;
-	size_t height = 350; // 380 for new
+	//std::cout << "============ Cropped ================ " << std::endl;
+	////p1
+	////Croping
+	//size_t i_min = 200;
+	//size_t j_min = 200;
+	//size_t k_min = 275; // 240 for new 
+	//size_t length = 150;
+	//size_t width = 150;
+	//size_t height = 350; // 380 for new
+	
 	
 	/*
 	////p2
@@ -3474,15 +3269,16 @@ int main() {
 	//size_t height = 400;
 	*/
 
-	std::cout << "New dimensions : Length = " << length << ", Width = " << width << ", Height = " << height << std::endl;
-	std::cout << "Cropped Spacing : (" << ctSpacing.sx << ", " << ctSpacing.sy << ", " << ctSpacing.sx << ")" << std::endl;
 	
-	dataType** imageCrop = new dataType * [height];
-	dataType** initialSegment = new dataType * [height];
-	for (k = 0; k < height; k++) {
-		imageCrop[k] = new dataType[length * width]{ 0 };
-		initialSegment[k] = new dataType[length * width]{ 0 };
-	}
+	//std::cout << "New dimensions : Length = " << length << ", Width = " << width << ", Height = " << height << std::endl;
+	//std::cout << "Cropped Spacing : (" << ctSpacing.sx << ", " << ctSpacing.sy << ", " << ctSpacing.sx << ")" << std::endl;
+	//
+	//dataType** imageCrop = new dataType * [height];
+	//dataType** initialSegment = new dataType * [height];
+	//for (k = 0; k < height; k++) {
+	//	imageCrop[k] = new dataType[length * width]{ 0 };
+	//	initialSegment[k] = new dataType[length * width]{ 0 };
+	//}
 	
 	//size_t k_n = 0, i_n = 0, j_n = 0;
 	//for (k = 0, k_n = k_min; k < height; k++, k_n++) {
@@ -3493,21 +3289,22 @@ int main() {
 	//	}
 	//}
 	
-	storing_path = outputPath + "cropped_p1.raw";
-	manageRAWFile3D<dataType>(imageCrop, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	////storing_path = outputPath + "cropped_p1.raw";
+	////manageRAWFile3D<dataType>(imageCrop, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
-	Point3D newOrigin = { i_min, j_min, k_min };
-	VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
-	newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
-	std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
-	Image_Data croppedImageData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	////Point3D newOrigin = { i_min, j_min, k_min };
+	////VoxelSpacing intSpacing = { ctSpacing.sx, ctSpacing.sy, ctSpacing.sx };
+	////newOrigin = getRealCoordFromImageCoord3D(newOrigin, ctOrigin, intSpacing, orientation);
+	////std::cout << "Cropped origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
+	////Image_Data croppedImageData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	////
+	////for (k = 0; k < Height; k++) 
+	////{
+	////	delete[] imageData[k];
+	////}
+	////delete[] imageData;
+	////free(ctContainer);
 	
-	//for (k = 0; k < Height; k++) 
-	//{
-	//	delete[] imageData[k];
-	//}
-	//delete[] imageData;
-	//free(ctContainer);
 
 	/*
 	//========== Downsampling =============================
@@ -3632,73 +3429,75 @@ int main() {
 	//fclose(path_value);
 	*/
 	
-	dataType h = ctSpacing.sx;
-	Segmentation_Parameters segParameters = {
-		30,//Maximum number of Gauss-Seidel iterations
-		100000,//edge detector coef
-		1e-6,//epsilon is the regularization factor (Evans-Spruck)
-		1000,//Number of current time step
-		1000,//Maximum number of time step
-		1,//saving frequency
-		1e-6,//segmentation tolerance
-		2 * h,//tau
-		h,//h
-		1.4,//omega_c
-		0.001,//tolerance
-		1.0,//convection coef
-		0.005,//diffusion coef
-	};
 	
-	Filter_Parameters smoothParameters = {
-		0.2,//tau
-		h,//h
-		0.0,//sigma
-		0,//K--> we use heat implicit
-		1.4,//omega
-		0.001,//tolerance
-		0.0001,//eps 2
-		0.001,//coef
-		1,//p
-		5,//time step number
-		100,//max solver iteration
-	};
+	//dataType h = ctSpacing.sx;
+	//Segmentation_Parameters segParameters = {
+	//	30,//Maximum number of Gauss-Seidel iterations
+	//	100000,//edge detector coef
+	//	1e-6,//epsilon is the regularization factor (Evans-Spruck)
+	//	1000,//Number of current time step
+	//	1000,//Maximum number of time step
+	//	1,//saving frequency
+	//	1e-6,//segmentation tolerance
+	//	2 * h,//tau
+	//	h,//h
+	//	1.4,//omega_c
+	//	0.001,//tolerance
+	//	1.0,//convection coef
+	//	0.005,//diffusion coef
+	//};
+	//
+	//Filter_Parameters smoothParameters = {
+	//	0.2,//tau
+	//	h,//h
+	//	0.0,//sigma
+	//	0,//K--> we use heat implicit
+	//	1.4,//omega
+	//	0.001,//tolerance
+	//	0.0001,//eps 2
+	//	0.001,//coef
+	//	1,//p
+	//	5,//time step number
+	//	100,//max solver iteration
+	//};
 
-	Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
-	Point3D* centers = new Point3D[1];
-	centers[0] = { 0.0, 0.0, 0.0 };
+	//Image_Data segmentInputData = { height, length, width, imageCrop, newOrigin, intSpacing, orientation };
+	//Point3D* centers = new Point3D[1];
+	//centers[0] = { 0.0, 0.0, 0.0 };
 
-	storing_path = outputPath + "initial_segment_p1.raw";
-	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "initial_segment_p1.raw";
+	//manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
-	storing_path = outputPath + "seg/3D/O/";
-	generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
-	//generalizedSubsurf_iioe(segmentInputData, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
-	//subsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, centers, 1, (unsigned char*)storing_path.c_str());
-	
-	//double cpu_start = clock();
+	//storing_path = outputPath + "seg/3D/O/";
 	//generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
-	////generalizedSubsurfSegmentation(segmentInputData, initial_segment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
-	//double cpu_end = clock();
-	//double needed_cpu_time = ((double)(cpu_end - cpu_start)) / CLOCKS_PER_SEC;
-	//printf("Hundred iterations need : %.3f s", needed_cpu_time);
+	////generalizedSubsurf_iioe(segmentInputData, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
+	////subsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, centers, 1, (unsigned char*)storing_path.c_str());
+	//
+	////double cpu_start = clock();
+	////generalizedSubsurfSegmentation(segmentInputData, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
+	//////generalizedSubsurfSegmentation(segmentInputData, initial_segment, segParameters, smoothParameters, segCenters, no_of_centers, (unsigned char*)storing_path.c_str());
+	////double cpu_end = clock();
+	////double needed_cpu_time = ((double)(cpu_end - cpu_start)) / CLOCKS_PER_SEC;
+	////printf("Hundred iterations need : %.3f s", needed_cpu_time);
 
-	for (k = 0; k < height; k++) {
-		delete[] imageCrop[k];
-		delete[] initialSegment[k];
-	}
-	delete[] imageCrop;
-	delete[] initialSegment;
-	
-	//for (k = 0; k < hauteur; k++) {
-	//	delete[] interpolatedImage[k];
+	//for (k = 0; k < height; k++) {
+	//	delete[] imageCrop[k];
+	//	delete[] initialSegment[k];
 	//}
-	//delete[] interpolatedImage;
+	//delete[] imageCrop;
+	//delete[] initialSegment;
+	//
+	////for (k = 0; k < hauteur; k++) {
+	////	delete[] interpolatedImage[k];
+	////}
+	////delete[] interpolatedImage;
+	//
+	//for (k = 0; k < Height; k++) {
+	//	delete[] imageData[k];
+	//}
+	//delete[] imageData;
+	//free(ctContainer);
 	
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-	}
-	delete[] imageData;
-	free(ctContainer);
 	
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
@@ -4695,19 +4494,33 @@ int main() {
 	dataType* smoothedImage = new dataType[dim2D]{ 0 };
 	dataType* potential = new dataType[dim2D]{ 0 };
 	dataType* action = new dataType[dim2D]{ 0 };
+	*/
 
-	////loading_path = inputPath + "raw/slice/slice_aorta.raw";
-	loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
+	//loading_path = inputPath + "raw/slice/slice_204_p1.raw";
+	////loading_path = inputPath + "raw/slice/eye_image_512_512.raw";
 	//manageRAWFile2D<dataType>(imageData, Length, Width, loading_path.c_str(), LOAD_DATA, false);
 	//rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
 	
-	//storing_path = outputPath + "input_image_2D.raw";
-	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	/*
+	storing_path = outputPath + "input_image_2D.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 	Image_Data2D imageDataStr = { Length, Width, imageData, {0.0, 0.0}, {1.0, 1.0}, {{1.0, 0.0}, {0.0, 1.0}} };
+
+	//dataType min_val = imageData[0], max_val = imageData[0];
+	//for(i = 0; i < dim2D; i++) {
+	//	if(imageData[i] < min_val) {
+	//		min_val = imageData[i];
+	//	}
+	//	if(imageData[i] > max_val) {
+	//		max_val = imageData[i];
+	//	}
+	//}
+	//std::cout << "Before Filtering Min: " << min_val << " Max: " << max_val << std::endl;
+	
 	Filter_Parameters filtering_parameters =
 	{
-		0.2,// timeStepSize;
-		1.0,// h not used here
+		0.5,// timeStepSize;
+		1.171875,// h not used here
 		1.0,// sigma not used here
 		0,// edge_detector_coefficient not used here
 		1.4,// omega_c;
@@ -4718,20 +4531,36 @@ int main() {
 		5,//number of time step;
 		100// max number of iteration;
 	};
-	//heatImplicit2dScheme(imageDataStr, filtering_parameters);
+	heatImplicit2dScheme(imageDataStr, filtering_parameters);
 
-	//const dataType sigma = 1.0;
+	//const dataType sigma = 3.0;
 	//gaussianSmoothing2D(imageData, smoothedImage, Length, Width, sigma);
 	//rescaleNewRange2D(smoothedImage, Length, Width, 0.0, 1.0);
+	*/
 	
+	/*
 	storing_path = outputPath + "filtered.raw";
 	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+
+	//min_val = smoothedImage[0], max_val = smoothedImage[0];
+	//for (i = 0; i < dim2D; i++) {
+	//	if (smoothedImage[i] < min_val) {
+	//		min_val = smoothedImage[i];
+	//	}
+	//	if (smoothedImage[i] > max_val) {
+	//		max_val = smoothedImage[i];
+	//	}
+	//}
+	//std::cout << "After Filtering Min: " << min_val << " Max: " << max_val << std::endl;
 
 	//int scale = 0;
 	//storing_path = outputPath + "input_3D_view.vtk";
 	//save2DImageAs3Dvtk(smoothedImage, Length, Width, (char*)storing_path.c_str(), scale);
 
+	//End Points sllice 
 	Point2D* endPoints = new Point2D[2];
+	endPoints[0] = { 175.0, 310.0 };
+	endPoints[1] = { 255.0, 208.0 };// One point is used for this test
 
 	//endPoints[0] = { 161.0, 301.0 };
 	//endPoints[1] = { 159.0, 237.0 };
@@ -4748,9 +4577,9 @@ int main() {
 	//endPoints[0] = { 261.0, 238.0 };
 	//endPoints[1] = { 194.0, 197.0 };
 
-	//Retinal image End Points
-	endPoints[0] = { 188.0, 64.0 };
-	endPoints[1] = { 370.0, 320.0 };
+	////Retinal image End Points
+	//endPoints[0] = { 188.0, 64.0 };
+	//endPoints[1] = { 370.0, 320.0 };
 
 	////Retinal image End Points second Tests
 	//endPoints[1] = { 181.0, 50.0 };
@@ -4787,28 +4616,15 @@ int main() {
 		radius
 	};
 	Image_Data2D toPotentialStr = { Length, Width, imageData, iOrigin, spacing, orientation2D };
-	//computePotential(toPotentialStr, potential, endPoints, parameters);
+	computePotential(toPotentialStr, potential, endPoints, parameters);
 
-	////Manually set the potential values
-	//Point2D grad;
-	//for(i = 0; i < Length; i++) {
-	//	for(j = 0; j < Width; j++) {
-	//		getGradient2D(smoothedImage, Width, Length, i, j, spacing, &grad);
-	//		dataType norm_grad = sqrt(grad.x * grad.x + grad.y * grad.y);
-	//		potential[x_new(i, j, Length)] = 1.0 / (2.5 * pow(norm_grad, 2) + 0.01);
-	//	}
-	//}
-
-	storing_path = outputPath + "potential_v2.raw";
-	manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), LOAD_DATA, false);
-
-	//const double LengthKeyPoints = 70.0;
-	//vector<Point2D> key_points;
+	storing_path = outputPath + "potential.raw";
+	//manageRAWFile2D<dataType>(potential, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
 	Image_Data2D toActionStr = { Length, Width, imageData, iOrigin, spacing, orientation2D };
-	//partialFrontPropagation2D(toActionStr, action, potential, endPoints);
-	fastMarching2D(toActionStr, action, potential, endPoints);
-	//rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.0001, 5000);
+	//fastMarching2D(toActionStr, action, potential, endPoints);
+	////partialFrontPropagation2D(toActionStr, action, potential, endPoints);
+	////rouyTourinFrontPropagation2D(toActionStr, action, potential, 0.001, 5000);
 	
 	//clock_t start, end;
 	////start = clock();
@@ -4823,28 +4639,27 @@ int main() {
 	//double laps = (end - start) / CLOCKS_PER_SEC;
 	//std::cout << "execution time : " << laps << std::endl;
 
-	storing_path = outputPath + "action.raw";
-	//storing_path = outputPath + "actionFM.raw";
-	manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	////storing_path = outputPath + "actionFM.raw";
+	//storing_path = outputPath + "actionRT.raw";
+	//manageRAWFile2D<dataType>(action, Length, Width, storing_path.c_str(), STORE_DATA, false);
 
-	Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
-	vector<Point2D> path_points;
-	Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
-	shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
+	//Path_Parameters parameters_path = { 0.8, 1000, 1.0 };
+	//vector<Point2D> path_points;
+	//Image_Data2D toExtractPath = { Length, Width, action, iOrigin, spacing, orientation2D };
+	//shortestPath2d(toExtractPath, endPoints, path_points, parameters_path);
 
-	FILE* path_points_file;
-	//string save_path_file = outputPath + "path_points_RT.csv";
-	string save_path_file = outputPath + "path_points_FM.csv";
-	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(path_points_file, "x,y\n");
-	for(size_t it = 0; it < path_points.size(); it++) {
-		fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
-	}
-	fclose(path_points_file);
-	*/
+	//FILE* path_points_file;
+	////string save_path_file = outputPath + "path_points_RT.csv";
+	//string save_path_file = outputPath + "path_points_FM.csv";
+	//if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(path_points_file, "x,y\n");
+	//for(size_t it = 0; it < path_points.size(); it++) {
+	//	fprintf(path_points_file, "%f,%f\n", path_points[it].x, path_points[it].y);
+	//}
+	//fclose(path_points_file);
 
 	////Save a sequence of path points
 	//size_t id_save = 0;
@@ -4865,7 +4680,7 @@ int main() {
 	//	}
 	//}
 
-	////Thresgold
+	////Threshold
 	//dataType thres_min = 0.245, thres_max = 0.29;
 	//for (i = 0; i < dim2D; i++) {
 	//	if( imageData[i] >= thres_min && imageData[i] <= thres_max ) {
@@ -4890,31 +4705,62 @@ int main() {
 	//storing_path = outputPath + "potential_3D_view.vtk";
 	//save2DImageAs3Dvtk(potential, Length, Width, (char*)storing_path.c_str(), scale);
 
-	//dataType* actionFM = new dataType[dim2D]{ 0 };
-	//dataType* actionRT = new dataType[dim2D]{ 0 };
-	//storing_path = outputPath + "actionFM.raw";
-	//manageRAWFile2D<dataType>(actionFM, Length, Width, storing_path.c_str(), LOAD_DATA, false);
-	//storing_path = outputPath + "actionRT.raw";
-	//manageRAWFile2D<dataType>(actionRT, Length, Width, storing_path.c_str(), LOAD_DATA, false);
-	////dataType mean_diff = 0.0;
-	////for(i = 0; i < dim2D; i++)
-	////{
-	////	mean_diff += pow(actionFM[i] - actionRT[i], 2);
-	////}
-	////mean_diff /= (dataType)dim2D;
-	////std::cout << "The mean diff is : " << mean_diff << std::endl;
+	
+	//Read the file of points with negative discriminant
+	vector<Point2D> nd;
+	dataType x, y;
+	string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_simple_file.csv";
+	FILE* pFile;
+	if (fopen_s(&pFile, path_discriminant.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	while (feof(pFile) == 0) {
+		fscanf_s(pFile, "%f", &x);
+		fscanf_s(pFile, ",");
+		fscanf_s(pFile, "%f", &y);
+		fscanf_s(pFile, "\n");
+		Point2D pt = { x, y };
+		nd.push_back(pt);
+	}
+	//std::cout << "Number of points with negative discriminant: " << nd.size() << std::endl;
+	fclose(pFile);
 
-	//size_t pt1 = x_new(276, 227, Length);
-	//size_t pt2 = x_new(332, 265, Length);
-	//size_t pt3 = x_new(337, 226, Length);
-	//size_t pt4 = x_new(384, 327, Length);
-	//std::cout << "Diff pt 1 : " << actionFM[pt1] - actionRT[pt1] << std::endl;
-	//std::cout << "Diff pt 2 : " << actionFM[pt2] - actionRT[pt2] << std::endl;
-	//std::cout << "Diff pt 3 : " << actionFM[pt3] - actionRT[pt3] << std::endl;
-	//std::cout << "Diff pt 4 : " << actionFM[pt4] - actionRT[pt4] << std::endl;
+	dataType* actionFM = new dataType[dim2D]{ 0 };
+	dataType* actionRT = new dataType[dim2D]{ 0 };
+	storing_path = outputPath + "actionFM.raw";
+	manageRAWFile2D<dataType>(actionFM, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = outputPath + "actionRT.raw";
+	manageRAWFile2D<dataType>(actionRT, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	dataType mean_diff = 0.0;
+	for(i = 0; i < dim2D; i++)
+	{
+		mean_diff += pow(actionFM[i] - actionRT[i], 2);
+	}
+	mean_diff /= (dataType)dim2D;
+	std::cout << "The mean diff is : " << mean_diff << std::endl;
+	dataType diff_action = 0.0;
+	dataType max_diff = 0.0, min_diff = 1000000.0;
+	for (k = 0; k < nd.size(); k++) 
+	{
+		xd = x_new((size_t)nd[k].x, (size_t)nd[k].y, Length);
+		diff_action = fabs(actionFM[xd] - actionRT[xd]);
+		if (diff_action > max_diff) {
+			max_diff = diff_action;
+		}
+		if (diff_action < min_diff) {
+			min_diff = diff_action;
+		}
+		if(k < 10) {
+			std::cout << "Point " << k << " : (" << nd[k].x << "," << nd[k].y << ") FM: " << actionFM[xd] << " RT: " << actionRT[xd] << " Diff: " << diff_action << std::endl;
+		}
+	}
+	std::cout << "Max diff : " << max_diff << std::endl;
+	std::cout << "Min diff : " << min_diff << std::endl;
 
-	//delete[] actionFM;
-	//delete[] actionRT;
+	delete[] actionFM;
+	delete[] actionRT;
+	
 
 	//vector<Point2D> fm, rt;
 	//dataType x, y;
@@ -4984,8 +4830,7 @@ int main() {
 	//}
 	//std::cout << "FM : " << H_fm / (dataType)fm.size() << std::endl;
 	//std::cout << "RT : " << H_rt / (dataType)rt.size() << std::endl;
-	
-	/*
+
 	delete[] endPoints;
 	delete[] imageData;
 	delete[] smoothedImage;
@@ -6533,45 +6378,6 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Test filtering with rectangular grid =======================================
-
-	/*
-	dataType** imageData = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-	}
-	//copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
-	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
-
-	storing_path = outputPath + "input.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
-
-	Image_Data toFiltereing = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	Filter_Parameters filtering_parameters =
-	{
-		0.25,// timeStepSize;
-		1.0,// h not used here
-		1.0,// sigma not used here
-		0,// edge_detector_coefficient not used here
-		1.4,// omega_c;
-		0.001,// tolerance;
-		0,// eps2 not used here
-		0,// coef not used here
-		1,// linked to sigma and not used here
-		2,//number of time step;
-		100// max number of iteration;
-	};
-	heatImplicitRectangularScheme(toFiltereing, filtering_parameters);
-
-	storing_path = outputPath + "filtered_2.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-	}
-	delete[] imageData;
-	*/
-
 	//==================== Test segmentation 2D =======================================================
 
 	/*
@@ -6645,6 +6451,96 @@ int main() {
 	
 	free(ctContainer);
 	*/
+
+	//==================== Test 3D computation norm of gradient, diamond cell rectangular grid =============
+
+	dataType** imageData = new dataType * [Height];
+	dataType** edgeDetector = new dataType * [Height];
+	for(k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		edgeDetector[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//loading_path = inputPath + "raw/filtered/New/filtered_p1.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	copyDataToAnotherArray(ctContainer->dataPointer, imageData, Height, Length, Width);
+	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
+
+	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+
+	Coefficient_Pointers vGrad;
+	vGrad.n_Ptr = new dataType * [Height];
+	vGrad.s_Ptr = new dataType * [Height];
+	vGrad.e_Ptr = new dataType * [Height];
+	vGrad.w_Ptr = new dataType * [Height];
+	vGrad.t_Ptr = new dataType * [Height];
+	vGrad.b_Ptr = new dataType * [Height];
+	for(k = 0; k < Height; k++) {
+		vGrad.n_Ptr[k] = new dataType[dim2D]{ 0 };
+		vGrad.s_Ptr[k] = new dataType[dim2D]{ 0 };
+		vGrad.e_Ptr[k] = new dataType[dim2D]{ 0 };
+		vGrad.w_Ptr[k] = new dataType[dim2D]{ 0 };
+		vGrad.t_Ptr[k] = new dataType[dim2D]{ 0 };
+		vGrad.b_Ptr[k] = new dataType[dim2D]{ 0 };
+	}
+
+	Filter_Parameters filtering_parameters =
+	{
+		1.0,// tau;
+		1.0,// h not used here
+		1.0,// sigma
+		1000,// edge_detector_coefficient
+		1.4,// omega_c;
+		1e-3,// tolerance;
+		1e-6,// eps2
+		1,// coef
+		1,// linked to sigma
+		1,//number of time step;
+		100// max number of iteration;
+	};
+
+	/*
+	heatImplicitRectangularScheme(inputImage, filtering_parameters);
+
+	//normOfGradientDiamondCellRectangular3D(inputImage, vGrad);
+	dataType average = 0.0, K = 100000;
+	for( k = 0; k < Height; k++)
+	{
+		for(i = 0; i < dim2D; i++)
+		{
+			average = (sqrt(vGrad.b_Ptr[k][i]) + sqrt(vGrad.t_Ptr[k][i]) + sqrt(vGrad.n_Ptr[k][i]) + sqrt(vGrad.s_Ptr[k][i])
+				+ sqrt(vGrad.w_Ptr[k][i]) + sqrt(vGrad.e_Ptr[k][i])) / 6.0;
+			edgeDetector[k][i] = gradientFunction(average * average, K);
+		}
+	}
+	*/
+
+	geodesicMeanCurvature(inputImage, filtering_parameters);
+
+	storing_path = outputPath + "filtered_GMCF_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for(k = 0; k < Height; k++)
+	{
+		delete[] imageData[k];
+		delete[] edgeDetector[k];
+		delete[] vGrad.b_Ptr[k];
+		delete[] vGrad.t_Ptr[k];
+		delete[] vGrad.n_Ptr[k];
+		delete[] vGrad.s_Ptr[k];
+		delete[] vGrad.e_Ptr[k];
+		delete[] vGrad.w_Ptr[k];
+	}
+	delete[] imageData;
+	delete[] edgeDetector;
+	delete[] vGrad.b_Ptr;
+	delete[] vGrad.t_Ptr;
+	delete[] vGrad.n_Ptr;
+	delete[] vGrad.s_Ptr;
+	delete[] vGrad.e_Ptr;
+	delete[] vGrad.w_Ptr;
+	free(ctContainer);
 
 	return EXIT_SUCCESS;
 }
