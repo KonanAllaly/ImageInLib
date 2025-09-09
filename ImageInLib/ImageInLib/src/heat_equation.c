@@ -307,7 +307,6 @@ void heatImplicit2dScheme(Image_Data2D imageData, const Filter_Parameters implic
 		} while (cpt < maxIteration && error > tol);
 
 		copyDataToAnother2dArray(gauss_seidel_solution, previous_solution, height_ext, width_ext);
-
 	}
 
 	//Copy back

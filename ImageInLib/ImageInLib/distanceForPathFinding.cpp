@@ -166,19 +166,19 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	size_t i, j, dim2D = length * width;
 
 	dataType seedVal1 = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[0].x, (size_t)seedPoints[0].y, length)]);
-	dataType seedVal2 = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[1].x, (size_t)seedPoints[1].y, length)]);
-	dataType seedVal = (dataType)(seedVal1 + seedVal2) / 2.0; //Average of the two seed points
+	//dataType seedVal2 = (dataType)(imageDataStr.imageDataPtr[x_new((size_t)seedPoints[1].x, (size_t)seedPoints[1].y, length)]);
+	//dataType seedVal = (dataType)(seedVal1 + seedVal2) / 2.0; //Average of the two seed points
 
-	dataType* distanceMap = new dataType[dim2D]{ 0 };
-	dataType* edgeImage = new dataType[dim2D]{ 0 };	
+	//dataType* distanceMap = new dataType[dim2D]{ 0 };
+	//dataType* edgeImage = new dataType[dim2D]{ 0 };	
 
 	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
 	bool isGradientComputed = false;
 	Point2D grad_vector;
 	PixelSpacing fVolume = imageDataStr.spacing;
 
-	dataType* arraySorted = new dataType[dim2D];
-	copyDataToAnother2dArray(imageDataStr.imageDataPtr, arraySorted, length, width);
+	//dataType* arraySorted = new dataType[dim2D];
+	//copyDataToAnother2dArray(imageDataStr.imageDataPtr, arraySorted, length, width);
 
 	//for (i = 0; i < length; i++) 
 	//{
@@ -216,18 +216,18 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	//manageRAWFile2D<dataType>(distanceMap, length, width, path_file.c_str(), STORE_DATA, false);
 
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal);
+		potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal1);
 		//potentialFuncPtr[i] = fabs(imageDataStr.imageDataPtr[i] - seedVal1);
 	}
 
-	//Find max difference
-	dataType maxDiff = 0.0;
-	for (i = 0; i < dim2D; i++) {
-		if (potentialFuncPtr[i] > maxDiff) {
-			maxDiff = potentialFuncPtr[i];
-		}
-	}
-	std::cout << "MaxDiff = " << maxDiff << std::endl;
+	////Find max difference
+	//dataType maxDiff = 0.0;
+	//for (i = 0; i < dim2D; i++) {
+	//	if (potentialFuncPtr[i] > maxDiff) {
+	//		maxDiff = potentialFuncPtr[i];
+	//	}
+	//}
+	//std::cout << "MaxDiff = " << maxDiff << std::endl;
 
 	//quickSort(arraySorted, 0, dim2D - 1);
 	//size_t index = (size_t)round((95 / 100.0) * (dim2D - 1));
@@ -239,7 +239,7 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 	//Normalization
 	dataType weight = 0.0;
 	for (i = 0; i < dim2D; i++) {
-		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / maxDiff;
+		potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i];// / maxDiff;
 		//if(factor != 0.0)
 		//{
 		//	potentialFuncPtr[i] = parameters.eps + potentialFuncPtr[i] / factor;
@@ -249,9 +249,9 @@ bool computePotential(Image_Data2D imageDataStr, dataType* potentialFuncPtr, Poi
 		//}
 	}
 
-	delete[] distanceMap;
-	delete[] edgeImage;
-	delete[] arraySorted;
+	//delete[] distanceMap;
+	//delete[] edgeImage;
+	//delete[] arraySorted;
 
 	return true;
 }
@@ -401,7 +401,7 @@ bool fastMarching2D(Image_Data2D imageData, dataType* distancePtr, dataType* pot
 		labelArray[k] = 3;
 	}
 
-	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant.csv";
+	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_01.csv";
 	FILE* dFile;
 	if (fopen_s(&dFile, path_discriminant.c_str(), "w") != 0) {
 		printf("Enable to open");
@@ -1457,7 +1457,7 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	size_t length = ctImageData.height;
 	size_t width = ctImageData.width;
-	size_t i, j, x, xd;
+	size_t i, j, k, xd, xd_ext;
 	size_t dim2D = length * width;
 
 	size_t length_ext = length + 2;
@@ -1473,7 +1473,7 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	//initialization
 	//endPoints[0] = { 170.0, 12.0 };
-	size_t indx_seed = x_new(188, 64, length);
+	size_t indx_seed = x_new(175, 310, length);
 	distancePtr[indx_seed] = 0.0;
 	status[indx_seed] = true;
 
@@ -1487,24 +1487,51 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	//dataType tau = hx * hy / sqrt(hx * hx + hy * hy);
 	dataType tau = 0.5 * min(hx, hy);
-	std::cout << "tau = " << tau << std::endl;
+	//std::cout << "tau = " << tau << std::endl;
 
-	std::string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/action_evolution.csv";
+	//Read the file of points with negative discriminant
+	vector<Point2D> nd;
+	dataType x, y;
+	string path_discriminant = "C:/Users/Konan Allaly/Documents/Tests/output/negative_discrinant_simple_file.csv";
 	FILE* pFile;
-	if (fopen_s(&pFile, path_discriminant.c_str(), "w") != 0) {
+	if (fopen_s(&pFile, path_discriminant.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
 	}
-	fprintf(pFile, "ID, pt1, pt2, pt3, pt4\n");
+	while (feof(pFile) == 0) {
+		fscanf_s(pFile, "%f", &x);
+		fscanf_s(pFile, ",");
+		fscanf_s(pFile, "%f", &y);
+		fscanf_s(pFile, "\n");
+		Point2D pt = { x, y };
+		nd.push_back(pt);
+	}
+	//std::cout << "Number of points with negative discriminant: " << nd.size() << std::endl;
+	fclose(pFile);
 	
-	size_t pt1 = x_new(276, 227, length);
-	size_t pt2 = x_new(332, 265, length);
-	size_t pt3 = x_new(337, 226, length);
-	size_t pt4 = x_new(384, 327, length);
-
+	string path_evolution = "C:/Users/Konan Allaly/Documents/Tests/output/action_evolution.csv";
+	string header_name;
+	FILE* dFile;
+	if (fopen_s(&dFile, path_evolution.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(dFile, "ID,");
+	for (i = 0; i < nd.size(); i++) 
+	{
+		if(i == nd.size() - 1) {
+			header_name = "pt" + to_string(i+1);
+			header_name += "\n";
+		}
+		else {
+			header_name = "pt" + to_string(i+1) + ",";
+		}
+		fprintf(dFile, header_name.c_str());
+	}
+	
 	size_t count_iteration = 0;
-	dataType w = 0.0, ind_res;
 	size_t nb_pt_processed = 1;
+	size_t xd_current;
 
 	/*
 	while (nb_pt_processed > 0 && count_iteration < max_iteration) {
@@ -1539,26 +1566,37 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
 		reflection2D(previousSolution, length_ext, width_ext);
 		count_iteration++;
+		fprintf(dFile, "%d,", count_iteration);
 		mass = 0.0;
 		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				xd = x_new(i_ext, j_ext, length_ext);
-				x = x_new(i, j, length);
-				if(x != indx_seed)
+				xd_ext = x_new(i_ext, j_ext, length_ext);
+				xd = x_new(i, j, length);
+				if(xd != indx_seed)
 				{
-					value = previousSolution[xd];
-					distancePtr[x] = value + tau * (potential[x] - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
+					value = previousSolution[xd_ext];
+					distancePtr[xd] = value + tau * (potential[xd] - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
 						+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
 				}
 				////Compute the mass
-				mass += pow(previousSolution[xd] - distancePtr[x], 2);
+				mass += pow(previousSolution[xd_ext] - distancePtr[xd], 2);
 				//mass += abs(previousSolution[xd] - distancePtr[x]);
 			}
 		}
 		mass = sqrt(mass);
-		fprintf(pFile, "%d,%f,%f,%f,%f\n", count_iteration, distancePtr[pt1], distancePtr[pt2], distancePtr[pt3], distancePtr[pt4]);
+		for (k = 0; k < nd.size(); k++)
+		{
+			xd_current = x_new((size_t)nd[k].x, (size_t)nd[k].y, length);
+			if (k == nd.size() - 1) {
+				fprintf(dFile, "%f\n", distancePtr[xd_current]);
+			}
+			else {
+				fprintf(dFile, "%f,", distancePtr[xd_current]);
+			}
+		}
 	}
-	fclose(pFile);
+	
+	fclose(dFile);
 	
 	std::cout << "Iteration: " << count_iteration << ", Mass: " << mass << std::endl;
 
