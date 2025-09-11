@@ -6430,6 +6430,7 @@ int main() {
 
 	//==================== Test segmentation regtangular grid ==================================
 
+	/*
 	dataType** inputImageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		inputImageData[k] = new dataType[dim2D]{ 0 };
@@ -6589,6 +6590,7 @@ int main() {
 	delete[] inputImageData;
 
 	free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }
