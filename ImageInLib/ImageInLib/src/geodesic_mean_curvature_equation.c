@@ -754,8 +754,6 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 	if (norm_of_gradient.east == NULL || norm_of_gradient.west == NULL || norm_of_gradient.north == NULL ||
 		norm_of_gradient.south == NULL || norm_of_gradient.top == NULL || norm_of_gradient.bottom == NULL)
 		return false;
-	
-	//normOfGradientReducedDiamondCells(presmoothingData, norm_of_gradient);
 
 	//Copy to extended area
 	// Create temporary Image Data holder for Previous time step data - with extended boundary because of boundary condition
@@ -820,6 +818,8 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 			return false;
 	}
 
+	normOfGradientReducedDiamondCells(presmoothingData, norm_of_gradient);
+
 	//calculation of coefficients
 	dataType voxel_coef, average_face_coef;
 	dataType g_east, g_west, g_north, g_south, g_top, g_bottom;
@@ -835,12 +835,12 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 				x = x_new(i, j, length);
 				
 				//edge detector function at each voxel face
-				g_east = gradientFunction(norm_of_gradient.east[k][i], coef_edge);
-				g_west = gradientFunction(norm_of_gradient.west[k][i], coef_edge);
-				g_north = gradientFunction(norm_of_gradient.north[k][i], coef_edge);
-				g_south = gradientFunction(norm_of_gradient.south[k][i], coef_edge);
-				g_top = gradientFunction(norm_of_gradient.top[k][i], coef_edge);
-				g_bottom = gradientFunction(norm_of_gradient.bottom[k][i], coef_edge);
+				g_east = gradientFunction(norm_of_gradient.east[k][x], coef_edge);
+				g_west = gradientFunction(norm_of_gradient.west[k][x], coef_edge);
+				g_north = gradientFunction(norm_of_gradient.north[k][x], coef_edge);
+				g_south = gradientFunction(norm_of_gradient.south[k][x], coef_edge);
+				g_top = gradientFunction(norm_of_gradient.top[k][x], coef_edge);
+				g_bottom = gradientFunction(norm_of_gradient.bottom[k][x], coef_edge);
 
 				//epsilon regularization
 				n_east = sqrt(norm_of_gradient.west[k][x] + eps2);
@@ -929,7 +929,6 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 	//Copy the current time step to original data holder after timeStepsNum
 	copyDataToReducedArea(inputImageData.imageDataPtr, gauss_seidelPtr, height, length, width);
 	
-
 	for (k = 0; k < height_ext; k++) 
 	{
 		if(k < height)
