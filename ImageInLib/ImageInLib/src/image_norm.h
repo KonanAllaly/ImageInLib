@@ -2,11 +2,6 @@
 extern "C" {
 #endif
 
-	/*
-	* Author: Markjoe Olunna UBA
-	* Purpose: ImageInLife project - 4D Image Segmentation Methods
-	* Language:  C
-	*/
 #pragma once
 #include <stdbool.h>
 #include <stddef.h>
@@ -20,6 +15,8 @@ extern "C" {
 	dataType timespacel2norm3dDataArrayD(dataType ** dataArray3DPtr1, dataType ** dataArray3DPtr2, const size_t xDim, const size_t yDim, const size_t zDim, dataType h);
 
 	dataType l2normD(dataType ** dataArray3DPtr1, dataType ** dataArray3DPtr2, const size_t xDim, const size_t yDim, const size_t zDim, double h);
+
+	dataType l2normRectangularGrid(dataType** dataArray3DPtr1, dataType** dataArray3DPtr2, const size_t xDim, const size_t yDim, const size_t zDim, VoxelSpacing h);
 
 #ifdef __cplusplus
 }
