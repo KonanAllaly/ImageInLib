@@ -9,6 +9,155 @@
 
 #include "conmon_filtering.h"
 
+dataType getMinInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z)
+{
+	dataType min_value = 10000.0;
+	size_t i, j, k;
+	size_t i_min, i_max, j_min, j_max, k_min, k_max;
+
+	if (x == 0)
+	{
+		i_min = x;
+	}
+	else
+	{
+		i_min = x - 1;
+	}
+	if (x == length - 1)
+	{
+		i_max = x;
+	}
+	else
+	{
+		i_max = x + 1;
+	}
+
+	if (y == 0)
+	{
+		j_min = y;
+	}
+	else
+	{
+		j_min = y - 1;
+	}
+	if (y == width - 1)
+	{
+		j_max = y;
+	}
+	else
+	{
+		j_max = y + 1;
+	}
+
+	if (z == 0)
+	{
+		k_min = z;
+	}
+	else
+	{
+		k_min = z - 1;
+	}
+	if (z == height - 1)
+	{
+		k_max = z;
+	}
+	else
+	{
+		k_max = z + 1;
+	}
+
+	for (k = k_min; k <= k_max; k++)
+	{
+		for (i = i_min; i <= i_max; i++)
+		{
+			for (j = j_min; j <= j_max; j++)
+			{
+				if (imageDataPtr[k][x_new(i, j, length)] < min_value)
+				{
+					min_value = imageDataPtr[k][x_new(i, j, length)];
+				}
+			}
+		}
+	}
+
+	return min_value;
+}
+
+dataType getMaxInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z)
+{
+	dataType max_value = 0.0;
+	size_t i, j, k;
+	size_t i_min, i_max, j_min, j_max, k_min, k_max;
+
+	if (x == 0)
+	{
+		i_min = x;
+	}
+	else
+	{
+		i_min = x - 1;
+	}
+
+	if (x == length - 1)
+	{
+		i_max = x;
+	}
+	else
+	{
+		i_max = x + 1;
+	}
+
+	if (y == 0)
+	{
+		j_min = y;
+	}
+	else
+	{
+		j_min = y - 1;
+	}
+	if (y == width - 1)
+	{
+		j_max = y;
+	}
+	else
+	{
+		j_max = y + 1;
+	}
+
+	if (z == 0)
+	{
+		k_min = z;
+	}
+	else
+	{
+		k_min = z - 1;
+	}
+	if (z == height - 1)
+	{
+		k_max = z;
+	}
+	else
+	{
+		k_max = z + 1;
+	}
+
+	for (k = k_min; k <= k_max; k++)
+	{
+		for (i = i_min; i <= i_max; i++)
+		{
+			for (j = j_min; j <= j_max; j++)
+			{
+				if (imageDataPtr[k][x_new(i, j, length)] > max_value)
+				{
+					max_value = imageDataPtr[k][x_new(i, j, length)];
+				}
+			}
+		}
+	}
+
+	return max_value;
+}
+
 bool normOfGradientReducedDiamondCells(Image_Data inputImageData, Pointers_Neighbours vGrad)
 {
 	if (inputImageData.imageDataPtr == NULL || vGrad.east == NULL || vGrad.west == NULL ||
