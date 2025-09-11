@@ -1,3 +1,5 @@
+#pragma warning(disable:6385) // the compiler doesn't understand the indexing
+
 #include <stdio.h>      // Standard lib for input and output functions
 #include <stdlib.h>
 #include <time.h>
@@ -33,6 +35,10 @@ bool normOfGradientReducedDiamondCells(Image_Data inputImageData, Pointers_Neigh
 	size_t i_ext, j_ext, k_ext, x_ext;
 
 	dataType** extendedCoefPtr = (dataType**)malloc(sizeof(dataType*) * height_ext);
+	if (extendedCoefPtr == NULL)
+	{
+		return false;
+	}
 	for (k = 0; k < height_ext; k++)
 	{
 		extendedCoefPtr[k] = (dataType*)malloc(sizeof(dataType) * length_ext * width_ext);
@@ -40,10 +46,6 @@ bool normOfGradientReducedDiamondCells(Image_Data inputImageData, Pointers_Neigh
 		{
 			return false;
 		}
-	}
-	if (extendedCoefPtr == NULL)
-	{
-		return false;
 	}
 
 	//Copy to extended area
@@ -115,40 +117,40 @@ bool normOfGradientReducedDiamondCells(Image_Data inputImageData, Pointers_Neigh
 				BuSW = extendedCoefPtr[kplus1][x_new(iminus1, jplus1, length_ext)];
 
 				// Calculation of coefficients in East direction
-				ux = (uE - u) / hx;
-				uy = ((uN + uNE) - (uS + uSE)) / quotient_y;
-				uz = ((Tu + TuE) - (Bu + BuE)) / quotient_z;
-				vGrad.east[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)((uE - u) / hx);
+				uy = (dataType)(((uN + uNE) - (uS + uSE)) / quotient_y);
+				uz = (dataType)(((Tu + TuE) - (Bu + BuE)) / quotient_z);
+				vGrad.east[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 
 				// Calculation of coefficients in West direction
-				ux = (uW - u) / hx;
-				uy = ((uNW + uN) - (uSW + uS)) / quotient_y;
-				uz = ((TuW + Tu) - (BuW + Bu)) / quotient_z;
-				vGrad.west[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)((uW - u) / hx);
+				uy = (dataType)(((uNW + uN) - (uSW + uS)) / quotient_y);
+				uz = (dataType)(((TuW + Tu) - (BuW + Bu)) / quotient_z);
+				vGrad.west[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 
 				// Calculation of coefficients in North direction
-				ux = ((uNE + uE) - (uNW + uW)) / quotient_x;
-				uy = (uN - u) / hy;
-				uz = ((TuN + Tu) - (BuN + Bu)) / quotient_z;
-				vGrad.north[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)(((uNE + uE) - (uNW + uW)) / quotient_x);
+				uy = (dataType)((uN - u) / hy);
+				uz = (dataType)(((TuN + Tu) - (BuN + Bu)) / quotient_z);
+				vGrad.north[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 
 				// Calculation of coefficients in South direction
-				ux = ((uE + uSE) - (uW + uSW)) / quotient_x;
-				uy = (uS - u) / hy;
-				uz = ((TuS + Tu) - (BuS + Bu)) / quotient_z;
-				vGrad.south[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)(((uE + uSE) - (uW + uSW)) / quotient_x);
+				uy = (dataType)((uS - u) / hy);
+				uz = (dataType)(((TuS + Tu) - (BuS + Bu)) / quotient_z);
+				vGrad.south[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 
 				// Calculation of coefficients in Top direction
-				ux = ((TuE + uE) - (TuW + uW)) / quotient_x;
-				uy = ((TuN + uN) - (TuS + uS)) / quotient_y;
-				uz = (Tu - u) / hz;
-				vGrad.top[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)(((TuE + uE) - (TuW + uW)) / quotient_x);
+				uy = (dataType)(((TuN + uN) - (TuS + uS)) / quotient_y);
+				uz = (dataType)((Tu - u) / hz);
+				vGrad.top[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 
 				// Calculation of coefficients in Bottom direction
-				ux = ((BuW + uW) - (BuE + uE)) / quotient_x;
-				uy = ((BuN + uN) - (BuS + uS)) / quotient_y;
-				uz = (Bu - u) / hz;
-				vGrad.bottom[k][x] = ux * ux + uy * uy + uz * uz;
+				ux = (dataType)(((BuW + uW) - (BuE + uE)) / quotient_x);
+				uy = (dataType)(((BuN + uN) - (BuS + uS)) / quotient_y);
+				uz = (dataType)((Bu - u) / hz);
+				vGrad.bottom[k][x] = (dataType)(ux * ux + uy * uy + uz * uz);
 			}
 		}
 	}
