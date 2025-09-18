@@ -281,7 +281,7 @@ using namespace std;
 	/// <param name="seedPoints">seed points</param>
 	/// <param name="path_points">vector to keep all the path points coordinates</param>
 	/// <returns></returns>
-	//bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);
+	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);
 
 	//=================================
 
@@ -314,7 +314,7 @@ using namespace std;
 	/// <param name="seedPoint">The starting point (seed) for the fast marching algorithm.</param>
 	/// <param name="spacing">The spacing between voxels in the 3D image.</param>
 	/// <returns>True if the fast marching computation was successful; otherwise, false.</returns>
-	//bool frontPropagation(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
+	bool frontPropagation(Image_Data ctImageData, dataType** distanceFuncPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	/// <summary>
 	/// Performs front propagation with key point detection on an action map, starting from a seed point, and saves the resulting path points.
@@ -356,7 +356,7 @@ using namespace std;
 	/// <param name="distanceFuncPtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground or object of interest.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	//bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
+	bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue);
 
 	/// <summary>
 	/// Computes a distance map from the given image data using the fast sweeping method.
@@ -365,7 +365,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="backgroundValue">The value in the image that represents the background.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	//bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
+	bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, const dataType backgroundValue);
 
 	/// <summary>
 	/// Computes a distance map for the given image using a brute-force approach.

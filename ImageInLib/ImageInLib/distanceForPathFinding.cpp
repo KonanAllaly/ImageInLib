@@ -1860,7 +1860,8 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 	}
 
 	if (current != i) {
-		swap3dPoints(&in_Process[i], &in_Process[current]);
+		//swap3dPoints(&in_Process[i], &in_Process[current]);
+		swap_elts(&in_Process[i], &in_Process[current], sizeof(pointFastMarching3D));
 		heapifyDown3D(in_Process, current);
 	}
 
@@ -1883,10 +1884,10 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 	}
 
 	if (current != i) {
-		swap3dPoints(&in_Process[current], &in_Process[i]);
+		//swap3dPoints(&in_Process[current], &in_Process[i]);
+		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching3D));
 		heapifyUp3D(in_Process, current);
 	}
-
 }
 
 void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
@@ -1904,7 +1905,8 @@ void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process) {
 	//we use type int for indexes because we do operations like pos--
 	int l = in_Process.size();
 	if (l > 1) {
-		swap3dPoints(&in_Process[0], &in_Process[l - 1]);
+		//swap3dPoints(&in_Process[0], &in_Process[l - 1]);
+		swap_elts(&in_Process[0], &in_Process[l - 1], sizeof(pointFastMarching3D));
 		in_Process.pop_back();
 		heapifyDown3D(in_Process, 0);
 	}
@@ -1951,15 +1953,18 @@ void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, s
 	dataType coefSpeed = potential[ind_z][xd];
 	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
 	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, solution };
-	if (labelArray[ind_z][xd] == 3) {
+	if (labelArray[ind_z][xd] == 3) 
+	{
 		addPointHeap3D(narrowBand, neighbor);
 		action[ind_z][xd] = solution;
 		labelArray[ind_z][xd] = 2;
 	}
-	else if (labelArray[ind_z][xd] == 2 && solution < action[ind_z][xd]) {
+	else if (labelArray[ind_z][xd] == 2 && solution < action[ind_z][xd]) 
+	{
 		action[ind_z][xd] = solution;
 		int pIndex = getIndexFromHeap3D(narrowBand, ind_x, ind_y, ind_z);
-		if (pIndex != -1) {
+		if (pIndex != -1) 
+		{
 			heapifyUp3D(narrowBand, pIndex);
 		}
 	}
@@ -1990,10 +1995,13 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
 	bool isGradientComputed = false;
 	Point3D grad_vector;
-	//
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < length; i++) {
-	//		for (j = 0; j < width; j++) {
+	
+	//for (k = 0; k < height; k++) 
+	//{
+	//	for (i = 0; i < length; i++) 
+	//	{
+	//		for (j = 0; j < width; j++) 
+	//		{
 	//			xd = x_new(i, j, length);
 	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
 	//			if (isGradientComputed == true) {
@@ -2014,13 +2022,13 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//		}
 	//	}
 	//}
-
+	
 	//Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/p6/distance_fs.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/p6/edge_image.raw";
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////Find min and max of the distance map
@@ -2036,6 +2044,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//		}
 	//	}
 	//}
+	//std::cout << "Max distance : " << max_distance << std::endl;
+	//std::cout << "Min distance : " << min_distance << std::endl;
 	//rescaleNewRange(distance, length, width, height, 0.0, 1.0, min_distance, max_distance);
 
 	////////Artificial image : no need to compute the edge image when empty inside
@@ -2053,8 +2063,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
-	////seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	////dataType value_second_pt = seedStats.mean_data;
+	std::cout << "Seed 1 value : " << value_first_pt << std::endl;
+	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
+	dataType value_second_pt = seedStats.mean_data;
+	std::cout << "Seed 2 value : " << value_second_pt << std::endl;
+	dataType seedValCT = value_first_pt;//(value_first_pt + value_second_pt) / 2.0;
+	std::cout << "Seed value : " << seedValCT << std::endl;
 
 	//std::cout << "#############################################################" << std::endl;
 	//std::cout << "Statistics on input image " << std::endl;
@@ -2071,11 +2085,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	else {
 		var_epsilon = parameters.eps;
 	}
-	//std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
-	
-	dataType seedValCT = value_first_pt;
-	//////dataType seedValCT = (value_first_pt + value_second_pt) / 2.0;
-	//////dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
+	//var_epsilon = parameters.eps;
+	std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
 
 	//Computation of potential function
 	for (k = 0; k < height; k++) {
@@ -2093,32 +2104,36 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//std::cout << "Standard deviation value: " << seedStats.sd_data << std::endl;
 	//std::cout << "#############################################################" << std::endl;
 
-	////Find the max of the difference
-	//dataType maxImage = 0.0;
-	//dataType minImage = INFINITY;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (potential[k][i] > maxImage) {
-	//			maxImage = potential[k][i];
-	//		}
-	//		if (potential[k][i] < minImage) {
-	//			minImage = potential[k][i];
-	//		}
-	//	}
-	//}
-	////rescaleNewRange(potential, length, width, height, 0.0, 1.0, minImage, maxImage);
-	//std::cout << "#############################################################" << std::endl;
+	//Find the max of the difference
+	dataType maxImage = 0.0;
+	dataType minImage = INFINITY;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (potential[k][i] > maxImage) 
+			{
+				maxImage = potential[k][i];
+			}
+			//if (potential[k][i] < minImage) 
+			//{
+			//	minImage = potential[k][i];
+			//}
+		}
+	}
+	
+	//rescaleNewRange(potential, length, width, height, 0.0, 1.0, minImage, maxImage);
+	////std::cout << "#############################################################" << std::endl;
 	//std::cout << "difference min : " << minImage << std::endl;
 	//std::cout << "difference max : " << maxImage << std::endl;
-	//std::cout << "#############################################################" << std::endl;
+	////std::cout << "#############################################################" << std::endl;
 
 	//dataType maxRatio = 0.0;
 	//dataType minRatio = INFINITY;
 	//Normalization
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
-			potential[k][i] = var_epsilon + potential[k][i];
-			//potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+			//potential[k][i] = var_epsilon + potential[k][i];
+			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+			//potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 		}
 	}
 	//std::cout << "min factor : " << minRatio << std::endl;
@@ -2141,7 +2156,6 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	return true;
 }
 
-/*
 bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
 
 	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
@@ -2186,7 +2200,8 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 		y -= parameters.tau * (grad_vector.y / norm_of_gradient);
 		z -= parameters.tau * (grad_vector.z / norm_of_gradient);
 
-		if(x < 0.0 || x >= length || y < 0.0 || y >= width || z < 0.0 || z >= height) {
+		if(x < 0.0 || x >= length || y < 0.0 || y >= width || z < 0.0 || z >= height) 
+		{
 			std::cout << "Error: Point out of bounds (" << x << ", " << y << ", " << z << ")" << std::endl;
 			return false;
 		}
@@ -2210,7 +2225,6 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 
 	return true;
 }
-*/
 
 bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints) {
 
@@ -2227,22 +2241,25 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	size_t i = 0, j = 0, k = 0, dim2D = length * width;
 
 	short** labelArray = new short* [height];
+	int** heapIndex = new int* [height];
+	if (labelArray == NULL || heapIndex == NULL) {
+		return false; // Memory allocation failed
+	}
 	for (k = 0; k < height; k++) {
 		labelArray[k] = new short[dim2D];
-		if (labelArray[k] == NULL) {
+		heapIndex[k] = new int[dim2D];
+		if (labelArray[k] == NULL || heapIndex[k] == NULL) {
 			return false; // Memory allocation failed
 		}
 	}
-	if( labelArray == NULL) {
-		return false; // Memory allocation failed
-	}
-
+	
 	//Initialization
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			actionPtr.imageDataPtr[k][i] = INFINITY;
 			labelArray[k][i] = 3;
+			heapIndex[k][i] = -1; //-1 means the point is not in the heap
 		}
 	}
 
@@ -2262,7 +2279,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 	if (k > 0) 
 	{
-		if(labelArray[k - 1][currentIndx] != 1) {
+		if(labelArray[k - 1][currentIndx] != 1) 
+		{
 			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 		}
 	}
@@ -2332,37 +2350,43 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 		if (k > 0)
 		{
-			if (labelArray[k - 1][currentIndx] != 1) {
+			if (labelArray[k - 1][currentIndx] != 1) 
+			{
 				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (k < (height - 1))
 		{
-			if (labelArray[k + 1][currentIndx] != 1) {
+			if (labelArray[k + 1][currentIndx] != 1) 
+			{
 				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (i > 0)
 		{
-			if (labelArray[k][x_new(i - 1, j, length)] != 1) {
+			if (labelArray[k][x_new(i - 1, j, length)] != 1) 
+			{
 				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (i < (length - 1))
 		{
-			if (labelArray[k][x_new(i + 1, j, length)] != 1) {
+			if (labelArray[k][x_new(i + 1, j, length)] != 1) 
+			{
 				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (j > 0)
 		{
-			if (labelArray[k][x_new(i, j - 1, length)] != 1) {
+			if (labelArray[k][x_new(i, j - 1, length)] != 1) 
+			{
 				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
 		if (j < (width - 1))
 		{
-			if (labelArray[k][x_new(i, j + 1, length)] != 1) {
+			if (labelArray[k][x_new(i, j + 1, length)] != 1) 
+			{
 				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
 			}
 		}
@@ -2385,6 +2409,7 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	return true;
 
 }
+
 /*
 bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** potentialFuncPtr, Point3D seedPoint) {
 
@@ -2426,35 +2451,53 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 	i = (size_t)seedPoint.x;
 	j = (size_t)seedPoint.y;
 	k = (size_t)seedPoint.z;
-	size_t currentIndx = x_new(i, j, length);
-	actionPtr[k][currentIndx] = 0.0;
-	labelArray[k][currentIndx] = 1;
+	size_t xd = x_new(i, j, length);
+	actionPtr[k][xd] = 0.0;
+	labelArray[k][xd] = 1;
 
 	//find the neighbours of the initial point add add them to inProces
 
 	if (k > 0)
 	{
-		updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if(labelArray[k - 1][xd] != 1)
+		{
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}
 	}
 	if (k < (height - 1))
 	{
-		updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if (labelArray[k + 1][xd] != 1)
+		{
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}
 	}
 	if (i > 0)
 	{
-		updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if (labelArray[k][x_new(i - 1, j, length)] != 1)
+		{
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}
 	}
 	if (i < (length - 1))
 	{
-		updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if (labelArray[k][x_new(i + 1, j, length)] != 1)
+		{
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}
 	}
 	if (j > 0)
 	{
-		updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if (labelArray[k][x_new(i, j - 1, length)] != 1)
+		{
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}
 	}
 	if (j < (width - 1))
 	{
-		updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		if (labelArray[k][x_new(i, j + 1, length)] != 1)
+		{
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		}	
 	}
 
 	while (narrowBand.size() > 0) {
@@ -2464,35 +2507,53 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 		i = current.x;
 		j = current.y;
 		k = current.z;
-		currentIndx = x_new(i, j, length);
+		size_t currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
 		deleteRootHeap3D(narrowBand);
 
 		if (k > 0)
 		{
-			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k - 1][xd] != 1)
+			{
+				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
 		}
 		if (k < (height - 1))
 		{
-			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k + 1][xd] != 1)
+			{
+				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
 		}
 		if (i > 0)
 		{
-			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k][x_new(i - 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
 		}
 		if (i < (length - 1))
 		{
-			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k][x_new(i + 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
+			
 		}
 		if (j > 0)
 		{
-			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k][x_new(i, j - 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
 		}
 		if (j < (width - 1))
 		{
-			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			if (labelArray[k][x_new(i, j + 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			}
 		}
-
 	}
 
 	for (k = 0; k < height; k++) {
@@ -2502,7 +2563,9 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 
 	return true;
 }
+*/
 
+/*
 bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving) {
 
 	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
@@ -2715,7 +2778,9 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	return true;
 }
+*/
 
+/*
 bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath) {
 
 	if (imageData.imageDataPtr == NULL || actionFirstFront == NULL || actionSecondFront == NULL || potentialPtr == NULL || endPoints == NULL) {
@@ -2953,7 +3018,9 @@ bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, d
 
 	return true;
 }
+*/
 
+/*
 bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
@@ -3025,6 +3092,7 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 
 	return true;
 }
+*/
 
 bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue) {
 
@@ -3042,9 +3110,12 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 
 	short** labelArray = new short* [height];
 	dataType** potentialFuncPtr = new dataType * [height];
+	if(labelArray == NULL || potentialFuncPtr == NULL) {
+		return false; // Memory allocation failed
+	}
 	for (k = 0; k < height; k++) {
 		labelArray[k] = new short[dim2D];
-		potentialFuncPtr[k] = new dataType[height];
+		potentialFuncPtr[k] = new dataType[dim2D];
 		if (labelArray[k] == NULL || potentialFuncPtr[k] == NULL) {
 			return false; // Memory allocation failed
 		}
@@ -3059,11 +3130,12 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 				distanceFuncPtr[k][i] = 0;
 				labelArray[k][i] = 1;
 			}
-			else {
+			else 
+			{
 				distanceFuncPtr[k][i] = INFINITY;
 				labelArray[k][i] = 3;
 			}
-			potentialFuncPtr[k][i] = 1.0;//Fro distance map, the potential is set equal to 1.0
+			potentialFuncPtr[k][i] = 1.0;//For distance map, the potential is set equal to 1.0
 		}
 	}
 
@@ -3083,29 +3155,46 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 
 					if (k > 0)
 					{
-						updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k - 1][currentIndx] != 1)
+						{
+							updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}	
 					}
 					if (k < (height - 1))
 					{
-						updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k + 1][currentIndx] != 1)
+						{
+							updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}
 					}
 					if (i > 0)
 					{
-						updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k][x_new(i - 1, j, length)] != 1)
+						{
+							updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}
 					}
 					if (i < (length - 1))
 					{
-						updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k][x_new(i + 1, j, length)] != 1)
+						{
+							updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}
 					}
 					if (j > 0)
 					{
-						updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k][x_new(i, j - 1, length)] != 1)
+						{
+							updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}
 					}
 					if (j < (width - 1))
 					{
-						updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						if (labelArray[k][x_new(i, j + 1, length)] != 1)
+						{
+							updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+						}
 					}
-
 				}
 			}
 		}
@@ -3125,19 +3214,31 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 
 		if (k > 0)
 		{
-			updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			if (labelArray[k - 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			}
 		}
 		if (k < (height - 1))
 		{
-			updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			if (labelArray[k + 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			}
 		}
 		if (i > 0)
 		{
-			updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			if (labelArray[k][x_new(i - 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			}
 		}
 		if (i < (length - 1))
 		{
-			updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			if (labelArray[k][x_new(i + 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			}
 		}
 		if (j > 0)
 		{
@@ -3145,9 +3246,11 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 		}
 		if (j < (width - 1))
 		{
-			updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			if (labelArray[k][x_new(i, j + 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			}
 		}
-
 	}
 
 	for (k = 0; k < height; k++) {
@@ -3196,9 +3299,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = 0; j < width; j++) 
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3217,9 +3320,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = 0; j < width; j++)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3238,9 +3341,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = 0; j < width; j++)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3259,9 +3362,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = width_minus; j > -1; j--)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3280,9 +3383,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = 0; j < width; j++)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3301,9 +3404,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = width_minus; j > -1; j--)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3322,9 +3425,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = width_minus; j > -1; j--)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3343,9 +3446,9 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 			for (int j = width_minus; j > -1; j--)
 			{
 				int xd = x_new((size_t)i, (size_t)j, length);
-				dataType x = select3dX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType y = select3dY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
-				dataType z = select3dZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType x = upwindFiniteDifferenceX(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType y = upwindFiniteDifferenceY(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
+				dataType z = upwindFiniteDifferenceZ(distancePtr, length, width, height, (size_t)i, (size_t)j, (size_t)k);
 				dataType coefSpeed = 1.0;
 				dataType pDistance = solve3dQuadraticEikonalEquation(x, y, z, coefSpeed, spacing);
 				if (pDistance < distancePtr[k][xd])
@@ -3359,6 +3462,7 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 	return true;
 }
 
+/*
 bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL) {
@@ -3404,7 +3508,9 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 	}
 	return true;
 }
+*/
 
+/*
 bool rouyTourinFrontPropagation(Image_Data ctImageData, dataType** distancePtr, dataType** potential, dataType tolerance, size_t max_iteration) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
