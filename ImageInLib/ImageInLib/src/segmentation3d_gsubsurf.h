@@ -17,8 +17,15 @@ extern "C" {
 
 	bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
 
+	bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
+
 	bool GSUBSURF_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
 
+	bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
+
+	bool GSUBSURF_S_TWO_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
+
+	bool gsubsurf_s_one_iioe_time_step(Image_Data segmentationData, Coefficient_Pointers a_out, Coefficient_Pointers coef, Segmentation_Parameters seg_parms);
 
 #ifdef __cplusplus
 }
