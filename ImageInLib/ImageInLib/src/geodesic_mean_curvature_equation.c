@@ -882,14 +882,14 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 					x = x_new(i, j, length);
 
 					// Begin Gauss-Seidel Formula Evaluation
-					gauss_seidel = (prevSolPtr[k_ext][x_ext] + ((coefPtr_e[k][x] * gauss_seidelPtr[k_ext][x_ext + 1])
+					gauss_seidel = (dataType)((prevSolPtr[k_ext][x_ext] + ((coefPtr_e[k][x] * gauss_seidelPtr[k_ext][x_ext + 1])
 						+ (coefPtr_w[k][x] * gauss_seidelPtr[k_ext][x_ext - 1])
 						+ (coefPtr_s[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)])
 						+ (coefPtr_n[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)])
 						+ (coefPtr_b[k][x] * gauss_seidelPtr[k_ext + 1][x_ext])
 						+ (coefPtr_t[k][x] * gauss_seidelPtr[k_ext - 1][x_ext]))) /
 						(1 + coefPtr_e[k][x] + coefPtr_w[k][x] + coefPtr_n[k][x]
-							+ coefPtr_s[k][x] + coefPtr_t[k][x] + coefPtr_b[k][x]);
+							+ coefPtr_s[k][x] + coefPtr_t[k][x] + coefPtr_b[k][x]));
 
 					// SOR implementation using Gauss-Seidel
 					gauss_seidelPtr[k_ext][x_ext] = gauss_seidelPtr[k_ext][x_ext] +
@@ -910,7 +910,7 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 					x_ext = x_new(i_ext, j_ext, length_ext);
 					x = x_new(i, j, length);
 
-					error += (dataType)pow(gauss_seidelPtr[k_ext][x_ext] * (1 + coefPtr_e[k][x]
+					error += (dataType)(pow(gauss_seidelPtr[k_ext][x_ext] * (1 + coefPtr_e[k][x]
 						+ coefPtr_w[k][x] + coefPtr_n[k][x] + coefPtr_s[k][x]
 						+ coefPtr_t[k][x] + coefPtr_b[k][x])
 						- ((coefPtr_e[k][x] * gauss_seidelPtr[k_ext][x_ext + 1])
@@ -918,7 +918,7 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 							+ (coefPtr_s[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)])
 							+ (coefPtr_n[k][x] * gauss_seidelPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)])
 							+ (coefPtr_b[k][x] * gauss_seidelPtr[k_ext + 1][x_ext])
-							+ (coefPtr_t[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])) - prevSolPtr[k_ext][x_ext], 2);
+							+ (coefPtr_t[k][x] * gauss_seidelPtr[k_ext - 1][x_ext])) - prevSolPtr[k_ext][x_ext], 2));
 				}
 			}
 		}
