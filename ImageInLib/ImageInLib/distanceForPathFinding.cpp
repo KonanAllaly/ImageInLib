@@ -31,6 +31,7 @@ dataType min0(dataType x, dataType y) {
 		return 0;
 }
 
+/*
 dataType upwindFiniteDifference2dX(dataType* actionPtr, const size_t length, const size_t width, size_t i, size_t j) {
 	
 	dataType i_minus, i_plus;
@@ -604,6 +605,7 @@ bool partialFrontPropagation2D(Image_Data2D imageData, dataType* distancePtr, da
 	
 	delete[] labelArray;
 }
+*/
 
 /*
 bool doubleFrontPropagation2D(Image_Data2D imageData, dataType* actionFirstFront, dataType* actionSecondFront, dataType* potentialPtr, Point2D* endPoints, string savingPath) {
@@ -969,6 +971,7 @@ bool frontPropagationWithKeyPointDetection2D(Image_Data2D actionMapStr, dataType
 }
 */
 
+/*
 bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Point2D>& path_points, Path_Parameters parameters) {
 
 	if (distanceFuncPtr.imageDataPtr == NULL || seedPoints == NULL)
@@ -1007,6 +1010,7 @@ bool shortestPath2d(Image_Data2D distanceFuncPtr, Point2D* seedPoints, vector<Po
 
 	return true;
 }
+*/
 
 /*
 bool bruteForceDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue) {
@@ -1450,6 +1454,7 @@ bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, da
 }
 */
 
+/*
 bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
@@ -1533,34 +1538,33 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 	size_t nb_pt_processed = 1;
 	size_t xd_current;
 
-	/*
-	while (nb_pt_processed > 0 && count_iteration < max_iteration) {
-		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
-		reflection2D(previousSolution, length_ext, width_ext);
-		count_iteration++;
-		mass = 0.0;
-		nb_pt_processed = 0;
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-				xd = x_new(i_ext, j_ext, length_ext);
-				x = x_new(i, j, length);
-				if (status[x] == false)
-				{
-					nb_pt_processed++;
-					value = previousSolution[xd];
-					w = potential[x];
-					distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
-						+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
 	
-					ind_res = fabs(previousSolution[xd] - distancePtr[x]);
-					if (ind_res <= tolerance) {
-						status[x] = true;
-					}
-				}
-			}
-		}	
-	}
-	*/
+	//while (nb_pt_processed > 0 && count_iteration < max_iteration) {
+	//	copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
+	//	reflection2D(previousSolution, length_ext, width_ext);
+	//	count_iteration++;
+	//	mass = 0.0;
+	//	nb_pt_processed = 0;
+	//	for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
+	//		for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+	//			xd = x_new(i_ext, j_ext, length_ext);
+	//			x = x_new(i, j, length);
+	//			if (status[x] == false)
+	//			{
+	//				nb_pt_processed++;
+	//				value = previousSolution[xd];
+	//				w = potential[x];
+	//				distancePtr[x] = value + tau * (w - sqrt(hx_2 * max(min0(previousSolution[x_new(i_ext - 1, j_ext, length_ext)], value), min0(previousSolution[x_new(i_ext + 1, j_ext, length_ext)], value))
+	//					+ hy_2 * max(min0(previousSolution[x_new(i_ext, j_ext - 1, length_ext)], value), min0(previousSolution[x_new(i_ext, j_ext + 1, length_ext)], value))));
+	//
+	//				ind_res = fabs(previousSolution[xd] - distancePtr[x]);
+	//				if (ind_res <= tolerance) {
+	//					status[x] = true;
+	//				}
+	//			}
+	//		}
+	//	}	
+	//}
 
 	while (mass > tolerance && count_iteration < max_iteration) {
 		copyDataTo2dExtendedArea(distancePtr, previousSolution, length, width);
@@ -1605,6 +1609,7 @@ bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePt
 
 	return true;
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //=================== Functions for the 3D Fast Marching and Path Tracking ==============================
@@ -1828,7 +1833,7 @@ void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
 	*b = temp;
 }
 
-void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
+void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
 
 	int length_array = in_Process.size();
 	if(length_array == 0) {
@@ -1861,13 +1866,20 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	if (current != i) {
 		//swap3dPoints(&in_Process[i], &in_Process[current]);
+		//heapifyDown3D(in_Process, current);
+
+		size_t idx1 = in_Process[i].index;
+		size_t idx2 = in_Process[current].index;
+
+		swap_elts(&heapIndex[idx1], &heapIndex[idx2], sizeof(int));
 		swap_elts(&in_Process[i], &in_Process[current], sizeof(pointFastMarching3D));
-		heapifyDown3D(in_Process, current);
+		
+		heapifyDown3D(in_Process, heapIndex, current);
 	}
 
 }
 
-void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
+void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
 
 	if(i <= 0 || i >= in_Process.size()) {
 		return; //nothing to heapify
@@ -1885,46 +1897,68 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	if (current != i) {
 		//swap3dPoints(&in_Process[current], &in_Process[i]);
+		//heapifyUp3D(in_Process, current);
+
+		size_t ind1 = in_Process[i].index;
+		size_t ind2 = in_Process[current].index;
+
+		swap_elts(&heapIndex[ind1], &heapIndex[ind2], sizeof(int));
 		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching3D));
-		heapifyUp3D(in_Process, current);
+
+		heapifyUp3D(in_Process, heapIndex, current);
 	}
 }
 
-void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
+void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex) {
 	int length_array = in_Process.size();
 	if(length_array < 2) {
 		return; //nothing to heapify
 	}
 	int ind, start = length_array / 2 - 1;
 	for (ind = start; ind >= 0; ind--) {
-		heapifyDown3D(in_Process, ind);
+		//heapifyDown3D(in_Process, ind);
+		heapifyDown3D(in_Process, heapIndex, ind);
 	}
 }
 
-void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process) {
+void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex) {
 	//we use type int for indexes because we do operations like pos--
 	int l = in_Process.size();
 	if (l > 1) {
 		//swap3dPoints(&in_Process[0], &in_Process[l - 1]);
+
+		size_t idx1 = in_Process[0].index;
+		size_t idx2 = in_Process[l - 1].index;
+
+		swap_elts(&heapIndex[idx1], &heapIndex[idx2], sizeof(int));
 		swap_elts(&in_Process[0], &in_Process[l - 1], sizeof(pointFastMarching3D));
+
+		heapIndex[idx2] = -1; //the point is removed from the heap
 		in_Process.pop_back();
-		heapifyDown3D(in_Process, 0);
+
+		//heapifyDown3D(in_Process, 0);
+		heapifyDown3D(in_Process, heapIndex, 0);
 	}
 	else {
 		in_Process.pop_back();
 	}
 }
 
-void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point) {
+void addPointHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, pointFastMarching3D point) {
 	//we use type int for indexes because we do operations like pos--
 	in_Process.push_back(point);
 	int l = in_Process.size();
+	size_t heapIndex_point = in_Process[l - 1].index;
+	heapIndex[heapIndex_point] = l - 1;
+	
 	if (l < 2) 
 	{
 		return; //nothing to heapify
 	}
-	else {
-		heapifyUp3D(in_Process, l - 1);
+	else 
+	{
+		//heapifyUp3D(in_Process, l - 1);
+		heapifyUp3D(in_Process, heapIndex, l - 1);
 	}
 }
 
@@ -1940,7 +1974,7 @@ int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t
 
 void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
 	dataType** action, dataType** potential, short** labelArray,
-	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand)
+	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, vector<int>& heapIndex)
 {
 
 	if (ind_x >= length || ind_y >= width || ind_z >= height)
@@ -1952,23 +1986,26 @@ void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, s
 	dataType uz = upwindFiniteDifferenceZ(action, length, width, height, ind_x, ind_y, ind_z);
 	dataType coefSpeed = potential[ind_z][xd];
 	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
-	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, solution };
+	size_t pos = x_flat(ind_x, ind_y, ind_z, length, width);
+	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, pos, solution };
 	if (labelArray[ind_z][xd] == 3) 
 	{
-		addPointHeap3D(narrowBand, neighbor);
+		//addPointHeap3D(narrowBand, neighbor);
+		addPointHeap3D(narrowBand, heapIndex, neighbor);
 		action[ind_z][xd] = solution;
 		labelArray[ind_z][xd] = 2;
 	}
 	else if (labelArray[ind_z][xd] == 2 && solution < action[ind_z][xd]) 
 	{
 		action[ind_z][xd] = solution;
-		int pIndex = getIndexFromHeap3D(narrowBand, ind_x, ind_y, ind_z);
+		//int pIndex = getIndexFromHeap3D(narrowBand, ind_x, ind_y, ind_z);
+		int pIndex = heapIndex[pos];
 		if (pIndex != -1) 
 		{
-			heapifyUp3D(narrowBand, pIndex);
+			//heapifyUp3D(narrowBand, pIndex);
+			heapifyUp3D(narrowBand, heapIndex, pIndex);
 		}
 	}
-
 }
 
 bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters) {
@@ -1996,57 +2033,41 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	
-	//for (k = 0; k < height; k++) 
-	//{
-	//	for (i = 0; i < length; i++) 
-	//	{
-	//		for (j = 0; j < width; j++) 
-	//		{
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			//threshold : real image
-	//			if (edgeValue <= parameters.thres) {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < length; i++) 
+		{
+			for (j = 0; j < width; j++) 
+			{
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
+				}
+			}
+		}
+	}
 	
 	//Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
-
-	////Find min and max of the distance map
-	//dataType max_distance = 0.0;
-	//dataType min_distance = INFINITY;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (distance[k][i] > max_distance) {
-	//			max_distance = distance[k][i];
-	//		}
-	//		if (distance[k][i] < min_distance) {
-	//			min_distance = distance[k][i];
-	//		}
-	//	}
-	//}
-	//std::cout << "Max distance : " << max_distance << std::endl;
-	//std::cout << "Min distance : " << min_distance << std::endl;
-	//rescaleNewRange(distance, length, width, height, 0.0, 1.0, min_distance, max_distance);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
+	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fm.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
@@ -2065,8 +2086,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType value_first_pt = seedStats.mean_data;
 	std::cout << "Seed 1 value : " << value_first_pt << std::endl;
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	dataType value_second_pt = seedStats.mean_data;
-	std::cout << "Seed 2 value : " << value_second_pt << std::endl;
+	//dataType value_second_pt = seedStats.mean_data;
+	//std::cout << "Seed 2 value : " << value_second_pt << std::endl;
 	dataType seedValCT = value_first_pt;//(value_first_pt + value_second_pt) / 2.0;
 	std::cout << "Seed value : " << seedValCT << std::endl;
 
@@ -2079,7 +2100,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//std::cout << "#############################################################" << std::endl;
 	
 	dataType var_epsilon = 0;//0.01;
-	if (seedStats.sd_data != 0) {
+	if (seedStats.sd_data != 0) 
+	{
 		var_epsilon = seedStats.sd_data;
 	}
 	else {
@@ -2132,7 +2154,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			//potential[k][i] = var_epsilon + potential[k][i];
-			potential[k][i] = (var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+			potential[k][i] = (dataType)(var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 			//potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
 		}
 	}
@@ -2238,33 +2260,35 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	VoxelSpacing spacing = actionPtr.spacing;
 
 	vector <pointFastMarching3D> narrowBand;
-	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width, dim3D = length * width * height;
 
 	short** labelArray = new short* [height];
-	int** heapIndex = new int* [height];
-	if (labelArray == NULL || heapIndex == NULL) {
+	if (labelArray == NULL) {
 		return false; // Memory allocation failed
 	}
 	for (k = 0; k < height; k++) {
 		labelArray[k] = new short[dim2D];
-		heapIndex[k] = new int[dim2D];
-		if (labelArray[k] == NULL || heapIndex[k] == NULL) {
+		if (labelArray[k] == NULL) {
 			return false; // Memory allocation failed
 		}
 	}
-	
-	//Initialization
 	//All the points are notProcessed ---> label = 3
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			actionPtr.imageDataPtr[k][i] = INFINITY;
 			labelArray[k][i] = 3;
-			heapIndex[k][i] = -1; //-1 means the point is not in the heap
 		}
 	}
 
+	vector<int> heapIndex(dim3D);
+	for (i = 0; i < dim3D; i++) {
+		heapIndex[i] = -1;
+	}
+
 	//Processed the starting point
-	if (endPoints[0].x < 0 || endPoints[0].x > length || endPoints[0].y < 0 || endPoints[0].y > width || endPoints[0].z < 0 || endPoints[0].z > height) {
+	if (endPoints[0].x < 0 || endPoints[0].x > length || 
+		endPoints[0].y < 0 || endPoints[0].y > width || 
+		endPoints[0].z < 0 || endPoints[0].z > height) {
 		std::cout << "Error in the input seed point" << std::endl;
 		return false;
 	}
@@ -2281,41 +2305,44 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	{
 		if(labelArray[k - 1][currentIndx] != 1) 
 		{
-			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (k < (height - 1))
 	{
 		if(labelArray[k + 1][currentIndx] != 1) {
-			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (i > 0)
 	{
 		if(labelArray[k][x_new(i - 1, j, length)] != 1) {
-			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (i < (length - 1))
 	{
 		if(labelArray[k][x_new(i + 1, j, length)] != 1) {
-			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (j > 0)
 	{
 		if (labelArray[k][x_new(i, j - 1, length)] != 1) {
-			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (j < (width - 1))
 	{
 		if (labelArray[k][x_new(i, j + 1, length)] != 1) {
-			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 
-	if (endPoints[1].x < 0 || endPoints[1].x > length || endPoints[1].y < 0 || endPoints[1].y > width || endPoints[1].z < 0 || endPoints[1].z > height) {
+	if (endPoints[1].x < 0 || endPoints[1].x > length || 
+		endPoints[1].y < 0 || endPoints[1].y > width || 
+		endPoints[1].z < 0 || endPoints[1].z > height) 
+	{
 		std::cout << "Error in the input seed point" << std::endl;
 		return false;
 	}
@@ -2346,51 +2373,50 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			break;
 		}
 
-		deleteRootHeap3D(narrowBand);
+		deleteRootHeap3D(narrowBand, heapIndex);
 
 		if (k > 0)
 		{
 			if (labelArray[k - 1][currentIndx] != 1) 
 			{
-				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (k < (height - 1))
 		{
 			if (labelArray[k + 1][currentIndx] != 1) 
 			{
-				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (i > 0)
 		{
 			if (labelArray[k][x_new(i - 1, j, length)] != 1) 
 			{
-				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (i < (length - 1))
 		{
 			if (labelArray[k][x_new(i + 1, j, length)] != 1) 
 			{
-				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (j > 0)
 		{
 			if (labelArray[k][x_new(i, j - 1, length)] != 1) 
 			{
-				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (j < (width - 1))
 		{
 			if (labelArray[k][x_new(i, j + 1, length)] != 1) 
 			{
-				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
-		
 	}
 	
 	for (k = 0; k < height; k++) {
@@ -2410,7 +2436,6 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 }
 
-/*
 bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** potentialFuncPtr, Point3D seedPoint) {
 
 	if (actionPtr == NULL || potentialFuncPtr == NULL) {
@@ -2455,48 +2480,54 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 	actionPtr[k][xd] = 0.0;
 	labelArray[k][xd] = 1;
 
+	size_t dim3D = length * width * height;
+	vector<int> heapIndex(dim3D);
+	for (size_t n = 0; n < dim3D; n++) {
+		heapIndex[n] = -1;
+	}
+
 	//find the neighbours of the initial point add add them to inProces
 
 	if (k > 0)
 	{
 		if(labelArray[k - 1][xd] != 1)
 		{
-			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (k < (height - 1))
 	{
 		if (labelArray[k + 1][xd] != 1)
 		{
-			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (i > 0)
 	{
 		if (labelArray[k][x_new(i - 1, j, length)] != 1)
 		{
-			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (i < (length - 1))
 	{
 		if (labelArray[k][x_new(i + 1, j, length)] != 1)
 		{
-			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (j > 0)
 	{
 		if (labelArray[k][x_new(i, j - 1, length)] != 1)
 		{
-			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 	}
 	if (j < (width - 1))
 	{
 		if (labelArray[k][x_new(i, j + 1, length)] != 1)
 		{
-			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}	
 	}
 
@@ -2509,34 +2540,34 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 		k = current.z;
 		size_t currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
-		deleteRootHeap3D(narrowBand);
+		deleteRootHeap3D(narrowBand, heapIndex);
 
 		if (k > 0)
 		{
 			if (labelArray[k - 1][xd] != 1)
 			{
-				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (k < (height - 1))
 		{
 			if (labelArray[k + 1][xd] != 1)
 			{
-				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (i > 0)
 		{
 			if (labelArray[k][x_new(i - 1, j, length)] != 1)
 			{
-				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (i < (length - 1))
 		{
 			if (labelArray[k][x_new(i + 1, j, length)] != 1)
 			{
-				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 			
 		}
@@ -2544,14 +2575,14 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 		{
 			if (labelArray[k][x_new(i, j - 1, length)] != 1)
 			{
-				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 		if (j < (width - 1))
 		{
 			if (labelArray[k][x_new(i, j + 1, length)] != 1)
 			{
-				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 			}
 		}
 	}
@@ -2563,10 +2594,8 @@ bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** p
 
 	return true;
 }
-*/
 
-/*
-bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving) {
+bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points) {
 
 	if (actionMapStr.imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoint == NULL) {
 		return false;
@@ -2612,33 +2641,38 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	actionMapStr.imageDataPtr[k][currentIndx] = 0.0;
 	labelArray[k][currentIndx] = 1;
 
+	size_t dim3D = length * width * height;
+	vector<int> heapIndex(dim3D);
+	for (size_t n = 0; n < dim3D; n++) {
+		heapIndex[n] = -1;
+	}
+
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
 
 	if (k > 0)
 	{
-		updateNeighbor3D(i, j, k - 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i, j, k - 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
 	if (k < height_minus)
 	{
-		updateNeighbor3D(i, j, k + 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i, j, k + 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
 	if (i > 0)
 	{
-		updateNeighbor3D(i - 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i - 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
 	if (i < length_minus)
 	{
-		updateNeighbor3D(i + 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i + 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
 	if (j > 0)
 	{
-		updateNeighbor3D(i, j - 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i, j - 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
 	if (j < width_minus)
 	{
-		updateNeighbor3D(i, j + 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+		updateNeighbor3D(i, j + 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 	}
-
 
 	size_t iEnd = (size_t)seedPoint[1].x;
 	size_t jEnd = (size_t)seedPoint[1].y;
@@ -2739,34 +2773,34 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		}
 		else {
 			actionMapStr.imageDataPtr[k][currentIndx] = current.arrival;
-			deleteRootHeap3D(narrowBand);
+			deleteRootHeap3D(narrowBand, heapIndex);
 		}
 
 		//====================
 		//processed neighbors of the minimum in the narrow band
 		if (k > 0)
 		{
-			updateNeighbor3D(i, j, k - 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 		if (k < height_minus)
 		{
-			updateNeighbor3D(i, j, k + 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 		if (i > 0)
 		{
-			updateNeighbor3D(i - 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 		if (i < length_minus)
 		{
-			updateNeighbor3D(i + 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 		if (j > 0)
 		{
-			updateNeighbor3D(i, j - 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 		if (j < width_minus)
 		{
-			updateNeighbor3D(i, j + 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand);
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 
 	}
@@ -2778,7 +2812,6 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	return true;
 }
-*/
 
 /*
 bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath) {
@@ -3020,7 +3053,6 @@ bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, d
 }
 */
 
-/*
 bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
@@ -3092,7 +3124,6 @@ bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 
 	return true;
 }
-*/
 
 bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue) {
 
@@ -3139,6 +3170,12 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 		}
 	}
 
+	size_t dim3D = length * width * height;
+	vector<int> heapIndex(dim3D);
+	for (size_t n = 0; n < dim3D; n++) {
+		heapIndex[n] = -1;
+	}
+
 	//find the neighbours of the initial point add add them to inProcess
 	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
 
@@ -3157,42 +3194,42 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 					{
 						if (labelArray[k - 1][currentIndx] != 1)
 						{
-							updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}	
 					}
 					if (k < (height - 1))
 					{
 						if (labelArray[k + 1][currentIndx] != 1)
 						{
-							updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}
 					}
 					if (i > 0)
 					{
 						if (labelArray[k][x_new(i - 1, j, length)] != 1)
 						{
-							updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}
 					}
 					if (i < (length - 1))
 					{
 						if (labelArray[k][x_new(i + 1, j, length)] != 1)
 						{
-							updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}
 					}
 					if (j > 0)
 					{
 						if (labelArray[k][x_new(i, j - 1, length)] != 1)
 						{
-							updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}
 					}
 					if (j < (width - 1))
 					{
 						if (labelArray[k][x_new(i, j + 1, length)] != 1)
 						{
-							updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+							updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 						}
 					}
 				}
@@ -3210,45 +3247,45 @@ bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr,
 		size_t currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
 
-		deleteRootHeap3D(inProcess);
+		deleteRootHeap3D(inProcess, heapIndex);
 
 		if (k > 0)
 		{
 			if (labelArray[k - 1][currentIndx] != 1)
 			{
-				updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+				updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 			}
 		}
 		if (k < (height - 1))
 		{
 			if (labelArray[k + 1][currentIndx] != 1)
 			{
-				updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+				updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 			}
 		}
 		if (i > 0)
 		{
 			if (labelArray[k][x_new(i - 1, j, length)] != 1)
 			{
-				updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+				updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 			}
 		}
 		if (i < (length - 1))
 		{
 			if (labelArray[k][x_new(i + 1, j, length)] != 1)
 			{
-				updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+				updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 			}
 		}
 		if (j > 0)
 		{
-			updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+			updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 		}
 		if (j < (width - 1))
 		{
 			if (labelArray[k][x_new(i, j + 1, length)] != 1)
 			{
-				updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess);
+				updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
 			}
 		}
 	}
@@ -3462,7 +3499,6 @@ bool fastSweepingDistanceMap(Image_Data ctImageData, dataType** distancePtr, con
 	return true;
 }
 
-/*
 bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL) {
@@ -3482,11 +3518,15 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 				cPoint = getRealCoordFromImageCoord3D(cPoint, ctImageData.origin, spacing, ctImageData.orientation);
 
 				min_distance = INFINITY;
-				for (size_t tk = 0; tk < height; tk++) {
-					for (size_t ti = 0; ti < length; ti++) {
-						for (size_t tj = 0; tj < width; tj++) {
+				for (size_t tk = 0; tk < height; tk++) 
+				{
+					for (size_t ti = 0; ti < length; ti++) 
+					{
+						for (size_t tj = 0; tj < width; tj++) 
+						{
 							size_t txd = x_new(ti, tj, length);
-							if (ctImageData.imageDataPtr[tk][txd] == foregroundValue) {
+							if (ctImageData.imageDataPtr[tk][txd] == foregroundValue) 
+							{
 								Point3D tPoint = { ti, tj, tk };
 								tPoint = getRealCoordFromImageCoord3D(tPoint, ctImageData.origin, spacing, ctImageData.orientation);
 								double pDistance = getPoint3DDistance(cPoint, tPoint);
@@ -3508,9 +3548,7 @@ bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataT
 	}
 	return true;
 }
-*/
 
-/*
 bool rouyTourinFrontPropagation(Image_Data ctImageData, dataType** distancePtr, dataType** potential, dataType tolerance, size_t max_iteration) {
 
 	if (ctImageData.imageDataPtr == NULL || distancePtr == NULL)
@@ -3584,6 +3622,5 @@ bool rouyTourinFrontPropagation(Image_Data ctImageData, dataType** distancePtr, 
 
 	return true;
 }
-*/
 
 

@@ -44,7 +44,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient2_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -1797,20 +1797,20 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 	}
 
-	//dataType minValue = 1000000.0, maxValue = -1000000.0;
-	//for (k = 0; k < Height; k++) 
-	//{
-	//	for (i = 0; i < dim2D; i++) 
-	//	{
-	//		imageData[k][i] = ctContainer->dataPointer[k][i];
-	//		if (imageData[k][i] < minValue) minValue = imageData[k][i];
-	//		if (imageData[k][i] > maxValue) maxValue = imageData[k][i];
-	//	}
-	//}
-	//std::cout << "Min data : " << minValue << ", Max data: " << maxValue << std::endl;
-	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
-	//storing_path = outputPath + "rescaled_p1.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	dataType minValue = 1000000.0, maxValue = -1000000.0;
+	for (k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			imageData[k][i] = ctContainer->dataPointer[k][i];
+			if (imageData[k][i] < minValue) minValue = imageData[k][i];
+			if (imageData[k][i] > maxValue) maxValue = imageData[k][i];
+		}
+	}
+	std::cout << "Min data : " << minValue << ", Max data: " << maxValue << std::endl;
+	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
+	storing_path = outputPath + "rescaled_p2.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Filter_Parameters smoothParameters =
 	{
@@ -1827,9 +1827,9 @@ int main() {
 		100// max number of iteration;
 	};
 	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	//geodesicMeanCurvature(inputImage, smoothParameters);
-	storing_path = outputPath + "filtered_p1.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	geodesicMeanCurvature(inputImage, smoothParameters);
+	storing_path = outputPath + "filtered_p2.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	////epsilon setting
 	//for(k = 0; k < Height; k++)
@@ -1843,13 +1843,13 @@ int main() {
 	//	}
 	//}
 
-	Point3D* endPoints = new Point3D[2];
-	endPoints[0] = { 261.0, 257.0, 145.0 };
-	endPoints[1] = { 259.0, 250.0, 246.0 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[0] = { 261.0, 257.0, 145.0 };
+	//endPoints[1] = { 259.0, 250.0, 246.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p2
-	//endPoints[0] = { 260.0, 254.0, 246.0 };
-	//endPoints[1] = { 255.0, 245.0, 350.0 };
+	Point3D* endPoints = new Point3D[2];//p2
+	endPoints[0] = { 260.0, 254.0, 246.0 };
+	endPoints[1] = { 255.0, 245.0, 350.0 };
 
 	//Point3D* endPoints = new Point3D[2];//p3
 	//endPoints[0] = { 268.0, 231.0, 112.0 };
@@ -1876,15 +1876,34 @@ int main() {
 	};
 	compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	//storing_path = outputPath + "potential_p6.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential_p2.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Image_Data toAction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
 	////frontPropagation(inputImage, action, potential, endPoints[0]);
 	partialFrontPropagation(toAction, potential, endPoints);
 
-	//storing_path = outputPath + "action_map_p6.raw";
-	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 50.0;
+	//frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
+
+	//FILE* key_points_file;
+	//string save_key_file = outputPath + "key_points.csv";
+	//if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(key_points_file, "x,y,z\n");
+	//for (size_t it = 0; it < key_points.size(); it++)
+	//{
+	//	//convert to real world coordinates
+	//	key_points[it] = getRealCoordFromImageCoord3D(key_points[it], ctOrigin, ctSpacing, orientation);
+	//	fprintf(key_points_file, "%f,%f,%f\n", key_points[it].x, key_points[it].y, key_points[it].z);
+	//}
+	//fclose(key_points_file);
+
+	storing_path = outputPath + "action_map_p2.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Path_Parameters parameters_path
 	{
@@ -1899,7 +1918,7 @@ int main() {
 	shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
 
 	FILE* path_points_file;
-	string save_path_file = outputPath + "path_points_p1_1.csv";
+	string save_path_file = outputPath + "path_points.csv";
 	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -1925,6 +1944,50 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
+
+
+	//==================== Compare distance map 3D ==================================
+
+	/*
+	dataType** distanceMapFM = new dataType * [Height];
+	dataType** distanceMapFS = new dataType * [Height];
+	for(k = 0; k < Height; k++)
+	{
+		distanceMapFM[k] = new dataType[dim2D]{ 0 };
+		distanceMapFS[k] = new dataType[dim2D]{ 0 };
+	}
+
+	storing_path = outputPath + "distance_map_fm.raw";
+	manageRAWFile3D<dataType>(distanceMapFM, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	storing_path = outputPath + "distance_map_fs.raw";
+	manageRAWFile3D<dataType>(distanceMapFS, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	dataType norm = 0.0, diff = 0.0;
+	for(k = 0; k < Height; k++)
+	{
+		for(i = 0; i < dim2D; i++)
+		{
+			//norm += pow(distanceMapFM[k][i] - distanceMapFS[k][i], 2);
+			diff = fabs(distanceMapFM[k][i] - distanceMapFS[k][i]);
+			if(norm < diff)
+			{
+				norm = diff;
+			}
+		}
+	}
+	//std::cout << "The mean square diff is : " << norm / (dataType)(Height * dim2D) << std::endl;
+	std::cout << "Max difference " << norm << std::endl;
+
+	for(k = 0; k < Height; k++)
+	{
+		delete[] distanceMapFM[k];
+		delete[] distanceMapFS[k];
+	}
+	delete[] distanceMapFM;
+	delete[] distanceMapFS;
+	free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }

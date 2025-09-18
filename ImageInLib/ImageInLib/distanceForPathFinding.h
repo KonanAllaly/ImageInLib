@@ -24,6 +24,7 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y, z;
+		size_t index;
 		dataType arrival;
 	} pointFastMarching3D;
 
@@ -40,6 +41,7 @@ using namespace std;
 		double tolerance; //minimal distance to stop
 	} Path_Parameters;
 
+	/*
 	/// <summary>
 	/// selection of neighboring pixels in x direction
 	/// </summary>
@@ -171,6 +173,7 @@ using namespace std;
 	//bool fastSweepingDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType foregroundValue);
 	//bool rouyTourinDistanceMap2D(Image_Data2D ctImageData, dataType* distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 	bool rouyTourinFrontPropagation2D(Image_Data2D ctImageData, dataType* distancePtr, dataType* potential, dataType tolerance, size_t max_iteration);
+	*/
 
 	/// <summary>
 	/// discretization in x-direction
@@ -223,39 +226,39 @@ using namespace std;
 	/// </summary>
 	/// <param name="in_Process">vector containing all the elements</param>
 	/// <param name="i">index where to start heapifying</param>
-	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i);
+	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
 
 	/// <summary>
 	/// create heap structure from vector
 	/// </summary>
 	/// <param name="in_Process">vector containing the elements</param>
-	void heapifyVector3D(vector<pointFastMarching3D>& in_Process);
+	void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex);
 
 	/// <summary>
 	/// heapify from the root element
 	/// </summary>
 	/// <param name="in_Process">vector of all the elements</param>
 	/// <param name="i">index of element where to start the heapifying</param>
-	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i);
+	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
 
 	/// <summary>
 	/// delete root element from the heap structure
 	/// </summary>
 	/// <param name="in_Process">vector containing all the elements</param>
-	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
+	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex);
 
 	/// <summary>
 	/// add new point in the heap structure and heapifung
 	/// </summary>
 	/// <param name="in_Process">vector containing all the elements</param>
 	/// <param name="point">element to be added</param>
-	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
+	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, pointFastMarching3D point);
 
 	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 
 	void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
 		dataType** action, dataType** potential, short** labelArray,
-		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand);
+		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, vector<int>& heapIndex);
 
 	/// <summary>
 	/// compute speed (potential) in each point
@@ -326,7 +329,7 @@ using namespace std;
 	/// <param name="path_points">Reference to a vector where the detected path points will be stored.</param>
 	/// <param name="path_saving">The file path where the resulting path will be saved.</param>
 	/// <returns>True if the front propagation and key point detection succeed; otherwise, false.</returns>
-	//bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points, std::string path_saving);
+	bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** potentialFuncPtr, Point3D* seedPoint, const double LengthKeyPoints, vector<Point3D>& key_points);
 
 	//bool doubleFrontPropagation(Image_Data imageData, dataType** actionFirstFront, dataType** actionSecondFront, dataType** potentialPtr, Point3D* endPoints, string savingPath);
 
@@ -347,7 +350,7 @@ using namespace std;
 	/// <param name="tolerance">The convergence tolerance for the distance computation.</param>
 	/// <param name="tau">The time step parameter for the Rouy-Tourin algorithm.</param>
 	/// <returns>Returns true if the distance map was successfully computed; otherwise, returns false.</returns>
-	//bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
+	bool rouyTourinDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType tolerance, size_t max_iteration, dataType foregroundValue);
 
 	/// <summary>
 	/// Performs the 3D Fast Marching Method to compute a distance map from a given image.
@@ -374,6 +377,7 @@ using namespace std;
 	/// <param name="distancePtr">A pointer to a 2D array where the computed distance map will be stored.</param>
 	/// <param name="foregroundValue">The value in the image that represents the foreground.</param>
 	/// <returns>True if the distance map was successfully computed; otherwise, false.</returns>
-	//bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
-	//bool rouyTourinFrontPropagation(Image_Data ctImageData, dataType** distancePtr, dataType** potential, dataType tolerance, size_t max_iteration);
+	bool bruteForceDistanceMap(Image_Data ctImageData, dataType** distancePtr, dataType foregroundValue);
+	
+	bool rouyTourinFrontPropagation(Image_Data ctImageData, dataType** distancePtr, dataType** potential, dataType tolerance, size_t max_iteration);
 	
