@@ -40,11 +40,12 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
+	//OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	
+	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient2_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -59,7 +60,8 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	
+	*/
+
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
@@ -633,212 +635,6 @@ int main() {
 	*/
 	
 	/*
-	//Artificial image
-	const size_t Height = 100, Width = 60, Length = 60;
-	const size_t dim2D = Length * Width;
-	dataType** imageData = new dataType * [Height];
-	dataType** action = new dataType * [Height];
-	dataType** potential = new dataType * [Height];
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{ 0 };
-		action[k] = new dataType[dim2D]{ 0 };
-		potential[k] = new dataType[dim2D]{ 0 };
-	}
-	//loading_path = inputPath + "shape/spiral.raw";
-	loading_path = inputPath + "shape/Action/empty_spiral.raw";
-	//loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	Point3D iOrigin = { 0.0, 0.0, 0.0 };
-	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
-	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
-	Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-
-	////create hole in the empty spiral
-	//imageDataNew[39][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(47, 67, Length)] = 0.0;
-	////
-	//imageDataNew[40][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(47, 67, Length)] = 0.0;
-	////
-	//imageDataNew[41][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(47, 67, Length)] = 0.0;
-
-	//storing_path = outputPath + "input_spiral.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//End Points for the spiral
-	Point3D seed1 = { 41, 30, 12 };
-	Point3D seed2 = { 41, 28, 86 };
-	Point3D* endPoints = new Point3D[2];
-	endPoints[0] = seed1;
-	endPoints[1] = seed2;
-	vector<Point3D> key_points;
-	const double LengthKeyPoints = 15;
-
-	double radius_potential = 3.0;
-	Potential_Parameters parameters{
-		1,//1000, //edge detector coefficient
-		1,//0.15, //threshold
-		0.1,//epsilon
-		radius_potential
-	};
-	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-	compute3DPotential(imageStr, potential, endPoints, parameters);
-
-	//storing_path = outputPath + "potential_v1.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//Image_Data toDistanceMap = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-	//fastMarching3dForDistanceMap(toDistanceMap, action, 1.0);
-	//storing_path = outputPath + "distance_map.raw";
-	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//storing_path = outputPath + "potential.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	storing_path = outputPath + "Action Spiral/without hole/action_";
-	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
-	partialFrontPropagation(actionMapStr, potential, endPoints, storing_path);
-	
-	////key_points.clear();
-	//key_points.push_back(seed1);
-	//key_points.push_back(seed2);
-	////Save the keys points in files
-	//string saving_csv = outputPath + "endpoints_spiral.csv";
-	//FILE* f_key_point;
-	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(f_key_point, "x,y,z\n");
-	//for (int n = 0; n < key_points.size(); n++) {
-	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
-	//}
-	//fclose(f_key_point);
-	//key_points.clear();
-	
-	//Extract and save the path points
-	dataType tau = 0.8, tolerance = 1.0;
-	Path_Parameters pathParameters = { tau, 1000, tolerance };
-	vector<Point3D> path_points;
-	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
-	FILE* path_file;
-	storing_path = outputPath + "path_points_fs.csv";
-	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(path_file, "x,y,z\n");
-	for(int it = 0; it < path_points.size(); it++) {
-		Point3D current_point = path_points[it];
-		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
-	}
-	fclose(path_file);
-
-	
-	////Compare the distance for different methods
-	//dataType** distanceMapBruteForce = new dataType * [Height];
-	//dataType** distanceMapFastMarching = new dataType * [Height];
-	//dataType** distanceMapFastSweeping = new dataType * [Height];
-	//dataType** distanceMapRouyTourin = new dataType * [Height];
-	//dataType** compare = new dataType * [Height];
-	//for (k = 0; k < Height; k++) {
-	//	distanceMapBruteForce[k] = new dataType[dim2D]{ 0 };
-	//	distanceMapFastMarching[k] = new dataType[dim2D]{ 0 };
-	//	distanceMapFastSweeping[k] = new dataType[dim2D]{ 0 };
-	//	distanceMapRouyTourin[k] = new dataType[dim2D]{ 0 };
-	//	compare[k] = new dataType[dim2D]{ 0 };
-	//}
-	//imageData[50][x_new(30, 30, Length)] = 1.0;
-	
-	//////bruteForceFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1000000000000.0, 0.0);
-	////bruteForceDistanceMap(inputImageStr, distanceMapBruteForce, 1.0);
-	//loading_path = outputPath + "distance_map_brtforce.raw";
-	//manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	//////fastMarching(distanceMapFastMarching, imageData, Height, Length, Width, 1.0);
-	////fastMarching3dForDistanceMap(inputImageStr, distanceMapFastMarching, 1.0);
-	//loading_path = outputPath + "distance_map_FM.raw";
-	//manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	//fastSweepingFunction_3D(distanceMapFastSweeping, imageData, Length, Width, Height, 1.0, 10000000000.0, 0.0);
-	//fastSweepingDistanceMap(inputImageStr, distanceMapFastSweeping, 1.0);
-	//loading_path = outputPath + "distance_map_fstswp.raw";
-	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	//rouyTourinFunction_3D(distanceMapRouyTourin, imageData, 0.5, Length, Width, Height, 0.4, 1.0);
-	//rouyTourinDistanceMap(inputImageStr, distanceMapRouyTourin, 1.0, 0.4, 0.5);
-	//loading_path = outputPath + "distance_map_RT.raw";
-	//manageRAWFile3D<dataType>(distanceMapRouyTourin, Length, Width, Height, loading_path.c_str(), STORE_DATA, false);
-
-	//dataType norm_fm = 0.0, norm_fstswp = 0.0, norm_rt = 0, norm_compare = 0.0;
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
-	//		//norm_fstswp += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
-	//		//norm_rt += pow(distanceMapBruteForce[k][i] - distanceMapRouyTourin[k][i], 2);
-	//		//norm_compare += pow(distanceMapRouyTourin[k][i] - compare[k][i], 2);
-
-	//		compare[k][i] = distanceMapFastMarching[k][i] - distanceMapBruteForce[k][i];
-	//	}
-	//}
-	////std::cout << "Residual Fast Marching: " << sqrt(norm_fm) << std::endl;
-	////std::cout << "Residual Fast Sweeping: " << sqrt(norm_fstswp) << std::endl;
-	////std::cout << "Residual Rouy Tourin: " << sqrt(norm_rt) << std::endl;
-	//////std::cout << "Residual Compare: " << sqrt(norm_compare) << std::endl;
-
-	//std::cout << "Diagonal lenght: " << sqrt( Length * Length + Width * Width ) << std::endl;
-	//loading_path = outputPath + "difference.raw";
-	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), STORE_DATA, false);
-
-	//for (k = 0; k < Height; k++) {
-	//	delete[] distanceMapBruteForce[k];
-	//	delete[] distanceMapFastMarching[k];
-	//	delete[] distanceMapFastSweeping[k];
-	//	delete[] distanceMapRouyTourin[k];
-	//}
-	//delete[] distanceMapBruteForce;
-	//delete[] distanceMapFastMarching;
-	//delete[] distanceMapFastSweeping;
-	//delete[] distanceMapRouyTourin;
-
-	delete[] endPoints;
-	for (k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] action[k];
-		delete[] potential[k];
-	}
-	delete[] imageData;
-	delete[] action;
-	delete[] potential;
-	*/
-	
-	/*
 	const size_t Length = 100, Width = 100;
 	const size_t dim2D = Length * Width;
 	dataType* imageData = new dataType[dim2D] { 0 };
@@ -1398,145 +1194,6 @@ int main() {
 	delete[] potential;
 	delete[] action;
 	*/
-	
-	/*
-	const size_t Length = 50, Width = 50, Height = 50;
-	size_t dim2D = Length * Width;
-	dataType** imageData = new dataType*[Height]{ 0 };
-	dataType** distanceMapBruteForce = new dataType*[Height]{ 0 };
-	dataType** distanceMapFastMarching = new dataType*[Height]{ 0 };
-	dataType** distanceMapFastSweeping = new dataType*[Height]{ 0 };
-	dataType** RTDistanceMap = new dataType*[Height]{ 0 };
-	dataType** difference = new dataType*[Height]{ 0 };
-	for (k = 0; k < Height; k++) {
-		imageData[k] = new dataType[dim2D]{0};
-		distanceMapBruteForce[k] = new dataType[dim2D]{0};
-		distanceMapFastMarching[k] = new dataType[dim2D]{0};
-		distanceMapFastSweeping[k] = new dataType[dim2D]{0};
-		RTDistanceMap[k] = new dataType[dim2D]{0};
-		difference[k] = new dataType[dim2D]{0};
-	}
-
-	dataType foregroundValue = 1.0;
-	Point3D center = { 25.0, 25.0, 25.0 };
-
-	//double step = M_PI / 1000.0;
-	//double phi, theta, r = 19.0, smallRadius = 5.0;
-	//for (phi = 0.0; phi < 2 * M_PI; phi += step) {
-	//	for (theta = 0.0; theta < M_PI; theta += step) {
-	//		i = (size_t)(center.x + r * cos(phi) * sin(theta));
-	//		j = (size_t)(center.y + r * sin(phi) * sin(theta));
-	//		k = (size_t)(center.z + r * cos(theta));
-	//		if (i < Length && j < Width && k < Height) 
-	//		{
-	//			imageData[k][x_new(i, j, Length)] = foregroundValue;
-	//		}
-	//		//Create holes in the sphere
-	//		dataType point_in_circleX = sqrt(((i - center.x) * (i - center.x) + (j - center.y) * (j - center.y)));
-	//		dataType point_in_circleY = sqrt(((i - center.x) * (i - center.x) + (k - center.z) * (k - center.z)));
-	//		dataType point_in_circleZ = sqrt(((k - center.z) * (k - center.z) + (j - center.y) * (j - center.y)));
-	//		// 2D to 1D representation
-	//		size_t s = x_new(i, j, Length);
-	//		if (((point_in_circleX <= smallRadius) || (point_in_circleY <= smallRadius) || (point_in_circleZ <= smallRadius)))
-	//			imageData[k][s] = 0.0;
-	//		else
-	//			imageData[k][s] = foregroundValue;
-	//	}
-	//}
-
-	imageData[25][x_new(25, 25, Length)] = foregroundValue; //Set a single point in the center of the sphere
-
-	//storing_path = outputPath + "sphere_with_holes.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	Point3D pOrigin = { 0.0, 0.0, 0.0 };
-	VoxelSpacing pSpacing = { 1.0, 1.0, 1.0 };
-	Image_Data toDistanceMap = { Height, Length, Width, imageData, pOrigin, pSpacing, orientation };
-	bruteForceDistanceMap(toDistanceMap, distanceMapBruteForce, foregroundValue);
-	storing_path = outputPath + "distanceMapBrFr.raw";
-	manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	
-	////fastMarching(distanceMapBruteForce, imageData, Height, Length, Width, foregroundValue);
-	fastMarching3dForDistanceMap(toDistanceMap, distanceMapFastMarching, foregroundValue);
-	storing_path = outputPath + "distanceMapFaMa.raw";
-	manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	dataType tolerance = 0.001;
-	size_t max_iter = 1000;
-	////rouyTourinFunction_3D(distanceMapBruteForce, imageData, tolerance, Length, Width, Height, 0.4, 1.0);
-	rouyTourinDistanceMap(toDistanceMap, RTDistanceMap, tolerance, max_iter, foregroundValue);
-	storing_path = outputPath + "distanceMapRT.raw";
-	manageRAWFile3D<dataType>(RTDistanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//for (k = 0; k < Height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (imageData[k][i] == 1.0) {
-	//			imageData[k][i] = 0.0;
-	//		}
-	//		else {
-	//			imageData[k][i] = 1.0;
-	//		}
-	//	}
-	//}
-
-	//fastSweepingFunction_3D(distanceMapFastSweeping, imageData, Length, Width, Height, pSpacing.sx, 10000000000.0, 0.0);
-	fastSweepingDistanceMap(toDistanceMap, distanceMapFastSweeping, foregroundValue);
-	storing_path = outputPath + "distanceMapFaSw.raw";
-	manageRAWFile3D<dataType>(distanceMapFastSweeping, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	//Compute the residual
-	dataType norm_fm = 0.0, norm_fs = 0.0, norm_rt = 0;	
-	dataType nb_grid_points = Length * Width * Height;
-	for (k = 0; k < Height; k++) 
-	{
-		for (i = 0; i < dim2D; i++) {
-			norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
-			norm_fs += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
-			norm_rt += pow(distanceMapBruteForce[k][i] - RTDistanceMap[k][i], 2);
-			difference[k][i] = RTDistanceMap[k][i] - distanceMapBruteForce[k][i];
-		}
-	}
-	norm_fs /= nb_grid_points;
-	norm_fm /= nb_grid_points;
-	norm_rt /= nb_grid_points;
-
-	std::cout << "Residual Brute Force Vs Fast Marching: " << norm_fm << std::endl;
-	std::cout << "Residual Brute Force Vs Fast Sweeping: " << norm_fs << std::endl;
-	std::cout << "Residual Brute Force Vs Rouy-Tourin: " << norm_rt << std::endl;
-	storing_path = outputPath + "difference.raw";
-	manageRAWFile3D<dataType>(difference, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	storing_path = outputPath + "information_circle_h001.csv";
-	FILE* p_info;
-	if (fopen_s(&p_info, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(p_info, "The test is performed on Monday 16th June\n");
-	//fprintf(p_info, "The objective is to confirm that our implementations for distance map are valide\n");
-	//fprintf(p_info, "The input image is made of a single point\n");
-	//fprintf(p_info, "The exact distance map is the smallest euclidian distance from each image point to the center\n");
-	fprintf(p_info, "The residual is computed as the mean square difference between brute force and the others\n");
-	fprintf(p_info, "The residual for Brute Vs Fast Marching is: %lf\n", norm_fm);
-	fprintf(p_info, "The residual for Brute Vs Fast Sweeping is: %lf\n", norm_fs);
-	fprintf(p_info, "The residual for Brute Vs Rouy-Tourin is: %lf\n", norm_rt);
-	fclose(p_info);
-
-	for(k = 0; k < Height; k++) {
-		delete[] imageData[k];
-		delete[] distanceMapBruteForce[k];
-		delete[] distanceMapFastMarching[k];
-		delete[] distanceMapFastSweeping[k];
-		delete[] RTDistanceMap[k];
-		delete[] difference[k];
-	}
-	delete[] imageData;
-	delete[] distanceMapBruteForce;
-	delete[] distanceMapFastMarching;
-	delete[] distanceMapFastSweeping;
-	delete[] RTDistanceMap;
-	delete[] difference;
-	*/
 
 	//==================== Test segmentation 2D =======================================================
 
@@ -1786,7 +1443,8 @@ int main() {
 
 	//==================== Path Extraction 3D image ==================================
 
-	
+	//3D real image
+	/*
 	dataType** imageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -1797,24 +1455,24 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 	}
 
-	dataType minValue = 1000000.0, maxValue = -1000000.0;
-	for (k = 0; k < Height; k++) 
-	{
-		for (i = 0; i < dim2D; i++) 
-		{
-			imageData[k][i] = ctContainer->dataPointer[k][i];
-			if (imageData[k][i] < minValue) minValue = imageData[k][i];
-			if (imageData[k][i] > maxValue) maxValue = imageData[k][i];
-		}
-	}
-	std::cout << "Min data : " << minValue << ", Max data: " << maxValue << std::endl;
-	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
-	storing_path = outputPath + "rescaled_p2.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//dataType minValue = 1000000.0, maxValue = -1000000.0;
+	//for (k = 0; k < Height; k++) 
+	//{
+	//	for (i = 0; i < dim2D; i++) 
+	//	{
+	//		imageData[k][i] = ctContainer->dataPointer[k][i];
+	//		if (imageData[k][i] < minValue) minValue = imageData[k][i];
+	//		if (imageData[k][i] > maxValue) maxValue = imageData[k][i];
+	//	}
+	//}
+	//std::cout << "Min data : " << minValue << ", Max data: " << maxValue << std::endl;
+	//rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
+	//storing_path = outputPath + "rescaled_p5.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Filter_Parameters smoothParameters =
 	{
-		1.2,// tau;
+		0.2,// tau;
 		1.0,// h not used here
 		1.0,// sigma
 		1000,// edge_detector_coefficient
@@ -1827,9 +1485,9 @@ int main() {
 		100// max number of iteration;
 	};
 	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
-	geodesicMeanCurvature(inputImage, smoothParameters);
-	storing_path = outputPath + "filtered_p2.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//geodesicMeanCurvature(inputImage, smoothParameters);
+	storing_path = outputPath + "filtered_p6.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	////epsilon setting
 	//for(k = 0; k < Height; k++)
@@ -1847,9 +1505,9 @@ int main() {
 	//endPoints[0] = { 261.0, 257.0, 145.0 };
 	//endPoints[1] = { 259.0, 250.0, 246.0 };
 
-	Point3D* endPoints = new Point3D[2];//p2
-	endPoints[0] = { 260.0, 254.0, 246.0 };
-	endPoints[1] = { 255.0, 245.0, 350.0 };
+	//Point3D* endPoints = new Point3D[2];//p2
+	//endPoints[0] = { 260.0, 254.0, 246.0 };
+	//endPoints[1] = { 255.0, 245.0, 350.0 };
 
 	//Point3D* endPoints = new Point3D[2];//p3
 	//endPoints[0] = { 268.0, 231.0, 112.0 };
@@ -1860,24 +1518,24 @@ int main() {
 	//endPoints[1] = { 280.0, 235.0, 223.0 };
 
 	//Point3D* endPoints = new Point3D[2];//p5
-	//endPoints[0] = { 264.0, 244.0, 470.0 };
+	//endPoints[0] = { 265.0, 244.0, 470.0 };
 	//endPoints[1] = { 235.0, 219.0, 626.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p6
-	//endPoints[0] = { 249.0, 299.0, 256.0 };
-	//endPoints[1] = { 258.0, 286.0, 443.0 };
+	Point3D* endPoints = new Point3D[2];//p6
+	endPoints[0] = { 249.0, 299.0, 256.0 };
+	endPoints[1] = { 258.0, 286.0, 443.0 };
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
-		0.15, //threshold, (0.15 --> p1, p2)
+		0.25, //threshold, (0.15 --> p1, p2)
 		0.001,//epsilon
 		radius
 	};
 	compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	storing_path = outputPath + "potential_p2.raw";
-	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "potential_p6.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Image_Data toAction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
 	////frontPropagation(inputImage, action, potential, endPoints[0]);
@@ -1902,8 +1560,8 @@ int main() {
 	//}
 	//fclose(key_points_file);
 
-	storing_path = outputPath + "action_map_p2.raw";
-	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "action_map_p6.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Path_Parameters parameters_path
 	{
@@ -1944,7 +1602,256 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
+	*/
 
+	//3D artificial image
+	
+	////Artificial image
+	//const size_t Height = 100, Width = 60, Length = 60;//short spiral
+	const size_t Height = 100, Width = 100, Length = 100;
+	const size_t dim2D = Length * Width;
+	dataType** imageData = new dataType * [Height];
+	dataType** newImageData = new dataType * [Height];
+	dataType** action = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	for (k = 0; k < Height; k++) {
+		imageData[k] = new dataType[dim2D]{ 0 };
+		newImageData[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+	}
+	loading_path = inputPath + "shape/spiral/spiral.raw";
+	//loading_path = inputPath + "shape/Action/empty_spiral.raw";
+	//loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	Point3D iOrigin = { 0.0, 0.0, 0.0 };
+	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
+	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
+	Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
+
+	////create hole in the empty spiral
+	//imageDataNew[39][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[39][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[39][x_new(47, 67, Length)] = 0.0;
+	////
+	//imageDataNew[40][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[40][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[40][x_new(47, 67, Length)] = 0.0;
+	////
+	//imageDataNew[41][x_new(43, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(43, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(44, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(44, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(45, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(45, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(46, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(46, 67, Length)] = 0.0;
+	//imageDataNew[41][x_new(47, 66, Length)] = 0.0;
+	//imageDataNew[41][x_new(47, 67, Length)] = 0.0;
+
+	//storing_path = outputPath + "input_spiral.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	////End Points for the spiral: short spiral
+	//Point3D seed1 = { 41, 30, 12 };
+	//Point3D seed2 = { 41, 28, 86 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[0] = seed1;
+	//endPoints[1] = seed2;
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 15;
+
+	//End Points for the spiral : long spiral
+	Point3D seed1 = { 82, 46, 87 };
+	Point3D seed2 = { 81, 52, 11 };
+	Point3D* endPoints = new Point3D[2];
+	endPoints[0] = seed1;
+	endPoints[1] = seed2;
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 15;
+
+	//Empty the long spiral
+	Point3D p_grad;
+	for (k = 0; k < Height; k++)
+	{
+		for (i = 0; i < Length; i++)
+		{
+			for (j = 0; j < Width; j++)
+			{
+				if (imageData[k][x_new(i, j, Length)] > 0.0)
+				{
+					p_grad = { (dataType)i, (dataType)j, (dataType)k };
+					getGradient3D(inputImageStr, i, j, k, &p_grad);
+					double norm = sqrt(p_grad.x * p_grad.x + p_grad.y * p_grad.y + p_grad.z * p_grad.z);
+					if (norm > 0.0) 
+					{
+						newImageData[k][x_new(i, j, Length)] = 1.0;
+					}
+				}
+			}
+		}
+	}
+
+	//Image_Data ImageStr = { Height, Length, Width, newImageData, iOrigin, iSpacing, orientation };
+
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/empty_spiral.raw";
+	manageRAWFile3D<dataType>(newImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	double radius_potential = 3.0;
+	Potential_Parameters parameters{
+		1,//1000, //edge detector coefficient
+		1,//0.15, //threshold
+		0.05,//epsilon
+		radius_potential
+	};
+	Image_Data imageStr = { Height, Length, Width, newImageData, iOrigin, iSpacing, orientation };
+	compute3DPotential(imageStr, potential, endPoints, parameters);
+
+	//storing_path = outputPath + "potential_v1.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//Image_Data toDistanceMap = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
+	//fastMarching3dForDistanceMap(toDistanceMap, action, 1.0);
+	//storing_path = outputPath + "distance_map.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//storing_path = outputPath + "potential.raw";
+	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//storing_path = outputPath + "Action Spiral/without hole/action_";
+	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
+	partialFrontPropagation(actionMapStr, potential, endPoints);
+
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/action.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	////key_points.clear();
+	//key_points.push_back(seed1);
+	//key_points.push_back(seed2);
+	////Save the keys points in files
+	//string saving_csv = outputPath + "endpoints_spiral.csv";
+	//FILE* f_key_point;
+	//if (fopen_s(&f_key_point, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(f_key_point, "x,y,z\n");
+	//for (int n = 0; n < key_points.size(); n++) {
+	//	fprintf(f_key_point, "%f,%f,%f\n", key_points[n].x, key_points[n].y, key_points[n].z);
+	//}
+	//fclose(f_key_point);
+	//key_points.clear();
+
+	//Extract and save the path points
+	dataType tau = 0.95, tolerance = 1.0;
+	Path_Parameters pathParameters = { tau, 1000, tolerance };
+	vector<Point3D> path_points;
+	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
+	FILE* path_file;
+	storing_path = outputPath + "path_points_short.csv";
+	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(path_file, "x,y,z\n");
+	for(int it = 0; it < path_points.size(); it++) {
+		Point3D current_point = path_points[it];
+		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
+	}
+	fclose(path_file);
+
+	////Compare the distance for different methods
+	//dataType** distanceMapBruteForce = new dataType * [Height];
+	//dataType** distanceMapFastMarching = new dataType * [Height];
+	//dataType** distanceMapFastSweeping = new dataType * [Height];
+	//dataType** distanceMapRouyTourin = new dataType * [Height];
+	//dataType** compare = new dataType * [Height];
+	//for (k = 0; k < Height; k++) {
+	//	distanceMapBruteForce[k] = new dataType[dim2D]{ 0 };
+	//	distanceMapFastMarching[k] = new dataType[dim2D]{ 0 };
+	//	distanceMapFastSweeping[k] = new dataType[dim2D]{ 0 };
+	//	distanceMapRouyTourin[k] = new dataType[dim2D]{ 0 };
+	//	compare[k] = new dataType[dim2D]{ 0 };
+	//}
+	//imageData[50][x_new(30, 30, Length)] = 1.0;
+
+	//////bruteForceFunction_3D(distanceMapBruteForce, imageData, Length, Width, Height, 1000000000000.0, 0.0);
+	////bruteForceDistanceMap(inputImageStr, distanceMapBruteForce, 1.0);
+	//loading_path = outputPath + "distance_map_brtforce.raw";
+	//manageRAWFile3D<dataType>(distanceMapBruteForce, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//////fastMarching(distanceMapFastMarching, imageData, Height, Length, Width, 1.0);
+	////fastMarching3dForDistanceMap(inputImageStr, distanceMapFastMarching, 1.0);
+	//loading_path = outputPath + "distance_map_FM.raw";
+	//manageRAWFile3D<dataType>(distanceMapFastMarching, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//fastSweepingFunction_3D(distanceMapFastSweeping, imageData, Length, Width, Height, 1.0, 10000000000.0, 0.0);
+	//fastSweepingDistanceMap(inputImageStr, distanceMapFastSweeping, 1.0);
+	//loading_path = outputPath + "distance_map_fstswp.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//rouyTourinFunction_3D(distanceMapRouyTourin, imageData, 0.5, Length, Width, Height, 0.4, 1.0);
+	//rouyTourinDistanceMap(inputImageStr, distanceMapRouyTourin, 1.0, 0.4, 0.5);
+	//loading_path = outputPath + "distance_map_RT.raw";
+	//manageRAWFile3D<dataType>(distanceMapRouyTourin, Length, Width, Height, loading_path.c_str(), STORE_DATA, false);
+
+	//dataType norm_fm = 0.0, norm_fstswp = 0.0, norm_rt = 0, norm_compare = 0.0;
+	//for (k = 0; k < Height; k++) {
+	//	for (i = 0; i < dim2D; i++) {
+	//		norm_fm += pow(distanceMapBruteForce[k][i] - distanceMapFastMarching[k][i], 2);
+	//		//norm_fstswp += pow(distanceMapBruteForce[k][i] - distanceMapFastSweeping[k][i], 2);
+	//		//norm_rt += pow(distanceMapBruteForce[k][i] - distanceMapRouyTourin[k][i], 2);
+	//		//norm_compare += pow(distanceMapRouyTourin[k][i] - compare[k][i], 2);
+
+	//		compare[k][i] = distanceMapFastMarching[k][i] - distanceMapBruteForce[k][i];
+	//	}
+	//}
+	////std::cout << "Residual Fast Marching: " << sqrt(norm_fm) << std::endl;
+	////std::cout << "Residual Fast Sweeping: " << sqrt(norm_fstswp) << std::endl;
+	////std::cout << "Residual Rouy Tourin: " << sqrt(norm_rt) << std::endl;
+	//////std::cout << "Residual Compare: " << sqrt(norm_compare) << std::endl;
+
+	//std::cout << "Diagonal lenght: " << sqrt( Length * Length + Width * Width ) << std::endl;
+	//loading_path = outputPath + "difference.raw";
+	//manageRAWFile3D<dataType>(compare, Length, Width, Height, loading_path.c_str(), STORE_DATA, false);
+
+	//for (k = 0; k < Height; k++) {
+	//	delete[] distanceMapBruteForce[k];
+	//	delete[] distanceMapFastMarching[k];
+	//	delete[] distanceMapFastSweeping[k];
+	//	delete[] distanceMapRouyTourin[k];
+	//}
+	//delete[] distanceMapBruteForce;
+	//delete[] distanceMapFastMarching;
+	//delete[] distanceMapFastSweeping;
+	//delete[] distanceMapRouyTourin;
+
+	delete[] endPoints;
+	for (k = 0; k < Height; k++) {
+		delete[] imageData[k];
+		delete[] action[k];
+		delete[] potential[k];
+		delete[] newImageData[k];
+	}
+	delete[] imageData;
+	delete[] action;
+	delete[] potential;
+	delete[] newImageData;
 
 	//==================== Compare distance map 3D ==================================
 
