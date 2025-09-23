@@ -35,6 +35,7 @@
     <ClCompile Include="src\fast_sweeping_method.c" />
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\filtering.c" />
+    <ClCompile Include="src\gaussian_distribution.c" />
     <ClCompile Include="src\generate_3d_shapes.c" />
     <ClCompile Include="src\geodesic_mean_curvature_equation.c" />
     <ClCompile Include="src\heat_equation.c" />
@@ -86,6 +87,7 @@
     <ClInclude Include="include\enhancement.h" />
     <ClInclude Include="include\file.h" />
     <ClInclude Include="include\filtering.h" />
+    <ClInclude Include="include\gaussian_distribution.h" />
     <ClInclude Include="include\hough_transform.h" />
     <ClInclude Include="include\Labelling.h" />
     <ClInclude Include="include\morphological_change.h" />

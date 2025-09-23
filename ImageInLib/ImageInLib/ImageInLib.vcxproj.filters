@@ -356,6 +356,9 @@
     <ClCompile Include="src\conmon_filtering.c">
       <Filter>Source Files\Filtering</Filter>
     </ClCompile>
+    <ClCompile Include="src\gaussian_distribution.c">
+      <Filter>Source Files\Statistics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -534,6 +537,9 @@
     </ClInclude>
     <ClInclude Include="include\conmon_filtering.h">
       <Filter>Header Files\Filtering</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gaussian_distribution.h">
+      <Filter>Header Files\Statistics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
