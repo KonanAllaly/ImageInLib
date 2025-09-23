@@ -22,6 +22,8 @@
 #include "../src/segmentation3d_gsubsurf.h"
 #include "../src/non_linear_heat_equation.h"
 
+#include "gaussian_distribution.h"
+
 int main() {
 
 	string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
@@ -1620,97 +1622,137 @@ int main() {
 		action[k] = new dataType[dim2D]{ 0 };
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = inputPath + "shape/spiral/spiral.raw";
+	
+	loading_path = inputPath + "spiral.raw";
+	//loading_path = inputPath + "low_contrast_spiral.raw";
+	//loading_path = inputPath + "shape/spiral/spiral.raw";
 	//loading_path = inputPath + "shape/Action/empty_spiral.raw";
 	//loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	////create holes
+	//Point3D hole_center = { 27, 31, 51 };
+	//double hole_radius = 10.0;
+	//for(k = 0; k < Height; k++)
+	//{
+	//	for(i = 0; i < Length; i++)
+	//	{
+	//		for(j = 0; j < Width; j++)
+	//		{
+	//			Point3D p = { (dataType)i, (dataType)j, (dataType)k };
+	//			double dist = getPoint3DDistance(p, hole_center);
+	//			if(dist <= hole_radius)
+	//			{
+	//				imageData[k][x_new(i, j, Length)] = 0.0;
+	//			}
+	//		}
+	//	}
+	//}
+	//storing_path = outputPath + "with_hole.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	//////decrease the contrast
+	//dataType new_value;
+	//for (k = 0; k < Height; k++) 
+	//{
+	//	for(i = 0; i < dim2D; i++) 
+	//	{
+	//		//if(imageData[k][i] > 0.0) 
+	//		//{
+	//		//	new_value = generateRandNormal(0.9, 0.01);
+	//		//}
+	//		//else 
+	//		//{
+	//		//	new_value = generateRandNormal(0.7, 0.01);
+	//		//}
+	//		//imageData[k][i] = new_value;
+	//		if (imageData[k][i] == 1.0) 
+	//		{
+	//			imageData[k][i] = 0.9;
+	//		}
+	//		else {
+	//			imageData[k][i] = 0.8;
+	//		}
+	//	}
+	//}
+	////storing_path = outputPath + "low_contrast_spiral.raw";
+	////manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	
 
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	Image_Data inputImageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 
-	////create hole in the empty spiral
-	//imageDataNew[39][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[39][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[39][x_new(47, 67, Length)] = 0.0;
-	////
-	//imageDataNew[40][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[40][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[40][x_new(47, 67, Length)] = 0.0;
-	////
-	//imageDataNew[41][x_new(43, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(43, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(44, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(44, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(45, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(45, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(46, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(46, 67, Length)] = 0.0;
-	//imageDataNew[41][x_new(47, 66, Length)] = 0.0;
-	//imageDataNew[41][x_new(47, 67, Length)] = 0.0;
-
-	//storing_path = outputPath + "input_spiral.raw";
+	//Filter_Parameters smoothParameters =
+	//{
+	//	0.5,// tau;
+	//	1.0,// h not used here
+	//	1.0,// sigma
+	//	1000,// edge_detector_coefficient
+	//	1.4,// omega_c;
+	//	1e-3,// tolerance;
+	//	1e-6,// eps2
+	//	1,// coef
+	//	1,// linked to sigma
+	//	1,//number of time step;
+	//	100// max number of iteration;
+	//};
+	////heatImplicitRectangularScheme(inputImageStr, smoothParameters);
+	storing_path = outputPath + "smooth.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	////End Points for the spiral: short spiral
-	//Point3D seed1 = { 41, 30, 12 };
-	//Point3D seed2 = { 41, 28, 86 };
-	//Point3D* endPoints = new Point3D[2];
-	//endPoints[0] = seed1;
-	//endPoints[1] = seed2;
-	//vector<Point3D> key_points;
-	//const double LengthKeyPoints = 15;
-
-	//End Points for the spiral : long spiral
-	Point3D seed1 = { 82, 46, 87 };
-	Point3D seed2 = { 81, 52, 11 };
+	//End Points for the spiral
+	Point3D seed1 = { 81, 52, 14 };
+	Point3D seed2 = { 79, 47, 84 };
 	Point3D* endPoints = new Point3D[2];
 	endPoints[0] = seed1;
 	endPoints[1] = seed2;
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 15;
 
-	//Empty the long spiral
-	Point3D p_grad;
-	for (k = 0; k < Height; k++)
-	{
-		for (i = 0; i < Length; i++)
-		{
-			for (j = 0; j < Width; j++)
-			{
-				if (imageData[k][x_new(i, j, Length)] > 0.0)
-				{
-					p_grad = { (dataType)i, (dataType)j, (dataType)k };
-					getGradient3D(inputImageStr, i, j, k, &p_grad);
-					double norm = sqrt(p_grad.x * p_grad.x + p_grad.y * p_grad.y + p_grad.z * p_grad.z);
-					if (norm > 0.0) 
-					{
-						newImageData[k][x_new(i, j, Length)] = 1.0;
-					}
-				}
-			}
-		}
-	}
+	////End Points for the spiral: short spiral
+	//Point3D seed1 = { 40, 30, 85 };
+	//Point3D seed2 = { 42, 30, 15 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[0] = seed1;
+	//endPoints[1] = seed2;
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 15;
+
+	////End Points for the spiral
+	//Point3D seed1 = { 90, 53, 15 };
+	//Point3D seed2 = { 90, 45, 85 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[0] = seed1;
+	//endPoints[1] = seed2;
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 15;
+
+	////Empty the long spiral
+	//Point3D p_grad;
+	//for (k = 0; k < Height; k++)
+	//{
+	//	for (i = 0; i < Length; i++)
+	//	{
+	//		for (j = 0; j < Width; j++)
+	//		{
+	//			if (imageData[k][x_new(i, j, Length)] > 0.0)
+	//			{
+	//				p_grad = { (dataType)i, (dataType)j, (dataType)k };
+	//				getGradient3D(inputImageStr, i, j, k, &p_grad);
+	//				double norm = sqrt(p_grad.x * p_grad.x + p_grad.y * p_grad.y + p_grad.z * p_grad.z);
+	//				if (norm > 0.0) 
+	//				{
+	//					newImageData[k][x_new(i, j, Length)] = 1.0;
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 	//Image_Data ImageStr = { Height, Length, Width, newImageData, iOrigin, iSpacing, orientation };
-
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/empty_spiral.raw";
-	manageRAWFile3D<dataType>(newImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/empty_spiral.raw";
+	//manageRAWFile3D<dataType>(newImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	double radius_potential = 3.0;
 	Potential_Parameters parameters{
@@ -1719,7 +1761,7 @@ int main() {
 		0.05,//epsilon
 		radius_potential
 	};
-	Image_Data imageStr = { Height, Length, Width, newImageData, iOrigin, iSpacing, orientation };
+	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
 	compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	//storing_path = outputPath + "potential_v1.raw";
@@ -1733,12 +1775,11 @@ int main() {
 	//storing_path = outputPath + "potential.raw";
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	//storing_path = outputPath + "Action Spiral/without hole/action_";
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
 	partialFrontPropagation(actionMapStr, potential, endPoints);
 
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/action.raw";
-	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "action.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	////key_points.clear();
 	//key_points.push_back(seed1);
@@ -1761,9 +1802,14 @@ int main() {
 	dataType tau = 0.95, tolerance = 1.0;
 	Path_Parameters pathParameters = { tau, 1000, tolerance };
 	vector<Point3D> path_points;
+	//path_points.push_back(endPoints[1]);
+	//path_points.push_back(endPoints[0]);
 	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "path_points_short.csv";
+	storing_path = outputPath + "endPoints.csv";
+	//storing_path = outputPath + "path_points_classic.csv";
+	//storing_path = outputPath + "path_points_distance_map.csv";
+	//storing_path = outputPath + "path_points_thin.csv";
 	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -1774,6 +1820,7 @@ int main() {
 		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
 	}
 	fclose(path_file);
+	
 
 	////Compare the distance for different methods
 	//dataType** distanceMapBruteForce = new dataType * [Height];
