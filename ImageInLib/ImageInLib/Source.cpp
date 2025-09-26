@@ -42,12 +42,11 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	//OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
+	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	
-	/*
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient5_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -62,7 +61,7 @@ int main() {
 	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
 	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	*/
+	
 
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
@@ -1446,7 +1445,7 @@ int main() {
 	//==================== Path Extraction 3D image ==================================
 
 	//3D real image
-	/*
+	
 	dataType** imageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -1472,24 +1471,24 @@ int main() {
 	//storing_path = outputPath + "rescaled_p5.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	Filter_Parameters smoothParameters =
-	{
-		0.2,// tau;
-		1.0,// h not used here
-		1.0,// sigma
-		1000,// edge_detector_coefficient
-		1.4,// omega_c;
-		1e-3,// tolerance;
-		1e-6,// eps2
-		1,// coef
-		1,// linked to sigma
-		1,//number of time step;
-		100// max number of iteration;
-	};
+	//Filter_Parameters smoothParameters =
+	//{
+	//	0.2,// tau;
+	//	1.0,// h not used here
+	//	1.0,// sigma
+	//	1000,// edge_detector_coefficient
+	//	1.4,// omega_c;
+	//	1e-3,// tolerance;
+	//	1e-6,// eps2
+	//	1,// coef
+	//	1,// linked to sigma
+	//	1,//number of time step;
+	//	100// max number of iteration;
+	//};
 	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
 	//geodesicMeanCurvature(inputImage, smoothParameters);
-	storing_path = outputPath + "filtered_p6.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "P3/filtered_p3.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	////epsilon setting
 	//for(k = 0; k < Height; k++)
@@ -1519,13 +1518,13 @@ int main() {
 	//endPoints[0] = { 279.0, 229.0, 134.0 };
 	//endPoints[1] = { 280.0, 235.0, 223.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p5
-	//endPoints[0] = { 265.0, 244.0, 470.0 };
-	//endPoints[1] = { 235.0, 219.0, 626.0 };
+	Point3D* endPoints = new Point3D[2];//p5
+	endPoints[0] = { 265.0, 244.0, 470.0 };
+	endPoints[1] = { 235.0, 219.0, 626.0 };
 
-	Point3D* endPoints = new Point3D[2];//p6
-	endPoints[0] = { 249.0, 299.0, 256.0 };
-	endPoints[1] = { 258.0, 286.0, 443.0 };
+	//Point3D* endPoints = new Point3D[2];//p6
+	//endPoints[0] = { 249.0, 299.0, 256.0 };
+	//endPoints[1] = { 258.0, 286.0, 443.0 };
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
@@ -1534,22 +1533,29 @@ int main() {
 		0.001,//epsilon
 		radius
 	};
-	compute3DPotential(inputImage, potential, endPoints, parameters);
+	//compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	storing_path = outputPath + "potential_p6.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "P5/potential_p5.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	Image_Data toAction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	////frontPropagation(inputImage, action, potential, endPoints[0]);
-	partialFrontPropagation(toAction, potential, endPoints);
+	//////frontPropagation(inputImage, action, potential, endPoints[0]);
+	//partialFrontPropagation(toAction, potential, endPoints);
 
-	//vector<Point3D> key_points;
-	//const double LengthKeyPoints = 50.0;
-	//frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
+	storing_path = outputPath + "action_map_p5.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 50.0;
+	frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
+
+	storing_path = outputPath + "keyp_action_map_p5.raw";
+	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//FILE* key_points_file;
-	//string save_key_file = outputPath + "key_points.csv";
-	//if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) {
+	//string save_key_file = outputPath + "key_points_p4.csv";
+	//if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) 
+	//{
 	//	printf("Enable to open");
 	//	return false;
 	//}
@@ -1557,13 +1563,10 @@ int main() {
 	//for (size_t it = 0; it < key_points.size(); it++)
 	//{
 	//	//convert to real world coordinates
-	//	key_points[it] = getRealCoordFromImageCoord3D(key_points[it], ctOrigin, ctSpacing, orientation);
-	//	fprintf(key_points_file, "%f,%f,%f\n", key_points[it].x, key_points[it].y, key_points[it].z);
+	//	Point3D kp = getRealCoordFromImageCoord3D(key_points[it], ctOrigin, ctSpacing, orientation);
+	//	fprintf(key_points_file, "%f,%f,%f\n", kp.x, kp.y, kp.z);
 	//}
 	//fclose(key_points_file);
-
-	storing_path = outputPath + "action_map_p6.raw";
-	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Path_Parameters parameters_path
 	{
@@ -1575,20 +1578,44 @@ int main() {
 	//path_points.push_back(endPoints[1]);
 	//path_points.push_back(endPoints[0]);
 	Image_Data toPathExtraction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
-	shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
+	//shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
 
 	FILE* path_points_file;
-	string save_path_file = outputPath + "path_points.csv";
+	//string save_path_file = outputPath + "end_points_p5.csv";
+	string save_path_file = outputPath + "path_points_new_p5.csv";
+	//string save_path_file = outputPath + "path_points_p5.csv";
 	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
 	}
 	fprintf(path_points_file, "x,y,z\n");
-	for(size_t it = 0; it < path_points.size(); it++) 
+
+	//for(size_t it = 0; it < path_points.size(); it++) 
+	//{
+	//	//convert to real world coordinates
+	//	path_points[it] = getRealCoordFromImageCoord3D(path_points[it], ctOrigin, ctSpacing, orientation);
+	//	fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
+	//}
+	//fclose(path_points_file);
+
+	storing_path = outputPath + "action_p5_";
+	string new_storing_path;
+	for(int i_n = key_points.size() - 1; i_n > 0; i_n--)
 	{
-		//convert to real world coordinates
-		path_points[it] = getRealCoordFromImageCoord3D(path_points[it], ctOrigin, ctSpacing, orientation);
-		fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
+		endPoints[0] = key_points[i_n];
+		endPoints[1] = key_points[i_n - 1];
+		partialFrontPropagation(toAction, potential, endPoints);
+		shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
+		extension = to_string(i_n);
+		new_storing_path = storing_path + extension + ".raw";
+		manageRAWFile3D<dataType>(action, Length, Width, Height, new_storing_path.c_str(), STORE_DATA, false);
+		for(size_t it = 0; it < path_points.size(); it++) 
+		{
+			//convert to real world coordinates
+			path_points[it] = getRealCoordFromImageCoord3D(path_points[it], ctOrigin, ctSpacing, orientation);
+			fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
+		}
+		path_points.clear();
 	}
 	fclose(path_points_file);
 	
@@ -1604,8 +1631,9 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
-	*/
+	
 
+	/*
 	//3D artificial image
 	
 	////Artificial image
@@ -1623,15 +1651,15 @@ int main() {
 		potential[k] = new dataType[dim2D]{ 0 };
 	}
 	
-	loading_path = inputPath + "spiral.raw";
-	//loading_path = inputPath + "low_contrast_spiral.raw";
+	////loading_path = inputPath + "spiral.raw";
+	////loading_path = inputPath + "low_contrast_spiral.raw";
 	//loading_path = inputPath + "shape/spiral/spiral.raw";
-	//loading_path = inputPath + "shape/Action/empty_spiral.raw";
-	//loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	////loading_path = inputPath + "shape/Action/empty_spiral.raw";
+	////loading_path = inputPath + "shape/Action/empty_spiral_with_hole.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	////create holes
-	//Point3D hole_center = { 27, 31, 51 };
+	//Point3D hole_center = { 27, 31, 50 };
 	//double hole_radius = 10.0;
 	//for(k = 0; k < Height; k++)
 	//{
@@ -1648,36 +1676,38 @@ int main() {
 	//		}
 	//	}
 	//}
+	
 	//storing_path = outputPath + "with_hole.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 	//////decrease the contrast
+	
 	//dataType new_value;
 	//for (k = 0; k < Height; k++) 
 	//{
 	//	for(i = 0; i < dim2D; i++) 
 	//	{
-	//		//if(imageData[k][i] > 0.0) 
-	//		//{
-	//		//	new_value = generateRandNormal(0.9, 0.01);
-	//		//}
-	//		//else 
-	//		//{
-	//		//	new_value = generateRandNormal(0.7, 0.01);
-	//		//}
-	//		//imageData[k][i] = new_value;
-	//		if (imageData[k][i] == 1.0) 
+	//		if(imageData[k][i] > 0.0) 
 	//		{
-	//			imageData[k][i] = 0.9;
+	//			new_value = 0.8;//generateRandNormal(0.8, 0.01);
 	//		}
-	//		else {
-	//			imageData[k][i] = 0.8;
+	//		else 
+	//		{
+	//			new_value = 0.7;//generateRandNormal(0.7, 0.01);
 	//		}
+	//		imageData[k][i] = new_value;
+	//		
+	//		//if (imageData[k][i] == 1.0) 
+	//		//{
+	//		//	imageData[k][i] = 0.8;
+	//		//}
+	//		//else {
+	//		//	imageData[k][i] = 0.7;
+	//		//}
 	//	}
 	//}
-	////storing_path = outputPath + "low_contrast_spiral.raw";
-	////manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = outputPath + "noisy_image.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	
-
 	Point3D iOrigin = { 0.0, 0.0, 0.0 };
 	VoxelSpacing iSpacing = { 1.0, 1.0, 1.0 };
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
@@ -1685,7 +1715,7 @@ int main() {
 
 	//Filter_Parameters smoothParameters =
 	//{
-	//	0.5,// tau;
+	//	1.0,// tau;
 	//	1.0,// h not used here
 	//	1.0,// sigma
 	//	1000,// edge_detector_coefficient
@@ -1697,9 +1727,9 @@ int main() {
 	//	1,//number of time step;
 	//	100// max number of iteration;
 	//};
-	////heatImplicitRectangularScheme(inputImageStr, smoothParameters);
-	storing_path = outputPath + "smooth.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//heatImplicitRectangularScheme(inputImageStr, smoothParameters);
+	storing_path = outputPath + "edge_image.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	//End Points for the spiral
 	Point3D seed1 = { 81, 52, 14 };
@@ -1709,6 +1739,33 @@ int main() {
 	endPoints[1] = seed2;
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 15;
+
+	////create hole close to point 2
+	Point3D hole_center1 = { 79, 47, 70 };
+	//Point3D hole_center1 = { 49, 20, 60 };
+	Point3D hole_center2 = { 29, 47, 55 };
+	for(k = 0; k < Height; k++)
+	{
+		for(i = 0; i < Length; i++)
+		{
+			for(j = 0; j < Width; j++)
+			{
+				Point3D p = { (dataType)i, (dataType)j, (dataType)k };
+				double dist = getPoint3DDistance(p, hole_center1);
+				if(dist <= 8.0)
+				{
+					imageData[k][x_new(i, j, Length)] = 0.0;
+				}
+				dist = getPoint3DDistance(p, hole_center2);
+				if (dist <= 8.0)
+				{
+					imageData[k][x_new(i, j, Length)] = 0.0;
+				}
+			}
+		}
+	}
+	storing_path = outputPath + "with_hole.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	////End Points for the spiral: short spiral
 	//Point3D seed1 = { 40, 30, 85 };
@@ -1754,15 +1811,24 @@ int main() {
 	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/empty_spiral.raw";
 	//manageRAWFile3D<dataType>(newImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
+	////End points spiral thin
+	//Point3D seed1 = { 90, 51, 15 };
+	//Point3D seed2 = { 90, 47, 84 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[0] = seed1;
+	//endPoints[1] = seed2;
+	//vector<Point3D> key_points;
+	//const double LengthKeyPoints = 15;
+
 	double radius_potential = 3.0;
 	Potential_Parameters parameters{
 		1,//1000, //edge detector coefficient
 		1,//0.15, //threshold
-		0.05,//epsilon
+		0.01,//epsilon
 		radius_potential
 	};
 	Image_Data imageStr = { Height, Length, Width, imageData, iOrigin, iSpacing, orientation };
-	compute3DPotential(imageStr, potential, endPoints, parameters);
+	//compute3DPotential(imageStr, potential, endPoints, parameters);
 
 	//storing_path = outputPath + "potential_v1.raw";
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
@@ -1776,7 +1842,7 @@ int main() {
 	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Image_Data actionMapStr = { Height, Length, Width, action, iOrigin, iSpacing, orientation };
-	partialFrontPropagation(actionMapStr, potential, endPoints);
+	//partialFrontPropagation(actionMapStr, potential, endPoints);
 
 	storing_path = outputPath + "action.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
@@ -1804,22 +1870,23 @@ int main() {
 	vector<Point3D> path_points;
 	//path_points.push_back(endPoints[1]);
 	//path_points.push_back(endPoints[0]);
-	shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
+	//shortestPath3D(actionMapStr, endPoints, path_points, pathParameters);
 	FILE* path_file;
-	storing_path = outputPath + "endPoints.csv";
+	//storing_path = outputPath + "endPoints.csv";
 	//storing_path = outputPath + "path_points_classic.csv";
 	//storing_path = outputPath + "path_points_distance_map.csv";
-	//storing_path = outputPath + "path_points_thin.csv";
-	if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(path_file, "x,y,z\n");
-	for(int it = 0; it < path_points.size(); it++) {
-		Point3D current_point = path_points[it];
-		fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
-	}
-	fclose(path_file);
+	//storing_path = outputPath + "path_points_shortcut.csv";
+	//storing_path = outputPath + "path_points_shortcut_V2.csv";
+	//if (fopen_s(&path_file, storing_path.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(path_file, "x,y,z\n");
+	//for(int it = 0; it < path_points.size(); it++) {
+	//	Point3D current_point = path_points[it];
+	//	fprintf(path_file, "%f,%f,%f\n", current_point.x, current_point.y, current_point.z);
+	//}
+	//fclose(path_file);
 	
 
 	////Compare the distance for different methods
@@ -1899,6 +1966,7 @@ int main() {
 	delete[] action;
 	delete[] potential;
 	delete[] newImageData;
+	*/
 
 	//==================== Compare distance map 3D ==================================
 

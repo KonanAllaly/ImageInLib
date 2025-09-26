@@ -2032,8 +2032,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
 	bool isGradientComputed = false;
 	Point3D grad_vector;
-	
-	
+	/*
 	for (k = 0; k < height; k++) 
 	{
 		for (i = 0; i < length; i++) 
@@ -2044,79 +2043,79 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
 				if (isGradientComputed == true) {
 					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-					potential[k][xd] = parameters.eps + pow(norm_of_gradient,3);
 				}
 				else {
 					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
 					return false;
 				}
 				
-				////dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-				//////threshold : real image
-				////if (edgeValue <= parameters.thres) {
-				////	maskThreshold[k][xd] = 1.0;
-				////}
-				////else {
-				////	maskThreshold[k][xd] = 0.0;
-				////}
-				////threshold : artificial
-				//if (norm_of_gradient > 0.02) 
-				//{
+				//dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				////threshold : real image
+				//if (edgeValue <= parameters.thres) {
 				//	maskThreshold[k][xd] = 1.0;
 				//}
-				//else 
-				//{
+				//else {
 				//	maskThreshold[k][xd] = 0.0;
 				//}
+				//threshold : artificial
+				if (norm_of_gradient > 0.0) 
+				{
+					maskThreshold[k][xd] = 1.0;
+				}
+				else 
+				{
+					maskThreshold[k][xd] = 0.0;
+				}
 			}
 		}
 	}
-
+	*/
+	
 	////Real image
-	//Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	std::string storing_path;// = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 	////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
 	////fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fm.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/P3/distance_map_fm.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
-	//////Artificial image : no need to compute the edge image when empty inside
-	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////////Artificial image : no need to compute the edge image when empty inside
+	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	//fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fm.raw";
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fm.raw";
 	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
-	//Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
-	//dataType value_first_pt = seedStats.mean_data;
-	//std::cout << "Seed 1 value : " << value_first_pt << std::endl;
+	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	dataType value_first_pt = seedStats.mean_data;
+	std::cout << "Seed 1 value : " << value_first_pt << std::endl;
 	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
 	////dataType value_second_pt = seedStats.mean_data;
 	////std::cout << "Seed 2 value : " << value_second_pt << std::endl;
-	//dataType seedValCT = value_first_pt;//(value_first_pt + value_second_pt) / 2.0;
-	dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
-	std::cout << "Seed value : " << seedValCT << std::endl;
+	dataType seedValCT = value_first_pt;//(value_first_pt + value_second_pt) / 2.0;
+	//dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
+	//std::cout << "Seed value : " << seedValCT << std::endl;
 	
-	//dataType var_epsilon = 0;//0.01;
-	////if (seedStats.sd_data != 0) 
-	////{
-	////	var_epsilon = 3.0 * seedStats.sd_data;
-	////}
-	////else {
-	////	var_epsilon = parameters.eps;
-	////}
+	dataType var_epsilon = 0;//0.01;
+	if (seedStats.sd_data != 0) 
+	{
+		var_epsilon = 1.0 * seedStats.sd_data;
+	}
+	else {
+		var_epsilon = parameters.eps;
+	}
 	//var_epsilon = parameters.eps;
-	//std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
+	std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
 
-	////Computation of potential function
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
-	//	}
-	//}
+	//Computation of potential function
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
+		}
+	}
 
 	////Find the max of the difference
 	//dataType maxImage = 0.0;
@@ -2131,13 +2130,15 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//}
 	//std::cout << "difference max : " << maxImage << std::endl;
 
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		potential[k][i] = 1.0 / (var_epsilon + potential[k][i]); // original potential
-	//		//potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i])); // new potential
-	//		//potential[k][i] = (dataType)(var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i])); //new poential
-	//	}
-	//}
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			//potential[k][i] = var_epsilon + potential[k][i]; // original potential
+			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i])); // new potential
+			//potential[k][i] = (dataType)(var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i])); //new poential
+		}
+	}
 
 	for (k = 0; k < height; k++) {
 		delete[] maskThreshold[k];
@@ -2323,7 +2324,18 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	size_t seedIndex = x_new(seedI, seedJ, length);
 
 	dataType max_action = 0;
+	size_t num_proceed = 1;
 
+	FILE* processed_points;
+	string save_points = "C:/Users/Konan Allaly/Documents/Tests/output/processed_partial.csv";
+	if (fopen_s(&processed_points, save_points.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(processed_points, "x,y,z\n");
+	Point3D processed = getRealCoordFromImageCoord3D(endPoints[0], actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
+	fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
+	
 	while (narrowBand.size() > 0) {
 
 		//processed the point with minimum distance
@@ -2333,6 +2345,12 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		k = current.z;
 		currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
+		num_proceed++;
+
+		//store the processed points
+		processed = { (dataType)i, (dataType)j, (dataType)k };
+		processed = getRealCoordFromImageCoord3D(processed, actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
+		fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
 
 		//Find the maximum action value
 		if (actionPtr.imageDataPtr[k][currentIndx] > max_action) {
@@ -2389,6 +2407,10 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			}
 		}
 	}
+
+	fclose(processed_points);
+
+	std::cout << num_proceed << " have been processed before the front reaches final points." << std::endl;
 	
 	for (k = 0; k < height; k++) {
 		for(i = 0; i < dim2D; i++) {
@@ -2407,7 +2429,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 
 }
 
-bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** potentialFuncPtr, Point3D seedPoint) {
+bool frontPropagation(Image_Data ctImageData, dataType** actionPtr, dataType** potentialFuncPtr, Point3D seedPoint) 
+{
 
 	if (actionPtr == NULL || potentialFuncPtr == NULL) {
 		return false;
@@ -2658,6 +2681,18 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	//Set the starting point as initial source point
 	Point3D currentSourcePoint = { (dataType)i, (dataType)j, (dataType)k };
 	key_points.push_back(currentSourcePoint);
+
+	dataType max_action = 0;
+
+	FILE* processed_points;
+	string save_points = "C:/Users/Konan Allaly/Documents/Tests/output/processed_keyp.csv";
+	if (fopen_s(&processed_points, save_points.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(processed_points, "x,y,z\n");
+	Point3D processed = getRealCoordFromImageCoord3D(seedPoint[0], actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+	fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
 	
 	while (narrowBand.size() > 0) {
 
@@ -2668,6 +2703,14 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		k = current.z;
 		currentIndx = x_new(i, j, length);
 		labelArray[k][currentIndx] = 1;
+
+		processed = { (dataType)i, (dataType)j, (dataType)k };
+		processed = getRealCoordFromImageCoord3D(processed, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+		fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
+
+		if(max_action < actionMapStr.imageDataPtr[k][currentIndx]) {
+			max_action = actionMapStr.imageDataPtr[k][currentIndx];
+		}
 
 		//Exit of the while loop if the end point is reached
 		if (labelArray[kEnd][x_new(iEnd, jEnd, length)] == 1) {
@@ -2774,6 +2817,19 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			updateNeighbor3D(i, j + 1, k, length, width, height, actionMapStr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
 		}
 
+	}
+
+	key_points.push_back(seedPoint[1]);
+
+	fclose(processed_points);
+
+	//set all the unvisited points to a maximum value
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+				actionMapStr.imageDataPtr[k][i] = max_action + 1;
+			}
+		}
 	}
 
 	for (k = 0; k < height; k++) {
