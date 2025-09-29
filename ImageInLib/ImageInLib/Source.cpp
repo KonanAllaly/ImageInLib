@@ -46,7 +46,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient5_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -1518,13 +1518,13 @@ int main() {
 	//endPoints[0] = { 279.0, 229.0, 134.0 };
 	//endPoints[1] = { 280.0, 235.0, 223.0 };
 
-	Point3D* endPoints = new Point3D[2];//p5
-	endPoints[0] = { 265.0, 244.0, 470.0 };
-	endPoints[1] = { 235.0, 219.0, 626.0 };
+	//Point3D* endPoints = new Point3D[2];//p5
+	//endPoints[0] = { 265.0, 244.0, 470.0 };
+	//endPoints[1] = { 235.0, 219.0, 626.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p6
-	//endPoints[0] = { 249.0, 299.0, 256.0 };
-	//endPoints[1] = { 258.0, 286.0, 443.0 };
+	Point3D* endPoints = new Point3D[2];//p6
+	endPoints[0] = { 249.0, 299.0, 256.0 };
+	endPoints[1] = { 258.0, 286.0, 443.0 };
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
@@ -1535,21 +1535,20 @@ int main() {
 	};
 	//compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	storing_path = outputPath + "P5/potential_p5.raw";
+	storing_path = outputPath + "P6/potential_p6.raw";
 	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	Image_Data toAction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
 	//////frontPropagation(inputImage, action, potential, endPoints[0]);
 	//partialFrontPropagation(toAction, potential, endPoints);
-
-	storing_path = outputPath + "action_map_p5.raw";
+	//storing_path = outputPath + "action_map_p5.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
 	const double LengthKeyPoints = 50.0;
 	frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
 
-	storing_path = outputPath + "keyp_action_map_p5.raw";
+	storing_path = outputPath + "keyp_action_map_p6.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//FILE* key_points_file;
@@ -1581,9 +1580,9 @@ int main() {
 	//shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
 
 	FILE* path_points_file;
-	//string save_path_file = outputPath + "end_points_p5.csv";
-	string save_path_file = outputPath + "path_points_new_p5.csv";
-	//string save_path_file = outputPath + "path_points_p5.csv";
+	//string save_path_file = outputPath + "end_points_p1.csv";
+	string save_path_file = outputPath + "path_points_new_p6.csv";
+	//string save_path_file = outputPath + "path_points_p1.csv";
 	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
 		printf("Enable to open");
 		return false;
@@ -1598,7 +1597,7 @@ int main() {
 	//}
 	//fclose(path_points_file);
 
-	storing_path = outputPath + "action_p5_";
+	//storing_path = outputPath + "action_p5_";
 	string new_storing_path;
 	for(int i_n = key_points.size() - 1; i_n > 0; i_n--)
 	{
@@ -1606,10 +1605,10 @@ int main() {
 		endPoints[1] = key_points[i_n - 1];
 		partialFrontPropagation(toAction, potential, endPoints);
 		shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
-		extension = to_string(i_n);
-		new_storing_path = storing_path + extension + ".raw";
-		manageRAWFile3D<dataType>(action, Length, Width, Height, new_storing_path.c_str(), STORE_DATA, false);
-		for(size_t it = 0; it < path_points.size(); it++) 
+		//extension = to_string(i_n);
+		//new_storing_path = storing_path + extension + ".raw";
+		//manageRAWFile3D<dataType>(action, Length, Width, Height, new_storing_path.c_str(), STORE_DATA, false);
+		for(int it = path_points.size() - 1; it > -1; it--) 
 		{
 			//convert to real world coordinates
 			path_points[it] = getRealCoordFromImageCoord3D(path_points[it], ctOrigin, ctSpacing, orientation);
