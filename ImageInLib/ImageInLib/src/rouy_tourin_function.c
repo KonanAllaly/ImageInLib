@@ -147,7 +147,7 @@ bool RouyTourinDistanceMapRectangularGrid(Image_Data ctImageData, dataType** dis
 		for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
 			for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
 				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
-					if (ctImageData.imageDataPtr[k][x_new(i, j, length)] == foregroundValue) {
+					if (ctImageData.imageDataPtr[k][x_new(i, j, length)] != foregroundValue) {
 						value = previousSolution[k_ext][x_new(i_ext, j_ext, length_ext)];
 						distancePtr[k][x_new(i, j, length)] = (dataType)(value + tau - tau * sqrt(
 							  hx_2 * max(pow(min(previousSolution[k_ext][x_new(i_ext - 1, j_ext, length_ext)] - value, 0), 2),

@@ -344,7 +344,6 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     }
 
     //pOutputPathPtr : can be used to save the path during the motion
-    //In the current implemention, just the final curve can be exported
 
     //let us consider single curve without topological changes
     resetIDGenerator();
@@ -535,7 +534,7 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
     const size_t x_dis = (size_t)x;
     const size_t y_dis = (size_t)y;
     const size_t z_dis = (size_t)z;
-    size_t xd = x_new(x_dis, y_dis, pDistanceMap->width);
+    size_t xd = x_new(x_dis, y_dis, pDistanceMap->length);
     Point3D current_grad;
     const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
 
@@ -580,8 +579,8 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             h_i_plus = current_point->distance_to_next;
             som_dist = h_i_plus + h_i;
 
-            //get the external velocity field
-            getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            ////get the external velocity field
+            //getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
 
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
             ty = (current_point->next->y - current_point->previous->y) / som_dist;
@@ -589,13 +588,14 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
             dot = tx * vx + ty * vy + tz * vz;
 
-            current_point->nvx = vx - dot * tx;
-            current_point->nvy = vy - dot * ty;
-            current_point->nvz = vz - dot * tz;
+            current_point->nvx = 0.0;//vx - dot * tx;
+            current_point->nvy = 0.0;//vy - dot * ty;
+            current_point->nvz = 1.0;//vz - dot * tz;
 
             Point3D pnorm = { current_point->nvx, current_point->nvy, current_point->nvz };
             norm_nv = norm3D(pnorm);
-            if (norm_nv == 0) {
+            if (norm_nv == 0) 
+            {
                 norm_nv = 1.0;
             }
 
