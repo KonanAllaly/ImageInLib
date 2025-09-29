@@ -113,16 +113,12 @@ void copyDataToExtendedArea(dataType** originalDataPtr, dataType** extendedDataP
 	const size_t length_ext = originalLength + 2;
 	const size_t width_ext = originalWidth + 2;
 
-	size_t sliceBound = (length_ext - 1) * width_ext;
-	size_t i, k, k_ext, i_d = 0;
-
+	size_t i, k, k_ext;
 	for (k = 0, k_ext = 1; k < originalHeight; k++, k_ext++)
 	{
-		i_d = 0;
-		for (i = length_ext + 1; i < sliceBound; i += length_ext)
+		for (i = 0; i < originalLength; i++)
 		{
-			memcpy(&(extendedDataPtr[k_ext][i]), &(originalDataPtr[k][i_d]), originalLength * sizeof(dataType));
-			i_d += originalLength;
+			memcpy(&(extendedDataPtr[k_ext][(i + 1) * width_ext + 1]), &(originalDataPtr[k][i * originalWidth]), originalWidth * sizeof(dataType));
 		}
 	}
 }
@@ -133,16 +129,13 @@ void copyDataToReducedArea(dataType** originalDataPtr, const dataType** extended
 	const size_t length_ext = originalLength + 2;
 	const size_t width_ext = originalWidth + 2;
 
-	size_t sliceBound = (length_ext - 1) * width_ext;
-	size_t i, k, k_ext, i_d = 0;
+	size_t i, k, k_ext;
 
 	for (k = 0, k_ext = 1; k < originalHeight; k++, k_ext++)
 	{
-		i_d = 0;
-		for (i = length_ext + 1; i < sliceBound; i += length_ext)
+		for (i = 0; i < originalLength; i++)
 		{
-			memcpy(&(originalDataPtr[k][i_d]), &(extendedDataPtr[k_ext][i]), originalLength * sizeof(dataType));
-			i_d += originalLength;
+			memcpy(&(originalDataPtr[k][i * originalWidth]), &(extendedDataPtr[k_ext][(i + 1) * width_ext + 1]), originalWidth * sizeof(dataType));
 		}
 	}
 }
@@ -152,14 +145,9 @@ void copyDataToAnotherArray(dataType** source, dataType** destination, size_t he
 	size_t k, i, j, xd;
 	for (k = 0; k < height; k++)
 	{
-		for (i = 0; i < length; i++)
+		for (i = 0; i < length * length; i++)
 		{
-			for (j = 0; j < width; j++)
-			{
-				// 2D flattening
-				xd = x_new(i, j, length);
-				destination[k][xd] = source[k][xd];
-			}
+			destination[k][i] = source[k][i];
 		}
 	}
 }
