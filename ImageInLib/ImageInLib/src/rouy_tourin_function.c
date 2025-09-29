@@ -135,7 +135,7 @@ bool RouyTourinDistanceMapRectangularGrid(Image_Data ctImageData, dataType** dis
 	dataType hy_2 = 1.0 / (hy * hy);
 	dataType hz_2 = 1.0 / (hz * hz);
 
-	dataType tau = hx * hy * hz / (2.0 * sqrt(hx * hx + hy * hy + hz * hz));
+	dataType tau = 0.5 * min(hx, min(hy, hz));
 
 	size_t count_iteration = 0;
 
