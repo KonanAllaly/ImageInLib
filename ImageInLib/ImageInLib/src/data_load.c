@@ -305,12 +305,12 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 	
 	dataType x = 0, y = 0, z = 0;
 
-	FILE* temp_file;
-	const char *path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/dist_between_points.csv";
-	if (fopen_s(&temp_file, path_to_file, "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
+	//FILE* temp_file;
+	//const char *path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/dist_between_points.csv";
+	//if (fopen_s(&temp_file, path_to_file, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
 
 	for (size_t i = 0; i < pCurve->numPoints; i++) {
 		
@@ -336,23 +336,24 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 			pCurve->pPoints[i].z = z;
 		}
 
-		//Export distance between points
-		if (i == 0) {
-			dist = 0.0;
-		}
-		else if (i == (pCurve->numPoints - 1)) 
-		{
-			dist = 0.0;
-		}else
-		{
-			dist = getPoint3DDistance(previous_point, current_point);
-		}
-		fprintf(temp_file, "%f\n", dist);
+		////Export distance between points
+		//if (i == 0) {
+		//	dist = 0.0;
+		//}
+		//else if (i == (pCurve->numPoints - 1)) 
+		//{
+		//	dist = 0.0;
+		//}
+		//else
+		//{
+		//	dist = getPoint3DDistance(previous_point, current_point);
+		//}
+		//fprintf(temp_file, "%f\n", dist);
 
 		previous_point = current_point;
 
 	}
-	fclose(temp_file);
+	//fclose(temp_file);
 	fclose(file);
 
 	return true;
