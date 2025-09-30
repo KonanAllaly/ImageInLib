@@ -57,7 +57,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
 /// <param name="eps">parameter epsilon</param>
 /// <param name="dt">parameter of time step</param>
 /// <returns></returns>
-bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt);
+bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, double dt);
 
 bool semiCoefficientsIIOE(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt);
 
@@ -410,7 +410,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
 
     const double eps = pparams->eps;
     const double omega = pparams->omega;
-    const double dt = pparams->time_step_size;
+    double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
     //function to compute the normal velocity
@@ -531,9 +531,9 @@ void getVelocity3D(Image_Data* pDistanceMap, const double x, const double y, con
 {
 
     //get the gradient components/coordinates
-    const size_t x_dis = (size_t)x;
-    const size_t y_dis = (size_t)y;
-    const size_t z_dis = (size_t)z;
+    const size_t x_dis = (size_t)(round(x));
+    const size_t y_dis = (size_t)(round(y));
+    const size_t z_dis = (size_t)(round(z));
     size_t xd = x_new(x_dis, y_dis, pDistanceMap->length);
     Point3D current_grad;
     const FiniteVolumeSize3D finite_volume = { pDistanceMap->spacing.sx, pDistanceMap->spacing.sy, pDistanceMap->spacing.sz };
@@ -588,9 +588,9 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
             dot = tx * vx + ty * vy + tz * vz;
 
-            current_point->nvx = 0.0;//vx - dot * tx;
-            current_point->nvy = 0.0;//vy - dot * ty;
-            current_point->nvz = 1.0;//vz - dot * tz;
+            current_point->nvx = vx - dot * tx;
+            current_point->nvy = vy - dot * ty;
+            current_point->nvz = vz - dot * tz;
 
             Point3D pnorm = { current_point->nvx, current_point->nvy, current_point->nvz };
             norm_nv = norm3D(pnorm);
@@ -713,7 +713,7 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
 
 }
 
-bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt)
+bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, double dt)
 {
     if (plinked_curve == NULL || pscheme_data == NULL)
     {
@@ -749,8 +749,10 @@ bool semiCoefficients3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data
             pscheme_data[iter].m = (h_i_plus + h_i) / (2.0 * dt);
             pscheme_data[iter].b = pscheme_data[iter].m - (pscheme_data[iter].a + pscheme_data[iter].c);//diagonal
 
-            if ((fabs(pscheme_data[iter].a) + fabs(pscheme_data[iter].c)) > fabs(pscheme_data[iter].b) || pscheme_data[iter].b < 0) {
-                return false;
+            if ((fabs(pscheme_data[iter].a) + fabs(pscheme_data[iter].c)) > fabs(pscheme_data[iter].b) || pscheme_data[iter].b < 0) 
+            {
+                //return false;
+				dt = (0.5 * (h_i_plus + h_i) / (fabs(pscheme_data[iter].a) + fabs(pscheme_data[iter].c) + pscheme_data[iter].a + pscheme_data[iter].a)) - 0.1 * dt;
             }
 
         }
