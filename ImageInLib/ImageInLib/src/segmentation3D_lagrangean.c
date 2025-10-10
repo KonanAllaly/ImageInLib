@@ -376,8 +376,9 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
             pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
         }
         
-        //evolve curve
-        evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
+        ////evolve curve
+        //evolveBySingleStep3D(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
+        evolveBySingleStepIIOE(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
 
         it++;
 
@@ -419,7 +420,12 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     //function to compute the tangential velocity
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
-    if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
+    //if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
+    //{
+    //    return false;
+    //}
+
+    if(!semiCoefficientsIIOE(plinked_curve, pscheme_data, eps, dt))
     {
         return false;
     }
