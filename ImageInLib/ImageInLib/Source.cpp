@@ -47,6 +47,8 @@ int main() {
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
 	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	//loading_path = inputPath + "vtk/petct/pet/Patient1_pet.vtk";
+	//loading_path = inputPath + "vtk/petct/aorta/AortaPatient2.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input ================ " << std::endl;
@@ -58,11 +60,60 @@ int main() {
 	std::cout << "CT image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << ctContainer->dimensions[2] << "" << std::endl;
 
 	std::cout << "CT origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << std::endl;
-	Point3D ctOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
-	VoxelSpacing ctSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
+	Point3D imageOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
+	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
-	
 
+	storing_path = outputPath + "pet_after.raw";
+	//manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	//free(ctContainer);
+
+	//==================== Translate for registration ================================================
+
+	/*
+	Point3D origin_before = { -300, -230, -1022.5 };
+	Point3D origin_after = { -300, -230, -1339.5 };
+	VoxelSpacing ctSpacing = { 1.171875, 1.171875, 2.5 };
+
+	Point3D t1 = { 260, 258, 142 };
+	t1 = getRealCoordFromImageCoord3D(t1, origin_before, ctSpacing, orientation);
+	
+	Point3D t2 = { 260, 255, 243 };
+	t2 = getRealCoordFromImageCoord3D(t2, origin_after, ctSpacing, orientation);
+
+	Point3D translation = { t1.x - t2.x, t1.y - t2.y, t1.z - t2.z };
+
+	t2.x = t2.x + translation.x;
+	t2.y = t2.y + translation.y;
+	t2.z = t2.z + translation.z;
+
+	//t1 = getRealCoordFromImageCoord3D(t1, origin_before, ctSpacing, orientation);
+	//t2 = getRealCoordFromImageCoord3D(t2, origin_after, ctSpacing, orientation);
+
+	//Point3D newOrigin = { origin_after.x + translation.x, origin_after.y + translation.y , origin_after.z + translation.z };
+	//newOrigin = getRealCoordFromImageCoord3D(newOrigin, origin_after, ctSpacing, orientation);
+	//std::cout << "New origin : (" << newOrigin.x << ", " << newOrigin.y << ", " << newOrigin.z << ")" << std::endl;
+
+	Point3D origin_after_pet = { -286.586, -216.586, -1338.5 };
+	Point3D newOriginPET = { origin_after_pet.x + translation.x, origin_after_pet.y + translation.y , origin_after_pet.z + translation.z };
+	std::cout << "New origin : (" << newOriginPET.x << ", " << newOriginPET.y << ", " << newOriginPET.z << ")" << std::endl;
+
+	////Save points
+	//string saving_csv = outputPath + "points.csv";
+	//FILE* f_point;
+	//if (fopen_s(&f_point, saving_csv.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(f_point, "x,y,z\n");
+	//fprintf(f_point, "%f,%f,%f\n", t1.x, t1.y, t1.z);
+	//fprintf(f_point, "%f,%f,%f\n", t2.x, t2.y, t2.z);
+	//fclose(f_point);
+
+	free(ctContainer);
+	*/
+	
 	//==================== Compute Hausdoff distance and Ratio =======================================
 	
 	/*
@@ -1444,6 +1495,7 @@ int main() {
 
 	//==================== Path Extraction 3D image ==================================
 
+	/*
 	//3D real image
 	
 	dataType** imageData = new dataType * [Height];
@@ -1629,7 +1681,7 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
-	
+	*/
 
 	/*
 	//3D artificial image
@@ -2008,6 +2060,102 @@ int main() {
 	delete[] distanceMapFS;
 	free(ctContainer);
 	*/
+
+	//==================== Quantitative study 3D ==================================
+    
+
+    //Translated origin
+	//CT = {-300, -226.484, -1275}
+	//PET = {-286.586, -213.07, -1274}
+
+    Point3D PETimageOrigin = { -286.586, -216.586, -1021.4 };
+	VoxelSpacing PETimageSpacing = { 4, 4, 4 };
+	size_t height = 255, width = 144, length = 144;
+	dataType** imageData = new dataType * [height];
+	dataType** maskData = new dataType * [height];
+	for (k = 0; k < height; k++) {
+		imageData[k] = new dataType[length * width]{ 0 };
+		maskData[k] = new dataType[length * width]{ 0 };
+	}
+	storing_path = outputPath + "pet_after.raw";
+	manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+
+	FILE* path_file;
+	loading_path = inputPath + "Before Treatment/centered_path_before.csv";
+	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+	dataType x = 0, y = 0, z = 0;
+	vector<Point3D> path_points;
+	dataType pet_value = 0.0, maxSUV = 0.0;
+	Point3D point_max = {0,0,0};
+	size_t imax, jmax, kmax;
+	
+	double radius = 2.5, offset = 1.0;
+	BoundingBox3D box;
+	while (feof(path_file) == 0) {
+		fscanf_s(path_file, "%f", &x);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &y);
+		fscanf_s(path_file, ",");
+		fscanf_s(path_file, "%f", &z);
+		fscanf_s(path_file, "\n");
+		Point3D current_point = { x, y, z };
+		current_point = getImageCoordFromRealCoord3D(current_point, PETimageOrigin, PETimageSpacing, orientation);
+		imax = (size_t)current_point.x;
+		jmax = (size_t)current_point.y;
+		kmax = (size_t)current_point.z;
+
+		box = findBoundingBox3D(current_point, length, width, height, radius, offset);
+		for(size_t kk = box.k_min; kk <= box.k_max; kk++)
+		{
+			for(size_t ii = box.i_min; ii <= box.i_max; ii++)
+			{
+				for(size_t jj = box.j_min; jj <= box.j_max; jj++)
+				{
+					Point3D p = { (dataType)ii, (dataType)jj, (dataType)kk };
+					double dist = getPoint3DDistance(p, current_point);
+					if(dist <= radius)
+					{
+						pet_value = imageData[kk][x_new(ii, jj, length)];
+						maskData[kk][x_new(ii, jj, length)] = 1.0;
+						if(pet_value > maxSUV)
+						{
+							maxSUV = pet_value;
+							point_max = { x, y, z };
+						}
+					}
+				}
+			}
+		}
+
+		//pet_value = imageData[kmax][x_new(imax, jmax, length)];
+		//if(pet_value > maxSUV)
+		//{
+		//	maxSUV = pet_value;
+		//	point_max = { x, y, z };
+		//}
+		////update point dimension
+		//current_point = getRealCoordFromImageCoord3D(current_point, imageOrigin, imageSpacing, orientation);
+		//path_points.push_back(current_point);
+	}
+	fclose(path_file);
+
+	std::cout << "Max SUV is : " << maxSUV << " at point (" << point_max.x << ", " << point_max.y << ", " << point_max.z << ")" << std::endl;
+
+	storing_path = outputPath + "maskROI.raw";
+	manageRAWFile3D<dataType>(maskData, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < height; k++) 
+	{
+		delete[] imageData[k];
+		delete[] maskData[k];
+	}
+	delete[] imageData;
+	delete[] maskData;
+
+	free(ctContainer);
 
 	return EXIT_SUCCESS;
 }
