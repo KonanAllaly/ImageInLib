@@ -419,22 +419,28 @@ void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapI
 	}
 }
 
-void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process) {
+void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex) {
 	//we use type int for indexes because we do operations like pos--
 	int l = in_Process.size();
-	if(l == 0) {
-		return; //nothing to delete
+	if (l > 1) 
+	{
+		//swap3dPoints(&in_Process[0], &in_Process[l - 1]);
+
+		size_t idx1 = in_Process[0].index;
+		size_t idx2 = in_Process[l - 1].index;
+
+		swap_elts(&heapIndex[idx1], &heapIndex[idx2], sizeof(int));
+		swap_elts(&in_Process[0], &in_Process[l - 1], sizeof(pointFastMarching3D));
+
+		heapIndex[idx2] = -1; //the point is removed from the heap
+		in_Process.pop_back();
+
+		//heapifyDown3D(in_Process, 0);
+		heapifyDown3D(in_Process, heapIndex, 0);
 	}
-	else {
-		if(l == 1) {
-			in_Process.pop_back();
-			return; //only one element
-		}
-		else {
-			swap3dPoints(&in_Process[0], &in_Process[l - 1]);
-			in_Process.pop_back();
-			heapifyDown3D(in_Process, 0);
-		}
+	else 
+	{
+		in_Process.pop_back();
 	}
 }
 

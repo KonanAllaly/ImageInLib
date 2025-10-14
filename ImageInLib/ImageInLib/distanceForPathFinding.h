@@ -52,7 +52,7 @@ using namespace std;
 
 	void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex);
 
-	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
+	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex);
 
 	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, pointFastMarching3D point);
 
