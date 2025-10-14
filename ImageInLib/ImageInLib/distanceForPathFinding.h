@@ -44,7 +44,7 @@ using namespace std;
 
 	dataType upwindFiniteDifferenceZ(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z);
 
-	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
+	bool compute3dPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters);
 
 	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
 

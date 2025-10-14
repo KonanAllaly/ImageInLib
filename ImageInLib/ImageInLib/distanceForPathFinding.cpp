@@ -261,78 +261,110 @@ dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dat
 
 }
 
-bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
+bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* seedPoint, Potential_Parameters parameters) {
 
-	if (imageDataPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL)
+	if (ctImageData.imageDataPtr == NULL || potential == NULL) {
 		return false;
+	}
 
-	size_t i, j, k;
+	size_t i = 0, j = 0, k = 0, xd = 0;
+	const size_t height = ctImageData.height;
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
 	const size_t dim2D = length * width;
-	size_t i0 = seedPoints[0].y, j0 = seedPoints[0].x, k0 = seedPoints[0].z;
-	size_t i1 = seedPoints[1].y, j1 = seedPoints[1].x, k1 = seedPoints[1].z;
 
-	dataType** gradientVectorX = new dataType* [height];
-	dataType** gradientVectorY = new dataType* [height];
-	dataType** gradientVectorZ = new dataType* [height];
+	dataType** maskThreshold = new dataType * [height];
+	dataType** distance = new dataType * [height];
 	for (k = 0; k < height; k++) {
-		gradientVectorX[k] = new dataType [dim2D];
-		gradientVectorY[k] = new dataType [dim2D];
-		gradientVectorZ[k] = new dataType [dim2D];
+		distance[k] = new dataType[dim2D]{ 0 };
+		maskThreshold[k] = new dataType[dim2D]{ 0 };
 	}
-	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
+	if (distance == NULL || maskThreshold == NULL)
 		return false;
-	
-	//compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
 
-	size_t seedIndice = x_new(j0, i0, width), currentIndx = 0;
-	dataType seedVal = (imageDataPtr[k0][x_new(j0, i0, width)] + imageDataPtr[k1][x_new(j1, i1, width)]) / 2;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0;
-	dataType epsilon = 0.01, K = 0.00005;
+	dataType norm_of_gradient = 0.0, edgeValue = 0.0;
+	bool isGradientComputed = false;
+	Point3D grad_vector;
+	const FiniteVolumeSize3D fVolume = { ctImageData.spacing.sx, ctImageData.spacing.sy, ctImageData.spacing.sz };
 
-	//Computation of potential function
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				potentialFuncPtr[k][currentIndx] = abs(seedVal - imageDataPtr[k][currentIndx]);
-			}
-		}
-	}
-
-	//Find max
-	dataType max_potential = -1 * INFINITY;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				if (potentialFuncPtr[k][currentIndx] > max_potential) {
-					max_potential = potentialFuncPtr[k][currentIndx];
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < length; i++) 
+		{
+			for (j = 0; j < width; j++) 
+			{
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData.imageDataPtr, length, width, height, i, j, k, fVolume, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				
+				dataType edgeValue = edgeDetector(norm_of_gradient, parameters.K);
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else {
+					maskThreshold[k][xd] = 0.0;
 				}
 			}
 		}
 	}
 
-	//Normalization
+	////Real image
+	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
+	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
+
+	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
+	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
+	dataType seedValCT = seedStats.mean_data;
+
+	dataType var_epsilon = 0;
+	if (seedStats.sd_data != 0)
+	{
+		var_epsilon = seedStats.sd_data;
+	}
+	else {
+		var_epsilon = parameters.eps;
+	}
+
+	//Computation of potential function
 	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				currentIndx = x_new(j, i, width);
-				ux = gradientVectorX[k][currentIndx];
-				uy = gradientVectorY[k][currentIndx];
-				uz = gradientVectorZ[k][currentIndx];
-				potentialFuncPtr[k][currentIndx] = epsilon + (potentialFuncPtr[k][currentIndx] / max_potential) * (1 + K * (ux * ux + uy * uy + uz * uz));
+		for (i = 0; i < dim2D; i++) {
+			potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
+		}
+	}
+
+	//Find the max of the difference
+	dataType maxImage = 0.0;
+	dataType minImage = INFINITY;
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (potential[k][i] > maxImage)
+			{
+				maxImage = potential[k][i];
 			}
 		}
 	}
 
-	for (k = 0; k < height; k++) {
-		delete[] gradientVectorX[k];
-		delete[] gradientVectorY[k];
-		delete[] gradientVectorZ[k];
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < dim2D; i++)
+		{
+			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i]));
+		}
 	}
-	delete[] gradientVectorX; 
-	delete[] gradientVectorY; 
-	delete[] gradientVectorZ;
+
+	for (k = 0; k < height; k++) {
+		delete[] maskThreshold[k];
+		delete[] distance[k];
+	}
+	delete[] maskThreshold;
+	delete[] distance;
 
 	return true;
 }
