@@ -9,6 +9,8 @@
 #include "distanceForPathFinding.h"
 #include<template_functions.h>
 
+#include "imageInterpolation.h"
+
 #define BIG_VALUE INFINITY
 
 using namespace std;
