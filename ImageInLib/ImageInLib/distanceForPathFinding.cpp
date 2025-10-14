@@ -18,69 +18,80 @@ using namespace std;
 
 //Functions for 3D images
 
-dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
+dataType upwindFiniteDifferenceX(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z) {
 
-	dataType j_minus, j_plus;
+	dataType x_minus, x_plus;
 
-	if (J == 0) {
-		j_minus = BIG_VALUE;
+	if (x == 0) 
+	{
+		x_minus = BIG_VALUE;
 	}
-	else {
-		j_minus = distanceFuncPtr[K][x_new(J - 1, I, dimJ)];
-	}
-
-	if (J == dimJ - 1) {
-		j_plus = BIG_VALUE;
-	}
-	else {
-		j_plus = distanceFuncPtr[K][x_new(J + 1, I, dimJ)];
+	else 
+	{
+		x_minus = actionMapPtr[z][x_new(x - 1, y, dimX)];
 	}
 
-	return min(j_minus, j_plus);
+	if (x == dimX - 1) 
+	{
+		x_plus = BIG_VALUE;
+	}
+	else 
+	{
+		x_plus = actionMapPtr[z][x_new(x + 1, y, dimX)];
+	}
+
+	return min(x_minus, x_plus);
 }
 
-dataType select3dY(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
+dataType upwindFiniteDifferenceY(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z) {
 
-	dataType i_minus, i_plus;
+	dataType y_minus, y_plus;
 
-	if (I == 0) {
-		i_minus = BIG_VALUE;
+	if (y == 0) 
+	{
+		y_minus = BIG_VALUE;
+	}
+	else 
+	{
+		y_minus = actionMapPtr[z][x_new(x, y - 1, dimX)];
+	}
+
+	if (y == dimY - 1) 
+	{
+		y_plus = BIG_VALUE;
 	}
 	else {
-		i_minus = distanceFuncPtr[K][x_new(J, I - 1, dimJ)];
+		y_plus = actionMapPtr[z][x_new(x, y + 1, dimX)];
 	}
 
-	if (I == dimI - 1) {
-		i_plus = BIG_VALUE;
-	}
-	else {
-		i_plus = distanceFuncPtr[K][x_new(J, I + 1, dimJ)];
-	}
-
-	return min(i_minus, i_plus);
+	return min(y_minus, y_plus);
 }
 
-dataType select3dZ(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
+dataType upwindFiniteDifferenceZ(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z) {
 
-	dataType k_minus, k_plus;
+	dataType z_minus, z_plus;
 
-	size_t xd = x_new(J, I, dimJ);
+	size_t xd = x_new(x, y, dimX);
 
-	if (K == 0) {
-		k_minus = BIG_VALUE;
+	if (z == 0) 
+	{
+		z_minus = BIG_VALUE;
 	}
-	else {
-		k_minus = distanceFuncPtr[K - 1][xd];
-	}
-
-	if (K == dimK - 1) {
-		k_plus = BIG_VALUE;
-	}
-	else {
-		k_plus = distanceFuncPtr[K + 1][xd];
+	else 
+	{
+		z_minus = actionMapPtr[z - 1][xd];
 	}
 
-	return min(k_minus, k_plus);
+	if (z == dimZ - 1) 
+	{
+		z_plus = BIG_VALUE;
+	}
+	else 
+	{
+		z_plus = actionMapPtr[z + 1][xd];
+	}
+
+	return min(z_minus, z_plus);
 }
 
 // 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
