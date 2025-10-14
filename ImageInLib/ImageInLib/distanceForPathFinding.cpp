@@ -337,9 +337,12 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 	return true;
 }
 
-void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
+void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
 
 	int length_array = in_Process.size();
+	if (length_array == 0) {
+		return; //nothing to heapify
+	}
 	int current = i;
 	int left_child = 2 * i + 1;
 	int right_child = 2 * i + 2;
@@ -366,8 +369,13 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 	}
 
 	if (current != i) {
-		swap3dPoints(&in_Process[i], &in_Process[current]);
-		heapifyDown3D(in_Process, current);
+		size_t idx1 = in_Process[i].index;
+		size_t idx2 = in_Process[current].index;
+
+		swap_elts(&heapIndex[idx1], &heapIndex[idx2], sizeof(int));
+		swap_elts(&in_Process[i], &in_Process[current], sizeof(pointFastMarching3D));
+
+		heapifyDown3D(in_Process, heapIndex, current);
 	}
 
 }
