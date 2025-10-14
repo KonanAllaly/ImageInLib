@@ -16,22 +16,6 @@ using namespace std;
 //J.A Sethian, A Fast Marching Level Set method for Monotonically advancing fronts, 1995, page 8 and 10.
 //link to article ---> http://ugweb.cs.ualberta.ca/~vis/courses/CompVis/readings/modelrec/sethian95fastlev.pdf
 
-//Functions for 2D images
-
-dataType computeGradientNorm2d(dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width) {
-	//this function is used to compute the norm of the gradient
-	size_t i, j, xd;
-	dataType norm_array = 0.0;
-
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			xd = x_new(j, i, width);
-			norm_array = (dataType)(norm_array + pow(gradientVectorX[xd], 2) + pow(gradientVectorY[xd], 2));
-		}
-	}
-	return sqrt(norm_array);
-}
-
 //Functions for 3D images
 
 dataType select3dX(dataType** distanceFuncPtr, const size_t dimI, const size_t dimJ, const size_t dimK, const size_t I, const size_t J, const size_t K) {
@@ -198,23 +182,6 @@ dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType P) {
 		}
 	}
 
-}
-
-dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t length, const size_t width, const size_t height) {
-	
-	size_t i, j, k, xd;
-	dataType norm_array = 0.0;
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < length; i++) {
-			for (j = 0; j < width; j++) {
-				xd = x_new(j, i, width);
-				norm_array = norm_array + pow(gradientVectorX[k][xd], 2) + pow(gradientVectorY[k][xd], 2) + pow(gradientVectorZ[k][xd], 2);
-			}
-		}
-	}
-	
-	return sqrt(norm_array);
 }
 
 bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
