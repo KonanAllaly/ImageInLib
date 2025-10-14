@@ -88,6 +88,9 @@ extern "C" {
 	*/
 	Statistics getStatistics(Image_Data imageData, Point3D point, dataType radius);
 
+	//point_of_interest is in image coordinates system
+	Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_interest, double radius);
+
 	//=====================================================
 	//2D Functions
 
