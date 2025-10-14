@@ -663,6 +663,196 @@ bool fastMarching3D_N(Image_Data ctImageData, dataType** actionPtr, dataType** p
 	return true;
 }
 
+bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, Point3D* endPoints) {
+
+	if (actionPtr.imageDataPtr == NULL || potentialFuncPtr == NULL || endPoints == NULL) {
+		return false;
+	}
+
+	const size_t height = actionPtr.height;
+	const size_t length = actionPtr.length;
+	const size_t width = actionPtr.width;
+	VoxelSpacing spacing = actionPtr.spacing;
+
+	vector <pointFastMarching3D> narrowBand;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width, dim3D = length * width * height;
+
+	short** labelArray = new short* [height];
+	if (labelArray == NULL) {
+		return false; // Memory allocation failed
+	}
+	for (k = 0; k < height; k++) {
+		labelArray[k] = new short[dim2D];
+		if (labelArray[k] == NULL) {
+			return false; // Memory allocation failed
+		}
+	}
+	//All the points are notProcessed ---> label = 3
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			actionPtr.imageDataPtr[k][i] = INFINITY;
+			labelArray[k][i] = 3;
+		}
+	}
+
+	vector<int> heapIndex(dim3D);
+	for (i = 0; i < dim3D; i++) {
+		heapIndex[i] = -1;
+	}
+
+	//Processed the starting point
+	if (endPoints[0].x < 0 || endPoints[0].x > length ||
+		endPoints[0].y < 0 || endPoints[0].y > width ||
+		endPoints[0].z < 0 || endPoints[0].z > height) {
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+	i = (size_t)endPoints[0].x;
+	j = (size_t)endPoints[0].y;
+	k = (size_t)endPoints[0].z;
+	size_t currentIndx = x_new(i, j, length);
+	actionPtr.imageDataPtr[k][currentIndx] = 0.0;
+	labelArray[k][currentIndx] = 1;
+
+	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
+
+	if (k > 0)
+	{
+		if (labelArray[k - 1][currentIndx] != 1)
+		{
+			updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+	if (k < (height - 1))
+	{
+		if (labelArray[k + 1][currentIndx] != 1) {
+			updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+	if (i > 0)
+	{
+		if (labelArray[k][x_new(i - 1, j, length)] != 1) {
+			updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+	if (i < (length - 1))
+	{
+		if (labelArray[k][x_new(i + 1, j, length)] != 1) {
+			updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+	if (j > 0)
+	{
+		if (labelArray[k][x_new(i, j - 1, length)] != 1) {
+			updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+	if (j < (width - 1))
+	{
+		if (labelArray[k][x_new(i, j + 1, length)] != 1) {
+			updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+		}
+	}
+
+	if (endPoints[1].x < 0 || endPoints[1].x > length ||
+		endPoints[1].y < 0 || endPoints[1].y > width ||
+		endPoints[1].z < 0 || endPoints[1].z > height)
+	{
+		std::cout << "Error in the input seed point" << std::endl;
+		return false;
+	}
+	size_t seedI = (size_t)endPoints[1].x;
+	size_t seedJ = (size_t)endPoints[1].y;
+	size_t seedK = (size_t)endPoints[1].z;
+	size_t seedIndex = x_new(seedI, seedJ, length);
+
+	dataType max_action = 0;
+	size_t num_proceed = 1;
+
+	while (narrowBand.size() > 0) {
+
+		//processed the point with minimum distance
+		pointFastMarching3D current = narrowBand[0];
+		i = current.x;
+		j = current.y;
+		k = current.z;
+		currentIndx = x_new(i, j, length);
+		labelArray[k][currentIndx] = 1;
+		num_proceed++;
+
+		//Find the maximum action value
+		if (actionPtr.imageDataPtr[k][currentIndx] > max_action) {
+			max_action = actionPtr.imageDataPtr[k][currentIndx];
+		}
+
+		//Exit the while loop when the final point is reached/computed
+		if (labelArray[seedK][seedIndex] == 1) {
+			break;
+		}
+
+		deleteRootHeap3D(narrowBand, heapIndex);
+
+		if (k > 0)
+		{
+			if (labelArray[k - 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k - 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+		if (k < (height - 1))
+		{
+			if (labelArray[k + 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k + 1, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+		if (i > 0)
+		{
+			if (labelArray[k][x_new(i - 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i - 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+		if (i < (length - 1))
+		{
+			if (labelArray[k][x_new(i + 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i + 1, j, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+		if (j > 0)
+		{
+			if (labelArray[k][x_new(i, j - 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j - 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+		if (j < (width - 1))
+		{
+			if (labelArray[k][x_new(i, j + 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j + 1, k, length, width, height, actionPtr.imageDataPtr, potentialFuncPtr, labelArray, spacing, narrowBand, heapIndex);
+			}
+		}
+
+	}
+
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionPtr.imageDataPtr[k][i] == INFINITY) {
+				actionPtr.imageDataPtr[k][i] = max_action + 1;
+			}
+		}
+	}
+
+	for (k = 0; k < height; k++) {
+		delete[] labelArray[k];
+	}
+	delete[] labelArray;
+
+	return true;
+}
+
 bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
 
 	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
