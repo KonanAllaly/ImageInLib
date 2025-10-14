@@ -58,6 +58,10 @@ using namespace std;
 
 	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 
+	void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
+		dataType** action, dataType** potential, short** labelArray,
+		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, vector<int>& heapIndex);
+
 	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
 
 	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);

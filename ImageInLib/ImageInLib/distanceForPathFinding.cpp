@@ -471,6 +471,39 @@ int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t
 	return -1; //not found
 }
 
+void updateNeighbor3D(size_t ind_x, size_t ind_y, size_t ind_z, size_t length, size_t width, size_t height,
+	dataType** action, dataType** potential, short** labelArray,
+	VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, vector<int>& heapIndex)
+{
+
+	if (ind_x >= length || ind_y >= width || ind_z >= height)
+		return;
+
+	size_t xd = x_new(ind_x, ind_y, length);
+	dataType ux = upwindFiniteDifferenceX(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uy = upwindFiniteDifferenceY(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType uz = upwindFiniteDifferenceZ(action, length, width, height, ind_x, ind_y, ind_z);
+	dataType coefSpeed = potential[ind_z][xd];
+	dataType solution = solve3dQuadraticEikonalEquation(ux, uy, uz, coefSpeed, spacing);
+	size_t pos = x_flat(ind_x, ind_y, ind_z, length, width);
+	pointFastMarching3D neighbor = { ind_x, ind_y, ind_z, pos, solution };
+	if (labelArray[ind_z][xd] == 3)
+	{
+		addPointHeap3D(narrowBand, heapIndex, neighbor);
+		action[ind_z][xd] = solution;
+		labelArray[ind_z][xd] = 2;
+	}
+	else if (labelArray[ind_z][xd] == 2 && solution < action[ind_z][xd])
+	{
+		action[ind_z][xd] = solution;
+		int pIndex = heapIndex[pos];
+		if (pIndex != -1)
+		{
+			heapifyUp3D(narrowBand, heapIndex, pIndex);
+		}
+	}
+}
+
 bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
 
 	if (imageDataPtr == NULL || distanceFuncPtr == NULL || potentialFuncPtr == NULL || seedPoints == NULL) {
