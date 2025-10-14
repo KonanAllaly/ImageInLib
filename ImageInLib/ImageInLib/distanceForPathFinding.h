@@ -48,9 +48,9 @@ using namespace std;
 
 	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
 
-	void heapifyVector3D(vector<pointFastMarching3D>& in_Process);
-
 	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
+
+	void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex);
 
 	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
 

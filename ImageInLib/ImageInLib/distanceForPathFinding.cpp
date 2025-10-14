@@ -380,11 +380,42 @@ void heapifyDown3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapInd
 
 }
 
-void heapifyVector3D(vector<pointFastMarching3D>& in_Process) {
+void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
+
+	if (i <= 0 || i >= in_Process.size()) {
+		return; //nothing to heapify
+	}
+	int current = i;
+
+	if (i > 0) {
+		int parent = (i - 1) / 2;
+		dataType val_current = in_Process[current].arrival;
+		dataType val_parent = in_Process[parent].arrival;
+		if (val_current < val_parent) {
+			current = parent;
+		}
+	}
+
+	if (current != i) {
+		size_t ind1 = in_Process[i].index;
+		size_t ind2 = in_Process[current].index;
+
+		swap_elts(&heapIndex[ind1], &heapIndex[ind2], sizeof(int));
+		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching3D));
+
+		heapifyUp3D(in_Process, heapIndex, current);
+	}
+
+}
+
+void heapifyVector3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex) {
 	int length_array = in_Process.size();
+	if (length_array < 2) {
+		return; //nothing to heapify
+	}
 	int ind, start = length_array / 2 - 1;
 	for (ind = start; ind >= 0; ind--) {
-		heapifyDown3D(in_Process, ind);
+		heapifyDown3D(in_Process, heapIndex, ind);
 	}
 }
 
@@ -412,34 +443,6 @@ void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D
 	in_Process.push_back(point);
 	int l = in_Process.size();
 	heapifyUp3D(in_Process, l - 1);
-}
-
-void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
-
-	if (i <= 0 || i >= in_Process.size()) {
-		return; //nothing to heapify
-	}
-	int current = i;
-
-	if (i > 0) {
-		int parent = (i - 1) / 2;
-		dataType val_current = in_Process[current].arrival;
-		dataType val_parent = in_Process[parent].arrival;
-		if (val_current < val_parent) {
-			current = parent;
-		}
-	}
-
-	if (current != i) {
-		size_t ind1 = in_Process[i].index;
-		size_t ind2 = in_Process[current].index;
-
-		swap_elts(&heapIndex[ind1], &heapIndex[ind2], sizeof(int));
-		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching3D));
-
-		heapifyUp3D(in_Process, heapIndex, current);
-	}
-
 }
 
 int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k) {
