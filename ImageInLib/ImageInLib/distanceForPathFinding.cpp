@@ -934,3 +934,178 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 
 	return true;
 }
+
+bool fastMarchingDistanceMap(Image_Data ctImageData, dataType** distanceFuncPtr, dataType foregroundValue) {
+
+	if (ctImageData.imageDataPtr == NULL || distanceFuncPtr == NULL) {
+		return false;
+	}
+
+	const size_t height = ctImageData.height;
+	const size_t length = ctImageData.length;
+	const size_t width = ctImageData.width;
+	VoxelSpacing spacing = ctImageData.spacing;
+
+	vector <pointFastMarching3D> inProcess;
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+
+	short** labelArray = new short* [height];
+	dataType** potentialFuncPtr = new dataType * [height];
+	if (labelArray == NULL || potentialFuncPtr == NULL) {
+		return false; // Memory allocation failed
+	}
+	for (k = 0; k < height; k++) {
+		labelArray[k] = new short[dim2D];
+		potentialFuncPtr[k] = new dataType[dim2D];
+		if (labelArray[k] == NULL || potentialFuncPtr[k] == NULL) {
+			return false; // Memory allocation failed
+		}
+	}
+
+	//Initialization
+	//All the points are notProcessed ---> label = 3
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (ctImageData.imageDataPtr[k][i] == foregroundValue)
+			{
+				distanceFuncPtr[k][i] = 0;
+				labelArray[k][i] = 1;
+			}
+			else
+			{
+				distanceFuncPtr[k][i] = INFINITY;
+				labelArray[k][i] = 3;
+			}
+			potentialFuncPtr[k][i] = 1.0;//For distance map, the potential is set equal to 1.0
+		}
+	}
+
+	size_t dim3D = length * width * height;
+	vector<int> heapIndex(dim3D);
+	for (size_t n = 0; n < dim3D; n++) {
+		heapIndex[n] = -1;
+	}
+
+	//find the neighbours of the initial point add add them to inProcess
+	size_t height_minus = height - 1, length_minus = length - 1, width_minus = width - 1;
+
+	//Initialize the source points
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < length; i++)
+		{
+			for (j = 0; j < width; j++)
+			{
+				size_t currentIndx = x_new(i, j, length);
+				if (ctImageData.imageDataPtr[k][currentIndx] == foregroundValue)
+				{
+
+					if (k > 0)
+					{
+						if (labelArray[k - 1][currentIndx] != 1)
+						{
+							updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+					if (k < (height - 1))
+					{
+						if (labelArray[k + 1][currentIndx] != 1)
+						{
+							updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+					if (i > 0)
+					{
+						if (labelArray[k][x_new(i - 1, j, length)] != 1)
+						{
+							updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+					if (i < (length - 1))
+					{
+						if (labelArray[k][x_new(i + 1, j, length)] != 1)
+						{
+							updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+					if (j > 0)
+					{
+						if (labelArray[k][x_new(i, j - 1, length)] != 1)
+						{
+							updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+					if (j < (width - 1))
+					{
+						if (labelArray[k][x_new(i, j + 1, length)] != 1)
+						{
+							updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	while (inProcess.size() > 0) {
+
+		//processed the point with minimum distance
+		pointFastMarching3D current = inProcess[0];
+		i = current.x;
+		j = current.y;
+		k = current.z;
+		size_t currentIndx = x_new(i, j, length);
+		labelArray[k][currentIndx] = 1;
+
+		deleteRootHeap3D(inProcess, heapIndex);
+
+		if (k > 0)
+		{
+			if (labelArray[k - 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k - 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+			}
+		}
+		if (k < (height - 1))
+		{
+			if (labelArray[k + 1][currentIndx] != 1)
+			{
+				updateNeighbor3D(i, j, k + 1, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+			}
+		}
+		if (i > 0)
+		{
+			if (labelArray[k][x_new(i - 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i - 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+			}
+		}
+		if (i < (length - 1))
+		{
+			if (labelArray[k][x_new(i + 1, j, length)] != 1)
+			{
+				updateNeighbor3D(i + 1, j, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+			}
+		}
+		if (j > 0)
+		{
+			updateNeighbor3D(i, j - 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+		}
+		if (j < (width - 1))
+		{
+			if (labelArray[k][x_new(i, j + 1, length)] != 1)
+			{
+				updateNeighbor3D(i, j + 1, k, length, width, height, distanceFuncPtr, potentialFuncPtr, labelArray, spacing, inProcess, heapIndex);
+			}
+		}
+	}
+
+	for (k = 0; k < height; k++) {
+		delete[] labelArray[k];
+		delete[] potentialFuncPtr[k];
+	}
+	delete[] labelArray;
+	delete[] potentialFuncPtr;
+
+	return true;
+}
