@@ -414,8 +414,11 @@ void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D
 	heapifyUp3D(in_Process, l - 1);
 }
 
-void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
+void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i) {
 
+	if (i <= 0 || i >= in_Process.size()) {
+		return; //nothing to heapify
+	}
 	int current = i;
 
 	if (i > 0) {
@@ -428,8 +431,13 @@ void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i) {
 	}
 
 	if (current != i) {
-		swap3dPoints(&in_Process[current], &in_Process[i]);
-		heapifyUp3D(in_Process, current);
+		size_t ind1 = in_Process[i].index;
+		size_t ind2 = in_Process[current].index;
+
+		swap_elts(&heapIndex[ind1], &heapIndex[ind2], sizeof(int));
+		swap_elts(&in_Process[current], &in_Process[i], sizeof(pointFastMarching3D));
+
+		heapifyUp3D(in_Process, heapIndex, current);
 	}
 
 }

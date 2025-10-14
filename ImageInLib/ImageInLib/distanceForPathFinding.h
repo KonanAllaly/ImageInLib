@@ -50,7 +50,7 @@ using namespace std;
 
 	void heapifyVector3D(vector<pointFastMarching3D>& in_Process);
 
-	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, int i);
+	void heapifyUp3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, int i);
 
 	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
 
