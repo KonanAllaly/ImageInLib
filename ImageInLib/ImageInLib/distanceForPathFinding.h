@@ -62,7 +62,7 @@ using namespace std;
 		dataType** action, dataType** potential, short** labelArray,
 		VoxelSpacing spacing, vector<pointFastMarching3D>& narrowBand, vector<int>& heapIndex);
 
-	bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
+	bool fastMarching3D_N(Image_Data ctImageData, dataType** actionPtr, dataType** potentialFuncPtr, Point3D seedPoint);
 
 	bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters);
 
