@@ -306,8 +306,9 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 	dataType x = 0, y = 0, z = 0;
 
 	//FILE* temp_file;
-	//const char *path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/dist_between_points.csv";
-	//if (fopen_s(&temp_file, path_to_file, "w") != 0) {
+	//const char *path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/dist_btwn_points_p6.csv";
+	//if (fopen_s(&temp_file, path_to_file, "w") != 0) 
+	//{
 	//	printf("Enable to open");
 	//	return false;
 	//}
