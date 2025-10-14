@@ -736,61 +736,6 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 	return true;
 }
 
-bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const size_t length, const size_t width, const size_t height, dataType h, point3d* seedPoints) {
-
-	if (distanceFuncPtr == NULL || resultedPath == NULL || seedPoints == NULL)
-		return false;
-
-	size_t dim2d = length * width, max_iter = 1000000000; //width* length* height;
-	dataType tau = 0.8, tol = 1.0;
-	size_t i_init = seedPoints[0].y, j_init = seedPoints[0].x, k_init = seedPoints[0].z;
-	size_t i_end = seedPoints[1].y, j_end = seedPoints[1].x, k_end = seedPoints[1].z;
-	
-	//Find the closest point till the last point
-	size_t cpt = 0;
-	size_t i_current = i_end;
-	size_t j_current = j_end;
-	size_t k_current = k_end;
-	size_t currentIndx = x_new(j_current, i_current, width);
-	resultedPath[k_current][currentIndx] = 1;
-
-	dataType iNew = i_current;
-	dataType jNew = j_current;
-	dataType kNew = k_current;
-	dataType currentDist = 0.0;
-	dataType dist_min = 0.0;
-
-	const FiniteVolumeSize3D spacing = { 1.0, 1.0, 1.0 };
-	Point3D v_gradient;
-	dataType norm_of_gradient = 0;
-
-	do {
-
-		getGradient3D(distanceFuncPtr, length, width, height, i_current, j_current, k_current, spacing, &v_gradient);
-		norm_of_gradient = sqrt(v_gradient.x * v_gradient.x + v_gradient.y * v_gradient.y + v_gradient.z * v_gradient.z);	
-
-		currentIndx = x_new(j_current, i_current, width);
-		iNew = iNew - tau * (v_gradient.x / norm_of_gradient);
-		jNew = jNew - tau * (v_gradient.y / norm_of_gradient);
-		kNew = kNew - tau * (v_gradient.z / norm_of_gradient);
-
-		dist_min = sqrt((iNew - i_init) * (iNew - i_init) + (jNew - j_init) * (jNew - j_init) + (kNew - k_init) * (kNew - k_init));
-
-		i_current = (size_t)(round(iNew)); 
-		j_current = (size_t)(round(jNew));
-		k_current = (size_t)(round(kNew));
-		resultedPath[k_current][x_new(j_current, i_current, width)] = 1;
-		cpt++;
-
-	} while (dist_min > tol && cpt < max_iter);
-
-	cout << "\nDistance to the end point : " << dist_min << endl;
-	cout << "\nNumber of iterations : " << cpt << endl;
-
-	return true;
-}
-
-/*
 bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
 
 	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
@@ -817,12 +762,14 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 	size_t count_iter = 1;
 	Point3D final_point = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
 
+	const FiniteVolumeSize3D fVolume = { actionMapStr.spacing.sx, actionMapStr.spacing.sy, actionMapStr.spacing.sz };
+
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	dataType norm_of_gradient = 0.0;
 	do {
 
-		isGradientComputed = getGradient3D(actionMapStr, i, j, k, &grad_vector);
+		isGradientComputed = getGradient3D(actionMapStr.imageDataPtr, length, width, height, i, j, k, fVolume, &grad_vector);
 		if (isGradientComputed == true) {
 			norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
 		}
@@ -860,4 +807,3 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 
 	return true;
 }
-*/
