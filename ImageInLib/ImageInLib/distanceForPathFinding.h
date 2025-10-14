@@ -22,6 +22,13 @@ using namespace std;
 		dataType arrival;
 	}pointFastMarching3D;
 
+	typedef struct {
+		dataType K; //edge detection coef
+		dataType thres;//edge detector threshold
+		dataType eps; //path smothing parameter
+		double radius;
+	} Potential_Parameters;
+
 	dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W);
 
 	dataType upwindFiniteDifferenceX(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z);
