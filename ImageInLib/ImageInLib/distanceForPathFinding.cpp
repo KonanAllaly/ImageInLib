@@ -787,3 +787,75 @@ bool shortestPath3d(dataType** distanceFuncPtr, dataType** resultedPath, const s
 
 	return true;
 }
+
+/*
+bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D>& path_points, Path_Parameters parameters) {
+
+	if (actionMapStr.imageDataPtr == NULL || seedPoints == NULL)
+		return false;
+
+	const size_t length = actionMapStr.length;
+	const size_t width = actionMapStr.width;
+	const size_t height = actionMapStr.height;
+	VoxelSpacing spacing = actionMapStr.spacing;
+
+	size_t i = 0, j = 0, k = 0, dim2D = length * width;
+
+	//Find the closest point till the last point
+	i = (size_t)seedPoints[1].x;
+	j = (size_t)seedPoints[1].y;
+	k = (size_t)seedPoints[1].z;
+	size_t currentIndx = x_new(i, j, length);
+
+	dataType x = seedPoints[1].x;
+	dataType y = seedPoints[1].y;
+	dataType z = seedPoints[1].z;
+	double dist_to_end = 0.0;
+
+	size_t count_iter = 1;
+	Point3D final_point = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
+
+	bool isGradientComputed = false;
+	Point3D grad_vector;
+	dataType norm_of_gradient = 0.0;
+	do {
+
+		isGradientComputed = getGradient3D(actionMapStr, i, j, k, &grad_vector);
+		if (isGradientComputed == true) {
+			norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+		}
+		else {
+			std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+			return false;
+		}
+
+		x -= parameters.tau * (grad_vector.x / norm_of_gradient);
+		y -= parameters.tau * (grad_vector.y / norm_of_gradient);
+		z -= parameters.tau * (grad_vector.z / norm_of_gradient);
+
+		if (x < 0.0 || x >= length || y < 0.0 || y >= width || z < 0.0 || z >= height)
+		{
+			std::cout << "Error: Point out of bounds (" << x << ", " << y << ", " << z << ")" << std::endl;
+			return false;
+		}
+
+		Point3D point_current = { x, y, z };
+		Point3D pDistance = getRealCoordFromImageCoord3D(point_current, actionMapStr.origin, spacing, actionMapStr.orientation);
+
+		//compute distance current Point - last point
+		dist_to_end = getPoint3DDistance(pDistance, final_point);
+
+		i = (size_t)(round(x));
+		j = (size_t)(round(y));
+		k = (size_t)(round(z));
+		currentIndx = x_new(i, j, length);
+		Point3D point_save = { i, j, k };
+		path_points.push_back(point_current);
+
+		count_iter++;
+
+	} while (dist_to_end > parameters.tolerance && count_iter < parameters.max_iteration);
+
+	return true;
+}
+*/
