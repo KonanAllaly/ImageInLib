@@ -46,7 +46,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
 	//loading_path = inputPath + "vtk/petct/pet/Patient1_pet.vtk";
 	//loading_path = inputPath + "vtk/petct/aorta/AortaPatient2.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
@@ -1495,9 +1495,8 @@ int main() {
 
 	//==================== Path Extraction 3D image ==================================
 
-	/*
-	//3D real image
 	
+	//3D real image
 	dataType** imageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -1537,7 +1536,7 @@ int main() {
 	//	1,//number of time step;
 	//	100// max number of iteration;
 	//};
-	Image_Data inputImage = { Height, Length, Width, imageData, ctOrigin, ctSpacing, orientation };
+	Image_Data inputImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
 	//geodesicMeanCurvature(inputImage, smoothParameters);
 	//storing_path = outputPath + "P5/filtered_p5.raw";
 	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
@@ -1554,9 +1553,9 @@ int main() {
 	//	}
 	//}
 
-	Point3D* endPoints = new Point3D[2];
-	endPoints[1] = { 261.0, 257.0, 145.0 };
-	endPoints[0] = { 259.0, 250.0, 246.0 };
+	//Point3D* endPoints = new Point3D[2];
+	//endPoints[1] = { 261.0, 257.0, 145.0 };
+	//endPoints[0] = { 259.0, 250.0, 246.0 };
 
 	//Point3D* endPoints = new Point3D[2];//p2
 	//endPoints[0] = { 260.0, 254.0, 246.0 };
@@ -1574,9 +1573,9 @@ int main() {
 	//endPoints[0] = { 265.0, 244.0, 470.0 };
 	//endPoints[1] = { 235.0, 219.0, 626.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p6
-	//endPoints[0] = { 249.0, 299.0, 256.0 };
-	//endPoints[1] = { 258.0, 286.0, 443.0 };
+	Point3D* endPoints = new Point3D[2];//p6
+	endPoints[0] = { 249.0, 299.0, 256.0 };
+	endPoints[1] = { 258.0, 286.0, 443.0 };
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
@@ -1587,23 +1586,23 @@ int main() {
 	};
 	//compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	storing_path = outputPath + "P1/potential_p1.raw";
+	storing_path = outputPath + "P6/potential_p6.raw";
 	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
-	Image_Data toAction = { Height, Length, Width, action, ctOrigin, ctSpacing, orientation };
+	Image_Data toAction = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
 	//////frontPropagation(inputImage, action, potential, endPoints[0]);
 	//partialFrontPropagation(toAction, potential, endPoints);
 	//storing_path = outputPath + "action_map_p5.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	vector<Point3D> key_points;
-	const double LengthKeyPoints = 30.0;
+	const double LengthKeyPoints = 50.0;
 	frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
 
 	//storing_path = outputPath + "keyp_action_map_p5.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	FILE* key_points_file;
-	string save_key_file = outputPath + "key_points_p1.csv";
+	string save_key_file = outputPath + "key_points_p6.csv";
 	if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) 
 	{
 		printf("Enable to open");
@@ -1613,7 +1612,7 @@ int main() {
 	for (size_t it = 0; it < key_points.size(); it++)
 	{
 		//convert to real world coordinates
-		Point3D kp = getRealCoordFromImageCoord3D(key_points[it], ctOrigin, ctSpacing, orientation);
+		Point3D kp = getRealCoordFromImageCoord3D(key_points[it], imageOrigin, imageSpacing, orientation);
 		fprintf(key_points_file, "%f,%f,%f\n", kp.x, kp.y, kp.z);
 	}
 	fclose(key_points_file);
@@ -1681,7 +1680,7 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
-	*/
+	
 
 	/*
 	//3D artificial image
@@ -2063,7 +2062,7 @@ int main() {
 
 	//==================== Quantitative study 3D ==================================
     
-
+	/*
     //Translated origin
 	//CT = {-300, -226.484, -1275}
 	//PET = {-286.586, -213.07, -1274}
@@ -2156,6 +2155,7 @@ int main() {
 	delete[] maskData;
 
 	free(ctContainer);
+	*/
 
 	return EXIT_SUCCESS;
 }
