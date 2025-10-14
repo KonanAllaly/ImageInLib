@@ -18,50 +18,6 @@ using namespace std;
 
 //Functions for 2D images
 
-bool computeImageGradient(dataType* imageDataPtr, dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width, dataType h) {
-	//This function compute the gradient of image by finite difference
-	// x--->j and y--->i
-
-	if (imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL) {
-		return false;
-	}
-
-	size_t i, j, xd;
-	dataType ux = 0.0, uy = 0.0;
-
-	for (i = 0; i < height; i++) {
-		for (j = 0; j < width; j++) {
-			xd = x_new(j, i, width);
-			if (j == 0) {
-				ux = (imageDataPtr[x_new(j + 1, i, width)] - imageDataPtr[x_new(j, i, width)]) / h;
-			}
-			else {
-				if (j == width - 1) {
-					ux = (imageDataPtr[x_new(j, i, width)] - imageDataPtr[x_new(j - 1, i, width)]) / h;
-				}
-				else {
-					ux = (imageDataPtr[x_new(j + 1, i, width)] - imageDataPtr[x_new(j - 1, i, width)]) / (2 * h);
-				}
-			}
-			if (i == 0) {
-				uy = (imageDataPtr[x_new(j, i + 1, width)] - imageDataPtr[x_new(j, i, width)]) / h;
-			}
-			else {
-				if (i == height - 1) {
-					uy = (imageDataPtr[x_new(j, i, width)] - imageDataPtr[x_new(j, i - 1, width)]) / h;
-				}
-				else {
-					uy = (imageDataPtr[x_new(j, i + 1, width)] - imageDataPtr[x_new(j, i - 1, width)]) / (2 * h);
-				}
-			}
-			gradientVectorX[xd] = ux;
-			gradientVectorY[xd] = uy;
-		}
-	}
-
-	return true;
-}
-
 dataType computeGradientNorm2d(dataType* gradientVectorX, dataType* gradientVectorY, const size_t height, const size_t width) {
 	//this function is used to compute the norm of the gradient
 	size_t i, j, xd;
@@ -259,67 +215,6 @@ dataType computeGradientNorm3d(dataType** gradientVectorX, dataType** gradientVe
 	}
 	
 	return sqrt(norm_array);
-}
-
-bool compute3dImageGradient(dataType** imageDataPtr, dataType** gradientVectorX, dataType** gradientVectorY, dataType** gradientVectorZ, const size_t lenght, const size_t width, const size_t height, dataType h) {
-
-	if (imageDataPtr == NULL || gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL) {
-		return false;
-	}
-
-	size_t i, j, k, currentInd;
-	dataType ux = 0.0, uy = 0.0, uz = 0.0;
-
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < lenght; i++) {
-			for (j = 0; j < width; j++) {
-
-				currentInd = x_new(j, i, width);
-
-				if (k == 0) {
-					uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k][currentInd]) / h;
-				}
-				else {
-					if (k == (height - 1)) {
-						uz = (imageDataPtr[k][currentInd] - imageDataPtr[k - 1][currentInd]) / h;
-					}
-					else {
-						uz = (imageDataPtr[k + 1][currentInd] - imageDataPtr[k - 1][currentInd]) / (2 * h);
-					}
-				}
-
-				if (i == 0) {
-					uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
-				}
-				else {
-					if (i == (lenght - 1)) {
-						uy = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / h;
-					}
-					else {
-						uy = (imageDataPtr[k][x_new(j, i + 1, width)] - imageDataPtr[k][x_new(j, i - 1, width)]) / (2 * h);
-					}
-				}
-
-				if (j == 0) {
-					ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j, i, width)]) / h;
-				}
-				else {
-					if (j == (width - 1)) {
-						ux = (imageDataPtr[k][x_new(j, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / h;
-					}
-					else {
-						ux = (imageDataPtr[k][x_new(j + 1, i, width)] - imageDataPtr[k][x_new(j - 1, i, width)]) / (2 * h);
-					}
-				}
-
-				gradientVectorX[k][currentInd] = ux; // j
-				gradientVectorY[k][currentInd] = uy; // i
-				gradientVectorZ[k][currentInd] = uz; // k
-
-			}
-		}
-	}
-	return true;
 }
 
 bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints) {
