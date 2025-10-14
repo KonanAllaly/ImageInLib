@@ -96,100 +96,166 @@ dataType upwindFiniteDifferenceZ(dataType** actionMapPtr, const size_t dimX, con
 	return min(z_minus, z_plus);
 }
 
-// 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
-dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType P) {
+dataType solve3dQuadraticEikonalEquation(dataType X, dataType Y, dataType Z, dataType P, VoxelSpacing h) {
+
+	if (h.sx <= 0 || h.sy <= 0 || h.sz <= 0) {
+		std::cout << "Error: Voxel spacing must be positive." << std::endl;
+		return INFINITY; // Return a large value or handle the error appropriately
+	}
+	if (P <= 0) {
+		std::cout << "Error: Propagation speed must be positive." << std::endl;
+		return INFINITY; // Return a large value or handle the error appropriately
+	}
 
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType P_2 = P * P;
+	dataType hx_2 = 1.0 / (h.sx * h.sx);
+	dataType hy_2 = 1.0 / (h.sy * h.sy);
+	dataType hz_2 = 1.0 / (h.sz * h.sz);
 
-	if (X == INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (Y + Z));
-		c = (dataType)(pow(Y, 2) + pow(Z, 2) - P_2);
-		delta = b * b - 4 * a * c;
+	if (X == INFINITY && Y == INFINITY && Z == INFINITY) 
+	{
+		return INFINITY; // No solution if all coordinates are infinite
+		std::cout << "Error: All coordinates are infinite." << std::endl;
+	}
+
+	if (X != INFINITY && Y == INFINITY && Z == INFINITY) 
+	{
+		a = hx_2;
+		b = (dataType)(-2 * X * hx_2);
+		c = (dataType)(X * X * hx_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > X) {
+				return solution;
+			}
+			else {
+				return (dataType)(X + h.sx * P);
+			}
 		}
 		else {
-			return min(Y, Z) + P;
+			return (dataType)(X + h.sx * P);
 		}
 	}
 
-	if (Y == INFINITY && X != INFINITY && Z != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (X + Z));
-		c = (dataType)(pow(X, 2) + pow(Z, 2) - P_2);
-		delta = b * b - 4 * a * c;
+	if (Y != INFINITY && X == INFINITY && Z == INFINITY) 
+	{
+		a = hy_2;
+		b = (dataType)(-2 * Y * hy_2);
+		c = (dataType)(Y * Y * hy_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > Y) {
+				return solution;
+			}
+			else {
+				return (dataType)(Y + h.sy * P);
+			}
 		}
 		else {
-			return min(X, Z) + P;
+			return (dataType)(Y + h.sy * P);
 		}
 	}
 
-	if (Z == INFINITY && X != INFINITY && Y != INFINITY) {
-		a = 2;
-		b = (dataType)(-2 * (X + Y));
-		c = (dataType)(pow(X, 2) + pow(Y, 2) - P_2);
-		delta = b * b - 4 * a * c;
+	if (Z != INFINITY && X == INFINITY && Y == INFINITY) 
+	{
+		a = hz_2;
+		b = (dataType)(-2 * Z * hz_2);
+		c = (dataType)(Z * Z * hz_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > Z) {
+				return solution;
+			}
+			else {
+				return (dataType)(Z + h.sz * P);
+			}
 		}
 		else {
-			return min(X, Y) + P;
+			return (dataType)(Z + h.sz * P);
 		}
 	}
 
-	if (X == INFINITY && Y == INFINITY && Z != INFINITY) {
-		a = 1;
-		b = -2 * Z;
-		c = pow(Z, 2) - P_2;
-		delta = b * b - 4 * a * c;
+	if (X != INFINITY && Y != INFINITY && Z == INFINITY) 
+	{
+		a = (dataType)(hx_2 + hy_2);
+		b = (dataType)(-2 * (X * hx_2 + Y * hy_2));
+		c = (dataType)(X * X * hx_2 + Y * Y * hy_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > max(X, Y)) {
+				return solution;
+			}
+			else {
+				return (dataType)(min(X + h.sx * P, Y + h.sy * P));
+			}
 		}
 		else {
-			return Z + P;
+			return (dataType)(min(X + h.sx * P, Y + h.sy * P));
 		}
 	}
 
-	if (X == INFINITY && Z == INFINITY && Y != INFINITY) {
-		a = 1;
-		b = -2 * Y;
-		c = pow(Y, 2) - P_2;
-		delta = b * b - 4 * a * c;
+	if (X != INFINITY && Z != INFINITY && Y == INFINITY) 
+	{
+		a = (dataType)(hx_2 + hz_2);
+		b = (dataType)(-2 * (X * hx_2 + Z * hz_2));
+		c = (dataType)(X * X * hx_2 + Z * Z * hz_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > max(X, Z)) {
+				return solution;
+			}
+			else {
+				return (dataType)(min(X + h.sx * P, Z + h.sz * P));
+			}
 		}
 		else {
-			return Y + P;
+			return (dataType)(min(X + h.sx * P, Z + h.sz * P));
 		}
 	}
 
-	if (Y == INFINITY && Z == INFINITY && X != INFINITY) {
-		a = 1;
-		b = -2 * X;
-		c = pow(X, 2) - P_2;
-		delta = b * b - 4 * a * c;
+	if (Y != INFINITY && Z != INFINITY && X == INFINITY) 
+	{
+		a = (dataType)(hy_2 + hz_2);
+		b = (dataType)(-2 * (Y * hy_2 + Z * hz_2));
+		c = (dataType)(Y * Y * hy_2 + Z * Z * hz_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > max(Y, Z)) {
+				return solution;
+			}
+			else {
+				return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
+			}
 		}
 		else {
-			return X + P;
+			return (dataType)(min(Y + h.sy * P, Z + h.sz * P));
 		}
 	}
 
-	if (X != INFINITY && Y != INFINITY && Z != INFINITY) {
-		a = 3;
-		b = -2 * (X + Y + Z);
-		c = pow(X, 2) + pow(Y, 2) + pow(Z, 2) - P_2;
-		delta = b * b - 4 * a * c;
+	if (X != INFINITY && Y != INFINITY && Z != INFINITY) 
+	{
+		a = (dataType)(hx_2 + hy_2 + hz_2);
+		b = (dataType)(-2 * (X * hx_2 + Y * hy_2 + Z * hz_2));
+		c = (dataType)(X * X * hx_2 + Y * Y * hy_2 + Z * Z * hz_2 - P_2);
+		delta = (dataType)(b * b - 4 * a * c);
 		if (delta >= 0) {
-			return (-b + sqrt(delta)) / (2 * a);
+			solution = (dataType)((-b + sqrt(delta)) / (2 * a));
+			if (solution > max(X, max(Y, Z))) {
+				return solution;
+			}
+			else {
+				return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
+			}
 		}
 		else {
-			return min(X, min(Y, Z)) + P;
+			return (dataType)(min(X + h.sx * P, min(Y + h.sy * P, Z + h.sz * P)));
 		}
 	}
 
