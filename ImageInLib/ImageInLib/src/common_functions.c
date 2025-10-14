@@ -1216,3 +1216,17 @@ BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double 
 
 	return (BoundingBox) { x_min, x_max, y_min, y_max, z_min, z_max };
 }
+
+void swap_elts(void* a, void* b, size_t size_of_elt)
+{
+	void* temp = malloc(size_of_elt);
+	if (temp == NULL) {
+		// Handle memory allocation failure
+		exit(EXIT_FAILURE);
+	}
+	memcpy(temp, a, size_of_elt);
+	memcpy(a, b, size_of_elt);
+	memcpy(b, temp, size_of_elt);
+	free(temp);
+	temp = NULL;
+}

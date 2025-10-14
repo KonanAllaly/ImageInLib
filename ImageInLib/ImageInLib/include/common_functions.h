@@ -581,7 +581,22 @@ extern "C" {
 	/// <param name="linked_curve">linked</param>
 	void release3dLinkedCurve(LinkedCurve3D* linked_curve);
 
+	/// <summary>
+	/// Find the bounding box around a given point with a given radius
+	/// </summary>
+	/// <param name="imageDataPtr">input image data</param>
+	/// <param name="point">current point</param>
+	/// <param name="radius">radius</param>
+	/// <returns>returns the coordinates of the bounding box</returns>
 	BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius);
+
+	/// <summary>
+	/// Swaps the contents of two memory locations of a specified size.
+	/// </summary>
+	/// <param name="a">Pointer to the first memory location.</param>
+	/// <param name="b">Pointer to the second memory location.</param>
+	/// <param name="size_of_elt">The size in bytes of the memory block to swap.</param>
+	void swap_elts(void* a, void* b, size_t size_of_elt);
 
 #endif // !COMMON_FUNCTIONS
 
