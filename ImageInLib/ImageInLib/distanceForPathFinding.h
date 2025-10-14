@@ -30,6 +30,12 @@ using namespace std;
 		double radius;
 	} Potential_Parameters;
 
+	typedef struct {
+		dataType tau; // used in the descent gradient
+		size_t max_iteration; // maximal iteration to stop descent gradient
+		double tolerance; //minimal distance to stop
+	} Path_Parameters;
+
 	dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType W);
 
 	dataType upwindFiniteDifferenceX(dataType** actionMapPtr, const size_t dimX, const size_t dimY, const size_t dimZ, const size_t x, const size_t y, const size_t z);
