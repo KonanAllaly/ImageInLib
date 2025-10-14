@@ -97,8 +97,6 @@ dataType upwindFiniteDifferenceZ(dataType** actionMapPtr, const size_t dimX, con
 // 3U^2 - 2U(X+Y+Z) + (X^2 + Y^2 + Z^2 - W) = 0 ---> aU + 2bU + c = 0
 dataType solve3dQuadratic(dataType X, dataType Y, dataType Z, dataType P) {
 
-	/* In the cuurrent implementation, the grid is supposed to be uniform with grid size hx= hy = hz = 1.0 */
-
 	dataType solution = 0.0, a = 0.0, b = 0.0, c = 0.0, delta = 0.0;
 	dataType P_2 = P * P;
 
@@ -216,7 +214,7 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 	if (gradientVectorX == NULL || gradientVectorY == NULL || gradientVectorZ == NULL)
 		return false;
 	
-	compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
+	//compute3dImageGradient(imageDataPtr, gradientVectorX, gradientVectorY, gradientVectorZ, length, width, height, 1.0);
 
 	size_t seedIndice = x_new(j0, i0, width), currentIndx = 0;
 	dataType seedVal = (imageDataPtr[k0][x_new(j0, i0, width)] + imageDataPtr[k1][x_new(j1, i1, width)]) / 2;
@@ -409,6 +407,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 		}
 	}
 
+	/*
 	compute3dPotential(imageDataPtr, potentialFuncPtr, length, width, height, seedPoints);
 
 	//Processed the initial point
@@ -725,6 +724,7 @@ bool fastMarching3D_N(dataType** imageDataPtr, dataType** distanceFuncPtr, dataT
 			}
 		}
 	}
+	*/
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
