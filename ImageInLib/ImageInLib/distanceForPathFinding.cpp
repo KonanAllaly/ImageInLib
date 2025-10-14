@@ -337,13 +337,6 @@ bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, co
 	return true;
 }
 
-//function to swap 3D points in the fast marching contest
-void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b) {
-	pointFastMarching3D temp = *a;
-	*a = *b;
-	*b = temp;
-}
-
 void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i) {
 
 	int length_array = in_Process.size();

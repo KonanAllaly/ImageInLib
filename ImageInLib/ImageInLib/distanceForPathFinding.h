@@ -46,9 +46,6 @@ using namespace std;
 
 	bool compute3dPotential(dataType** imageDataPtr, dataType** potentialFuncPtr, const size_t length, const size_t width, const size_t height, point3d* seedPoints);
 
-	//heap functions
-	void swap3dPoints(pointFastMarching3D* a, pointFastMarching3D* b);
-
 	void heapifyDown3D(vector<pointFastMarching3D>& in_Process, int i);
 
 	void heapifyVector3D(vector<pointFastMarching3D>& in_Process);
