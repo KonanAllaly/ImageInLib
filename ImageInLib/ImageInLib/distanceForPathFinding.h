@@ -19,6 +19,7 @@ using namespace std;
 
 	typedef struct {
 		size_t x, y, z;
+		size_t index;
 		dataType arrival;
 	}pointFastMarching3D;
 
