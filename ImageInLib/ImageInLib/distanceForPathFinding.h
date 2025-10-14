@@ -54,7 +54,7 @@ using namespace std;
 
 	void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process);
 
-	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point);
+	void addPointHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, pointFastMarching3D point);
 
 	int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k);
 

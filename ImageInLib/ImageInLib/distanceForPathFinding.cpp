@@ -438,11 +438,21 @@ void deleteRootHeap3D(vector<pointFastMarching3D>& in_Process) {
 	}
 }
 
-void addPointHeap3D(vector<pointFastMarching3D>& in_Process, pointFastMarching3D point) {
+void addPointHeap3D(vector<pointFastMarching3D>& in_Process, vector<int>& heapIndex, pointFastMarching3D point) {
 	//we use type int for indexes because we do operations like pos--
 	in_Process.push_back(point);
 	int l = in_Process.size();
-	heapifyUp3D(in_Process, l - 1);
+	size_t heapIndex_point = in_Process[l - 1].index;
+	heapIndex[heapIndex_point] = l - 1;
+	if (l < 2)
+	{
+		return; //nothing to heapify
+	}
+	else
+	{
+		//heapifyUp3D(in_Process, l - 1);
+		heapifyUp3D(in_Process, heapIndex, l - 1);
+	}
 }
 
 int getIndexFromHeap3D(vector<pointFastMarching3D>& in_Process, size_t i, size_t j, size_t k) {
