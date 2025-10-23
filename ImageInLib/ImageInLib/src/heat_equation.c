@@ -261,9 +261,10 @@ void heatImplicit2dScheme(Image_Data2D imageData, const Filter_Parameters implic
 	const size_t height_ext = height + 2, width_ext = width + 2;
 	size_t dim2D = height * width, dim2D_ext = height_ext * width_ext;
 
-	dataType tau = implicitParameters.timeStepSize, hh = implicitParameters.h * implicitParameters.h;
+	dataType tau = implicitParameters.timeStepSize;
+	dataType hx = imageData.spacing.sx, hy = imageData.spacing.sy;
+	dataType hx2 = 1.0 / (hx * hx), hy2 = 1.0 / (hy * hy);
 	dataType tol = implicitParameters.tolerance, omega = implicitParameters.omega_c;
-	dataType coeff = tau / hh;
 	size_t maxIteration = implicitParameters.maxNumberOfSolverIteration;
 
 	dataType* previous_solution = (dataType*)malloc(sizeof(dataType) * dim2D_ext);
@@ -285,27 +286,38 @@ void heatImplicit2dScheme(Image_Data2D imageData, const Filter_Parameters implic
 		do {
 			cpt = cpt + 1;
 
-			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) 
+			{
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
+				{
 					currentIndx = x_new(i_ext, j_ext, height_ext);
-					gauss_seidel_coef = (dataType)((previous_solution[x_new(i_ext, j_ext, height_ext)] + coeff * (gauss_seidel_solution[x_new(i_ext - 1, j_ext, height_ext)] +
-						gauss_seidel_solution[x_new(i_ext + 1, j_ext, height_ext)] + gauss_seidel_solution[x_new(i_ext, j_ext - 1, height_ext)] + gauss_seidel_solution[x_new(i_ext, j_ext + 1, height_ext)])) /
-						(1 + 4 * coeff));
+					gauss_seidel_coef = (dataType)((previous_solution[x_new(i_ext, j_ext, height_ext)] + 
+						tau * (hx2 * gauss_seidel_solution[x_new(i_ext - 1, j_ext, height_ext)] +
+						       hx2 * gauss_seidel_solution[x_new(i_ext + 1, j_ext, height_ext)] + 
+							   hy2 * gauss_seidel_solution[x_new(i_ext, j_ext - 1, height_ext)] + 
+							   hy2 * gauss_seidel_solution[x_new(i_ext, j_ext + 1, height_ext)])) 
+						/ (1 + 2 * tau * (hx2 + hy2)));
 					gauss_seidel_solution[currentIndx] = gauss_seidel_solution[currentIndx] + omega * (gauss_seidel_coef - gauss_seidel_solution[currentIndx]);
 				}
 			}
 
 			error = 0.0;
-			for (i = 0, i_ext = 1; i < height; i++, i_ext++) {
-				for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+			for (i = 0, i_ext = 1; i < height; i++, i_ext++) 
+			{
+				for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
+				{
 					currentIndx = x_new(i_ext, j_ext, height_ext);
-					error += (dataType)(pow(gauss_seidel_solution[currentIndx] * (1 + 4.0 * coeff) - coeff * (gauss_seidel_solution[x_new(i_ext - 1, j_ext, height_ext)] + gauss_seidel_solution[x_new(i_ext + 1, j_ext, height_ext)] +
-						gauss_seidel_solution[x_new(i_ext, j_ext - 1, height_ext)] + gauss_seidel_solution[x_new(i_ext, j_ext + 1, height_ext)]) - previous_solution[currentIndx], 2));
+					error += (dataType)(pow(gauss_seidel_solution[currentIndx] * (1 + 2.0 * tau * (hx2 + hy2)) 
+						- tau * (hx2 * gauss_seidel_solution[x_new(i_ext - 1, j_ext, height_ext)] + 
+							     hx2 * gauss_seidel_solution[x_new(i_ext + 1, j_ext, height_ext)] + 
+							     hy2 * gauss_seidel_solution[x_new(i_ext, j_ext - 1, height_ext)] + 
+							     hy2 * gauss_seidel_solution[x_new(i_ext, j_ext + 1, height_ext)]) 
+						- previous_solution[currentIndx], 2) * hx * hy);
 				}
 			}
 
 		} while (cpt < maxIteration && error > tol);
-
+		printf("The number of iterations is %zd\n", cpt);
 		copyDataToAnother2dArray(gauss_seidel_solution, previous_solution, height_ext, width_ext);
 	}
 

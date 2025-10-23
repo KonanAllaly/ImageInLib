@@ -502,21 +502,25 @@ bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filterin
 	size_t i, j, i_ext, j_ext;
 	const size_t length_ext = length + 2, width_ext = width + 2;
 	size_t dim2D = length * width, dim2D_ext = length_ext * width_ext;
-	dataType tau = filtering_parameters.timeStepSize, h = filtering_parameters.h;
+	dataType tau = filtering_parameters.timeStepSize;
+	dataType hx = spacing.sx, hy = spacing.sy;
+	dataType hx2 = hx * hx, hy2 = hy * hy;
 	dataType tol = filtering_parameters.tolerance, omega = filtering_parameters.omega_c;
-	dataType coef_edge_detector = filtering_parameters.edge_detector_coefficient, eps = filtering_parameters.eps2;
-	dataType coef_tau = tau / (h * h), gauss_seidel_coef = 0.0;
+	dataType coef_edge_detector = filtering_parameters.edge_detector_coefficient;
+	dataType gauss_seidel_coef = 0.0;
 	size_t maxIter = filtering_parameters.maxNumberOfSolverIteration;
 
 	dataType* smothedImage = (dataType*)malloc(dim2D * sizeof(dataType));
-	Point2D iOrigin = { 0.0, 0.0 };
-	Image_Data2D imageData = { length, width, smothedImage, iOrigin, spacing };
+	Image_Data2D imageData = { length, width, smothedImage, inputImage.origin, spacing };
 
 	copyDataToAnother2dArray(inputImage.imageDataPtr, smothedImage, length, width);
 
-	//heat2dExplicitScheme(imageData, filtering_parameters);
-	//heatImplicit2dScheme(imageData, filtering_parameters);
-	gaussianSmoothing2D(inputImage.imageDataPtr, smothedImage, length, width, 1.0);
+	heatImplicit2dScheme(imageData, filtering_parameters);
+	//gaussianSmoothing2D(inputImage.imageDataPtr, smothedImage, length, width, 1.0);
+
+	Storage_Flags flags = { false, false };
+	const char storing_path[] = "C:/Users/Konan Allaly/Documents/Tests/output/smoothed.raw";
+	store2dRawData(imageData.imageDataPtr, length, width, storing_path, flags);
 
 	dataType* previous_Solution = (dataType*)malloc(dim2D_ext * sizeof(dataType));
 	dataType* gauss_Seidel_Sol = (dataType*)malloc(dim2D_ext * sizeof(dataType));
@@ -527,6 +531,9 @@ bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filterin
 
 	copyDataTo2dExtendedArea(smothedImage, extended_image_data, length, width);
 	reflection2D(extended_image_data, length_ext, width_ext);
+
+	copyDataToAnother2dArray(extended_image_data, gauss_Seidel_Sol, length_ext, width_ext);
+	copyDataToAnother2dArray(extended_image_data, previous_Solution, length_ext, width_ext);
 
 	dataType* uNorth = (dataType*)malloc(dim2D * sizeof(dataType));
 	dataType* uSouth = (dataType*)malloc(dim2D * sizeof(dataType));
@@ -572,65 +579,66 @@ bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filterin
 			uSW = extended_image_data[x_new(iminus, jplus, length_ext)];
 
 			//East
-			ux = (uE - uP) / h;
-			uy = (uNE + uN - uS - uSE) / (4.0 * h);
+			ux = (uE - uP) / hx;
+			uy = (uNE + uN - uS - uSE) / (4.0 * hy);
 			current_value = ux * ux + uy * uy;
 			uEast[currentIndx] = sqrt(current_value + eps2);
 			gEast[currentIndx] = gradientFunction(current_value, coef_edge_detector);
 
 			//West
-			ux = (uP - uW) / h;
-			uy = (uNW + uN - uSW - uS) / (4.0 * h);
+			ux = (uP - uW) / hx;
+			uy = (uNW + uN - uSW - uS) / (4.0 * hy);
 			current_value = ux * ux + uy * uy;
 			uWest[currentIndx] = sqrt(current_value + eps2);
-			gEast[currentIndx] = gradientFunction(current_value, coef_edge_detector);
+			gWest[currentIndx] = gradientFunction(current_value, coef_edge_detector);
 
 			//North
-			ux = (uNE + uE - uNW - uW) / (4.0 * h);
-			uy = (uN - uP) / h;
+			ux = (uNE + uE - uNW - uW) / (4.0 * hx);
+			uy = (uN - uP) / hy;
 			current_value = ux * ux + uy * uy;
-			uNorth[currentIndx] = (current_value + eps2);
+			uNorth[currentIndx] = sqrt(current_value + eps2);
 			gNorth[currentIndx] = gradientFunction(current_value, coef_edge_detector);
 
 			//South
-			ux = (uSE + uE - uSW - uW) / (4.0 * h);
-			uy = (uP - uS) / h;
+			ux = (uSE + uE - uSW - uW) / (4.0 * hx);
+			uy = (uP - uS) / hy;
 			current_value = ux * ux + uy * uy;
-			uSouth[currentIndx] = (current_value + eps2);
+			uSouth[currentIndx] = sqrt(current_value + eps2);
 			gSouth[currentIndx] = gradientFunction(current_value, coef_edge_detector);
 
 			u_average = (dataType)((uEast[currentIndx] + uWest[currentIndx] + uNorth[currentIndx] + uSouth[currentIndx]) / 4.0);
-			avg_norm_gardient = sqrt(u_average * u_average + eps);
+			avg_norm_gardient = sqrt(u_average * u_average + eps2);
 
-			coefEast[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gEast[currentIndx] * (1.0 / uEast[currentIndx]));
-			coefWest[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gWest[currentIndx] * (1.0 / uWest[currentIndx]));
-			coefNorth[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gNorth[currentIndx] * (1.0 / uNorth[currentIndx]));
-			coefSouth[currentIndx] = (dataType)(coef_tau * avg_norm_gardient * gSouth[currentIndx] * (1.0 / uSouth[currentIndx]));
+			coefEast[currentIndx] = (dataType)(tau * avg_norm_gardient * gEast[currentIndx] * (1.0 / (hx2 * uEast[currentIndx])));
+			coefWest[currentIndx] = (dataType)(tau * avg_norm_gardient * gWest[currentIndx] * (1.0 / (hx2 * uWest[currentIndx])));
+			coefNorth[currentIndx] = (dataType)(tau * avg_norm_gardient * gNorth[currentIndx] * (1.0 / (hy2 * uNorth[currentIndx])));
+			coefSouth[currentIndx] = (dataType)(tau * avg_norm_gardient * gSouth[currentIndx] * (1.0 / (hy2 * uSouth[currentIndx])));
 
 		}
 	}
 
-	copyDataToAnother2dArray(extended_image_data, gauss_Seidel_Sol, length_ext, width_ext);
-	copyDataToAnother2dArray(extended_image_data, previous_Solution, length_ext, width_ext);
-
-	//copyDataTo2dExtendedArea(inputImage.imageDataPtr, gauss_Seidel_Sol, length, width);
-	//reflection2D(gauss_Seidel_Sol, length_ext, width_ext);
-	//copyDataTo2dExtendedArea(inputImage.imageDataPtr, previous_Solution, length, width);
-	//reflection2D(previous_Solution, length_ext, width_ext);
+	const char edge_detector_path[] = "C:/Users/Konan Allaly/Documents/Tests/output/edge_East.raw";
+	store2dRawData(gEast, length, width, edge_detector_path, flags);
 
 	size_t cpt = 0;
 	dataType error = 0.0;
+	
 	do {
 		cpt++;
 
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) 
+		{
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
+			{
 
 				size_t currentIndx = x_new(i, j, length);
 				size_t currentIndx_ext = x_new(i_ext, j_ext, length_ext);
 
-				gauss_seidel_coef = (dataType)((previous_Solution[currentIndx_ext] + coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)]
-					+ coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)])
+				gauss_seidel_coef = (dataType)((previous_Solution[currentIndx_ext] + 
+					coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + 
+					coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)]+ 
+					coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + 
+					coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)])
 					/ (1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]));
 
 				gauss_Seidel_Sol[currentIndx_ext] = gauss_Seidel_Sol[currentIndx_ext] + omega * (gauss_seidel_coef - gauss_Seidel_Sol[currentIndx_ext]);
@@ -638,19 +646,25 @@ bool geodesicMeanCurvature2D(Image_Data2D inputImage, Filter_Parameters filterin
 		}
 
 		error = 0.0;
-		for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-			for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+		for (i = 0, i_ext = 1; i < length; i++, i_ext++) 
+		{
+			for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
+			{
 
 				size_t currentIndx = x_new(i, j, length);
 				size_t currentIndx_ext = x_new(i_ext, j_ext, length_ext);
 
-				error += (dataType)(pow((1 + coefEast[currentIndx] + coefNorth[currentIndx] + coefWest[currentIndx] + coefSouth[currentIndx]) * gauss_Seidel_Sol[currentIndx_ext]
-					- (coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)]
-						+ coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)]) - previous_Solution[currentIndx_ext], 2) * h * h);
+				error += (dataType)(pow((1 + coefEast[currentIndx] + coefNorth[currentIndx] + 
+					coefWest[currentIndx] + coefSouth[currentIndx]) * gauss_Seidel_Sol[currentIndx_ext]
+					- (coefEast[currentIndx] * gauss_Seidel_Sol[x_new(i_ext + 1, j_ext, length_ext)] + 
+						coefNorth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext - 1, length_ext)] + 
+						coefWest[currentIndx] * gauss_Seidel_Sol[x_new(i_ext - 1, j_ext, length_ext)] + 
+						coefSouth[currentIndx] * gauss_Seidel_Sol[x_new(i_ext, j_ext + 1, length_ext)]) 
+					- previous_Solution[currentIndx_ext], 2) * hx * hy);
 			}
 		}
-
 	} while (cpt < maxIter && error > tol);
+	printf("The number of iterations is %zd\n", cpt);
 
 	//Copy back
 	copyDataTo2dReducedArea(inputImage.imageDataPtr, gauss_Seidel_Sol, length, width);
