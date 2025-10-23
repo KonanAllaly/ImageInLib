@@ -343,10 +343,10 @@ void heatImplicitRectangularScheme(Image_Data toImplicitImage, const Filter_Para
 	dataType tau = implicitParameters.timeStepSize;
 	size_t k_ext, j_ext, i_ext, x_ext;
 
-	dataType hx_2 = hx * hx;
-	dataType hy_2 = hy * hy;
-	dataType hz_2 = hz * hz;
-	dataType coeff = 2.0 * tau * (1.0 / hx_2 + 1.0 / hy_2 + 1.0 / hz_2);
+	dataType hx_2 = 1.0 / (hx * hx);
+	dataType hy_2 = 1.0 / (hy * hy);
+	dataType hz_2 = 1.0 / (hz * hz);
+	dataType coeff = 2.0 * tau * (hx_2 + hy_2 + hz_2);
 
 	// Error value used to check iteration
 	// sor - successive over relation value, used in Gauss-Seidel formula
@@ -403,11 +403,11 @@ void heatImplicitRectangularScheme(Image_Data toImplicitImage, const Filter_Para
 					for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
 						x_ext = x_new(i_ext, j_ext, length_ext);
 						// Begin Gauss-Seidel Formula Evaluation
-						sor = (dataType)((tempPtr[k_ext][x_ext] + tau * (currentPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] / hx_2
-							+ currentPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] / hx_2
-							+ currentPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)] / hy_2
-							+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] / hy_2
-							+ currentPtr[k_ext + 1][x_ext] / hz_2 + currentPtr[k_ext - 1][x_ext] / hz_2)) / (1 + coeff));
+						sor = (dataType)((tempPtr[k_ext][x_ext] + tau * (currentPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] * hx_2
+							+ currentPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] * hx_2
+							+ currentPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)] * hy_2
+							+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] * hy_2
+							+ currentPtr[k_ext + 1][x_ext] * hz_2 + currentPtr[k_ext - 1][x_ext] * hz_2)) / (1 + coeff));
 						// Gauss-Seidel
 						currentPtr[k_ext][x_ext] = currentPtr[k_ext][x_ext] + implicitParameters.omega_c * (sor - currentPtr[k_ext][x_ext]);
 					}
@@ -416,17 +416,20 @@ void heatImplicitRectangularScheme(Image_Data toImplicitImage, const Filter_Para
 
 			// Error Evaluation
 			error = 0.0; // Initialize
-			for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
-				for (i = 0, i_ext = 1; i < length; i++, i_ext++) {
-					for (j = 0, j_ext = 1; j < width; j++, j_ext++) {
+			for (k = 0, k_ext = 1; k < height; k++, k_ext++) 
+			{
+				for (i = 0, i_ext = 1; i < length; i++, i_ext++) 
+				{
+					for (j = 0, j_ext = 1; j < width; j++, j_ext++) 
+					{
 						// 2D to 1D representation for i, j
 						x_ext = x_new(i_ext, j_ext, length_ext);
 						// Begin Error Calculation
 						error += (dataType)pow(currentPtr[k_ext][x_ext] * (1 + coeff)
-							- tau * (currentPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] / hx_2
-								+ currentPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] / hx_2 + currentPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)] / hy_2
-								+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] / hy_2 + currentPtr[k_ext + 1][x_ext] / hz_2
-								+ currentPtr[k_ext - 1][x_ext] / hz_2) - tempPtr[k_ext][x_ext], 2);
+							- tau * (currentPtr[k_ext][x_new(i_ext + 1, j_ext, length_ext)] * hx_2
+								+ currentPtr[k_ext][x_new(i_ext - 1, j_ext, length_ext)] * hx_2 + currentPtr[k_ext][x_new(i_ext, j_ext + 1, length_ext)] * hy_2
+								+ currentPtr[k_ext][x_new(i_ext, j_ext - 1, length_ext)] * hy_2 + currentPtr[k_ext + 1][x_ext] * hz_2
+								+ currentPtr[k_ext - 1][x_ext] * hz_2) - tempPtr[k_ext][x_ext], 2);
 					}
 				}
 			}
