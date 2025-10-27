@@ -31,7 +31,7 @@ extern "C" {
 
 	bool set2dDirichletBoundaryCondition(dataType* imageDataPtr, const size_t height, const size_t width);
 
-	bool computeNormOfGradientDiamondCells(dataType* imageDataPtr, neighPtrs neigbours, const size_t height, const size_t width, dataType h);
+	bool computeNormOfGradientDiamondCells(dataType* imageDataPtr, neighPtrs neigbours, const size_t height, const size_t width, PixelSpacing spacing);
 
 	bool subsurf(Image_Data2D imageData, dataType* initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms);
 

@@ -1262,67 +1262,67 @@ int main() {
 	//rescaleNewRange2D(imageData, Length, Width, 0.0, 1.0);
 
 	storing_path = outputPath + "input.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
+	//manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 	
 	Point2D sliceOrigin = { 0.0, 0.0 };
-	PixelSpacing sliceSpacing = { 1.0, 1.0 };
-	//PixelSpacing sliceSpacing = { imageSpacing.sx, imageSpacing.sy };
+	//PixelSpacing sliceSpacing = { 1.0, 1.0 };
+	PixelSpacing sliceSpacing = { imageSpacing.sx, imageSpacing.sy };
 	Image_Data2D imageDataStr = { Length, Width, imageData, sliceOrigin, sliceSpacing, {{1.0, 0.0},{0.0, 1.0}} };
 	
 	const Filter_Parameters filteringParameters
 	{
-		1.0,// timeStepSize;
+		2.0,// timeStepSize;
 		1,// h;
 		1.0,// sigma;
-		1000,// edge detector coefficient;
+		100,// edge detector coefficient;
 		1.4,// omega_c;
 		1e-3,// tolerance;
 		1e-6,// eps2;
 		1e-6,// coef;
 		1,// p;
-		1,// timeStepsNum;
+		2,// timeStepsNum;
 		1000// maxNumberOfSolverIteration;
 	};
 	
-	//heatImplicit2dScheme(imageDataStr, filteringParameters);
-	geodesicMeanCurvature2D(imageDataStr, filteringParameters);
-	storing_path = outputPath + "filtered.raw";
-	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	////heatImplicit2dScheme(imageDataStr, filteringParameters);
+	//geodesicMeanCurvature2D(imageDataStr, filteringParameters);
+	//storing_path = outputPath + "filtered.raw";
+	manageRAWFile2D<dataType>(imageData, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
-	//Point2D* center = new Point2D[1];
-	//center[0] = {165.0, 279.0};
-	//dataType v = 0.5, R = 30.0;
+	Point2D* center = new Point2D[1];
+	center[0] = { 191, 275 };// { 165.0, 279.0 };
+	dataType v = 0.5, R = 200.0;
 	//generateInitialSegmentationFunction(initialSegment, Length, Width, center, v, R);
-	////storing_path = outputPath + "seg00.raw";
-	////manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "seg00.raw";
+	manageRAWFile2D<dataType>(initialSegment, Length, Width, storing_path.c_str(), LOAD_DATA, false);
 
-	//Segmentation_Parameters segmentation_parms
-	//{
-	//	50, // Maximum number of Gauss-Seidel iterations
-	//	10000, // constant K in the Perona-Malik function G for the image
-	//	1e-6, // epsilon is the regularization factor (Evans-Spruck)
-	//	2000,// Number of current time step
-	//	2000,// Maximum number of time step
-	//	10, // Kind of writing density
-	//	1e-6, // Tolerance for stopping of the segmentation process
-	//	5.0 * h, //tau
-	//	h, //h
-	//	1.4, //omega_c
-	//	1e-6, // gauss seidelTolerance;
-	//	1.0,// coef_conv;// controle advection
-	//	0.5//coef_dif; // controle curvature
-	//};
-	////string segmentPath = outputPath + "seg/segment_";
-	////subsurf(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
+	Segmentation_Parameters segmentation_parms
+	{
+		50, // Maximum number of Gauss-Seidel iterations
+		50000, // constant K in the Perona-Malik function G for the image
+		1e-6, // epsilon is the regularization factor (Evans-Spruck)
+		4000,// Number of current time step
+		4000,// Maximum number of time step
+		10, // Kind of writing density
+		1e-6, // Tolerance for stopping of the segmentation process
+		5.0 * imageSpacing.sx, //tau
+		1.0, //h
+		1.4, //omega_c
+		1e-6, // gauss seidelTolerance;
+		5.0 * imageSpacing.sx,// coef_conv;// controle advection
+		4.0 * imageSpacing.sx//coef_dif; // controle curvature
+	};
 	
-	//string segmentPath = outputPath + "seg/IIOE/segment_";
-	//gsubsurf_iioe(imageDataStr, initialSegment, segmentPath.c_str(), implicitParameters, segmentation_parms);
-	////string segmentPath = outputPath + "seg/SUBSURF/segment_";
-	////subsurf(imageDataStr, initialSegment, (const char*)segmentPath.c_str(), implicitParameters, segmentation_parms);
-	////string segmentPath = outputPath + "seg/GSUBSURF/segment_";
-	////gsubsurf(imageDataStr, initialSegment, (const char*)segmentPath.c_str(), implicitParameters, segmentation_parms);
+	//string segmentPath = outputPath + "seg/SUBSURF/_";
+	//subsurf(imageDataStr, initialSegment, segmentPath.c_str(), filteringParameters, segmentation_parms);
+	
+	string segmentPath = outputPath + "seg/IIOE/_";
+	gsubsurf_iioe(imageDataStr, initialSegment, (const char*)segmentPath.c_str(), filteringParameters, segmentation_parms);
+	
+	//string segmentPath = outputPath + "seg/New folder/_";
+	//gsubsurf(imageDataStr, initialSegment, (const char*)segmentPath.c_str(), filteringParameters, segmentation_parms);
 
-	//delete[] center;
+	delete[] center;
 	delete[] imageData;
 	delete[] initialSegment;
 	
