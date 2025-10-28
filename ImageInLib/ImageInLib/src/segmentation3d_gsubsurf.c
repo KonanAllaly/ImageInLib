@@ -20,7 +20,6 @@
 #include "common_functions.h"
 #include "setting_boundary_values.h"
 
-
 bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initialSegment, Segmentation_Parameters segParameters, Filter_Parameters explicit_lhe_Parameters, unsigned char* outputPathPtr) {
 
 	if (inputImageData.imageDataPtr == NULL || initialSegment == NULL || outputPathPtr == NULL)
@@ -773,6 +772,7 @@ bool computeNormOfGradientDiamondCell3D(dataType** imageData, const size_t lengt
 	return true;
 }
 
+/*
 bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -1739,7 +1739,9 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 
 	return true;
 }
+*/
 
+/*
 bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -2179,7 +2181,9 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 
 	return true;
 }
+*/
 
+/*
 bool GSUBSURF_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -2712,6 +2716,7 @@ bool GSUBSURF_IIOE(Image_Data imageData, dataType** initialSegment, const char* 
 
 	return true;
 }
+*/
 
 bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
@@ -3681,6 +3686,7 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 	return true;
 }
 
+/*
 bool GSUBSURF_S_TWO_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -4709,3 +4715,4 @@ bool gsubsurf_s_one_iioe_time_step(Image_Data segmentationData, Coefficient_Poin
 
 	return true;
 }
+*/
