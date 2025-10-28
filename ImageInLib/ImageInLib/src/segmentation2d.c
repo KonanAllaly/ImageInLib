@@ -1280,25 +1280,10 @@ bool gsubsurf_iioe(Image_Data2D imageData, dataType* initialSegment, const char*
 					}
 				}
 
-				dataType a = 1 - fmin(0.5, theta_east);
-				dataType b = 1 - fmin(0.5, theta_west);
-				dataType c = 1 - fmin(0.5, theta_north);
-				dataType d = 1 - fmin(0.5, theta_south);
-
-				theta_in.East[xd] = a;//1 - fmin(0.5, theta_east);
-				theta_in.West[xd] = b;//1 - fmin(0.5, theta_west);
-				theta_in.North[xd] = c;//1 - fmin(0.5, theta_north);
-				theta_in.South[xd] = d;//1 - fmin(0.5, theta_south);
-
-				//theta_out.East[xd] = 0.5;
-				//theta_out.West[xd] = 0.5;
-				//theta_out.North[xd] = 0.5;
-				//theta_out.South[xd] = 0.5;
-
-				//theta_in.East[xd] = 1 - theta_out.East[xd];
-				//theta_in.West[xd] = 1 - theta_out.West[xd];
-				//theta_in.North[xd] = 1 - theta_out.North[xd];
-				//theta_in.South[xd] = 1 - theta_out.South[xd];
+				theta_in.East[xd] = 1 - fmin(0.5, theta_east);
+				theta_in.West[xd] = 1 - fmin(0.5, theta_west);
+				theta_in.North[xd] = 1 - fmin(0.5, theta_north);
+				theta_in.South[xd] = 1 - fmin(0.5, theta_south);
 				
 				uCoef.East[xd] = (dataType)(tau_mp * theta_in.East[xd] * a_in.East[xd] + tau * (diff * u_average * edgeDetectorPtr[xd]) / (hx2 * normGrad.East[xd]));
 				uCoef.West[xd] = (dataType)(tau_mp * theta_in.West[xd] * a_in.West[xd] + tau * (diff * u_average * edgeDetectorPtr[xd]) / (hx2 * normGrad.West[xd]));
