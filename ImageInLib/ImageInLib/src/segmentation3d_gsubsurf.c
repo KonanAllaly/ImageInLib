@@ -3140,24 +3140,24 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 	size_t number_time_step = 0;
 	dataType error_segmentation = 0.0;
 	dataType u1 = 0.0, u2 = 0.0, u3 = 0.0, u4 = 0.0;
-	dataType u_p = 0.0, u_p_min = 0.0, u_p_max = 0.0;
+	
 	dataType average_norm_gradient = 0.0, u_average = 0;
 	dataType gauss_seidel_coef = 0.0;
 	size_t ind_east, ind_west, ind_north, ind_south;
-	dataType numerator_max_p = 0.0, numerator_min_p = 0.0;
+	
 	size_t count_gauss_seidel_iteration = 0;
 	dataType error_gauss_seidel = 0.0;
 
 	Image_Data segmentationData = { height, length, width, segmentationPtr, imageData.origin, imageData.spacing, imageData.orientation };
 
-	dataType u_e_min, u_w_min, u_n_min, u_s_min, u_t_min, u_b_min;
-	dataType u_e_max, u_w_max, u_n_max, u_s_max, u_t_max, u_b_max;
-	dataType u_east, u_west, u_north, u_south, u_top, u_bottom;
-
 	dataType theta_out_east, theta_out_west, theta_out_north, theta_out_south, theta_out_top, theta_out_bottom;
 	dataType theta_in_east, theta_in_west, theta_in_north, theta_in_south, theta_in_top, theta_in_bottom;
 	dataType prod_east, prod_west, prod_north, prod_south, prod_top, prod_bottom;
+
+	dataType u_p = 0.0, u_p_min = 0.0, u_p_max = 0.0;
+	dataType numerator_max_p = 0.0, numerator_min_p = 0.0;
 	
+	dataType u_east, u_west, u_north, u_south, u_top, u_bottom;
 	dataType u_east_min, u_west_min, u_north_min, u_south_min, u_top_min, u_bottom_min;
 	dataType u_east_max, u_west_max, u_north_max, u_south_max, u_top_max, u_bottom_max;
 	
@@ -3326,8 +3326,8 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 					else
 					{
 						//East
-						u_e_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
-						u_e_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
+						u_east_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
+						u_east_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
 						prod_east = -a_in.e_Ptr[k][x] * (u_p - u_east);
 						if (prod_east == 0)
 						{
@@ -3335,16 +3335,16 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_east > 0)
 						{
-							theta_in_east = mp * (u_e_max - u_east) / (tau * n_out[k][x] * prod_east);
+							theta_in_east = mp * (u_east_max - u_east) / (tau * n_out[k][x] * prod_east);
 						}
 						else
 						{
-							theta_in_east = mp * (u_e_min - u_east) / (tau * n_out[k][x] * prod_east);
+							theta_in_east = mp * (u_east_min - u_east) / (tau * n_out[k][x] * prod_east);
 						}
 
 						//West
-						u_w_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
-						u_w_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
+						u_west_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
+						u_west_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
 						prod_west = -a_in.w_Ptr[k][x] * (u_p - u_west);
 						if (prod_west == 0)
 						{
@@ -3352,16 +3352,16 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_west > 0)
 						{
-							theta_in_west = mp * (u_w_max - u_west) / (tau * n_out[k][x] * prod_west);
+							theta_in_west = mp * (u_west_max - u_west) / (tau * n_out[k][x] * prod_west);
 						}
 						else
 						{
-							theta_in_west = mp * (u_w_min - u_west) / (tau * n_out[k][x] * prod_west);
+							theta_in_west = mp * (u_west_min - u_west) / (tau * n_out[k][x] * prod_west);
 						}
 
 						//North
-						u_n_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
-						u_n_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
+						u_north_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
+						u_north_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
 						prod_north = -a_in.n_Ptr[k][x] * (u_p - u_north);
 						if (prod_north == 0)
 						{
@@ -3369,16 +3369,16 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_north > 0)
 						{
-							theta_in_north = mp * (u_n_max - u_north) / (tau * n_out[k][x] * prod_north);
+							theta_in_north = mp * (u_north_max - u_north) / (tau * n_out[k][x] * prod_north);
 						}
 						else
 						{
-							theta_in_north = mp * (u_n_min - u_north) / (tau * n_out[k][x] * prod_north);
+							theta_in_north = mp * (u_north_min - u_north) / (tau * n_out[k][x] * prod_north);
 						}
 
 						//South
-						u_s_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
-						u_s_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
+						u_south_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
+						u_south_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
 						prod_south = -a_in.s_Ptr[k][x] * (u_p - u_south);
 						if (prod_south == 0)
 						{
@@ -3386,16 +3386,16 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_south > 0)
 						{
-							theta_in_south = mp * (u_s_max - u_south) / (tau * n_out[k][x] * prod_south);
+							theta_in_south = mp * (u_south_max - u_south) / (tau * n_out[k][x] * prod_south);
 						}
 						else
 						{
-							theta_in_south = mp * (u_s_min - u_south) / (tau * n_out[k][x] * prod_south);
+							theta_in_south = mp * (u_south_min - u_south) / (tau * n_out[k][x] * prod_south);
 						}
 
 						//Top
-						u_t_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
-						u_t_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
+						u_top_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
+						u_top_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
 						prod_top = -a_in.t_Ptr[k][x] * (u_p - u_top);
 						if (prod_top == 0)
 						{
@@ -3403,16 +3403,16 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_top > 0)
 						{
-							theta_in_top = mp * (u_t_max - u_top) / (tau * n_out[k][x] * prod_top);
+							theta_in_top = mp * (u_top_max - u_top) / (tau * n_out[k][x] * prod_top);
 						}
 						else
 						{
-							theta_in_top = mp * (u_t_min - u_top) / (tau * n_out[k][x] * prod_top);
+							theta_in_top = mp * (u_top_min - u_top) / (tau * n_out[k][x] * prod_top);
 						}
 
 						//Bottom
-						u_b_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
-						u_b_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
+						u_bottom_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
+						u_bottom_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
 						prod_bottom = -a_in.b_Ptr[k][x] * (u_p - u_bottom);
 						if (prod_bottom == 0)
 						{
@@ -3420,11 +3420,11 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						}
 						else if (prod_bottom > 0)
 						{
-							theta_in_bottom = mp * (u_b_max - u_bottom) / (tau * n_out[k][x] * prod_bottom);
+							theta_in_bottom = mp * (u_bottom_max - u_bottom) / (tau * n_out[k][x] * prod_bottom);
 						}
 						else
 						{
-							theta_in_bottom = mp * (u_b_min - u_bottom) / (tau * n_out[k][x] * prod_bottom);
+							theta_in_bottom = mp * (u_bottom_min - u_bottom) / (tau * n_out[k][x] * prod_bottom);
 						}
 					}
 
