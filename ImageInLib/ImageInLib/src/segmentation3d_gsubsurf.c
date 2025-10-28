@@ -2880,6 +2880,33 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 		}
 	}
 
+	Coefficient_Pointers coefPrev;
+	coefPrev.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPrev.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPrev.n_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPrev.s_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPrev.t_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	coefPrev.b_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
+	if (coefPrev.e_Ptr == NULL || coefPrev.w_Ptr == NULL || coefPrev.n_Ptr == NULL ||
+		coefPrev.s_Ptr == NULL || coefPrev.t_Ptr == NULL || coefPrev.b_Ptr == NULL)
+	{
+		return false; // Memory allocation failed
+	}
+	for (k = 0; k < height; k++)
+	{
+		coefPrev.e_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPrev.w_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPrev.n_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPrev.s_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPrev.t_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		coefPrev.b_Ptr[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (coefPrev.e_Ptr[k] == NULL || coefPrev.w_Ptr[k] == NULL || coefPrev.n_Ptr[k] == NULL ||
+			coefPrev.s_Ptr[k] == NULL || coefPrev.t_Ptr[k] == NULL || coefPrev.b_Ptr[k] == NULL)
+		{
+			return false; // Memory allocation failed
+		}
+	}
+
 	Coefficient_Pointers a_out;
 	a_out.e_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
 	a_out.w_Ptr = (dataType**)malloc(sizeof(dataType*) * height);
@@ -2988,17 +3015,15 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 		}
 	}
 
-	dataType** n_out_pq = (dataType**)malloc(sizeof(dataType*) * height);
-	dataType** n_out_qp = (dataType**)malloc(sizeof(dataType*) * height);
-	if (n_out_pq == NULL || n_out_qp == NULL)
+	dataType** n_out = (dataType**)malloc(sizeof(dataType*) * height);
+	if (n_out == NULL)
 	{
 		return false;
 	}
 	for (k = 0; k < height; k++)
 	{
-		n_out_pq[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		n_out_qp[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
-		if (n_out_pq[k] == NULL || n_out_qp[k] == NULL)
+		n_out[k] = (dataType*)malloc(sizeof(dataType) * dim2D);
+		if (n_out[k] == NULL)
 		{
 			return false; // Memory allocation failed
 		}
@@ -3032,7 +3057,6 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 	// v_pq = -w_a * m(e_pq) * G_pq;
 	dataType vpe, vpw, vpn, vps, vpt, vpb;
 	dataType mp = hx * hy * hz;
-	dataType mq = hx * hy * hz;
 	dataType coef_tau = tau / mp;
 
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++)
@@ -3064,10 +3088,32 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 				a_out.t_Ptr[k][x] = fmin(vpt, 0);
 				a_out.b_Ptr[k][x] = fmin(vpb, 0);
 
-				n_out_pq[k][x] = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
+				if(a_out.e_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				if (a_out.w_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				if (a_out.n_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				if (a_out.s_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				if (a_out.t_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				if (a_out.b_Ptr[k][x] != 0)
+				{
+					n_out[k][x] += 1.0;
+				}
+				//n_out[k][x] = -(signum(a_out.e_Ptr[k][x]) + signum(a_out.w_Ptr[k][x]) + signum(a_out.n_Ptr[k][x]) + signum(a_out.s_Ptr[k][x]) + signum(a_out.t_Ptr[k][x]) + signum(a_out.b_Ptr[k][x]));
 
-				////a_out_pq = -a_in_pq
-				n_out_qp[k][x] = -(signum(-a_in.e_Ptr[k][x]) + signum(-a_in.w_Ptr[k][x]) + signum(-a_in.n_Ptr[k][x]) + signum(-a_in.s_Ptr[k][x]) + signum(-a_in.t_Ptr[k][x]) + signum(-a_in.b_Ptr[k][x]));
 			}
 		}
 	}
@@ -3101,14 +3147,20 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 	dataType numerator_max_p = 0.0, numerator_min_p = 0.0;
 	size_t count_gauss_seidel_iteration = 0;
 	dataType error_gauss_seidel = 0.0;
-	dataType prod_pq = 0.0, prod_qp = 0.0;
-	dataType value_pq = 0.0, value_qp = 0.0;
 
 	Image_Data segmentationData = { height, length, width, segmentationPtr, imageData.origin, imageData.spacing, imageData.orientation };
 
 	dataType u_e_min, u_w_min, u_n_min, u_s_min, u_t_min, u_b_min;
 	dataType u_e_max, u_w_max, u_n_max, u_s_max, u_t_max, u_b_max;
 	dataType u_east, u_west, u_north, u_south, u_top, u_bottom;
+
+	dataType theta_out_east, theta_out_west, theta_out_north, theta_out_south, theta_out_top, theta_out_bottom;
+	dataType theta_in_east, theta_in_west, theta_in_north, theta_in_south, theta_in_top, theta_in_bottom;
+	dataType prod_east, prod_west, prod_north, prod_south, prod_top, prod_bottom;
+	
+	dataType u_east_min, u_west_min, u_north_min, u_south_min, u_top_min, u_bottom_min;
+	dataType u_east_max, u_west_max, u_north_max, u_south_max, u_top_max, u_bottom_max;
+	
 	do {
 		number_time_step++;
 
@@ -3122,6 +3174,11 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 					x = x_new(i, j, length);
 					x_ext = x_new(i_ext, j_ext, length_ext);
 
+					//average norm of gradient
+					average_norm_gradient = (dataType)((segPtrs.east[k][x] + segPtrs.west[k][x] + segPtrs.north[k][x] +
+						segPtrs.south[k][x] + segPtrs.top[k][x] + segPtrs.bottom[k][x]) / 6.0);
+					u_average = sqrt(average_norm_gradient + eps2);
+
 					//epsilon regularization
 					segPtrs.east[k][x] = sqrt(segPtrs.east[k][x] + eps2);
 					segPtrs.west[k][x] = sqrt(segPtrs.west[k][x] + eps2);
@@ -3129,11 +3186,6 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 					segPtrs.south[k][x] = sqrt(segPtrs.south[k][x] + eps2);
 					segPtrs.top[k][x] = sqrt(segPtrs.top[k][x] + eps2);
 					segPtrs.bottom[k][x] = sqrt(segPtrs.bottom[k][x] + eps2);
-
-					//average norm of gradient
-					average_norm_gradient = (segPtrs.east[k][x] + segPtrs.west[k][x] + segPtrs.north[k][x] +
-						segPtrs.south[k][x] + segPtrs.top[k][x] + segPtrs.bottom[k][x]) / 6.0;
-					u_average = sqrt(average_norm_gradient * average_norm_gradient + eps2);
 
 					u_p = previousSolPtr[k_ext][x_ext];
 					u_east = previousSolPtr[k_ext][x_ext + 1];
@@ -3149,263 +3201,255 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 					numerator_max_p = mp * (u_p_max - u_p);
 					numerator_min_p = mp * (u_p_min - u_p);
 
-					if (n_out_pq[k][x] == 0)
+					if (n_out[k][x] == 0)
 					{
-						theta_out.e_Ptr[k][x] = 0.5;
-						theta_out.w_Ptr[k][x] = 0.5;
-						theta_out.s_Ptr[k][x] = 0.5;
-						theta_out.n_Ptr[k][x] = 0.5;
-						theta_out.t_Ptr[k][x] = 0.5;
-						theta_out.b_Ptr[k][x] = 0.5;
+						theta_out_east = 0.5;
+						theta_out_west = 0.5;
+						theta_out_south = 0.5;
+						theta_out_north = 0.5;
+						theta_out_top = 0.5;
+						theta_out_bottom = 0.5;
 					}
 					else
 					{
 						//East
-						prod_pq = a_out.e_Ptr[k][x] * (u_east - u_p);
-						if (prod_pq == 0)
+						prod_east = a_out.e_Ptr[k][x] * (u_east - u_p);
+						if (prod_east == 0)
 						{
-							theta_out.e_Ptr[k][x] = 0.5;
+							theta_out_east = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_east > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.e_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_east = numerator_max_p / (tau * n_out[k][x] * prod_east);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.e_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_east = numerator_min_p / (tau * n_out[k][x] * prod_east);
 						}
 
 						//West
-						prod_pq = a_out.w_Ptr[k][x] * (u_west - u_p);
-						if (prod_pq == 0)
+						prod_west = a_out.w_Ptr[k][x] * (u_west - u_p);
+						if (prod_west == 0)
 						{
-							theta_out.w_Ptr[k][x] = 0.5;
+							theta_out_west = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_west > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.w_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_west = numerator_max_p / (tau * n_out[k][x] * prod_west);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.w_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_west = numerator_min_p / (tau * n_out[k][x] * prod_west);
 						}
 
 						//North
-						prod_pq = a_out.n_Ptr[k][x] * (u_north - u_p);
-						if (prod_pq == 0)
+						prod_north = a_out.n_Ptr[k][x] * (u_north - u_p);
+						if (prod_north == 0)
 						{
-							theta_out.n_Ptr[k][x] = 0.5;
+							theta_out_north = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_north > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.n_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_north = numerator_max_p / (tau * n_out[k][x] * prod_north);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.n_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_north = numerator_min_p / (tau * n_out[k][x] * prod_north);
 						}
 
 						//South
-						prod_pq = a_out.s_Ptr[k][x] * (u_south - u_p);
-						if (prod_pq == 0)
+						prod_south = a_out.s_Ptr[k][x] * (u_south - u_p);
+						if (prod_south == 0)
 						{
-							theta_out.s_Ptr[k][x] = 0.5;
+							theta_out_south = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_south > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.s_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_south = numerator_max_p / (tau * n_out[k][x] * prod_south);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.s_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_south = numerator_min_p / (tau * n_out[k][x] * prod_south);
 						}
 
 						//Top
-						prod_pq = a_out.t_Ptr[k][x] * (u_top - u_p);
-						if (prod_pq == 0)
+						prod_top = a_out.t_Ptr[k][x] * (u_top - u_p);
+						if (prod_top == 0)
 						{
-							theta_out.t_Ptr[k][x] = 0.5;
+							theta_out_top = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_top > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.t_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_top = numerator_max_p / (tau * n_out[k][x] * prod_top);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.t_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_top = numerator_min_p / (tau * n_out[k][x] * prod_top);
 						}
 
 						//Bottom
-						prod_pq = a_out.b_Ptr[k][x] * (u_bottom - u_p);
-						if (prod_pq == 0)
+						prod_bottom = a_out.b_Ptr[k][x] * (u_bottom - u_p);
+						if (prod_bottom == 0)
 						{
-							theta_out.b_Ptr[k][x] = 0.5;
+							theta_out_bottom = 0.5;
 						}
-						else if (prod_pq > 0)
+						else if (prod_bottom > 0)
 						{
-							value_pq = numerator_max_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.b_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_bottom = numerator_max_p / (tau * n_out[k][x] * prod_bottom);
 						}
 						else
 						{
-							value_pq = numerator_min_p / (tau * n_out_pq[k][x] * prod_pq);
-							theta_out.b_Ptr[k][x] = fmin(0.5, value_pq);
+							theta_out_bottom = numerator_min_p / (tau * n_out[k][x] * prod_bottom);
 						}
 					}
 
-					
+					theta_out.e_Ptr[k][x] = fmin(0.5, theta_out_east);
+					theta_out.w_Ptr[k][x] = fmin(0.5, theta_out_west);
+					theta_out.n_Ptr[k][x] = fmin(0.5, theta_out_north);
+					theta_out.s_Ptr[k][x] = fmin(0.5, theta_out_south);
+					theta_out.t_Ptr[k][x] = fmin(0.5, theta_out_top);
+					theta_out.b_Ptr[k][x] = fmin(0.5, theta_out_bottom);
+
 					//============= Compute theta_in_pq ===========
 					//a_in_qp = - a_out_pq 
 					//a_out_qp = - a_in_pq
-					if (n_out_qp[k][x] == 0)
+					
+					if (n_out[k][x] == 0)
 					{
-						theta_in.e_Ptr[k][x] = 0.5;
-						theta_in.w_Ptr[k][x] = 0.5;
-						theta_in.s_Ptr[k][x] = 0.5;
-						theta_in.n_Ptr[k][x] = 0.5;
-						theta_in.t_Ptr[k][x] = 0.5;
-						theta_in.b_Ptr[k][x] = 0.5;
+						theta_in_east = 0.5;
+						theta_in_west = 0.5;
+						theta_in_south = 0.5;
+						theta_in_north = 0.5;
+						theta_in_top = 0.5;
+						theta_in_bottom = 0.5;
 					}
 					else
 					{
 						//East
 						u_e_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
 						u_e_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext + 1, j_ext, k_ext);
-						prod_qp = -a_in.e_Ptr[k][x] * (u_p - u_east);
-						if (prod_qp == 0)
+						prod_east = -a_in.e_Ptr[k][x] * (u_p - u_east);
+						if (prod_east == 0)
 						{
-							theta_in.e_Ptr[k][x] = 0.5;
+							theta_in_east = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_east > 0)
 						{
-							value_qp = mq * (u_e_max - u_east) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.e_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_east = mp * (u_e_max - u_east) / (tau * n_out[k][x] * prod_east);
 						}
 						else
 						{
-							value_qp = mq * (u_e_min - u_east) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.e_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_east = mp * (u_e_min - u_east) / (tau * n_out[k][x] * prod_east);
 						}
 
 						//West
 						u_w_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
 						u_w_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext - 1, j_ext, k_ext);
-						prod_qp = -a_in.w_Ptr[k][x] * (u_p - u_west);
-						if (prod_qp == 0)
+						prod_west = -a_in.w_Ptr[k][x] * (u_p - u_west);
+						if (prod_west == 0)
 						{
-							theta_in.w_Ptr[k][x] = 0.5;
+							theta_in_west = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_west > 0)
 						{
-							value_qp = mq * (u_w_max - u_west) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.w_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_west = mp * (u_w_max - u_west) / (tau * n_out[k][x] * prod_west);
 						}
 						else
 						{
-							value_qp = mq * (u_w_min - u_west) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.w_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_west = mp * (u_w_min - u_west) / (tau * n_out[k][x] * prod_west);
 						}
 
 						//North
 						u_n_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
 						u_n_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext - 1, k_ext);
-						prod_qp = -a_in.n_Ptr[k][x] * (u_p - u_north);
-						if (prod_qp == 0)
+						prod_north = -a_in.n_Ptr[k][x] * (u_p - u_north);
+						if (prod_north == 0)
 						{
-							theta_in.n_Ptr[k][x] = 0.5;
+							theta_in_north = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_north > 0)
 						{
-							value_qp = mq * (u_n_max - u_north) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.n_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_north = mp * (u_n_max - u_north) / (tau * n_out[k][x] * prod_north);
 						}
 						else
 						{
-							value_qp = mq * (u_n_min - u_north) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.n_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_north = mp * (u_n_min - u_north) / (tau * n_out[k][x] * prod_north);
 						}
 
 						//South
 						u_s_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
 						u_s_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext + 1, k_ext);
-						prod_qp = -a_in.s_Ptr[k][x] * (u_p - u_south);
-						if (prod_qp == 0)
+						prod_south = -a_in.s_Ptr[k][x] * (u_p - u_south);
+						if (prod_south == 0)
 						{
-							theta_in.s_Ptr[k][x] = 0.5;
+							theta_in_south = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_south > 0)
 						{
-							value_qp = mq * (u_s_max - u_south) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.s_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_south = mp * (u_s_max - u_south) / (tau * n_out[k][x] * prod_south);
 						}
 						else
 						{
-							value_qp = mq * (u_s_min - u_south) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.s_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_south = mp * (u_s_min - u_south) / (tau * n_out[k][x] * prod_south);
 						}
 
 						//Top
 						u_t_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
 						u_t_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext - 1);
-						prod_qp = -a_in.t_Ptr[k][x] * (u_p - u_top);
-						if (prod_qp == 0)
+						prod_top = -a_in.t_Ptr[k][x] * (u_p - u_top);
+						if (prod_top == 0)
 						{
-							theta_in.t_Ptr[k][x] = 0.5;
+							theta_in_top = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_top > 0)
 						{
-							value_qp = mq * (u_t_max - u_top) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.t_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_top = mp * (u_t_max - u_top) / (tau * n_out[k][x] * prod_top);
 						}
 						else
 						{
-							value_qp = mq * (u_t_min - u_top) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.t_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_top = mp * (u_t_min - u_top) / (tau * n_out[k][x] * prod_top);
 						}
 
 						//Bottom
 						u_b_min = getMinInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
 						u_b_max = getMaxInNeighborhood3D(previousSolPtr, length_ext, width_ext, height_ext, i_ext, j_ext, k_ext + 1);
-						prod_qp = -a_in.b_Ptr[k][x] * (u_p - u_bottom);
-						if (prod_qp == 0)
+						prod_bottom = -a_in.b_Ptr[k][x] * (u_p - u_bottom);
+						if (prod_bottom == 0)
 						{
-							theta_in.b_Ptr[k][x] = 0.5;
+							theta_in_bottom = 0.5;
 						}
-						else if (prod_qp > 0)
+						else if (prod_bottom > 0)
 						{
-							value_qp = mq * (u_b_max - u_bottom) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.b_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_bottom = mp * (u_b_max - u_bottom) / (tau * n_out[k][x] * prod_bottom);
 						}
 						else
 						{
-							value_qp = mq * (u_b_min - u_bottom) / (tau * n_out_qp[k][x] * prod_qp);
-							theta_in.b_Ptr[k][x] = 1 - fmin(0.5, value_qp);
+							theta_in_bottom = mp * (u_b_min - u_bottom) / (tau * n_out[k][x] * prod_bottom);
 						}
 					}
 
-					//theta_in.e_Ptr[k][x] = 1.0 - theta_out.e_Ptr[k][x];
-					//theta_in.w_Ptr[k][x] = 1.0 - theta_out.w_Ptr[k][x];
-					//theta_in.n_Ptr[k][x] = 1.0 - theta_out.n_Ptr[k][x];
-					//theta_in.s_Ptr[k][x] = 1.0 - theta_out.s_Ptr[k][x];
-					//theta_in.t_Ptr[k][x] = 1.0 - theta_out.t_Ptr[k][x];
-					//theta_in.b_Ptr[k][x] = 1.0 - theta_out.b_Ptr[k][x];
+					theta_in.e_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_east);
+					theta_in.w_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_west);
+					theta_in.n_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_north);
+					theta_in.s_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_south);
+					theta_in.t_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_top);
+					theta_in.b_Ptr[k][x] = 1.0 - fmin(0.5, theta_in_bottom);
 
-					uCoef.e_Ptr[k][x] = coef_tau * theta_in.e_Ptr[k][x] * a_in.e_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hx2 * segPtrs.east[k][x]);
-					uCoef.w_Ptr[k][x] = coef_tau * theta_in.w_Ptr[k][x] * a_in.w_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hx2 * segPtrs.west[k][x]);
-					uCoef.n_Ptr[k][x] = coef_tau * theta_in.n_Ptr[k][x] * a_in.n_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hy2 * segPtrs.north[k][x]);
-					uCoef.s_Ptr[k][x] = coef_tau * theta_in.s_Ptr[k][x] * a_in.s_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hy2 * segPtrs.south[k][x]);
-					uCoef.t_Ptr[k][x] = coef_tau * theta_in.t_Ptr[k][x] * a_in.t_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hz2 * segPtrs.top[k][x]);
-					uCoef.b_Ptr[k][x] = coef_tau * theta_in.b_Ptr[k][x] * a_in.b_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hz2 * segPtrs.bottom[k][x]);
+					//============= Compute coefficients ===========
+
+					coefPrev.e_Ptr[k][x] = (dataType)(coef_tau * theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x]);
+					coefPrev.w_Ptr[k][x] = (dataType)(coef_tau * theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x]);
+					coefPrev.n_Ptr[k][x] = (dataType)(coef_tau * theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x]);
+					coefPrev.s_Ptr[k][x] = (dataType)(coef_tau * theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x]);
+					coefPrev.t_Ptr[k][x] = (dataType)(coef_tau * theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x]);
+					coefPrev.b_Ptr[k][x] = (dataType)(coef_tau * theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x]);
+
+					uCoef.e_Ptr[k][x] = (dataType)(coef_tau * theta_in.e_Ptr[k][x] * a_in.e_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hx2 * segPtrs.east[k][x]));
+					uCoef.w_Ptr[k][x] = (dataType)(coef_tau * theta_in.w_Ptr[k][x] * a_in.w_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hx2 * segPtrs.west[k][x]));
+					uCoef.n_Ptr[k][x] = (dataType)(coef_tau * theta_in.n_Ptr[k][x] * a_in.n_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hy2 * segPtrs.north[k][x]));
+					uCoef.s_Ptr[k][x] = (dataType)(coef_tau * theta_in.s_Ptr[k][x] * a_in.s_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hy2 * segPtrs.south[k][x]));
+					uCoef.t_Ptr[k][x] = (dataType)(coef_tau * theta_in.t_Ptr[k][x] * a_in.t_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hz2 * segPtrs.top[k][x]));
+					uCoef.b_Ptr[k][x] = (dataType)(coef_tau * theta_in.b_Ptr[k][x] * a_in.b_Ptr[k][x] + tau * coef_diff * u_average * edgeDetectorPtr[k][x] / (hz2 * segPtrs.bottom[k][x]));
 				}
 			}
 		}
@@ -3429,18 +3473,22 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						ind_north = x_new(i_ext, j_ext - 1, length_ext);
 						ind_south = x_new(i_ext, j_ext + 1, length_ext);
 
-						gauss_seidel_coef = (dataType)(((1 - coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] + theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x]
-							+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] + theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x]
-							+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] + theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x])) * previousSolPtr[k_ext][x_ext]
-							+ coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] * previousSolPtr[k_ext][ind_east]
-								+ theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x] * previousSolPtr[k_ext][ind_west]
-								+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] * previousSolPtr[k_ext][ind_north]
-								+ theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x] * previousSolPtr[k_ext][ind_south]
-								+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] * previousSolPtr[k_ext - 1][x_ext]
-								+ theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x] * previousSolPtr[k_ext + 1][x_ext])
-							+ (uCoef.e_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_east] + uCoef.w_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_west] + uCoef.n_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_north]
-								+ uCoef.s_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_south] + uCoef.t_Ptr[k][x] * gaussSeidelPtr[k_ext - 1][x_ext] + uCoef.b_Ptr[k][x] * gaussSeidelPtr[k_ext + 1][x_ext]))
-							/ (1.0 + uCoef.e_Ptr[k][x] + uCoef.w_Ptr[k][x] + uCoef.n_Ptr[k][x] + uCoef.s_Ptr[k][x] + uCoef.t_Ptr[k][x] + uCoef.b_Ptr[k][x]));
+						gauss_seidel_coef = (dataType)(((1 - (coefPrev.e_Ptr[k][x] + coefPrev.w_Ptr[k][x] + coefPrev.n_Ptr[k][x] 
+							+ coefPrev.s_Ptr[k][x] + coefPrev.t_Ptr[k][x] + coefPrev.b_Ptr[k][x])) * previousSolPtr[k_ext][x_ext]
+							+ (coefPrev.e_Ptr[k][x] * previousSolPtr[k_ext][ind_east]
+								+ coefPrev.w_Ptr[k][x] * previousSolPtr[k_ext][ind_west]
+								+ coefPrev.n_Ptr[k][x] * previousSolPtr[k_ext][ind_north]
+								+ coefPrev.s_Ptr[k][x] * previousSolPtr[k_ext][ind_south]
+								+ coefPrev.t_Ptr[k][x] * previousSolPtr[k_ext - 1][x_ext]
+								+ coefPrev.b_Ptr[k][x] * previousSolPtr[k_ext + 1][x_ext])
+							+ (uCoef.e_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_east] 
+								+ uCoef.w_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_west] 
+								+ uCoef.n_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_north]
+								+ uCoef.s_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_south] 
+								+ uCoef.t_Ptr[k][x] * gaussSeidelPtr[k_ext - 1][x_ext] 
+								+ uCoef.b_Ptr[k][x] * gaussSeidelPtr[k_ext + 1][x_ext]))
+							/ (1.0 + uCoef.e_Ptr[k][x] + uCoef.w_Ptr[k][x] + uCoef.n_Ptr[k][x] 
+								+ uCoef.s_Ptr[k][x] + uCoef.t_Ptr[k][x] + uCoef.b_Ptr[k][x]));
 
 						gaussSeidelPtr[k_ext][x_ext] = gaussSeidelPtr[k_ext][x_ext] + omega * (gauss_seidel_coef - gaussSeidelPtr[k_ext][x_ext]);
 					}
@@ -3463,15 +3511,14 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 						ind_south = x_new(i_ext, j_ext + 1, length_ext);
 
 						u1 = (1.0 + uCoef.e_Ptr[k][x] + uCoef.w_Ptr[k][x] + uCoef.n_Ptr[k][x] + uCoef.s_Ptr[k][x] + uCoef.t_Ptr[k][x] + uCoef.b_Ptr[k][x]) * gaussSeidelPtr[k_ext][x_ext];
-						u2 = (1 - coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] + theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x]
-							+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] + theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x]
-							+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] + theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x])) * previousSolPtr[k_ext][x_ext];
-						u3 = coef_tau * (theta_out.e_Ptr[k][x] * a_out.e_Ptr[k][x] * previousSolPtr[k_ext][ind_east]
-							+ theta_out.w_Ptr[k][x] * a_out.w_Ptr[k][x] * previousSolPtr[k_ext][ind_west]
-							+ theta_out.n_Ptr[k][x] * a_out.n_Ptr[k][x] * previousSolPtr[k_ext][ind_north]
-							+ theta_out.s_Ptr[k][x] * a_out.s_Ptr[k][x] * previousSolPtr[k_ext][ind_south]
-							+ theta_out.t_Ptr[k][x] * a_out.t_Ptr[k][x] * previousSolPtr[k_ext - 1][x_ext]
-							+ theta_out.b_Ptr[k][x] * a_out.b_Ptr[k][x] * previousSolPtr[k_ext + 1][x_ext]);
+						u2 = (1 - (coefPrev.e_Ptr[k][x] + coefPrev.w_Ptr[k][x] + coefPrev.n_Ptr[k][x] 
+							+ coefPrev.s_Ptr[k][x] + coefPrev.t_Ptr[k][x] + coefPrev.b_Ptr[k][x])) * previousSolPtr[k_ext][x_ext];
+						u3 = coefPrev.e_Ptr[k][x] * previousSolPtr[k_ext][ind_east]
+							+ coefPrev.w_Ptr[k][x] * previousSolPtr[k_ext][ind_west]
+							+ coefPrev.n_Ptr[k][x] * previousSolPtr[k_ext][ind_north]
+							+ coefPrev.s_Ptr[k][x] * previousSolPtr[k_ext][ind_south]
+							+ coefPrev.t_Ptr[k][x] * previousSolPtr[k_ext - 1][x_ext]
+							+ coefPrev.b_Ptr[k][x] * previousSolPtr[k_ext + 1][x_ext];
 						u4 = uCoef.e_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_east] + uCoef.w_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_west]
 							+ uCoef.n_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_north] + uCoef.s_Ptr[k][x] * gaussSeidelPtr[k_ext][ind_south]
 							+ uCoef.t_Ptr[k][x] * gaussSeidelPtr[k_ext - 1][x_ext] + uCoef.b_Ptr[k][x] * gaussSeidelPtr[k_ext + 1][x_ext];
@@ -3558,8 +3605,13 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 			free(theta_in.s_Ptr[k]);
 			free(theta_in.t_Ptr[k]);
 			free(theta_in.b_Ptr[k]);
-			free(n_out_pq[k]);
-			free(n_out_qp[k]);
+			free(n_out[k]);
+			free(coefPrev.e_Ptr[k]);
+			free(coefPrev.w_Ptr[k]);
+			free(coefPrev.n_Ptr[k]);
+			free(coefPrev.s_Ptr[k]);
+			free(coefPrev.t_Ptr[k]);
+			free(coefPrev.b_Ptr[k]);
 		}
 		free(previousSolPtr[k]);
 		free(gaussSeidelPtr[k]);
@@ -3618,8 +3670,13 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 	free(theta_in.s_Ptr);
 	free(theta_in.t_Ptr);
 	free(theta_in.b_Ptr);
-	free(n_out_pq);
-	free(n_out_qp);
+	free(n_out);
+	free(coefPrev.e_Ptr);
+	free(coefPrev.w_Ptr);
+	free(coefPrev.n_Ptr);
+	free(coefPrev.s_Ptr);
+	free(coefPrev.t_Ptr);
+	free(coefPrev.b_Ptr);
 
 	return true;
 }
