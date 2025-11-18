@@ -2033,52 +2033,43 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	
-	//for (k = 0; k < height; k++) 
-	//{
-	//	for (i = 0; i < length; i++) 
-	//	{
-	//		for (j = 0; j < width; j++) 
-	//		{
-	//			xd = x_new(i, j, length);
-	//			isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-	//			if (isGradientComputed == true) {
-	//				norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-	//			}
-	//			else {
-	//				std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-	//				return false;
-	//			}
-	//			
-	//			dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
-	//			//threshold : real image
-	//			if (edgeValue <= parameters.thres) {
-	//				maskThreshold[k][xd] = 1.0;
-	//			}
-	//			else {
-	//				maskThreshold[k][xd] = 0.0;
-	//			}
-	//			
-	//			////threshold : artificial
-	//			//if (norm_of_gradient > 0.0) 
-	//			//{
-	//			//	maskThreshold[k][xd] = 1.0;
-	//			//}
-	//			//else 
-	//			//{
-	//			//	maskThreshold[k][xd] = 0.0;
-	//			//}
-	//		}
-	//	}
-	//}
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < length; i++) 
+		{
+			for (j = 0; j < width; j++) 
+			{
+				xd = x_new(i, j, length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) {
+					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else {
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					return false;
+				}
+				
+				dataType edgeValue = gradientFunction(norm_of_gradient, parameters.K);
+				//maskThreshold[k][xd] = edgeValue;
+				//threshold : real image
+				if (edgeValue <= parameters.thres) {
+					maskThreshold[k][xd] = 1.0;
+				}
+				else 
+				{
+					maskThreshold[k][xd] = 0.0;
+				}
+			}
+		}
+	}
 	
 	////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	////fastSweepingDistanceMap(toDistanceMap, distance, 1.0);
-	//fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_fm.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p1.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
@@ -2092,17 +2083,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
 	std::cout << "Seed 1 value : " << value_first_pt << std::endl;
-	//seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[1], parameters.radius);
-	////dataType value_second_pt = seedStats.mean_data;
-	////std::cout << "Seed 2 value : " << value_second_pt << std::endl;
-	dataType seedValCT = value_first_pt;//(value_first_pt + value_second_pt) / 2.0;
-	//dataType seedValCT = ctImageData.imageDataPtr[(size_t)seedPoint[0].z][x_new((size_t)seedPoint[0].x, (size_t)seedPoint[0].y, length)];
-	//std::cout << "Seed value : " << seedValCT << std::endl;
+	dataType seedValCT = value_first_pt;
 	
 	dataType var_epsilon = 0;//0.01;
 	if (seedStats.sd_data != 0) 
 	{
-		var_epsilon = 0.5 * seedStats.sd_data;
+		var_epsilon = seedStats.sd_data;
 	}
 	else {
 		var_epsilon = parameters.eps;
@@ -2119,7 +2105,6 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 
 	//Find the max of the difference
 	dataType maxImage = 0.0;
-	dataType minImage = INFINITY;
 	for (k = 0; k < height; k++) {
 		for (i = 0; i < dim2D; i++) {
 			if (potential[k][i] > maxImage) 
@@ -2128,15 +2113,13 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			}
 		}
 	}
-	//std::cout << "difference max : " << maxImage << std::endl;
+	std::cout << "Max pot: " << maxImage << std::endl;
 
 	for (k = 0; k < height; k++) 
 	{
 		for (i = 0; i < dim2D; i++) 
 		{
-			//potential[k][i] = var_epsilon + potential[k][i]; // original potential
-			potential[k][i] = (var_epsilon + potential[k][i]) * (1.0 / (1.0 + 1.0 * distance[k][i])); // new potential
-			//potential[k][i] = (dataType)(var_epsilon + potential[k][i] / maxImage) * (1.0 / (1.0 + 1.0 * distance[k][i])); //new poential
+			potential[k][i] = (dataType)(var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i]));
 		}
 	}
 
