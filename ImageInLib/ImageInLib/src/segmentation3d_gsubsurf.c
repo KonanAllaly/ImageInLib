@@ -3462,7 +3462,8 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 		//gauss seidel for segmentation function
 		count_gauss_seidel_iteration = 0;
 
-		do {
+		do 
+		{
 			count_gauss_seidel_iteration++;
 			for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 			{
