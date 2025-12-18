@@ -1140,7 +1140,7 @@ int main() {
 
 	//==================== Test segmentation 2D =======================================================
 
-	
+	/*
 	const size_t Length = 512, Width = 512;
 	const size_t dim2D = Length * Width;
 	dataType* imageData = new dataType[dim2D] {0};
@@ -1222,7 +1222,7 @@ int main() {
 	delete[] initialSegment;
 	
 	//free(ctContainer);
-	
+	*/
 
 	//==================== Test segmentation 3D ==================================
 
@@ -2325,9 +2325,9 @@ int main() {
 
 	//==================== Analyse extracted path curvature ======================
 
-	/*
 	FILE* path_file;
-	loading_path = outputPath + "Segmentation/3D image/centered paths/smoothed/finalCurve_p5.csv";
+	//loading_path = outputPath + "Segmentation/3D image/centered paths/finalCurve_p1.csv";
+	loading_path = outputPath + "smoothed_implicit.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2352,6 +2352,8 @@ int main() {
 
 	const size_t nb_path_points = pPoints.size();
 
+	/*
+	//Multiple
 	string saving_csv = outputPath + "P5/curvature.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
@@ -2432,14 +2434,44 @@ int main() {
 		fprintf(f_curvature, "%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", i, pPoints[icurrent].x, pPoints[icurrent].y, pPoints[icurrent].z, norm_save[i], tangent[0][i], tangent[1][i], tangent[2][i]);
 	}
 	fclose(f_curvature);
-
-	for(i = 0; i < 3; i++)
+		for(i = 0; i < 3; i++)
 	{
 		delete[] tangent[i];
 	}
 	delete[] tangent;
 	delete[] norm_save;
 	*/
+
+	//string saving_csv = outputPath + "P1/curvature.csv";
+	string saving_csv = outputPath + "P1/curvature_smooth_implicit.csv";
+	FILE* f_curvature;
+	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
+	{
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(f_curvature, "Index,x,y,z,Curvature\n");
+
+	dataType h_i, h_i_plus, coef, norm_r;
+	dataType r_x, r_y, r_z;
+	size_t index = 0, icurrent, iminus, iplus;
+	for (i = 1; i < (nb_path_points - 1); i++)
+	{
+		index++;
+		icurrent = i;
+		iminus = (i - 1);
+		iplus = (i + 1);
+		h_i = getPoint3DDistance(pPoints[iminus], pPoints[icurrent]);
+		h_i_plus = getPoint3DDistance(pPoints[iplus], pPoints[icurrent]);
+		coef = 2.0 / (h_i + h_i_plus);
+		r_x = coef * (((pPoints[iplus].x - pPoints[icurrent].x) / h_i_plus) - ((pPoints[icurrent].x - pPoints[iminus].x) / h_i));
+		r_y = coef * (((pPoints[iplus].y - pPoints[icurrent].y) / h_i_plus) - ((pPoints[icurrent].y - pPoints[iminus].y) / h_i));
+		r_z = coef * (((pPoints[iplus].z - pPoints[icurrent].z) / h_i_plus) - ((pPoints[icurrent].z - pPoints[iminus].z) / h_i));
+		norm_r = sqrt(r_x * r_x + r_y * r_y + r_z * r_z);
+		fprintf(f_curvature, "%d,%lf,%lf,%lf,%lf\n", index, pPoints[icurrent].x, pPoints[icurrent].x, pPoints[icurrent].x, norm_r);
+	}
+	fclose(f_curvature);
+
 
 	return EXIT_SUCCESS;
 }
