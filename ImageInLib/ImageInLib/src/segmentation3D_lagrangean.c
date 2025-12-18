@@ -588,35 +588,43 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             ////get the external velocity field
             getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
 
+			//Compute the tangent vector components
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
             ty = (current_point->next->y - current_point->previous->y) / som_dist;
             tz = (current_point->next->z - current_point->previous->z) / som_dist;
 
+			//Component the scalar product between the velocity vector and the tangent vector
             dot = tx * vx + ty * vy + tz * vz;
 
+			//Compute the normal velocity vector components
             current_point->nvx = vx - dot * tx;
             current_point->nvy = vy - dot * ty;
             current_point->nvz = vz - dot * tz;
 
             Point3D pnorm = { current_point->nvx, current_point->nvy, current_point->nvz };
             norm_nv = norm3D(pnorm);
+            //This should be corrected
             if (norm_nv == 0) 
             {
                 norm_nv = 1.0;
             }
 
+			//Compute the vector N1 components
             n1_x = nvx / norm_nv;
             n1_y = nvy / norm_nv;
             n1_z = nvz / norm_nv;
 
+			//Compute the vector N2 components
             n2_x = n1_y * tz - n1_z * ty;
             n2_y = n1_z * tx - n1_x * tz;
             n2_z = n1_x * ty - n1_y * tx;
 
+			//Compute the discrete curvature vector components
             curv_x = (2.0 / som_dist) * (((current_point->next->x - current_point->x) / h_i_plus) - ((current_point->x - current_point->previous->x) / h_i));
             curv_y = (2.0 / som_dist) * (((current_point->next->y - current_point->y) / h_i_plus) - ((current_point->y - current_point->previous->y) / h_i));
             curv_z = (2.0 / som_dist) * (((current_point->next->z - current_point->z) / h_i_plus) - ((current_point->z - current_point->previous->z) / h_i));
 
+			//Compute the coefficients k1, k2, u, v
             pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
             pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
             pscheme_data[i].u = eps * pscheme_data[i].k1 + mu * norm_nv;
@@ -931,6 +939,8 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
+		//the same scheme data variable is reused for all components
+		//so we update the components before solving the next system
         update3dPoint(plinked_curve, current_point, pscheme_data[i].sol, current_point->y, current_point->z);
         current_point = current_point->next;
     }
@@ -966,6 +976,8 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
+        //The same scheme_data variable is reused for all components
+        //so we update the components before solving the next system
         update3dPoint(plinked_curve, current_point, current_point->x, pscheme_data[i].sol, current_point->z);
         current_point = current_point->next;
     }
@@ -982,6 +994,8 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
     {
+        //The same scheme data variable is reused for all components
+        //so we update the components before solving the next system
         update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, pscheme_data[i].sol);
         current_point = current_point->next;
     }

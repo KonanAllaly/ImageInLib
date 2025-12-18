@@ -991,7 +991,9 @@ bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, con
 		return false;
 	}
 
-	if (linked_point->x == x && linked_point->y == y && linked_point->z == z) {
+	//ensure that there is a change
+	if (linked_point->x == x && linked_point->y == y && linked_point->z == z) 
+	{
 		return true;
 	}
 
@@ -999,11 +1001,13 @@ bool update3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, con
 	linked_point->y = y;
 	linked_point->z = z;
 
+	//update distance current to next points
 	if (linked_point->next != NULL)
 	{	
 		updateDistance3dToNext(linked_curve, linked_point);
 	}
 
+	//update distance previous to current points
 	if (linked_point->previous != NULL)
 	{
 		updateDistance3dToNext(linked_curve, linked_point->previous);
@@ -1070,6 +1074,7 @@ LinkedPoint3D* create3dLinkedPoint(const double point_x, const double point_y, c
 	linked_point->next = NULL;
 	linked_point->previous = NULL;
 	linked_point->distance_to_next = 0;
+	
 	//Extention to observe the average distance to the next after evolution
 	linked_point->average_distance_to_next = 0;
 	linked_point->id = getNextID();

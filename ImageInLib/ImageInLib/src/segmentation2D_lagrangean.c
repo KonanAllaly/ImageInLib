@@ -669,8 +669,6 @@ void calculateCurvature(LinkedCurve* plinked_curve, SchemeData* pscheme_data)
     double x_i_minus_2, x_i_minus_1, x_i, x_i_plus_1;
     double y_i_minus_2, y_i_minus_1, y_i, y_i_plus_1;
 
-
-
     for (size_t i = 1; i <= curve_length; i++)
     {
         if (!is_curve_closed && (i <= 2 || i >= curve_length - 1))
