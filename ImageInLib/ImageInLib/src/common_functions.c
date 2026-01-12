@@ -730,4 +730,76 @@ void swap_elts(void* a, void* b, size_t size_of_elt)
 	free(temp);
 	temp = NULL;
 }
+//==============================================================================
+bool isEdgeVoxel(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t ix, const size_t jy, const size_t kz, const dataType backgroundValue)
+{
+	size_t i_min = (ix == 0) ? 0 : ix - 1;
+	size_t i_max = (ix == length - 1) ? length - 1 : ix + 1;
+
+	size_t j_min = (jy == 0) ? 0 : jy - 1;
+	size_t j_max = (jy == width - 1) ? width - 1 : jy + 1;
+
+	size_t k_min = (kz == 0) ? 0 : kz - 1;
+	size_t k_max = (kz == height - 1) ? height - 1 : kz + 1;
+
+	for(size_t k = k_min; k <= k_max; k++)
+	{
+		for(size_t i = i_min; i <= i_max; i++)
+		{
+			for(size_t j = j_min; j <= j_max; j++)
+			{
+				if(imageDataPtr[k][x_new(i, j, length)] == backgroundValue)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+Statistics getStatisticsInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z, const size_t sizeNeigh)
+{
+	Statistics stats = {0.0, 0.0, 0.0, 0.0, 0.0};
+	size_t i, j, k;
+
+	size_t i_min = (x - sizeNeigh > 0) ? x - sizeNeigh : 0;
+	size_t i_max = (x + sizeNeigh < length - 1) ? x + sizeNeigh : length - 1;
+
+	size_t j_min = (y - sizeNeigh > 0) ? y - sizeNeigh : 0;
+	size_t j_max = (y + sizeNeigh < width - 1) ? y + sizeNeigh : width - 1;
+
+	size_t k_min = (z - sizeNeigh > 0) ? z - sizeNeigh : 0;
+	size_t k_max = (z + sizeNeigh < height - 1) ? z + sizeNeigh : height - 1;
+
+	dataType min_val = 1e6, max_val = -1e6, sum = 0.0;
+	size_t count = 0;
+	for (k = k_min; k <= k_max; k++)
+	{
+		for (i = i_min; i <= i_max; i++)
+		{
+			for (j = j_min; j <= j_max; j++)
+			{
+				if (imageDataPtr[k][x_new(i, j, length)] < min_val)
+				{
+					min_val = imageDataPtr[k][x_new(i, j, length)];
+				}
+				if(imageDataPtr[k][x_new(i, j, length)] > max_val)
+				{
+					max_val = imageDataPtr[k][x_new(i, j, length)];
+				}
+				sum += imageDataPtr[k][x_new(i, j, length)];
+				count++;
+			}
+		}
+	}
+	stats.min_data = min_val;
+	stats.max_data = max_val;
+	stats.mean_data = sum / (dataType)count;
+
+	//The standard deviation and variance are not needed currently
+	//Should be implemented if needed in the future
+
+	return stats;
+}
 

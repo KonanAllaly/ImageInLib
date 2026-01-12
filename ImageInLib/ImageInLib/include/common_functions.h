@@ -230,6 +230,10 @@ extern "C" {
 
 	void swap_elts(void* a, void* b, size_t size_of_elt);
 
+	bool isEdgeVoxel(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t i, const size_t j, const size_t k, const dataType backgroundValue);
+
+	Statistics getStatisticsInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z, const size_t sizeNeigh);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus
