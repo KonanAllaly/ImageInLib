@@ -14,27 +14,23 @@ Point3D getRealCoordFromImageCoord3D(Point3D image_point, Point3D real_origin, V
 
 Point3D getImageCoordFromRealCoord3D(Point3D real_point, Point3D real_origin, VoxelSpacing real_spacing, OrientationMatrix orientation) {
     Point3D resultPoint;
-    double x = (real_point.x - real_origin.x) / (real_spacing.sx * orientation.v1.x);
-	double y = (real_point.y - real_origin.y) / (real_spacing.sy * orientation.v2.y);
-	double z = (real_point.z - real_origin.z) / (real_spacing.sz * orientation.v3.z);
-	if (x < 0) {
-		resultPoint.x = 0;
+    
+    if(real_spacing.sx == 0 || real_spacing.sy == 0 || real_spacing.sz == 0)
+    {
+        printf("Voxel spacing cannot be zero\n");
+        resultPoint.x = INFINITY;
+        resultPoint.y = INFINITY;
+        resultPoint.z = INFINITY;
+        return resultPoint;
 	}
-	else {
-		resultPoint.x = (round)(x);
-	}
-    if (y < 0) {
-		resultPoint.y = 0;
-    }
-    else {
-		resultPoint.y = (round)(y);
-    }
-    if (z < 0) {
-		resultPoint.z = 0;
-	}
-    else {
-        resultPoint.z = (round)(z);
-    }
+
+    dataType x = (real_point.x - real_origin.x) / (real_spacing.sx * orientation.v1.x);
+    dataType y = (real_point.y - real_origin.y) / (real_spacing.sy * orientation.v2.y);
+    dataType z = (real_point.z - real_origin.z) / (real_spacing.sz * orientation.v3.z);
+	
+	resultPoint.x = (x < 0) ? 0 : (round)(x);
+	resultPoint.y = (y < 0) ? 0 : (round)(y);
+	resultPoint.z = (z < 0) ? 0 : (round)(z);
     return resultPoint;
 }
 
@@ -621,26 +617,6 @@ Statistics getPointNeighborhoodStats(Image_Data imageData, Point3D point_of_inte
     }
 
     return result;
-}
-
-bool generateStatisticsImages(Image_Data imageData, statictics_Pointers statsImage, double radius) {
-    size_t i, j, k, x;
-
-    for (k = 0; k < imageData.height; k++) {
-        for (i = 0; i < imageData.length; i++) {
-            for (j = 0; j < imageData.width; j++) {
-                x = x_new(i, j, imageData.length);
-                Point3D current_point = { i, j, k };
-                current_point = getRealCoordFromImageCoord3D(current_point, imageData.origin, imageData.spacing, imageData.orientation);
-                Statistics current_stats = getStats(imageData, current_point, radius);
-                //statsImage.maximum[k][x] = current_stats.max_data;
-                //statsImage.minimum[k][x] = current_stats.min_data;
-                statsImage.mean[k][x] = current_stats.mean_data;
-                //statsImage.sd[k][x] = current_stats.sd_data;
-            }
-        }
-    }
-    return true;
 }
 
 //=======================================================
