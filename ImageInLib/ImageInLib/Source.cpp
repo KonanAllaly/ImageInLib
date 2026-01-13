@@ -2521,8 +2521,8 @@ int main() {
 	//==================== Analyse extracted path curvature ======================
 
 	FILE* path_file;
-	//loading_path = outputPath + "Segmentation/3D image/centered paths/finalCurve_p1.csv";
-	loading_path = outputPath + "smoothed_implicit.csv";
+	loading_path = outputPath + "Segmentation/3D image/centered paths/finalCurve_p2.csv";
+	//loading_path = outputPath + "Segmentation/3D image/centered paths/smoothed/finalCurve_p2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2635,20 +2635,19 @@ int main() {
 	//delete[] tangent;
 	//delete[] norm_save;
 	
-	//string saving_csv = outputPath + "P1/curvature.csv";
-	string saving_csv = outputPath + "P1/curvature_smooth_implicit.csv";
+	string saving_csv = outputPath + "curvature_initial.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
 	{
 		printf("Enable to open");
 		return false;
 	}
-	fprintf(f_curvature, "Index,x,y,z,Curvature\n");
 
-	dataType h_i, h_i_plus, coef, norm_r;
+	dataType h_i, h_i_plus, coef, norm_r, max_curv = 0.0;
 	dataType r_x, r_y, r_z;
 	size_t index = 0, icurrent, iminus, iplus;
-	for (i = 1; i < (nb_path_points - 1); i++)
+	Point3D pointMax = { 0, 0, 0 };
+	for(i = 1; i < (nb_path_points - 1); i++)
 	{
 		index++;
 		icurrent = i;
@@ -2661,9 +2660,25 @@ int main() {
 		r_y = coef * (((pPoints[iplus].y - pPoints[icurrent].y) / h_i_plus) - ((pPoints[icurrent].y - pPoints[iminus].y) / h_i));
 		r_z = coef * (((pPoints[iplus].z - pPoints[icurrent].z) / h_i_plus) - ((pPoints[icurrent].z - pPoints[iminus].z) / h_i));
 		norm_r = sqrt(r_x * r_x + r_y * r_y + r_z * r_z);
-		fprintf(f_curvature, "%d,%lf,%lf,%lf,%lf\n", index, pPoints[icurrent].x, pPoints[icurrent].x, pPoints[icurrent].x, norm_r);
+		fprintf(f_curvature, "%d,%lf\n", index, norm_r);
+		if(norm_r > max_curv)
+		{
+			max_curv = norm_r;
+			pointMax = pPoints[icurrent];
+		}
 	}
 	fclose(f_curvature);
+
+	string saving_max_curv_pt_csv = outputPath + "max_curvature_initial.csv";
+	FILE* f_curv_max;
+	if (fopen_s(&f_curv_max, saving_max_curv_pt_csv.c_str(), "w") != 0)
+	{
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(f_curv_max, "x,y,z\n");
+	fprintf(f_curv_max, "%lf,%lf,%lf\n", pointMax.x, pointMax.y, pointMax.z);
+	fclose(f_curv_max);
 
 	return EXIT_SUCCESS;
 }
