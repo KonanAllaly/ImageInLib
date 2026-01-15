@@ -2521,8 +2521,8 @@ int main() {
 	//==================== Analyse extracted path curvature ======================
 
 	FILE* path_file;
-	loading_path = outputPath + "Segmentation/3D image/centered paths/finalCurve_p2.csv";
-	//loading_path = outputPath + "Segmentation/3D image/centered paths/smoothed/finalCurve_p2.csv";
+	//loading_path = outputPath + "Segmentation/3D image/centered paths/finalCurve_p2.csv";
+	loading_path = outputPath + "smoothed_pm.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2635,7 +2635,7 @@ int main() {
 	//delete[] tangent;
 	//delete[] norm_save;
 	
-	string saving_csv = outputPath + "curvature_initial.csv";
+	string saving_csv = outputPath + "curvature_pm.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
 	{
@@ -2669,7 +2669,7 @@ int main() {
 	}
 	fclose(f_curvature);
 
-	string saving_max_curv_pt_csv = outputPath + "max_curvature_initial.csv";
+	string saving_max_curv_pt_csv = outputPath + "max_curvature_pm.csv";
 	FILE* f_curv_max;
 	if (fopen_s(&f_curv_max, saving_max_curv_pt_csv.c_str(), "w") != 0)
 	{
