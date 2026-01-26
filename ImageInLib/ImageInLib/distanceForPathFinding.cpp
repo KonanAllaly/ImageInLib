@@ -2065,11 +2065,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	
 	////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/edge_image_p4.raw";
 	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	////fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p1.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	
+	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/distance_map_p4.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
@@ -2093,7 +2094,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	else {
 		var_epsilon = parameters.eps;
 	}
-	//var_epsilon = parameters.eps;
+	
 	std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
 
 	//Computation of potential function
@@ -2877,40 +2878,16 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	}
 
-	//id_key++;
-	//save_front_key = save_front + to_string(id_key) + ".raw";
-	//for (int ik = 0; ik < height; ik++)
-	//{
-	//	for (int ij = 0; ij < dim2D; ij++)
-	//	{
-	//		if (labelArray[ik][ij] == 1)
-	//		{
-	//			saveAction[ik][ij] = actionMapStr.imageDataPtr[ik][ij];
-	//		}
-	//		else {
-	//			saveAction[ik][ij] = max_action + 1;
-	//		}
-	//	}
-	//}
-	//manageRAWFile3D<dataType>(saveAction, length, width, height, save_front_key.c_str(), STORE_DATA, false);
-
 	key_points.push_back(seedPoint[1]);
 
-	//for (k = 0; k < height; k++) {
-	//	delete[] saveAction[k];
-	//}
-	//delete[] saveAction;
-
-	//fclose(processed_points);
-
-	////set all the unvisited points to a maximum value
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
-	//			actionMapStr.imageDataPtr[k][i] = max_action + 1;
-	//		}
-	//	}
-	//}
+	//set all the unvisited points to a maximum value
+	for (k = 0; k < height; k++) {
+		for (i = 0; i < dim2D; i++) {
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+				actionMapStr.imageDataPtr[k][i] = max_action + 1;
+			}
+		}
+	}
 
 	for (k = 0; k < height; k++) {
 		delete[] labelArray[k];
