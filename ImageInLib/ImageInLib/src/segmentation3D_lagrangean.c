@@ -63,6 +63,21 @@ bool semiCoefficientsIIOE(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_da
 
 bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
+//=============================================================
+
+bool smoothingByLagrangeanCurveEvolution(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
+    unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
+
+bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
+
+void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
+    const double eps, const double mu);
+
+void tangentialVelocitySmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega);
+
+bool coefficientsSmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt);
+
+//===========================================================
 //===========================================================
 
 bool lagrangeanExplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
@@ -997,6 +1012,472 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
         //The same scheme data variable is reused for all components
         //so we update the components before solving the next system
         update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, pscheme_data[i].sol);
+        current_point = current_point->next;
+    }
+
+    return true;
+}
+
+//=========================================================
+
+bool smoothingByLagrangeanCurveEvolution(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
+    unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation)
+{
+    //check if the pointers a well allocated
+    if (pSegmentationParams == NULL || pResultSegmentation == NULL) {
+        return false;
+    }
+
+    //check that we have at least three points at the biginning
+    if (pSegmentationParams->num_points < 3) {
+        return false;
+    }
+
+    //pOutputPathPtr : can be used to save the path during the motion
+
+    //let us consider single curve without topological changes
+    resetIDGenerator();
+
+    bool isOrientedPositively = true; //does not matter for open curves
+
+    if (!pSegmentationParams->open_curve)
+    {
+        isOrientedPositively = is3dCurveOrientedPositively(pSegmentationParams->pinitial_condition);
+    }
+
+    //create initial linked curve
+    LinkedCurve3D initial_curve = create3dLinkedCurve();
+
+    //Initialize the evolving linked curve
+    initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &initial_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
+
+    //create evolving linked curve
+    LinkedCurve3D linked_curve = create3dLinkedCurve();
+
+    //Initialize the evolving linked curve
+    initialize3dLinkedCurve(pSegmentationParams->pinitial_condition, &linked_curve, !isOrientedPositively, !pSegmentationParams->open_curve);
+
+    size_t length_of_data = linked_curve.number_of_points + 2;
+    SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
+
+    size_t it = 1;
+    double motion = 0.0;
+    double distance_to_next = 0.0;
+    do 
+    {
+
+        if (length_of_data < linked_curve.number_of_points + 2)
+        {
+            free(pscheme_data);
+            length_of_data = linked_curve.number_of_points + 2;
+            pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
+        }
+
+        ////evolve curve
+        //evolveBySingleStepIIOE(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
+        evolveForSmoothingBySingleStep(&initial_curve, &linked_curve, pscheme_data, pSegmentationParams);
+
+        it++;
+
+    } while (it < pSegmentationParams->num_time_steps);
+
+    LinkedPoint3D* pPoint = linked_curve.first_point;
+
+    for (size_t i = 0; i < linked_curve.number_of_points; i++)
+    {
+        pResultSegmentation->pPoints[i].x = (dataType)pPoint->x;
+        pResultSegmentation->pPoints[i].y = (dataType)pPoint->y;
+        pResultSegmentation->pPoints[i].z = (dataType)pPoint->z;
+        pPoint = pPoint->next;
+    }
+
+    free(pscheme_data);
+    release3dLinkedCurve(&linked_curve);
+
+    return true;
+}
+
+bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
+{
+    //check if the pointers a well allocated
+    if (pinitial_curve == NULL || plinked_curve == NULL || pscheme_data == NULL || pparams == NULL)
+    {
+        return false;
+    }
+
+    const double eps = pparams->eps;
+    const double omega = pparams->omega;
+    const double dt = pparams->time_step_size;
+    const double mu = pparams->mu;
+
+    ////function to compute the normal velocity
+    //normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, eps, mu);
+    normalVelocitySmoothing(pinitial_curve, plinked_curve, pscheme_data, eps, mu);
+
+    ////function to compute the tangential velocity
+    //tang_velocity3D(plinked_curve, pscheme_data, omega);
+    tangentialVelocitySmoothing(plinked_curve, pscheme_data, omega);
+
+    if (!coefficientsSmoothing(plinked_curve, pscheme_data, eps, dt))
+    {
+        return false;
+    }
+
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+
+    //////////////////////    X component ///////////////////////////////////////////////////////////
+
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+
+        if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
+        {
+            pscheme_data[i].ps = current_point->x;
+        }
+        else
+        {
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * pscheme_data[i].v * current_point->nvx
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x);
+        }
+        current_point = current_point->next;
+    }
+
+    if (pparams->open_curve)
+    {
+        calculate_by_thomas3D(pscheme_data, plinked_curve->number_of_points);
+    }
+    else
+    {
+        sherman_morris3D(pscheme_data, plinked_curve->number_of_points);
+    }
+
+    /////////////////////    Y component   ///////////////////////////////////////////////////////////
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+
+        if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
+        {
+            pscheme_data[i].ps = current_point->y;
+        }
+        else
+        {
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * pscheme_data[i].v * current_point->nvy
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
+        }
+        current_point = current_point->next;
+    }
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+        //the same scheme data variable is reused for all components
+        //so we update the components before solving the next system
+        update3dPoint(plinked_curve, current_point, pscheme_data[i].sol, current_point->y, current_point->z);
+        current_point = current_point->next;
+    }
+
+    if (pparams->open_curve)
+    {
+        calculate_by_thomas3D(pscheme_data, plinked_curve->number_of_points);
+    }
+    else
+    {
+        sherman_morris3D(pscheme_data, plinked_curve->number_of_points);
+    }
+
+    /////////////////////    Z component   ///////////////////////////////////////////////////////////
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+
+        if (pparams->open_curve && (i == 1 || i == plinked_curve->number_of_points))
+        {
+            pscheme_data[i].ps = current_point->z;
+        }
+        else
+        {
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * pscheme_data[i].v * current_point->nvz
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
+        }
+        current_point = current_point->next;
+    }
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+        //The same scheme_data variable is reused for all components
+        //so we update the components before solving the next system
+        update3dPoint(plinked_curve, current_point, current_point->x, pscheme_data[i].sol, current_point->z);
+        current_point = current_point->next;
+    }
+
+    if (pparams->open_curve)
+    {
+        calculate_by_thomas3D(pscheme_data, plinked_curve->number_of_points);
+    }
+    else
+    {
+        sherman_morris3D(pscheme_data, plinked_curve->number_of_points);
+    }
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= plinked_curve->number_of_points; i++)
+    {
+        //The same scheme data variable is reused for all components
+        //so we update the components before solving the next system
+        update3dPoint(plinked_curve, current_point, current_point->x, current_point->y, pscheme_data[i].sol);
+        current_point = current_point->next;
+    }
+
+    return true;
+}
+
+void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
+    const double eps, const double mu)
+{
+
+    //check if the pointers a well allocated
+    if (plinked_curve == NULL || pscheme_data == NULL)
+    {
+        return;
+    }
+
+    const size_t number_of_points = plinked_curve->number_of_points;
+
+    double h_i = -1, h_i_plus = -1;            // distance between two neighboring points
+    double tx = 0, ty = 0, tz = 0;             //tangential vector components
+    double nx = 0, ny = 0, nz = 0;             //tangential vector components
+    double som_dist = 0;
+    double curv_x = 0, curv_y = 0, curv_z = 0; //discrete curvature vector components
+
+	double min_dist = plinked_curve->length;
+    Point3D point_of_interest = {0.0, 0.0, 0.0};
+	Point3D p1 = { 0.0, 0.0, 0.0 };
+    Point3D p2 = { 0.0, 0.0, 0.0 };
+    Point3D q = { 0.0, 0.0, 0.0 };
+    double dist_min, dist, dist_new, t, t_cl, numerator, denominator, curvature, omega;
+
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= number_of_points; i++)
+    { 
+        dist_min = 1e6;
+        if (i > 1 && i < plinked_curve->number_of_points)
+        {
+			//Find the closest point on the initial curve
+            LinkedPoint3D* current_point_initial = pinitial_curve->first_point->next;//r_{j}
+			LinkedPoint3D* previous_point_initial = current_point_initial->previous;//r_{j-1}
+            for (size_t j = 1; j <= pinitial_curve->number_of_points; j++) 
+            {
+                //Step 1 : compute t
+
+				//p1 = r^{0}_{j} - r^{0}_{j-1}
+                p1.x = current_point_initial->x - previous_point_initial->x;
+                p1.y = current_point_initial->y - previous_point_initial->y;
+                p1.z = current_point_initial->z - previous_point_initial->z;
+
+				//p2 = r^{n}_i - r^{0}_{j-1}
+                p2.x = current_point->x - previous_point_initial->x;
+                p2.y = current_point->y - previous_point_initial->y;
+                p2.z = current_point->z - previous_point_initial->z;
+
+				numerator = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;//dot product : p1.p2
+				denominator = p1.x * p1.x + p1.y * p1.y + p1.z * p1.z;//dot product : p1.p1
+                if (denominator != 0.0)
+                {
+                    t = numerator / denominator;
+                }
+                else
+                {
+                    printf("Warning: zero denominator\n");
+                    t = 0.0;
+                }
+
+                //Step 2 : compute the closest point q
+                t_cl = fmax(0.0, fmin(1.0, t));
+                q.x = previous_point_initial->x + t_cl * p1.x;
+                q.y = previous_point_initial->y + t_cl * p1.y;
+                q.z = previous_point_initial->z + t_cl * p1.z;
+
+                //Step 3 : compute the distance
+                dist = sqrt((current_point->x - q.x) * (current_point->x - q.x) +
+                    (current_point->y - q.y) * (current_point->y - q.y) +
+                    (current_point->z - q.z) * (current_point->z - q.z));
+
+				if (dist < dist_min)
+                {
+					dist_min = dist;
+					point_of_interest = q;
+                }
+
+				current_point_initial = current_point_initial->next;
+				previous_point_initial = previous_point_initial->next;
+            }
+
+            //Set the point of interest
+            point_of_interest = q;
+
+			//Set the normal velocity towards the initial curve
+            h_i = current_point->previous->distance_to_next;
+            h_i_plus = current_point->distance_to_next;
+            som_dist = h_i_plus + h_i;
+           
+            //Compute the discrete curvature vector components
+            curv_x = (2.0 / som_dist) * (((current_point->next->x - current_point->x) / h_i_plus) - ((current_point->x - current_point->previous->x) / h_i));
+            curv_y = (2.0 / som_dist) * (((current_point->next->y - current_point->y) / h_i_plus) - ((current_point->y - current_point->previous->y) / h_i));
+            curv_z = (2.0 / som_dist) * (((current_point->next->z - current_point->z) / h_i_plus) - ((current_point->z - current_point->previous->z) / h_i));
+			curvature = sqrt(curv_x * curv_x + curv_y * curv_y + curv_z * curv_z);
+			
+			//Set normal vector components
+            pscheme_data[i].k1 = curvature;
+            if (curvature == 0)
+            {
+				current_point->nvx = 0.0;   
+				current_point->nvy = 0.0;
+                current_point->nvz = 0.0;
+            }
+            else
+			{
+				current_point->nvx = curv_x / curvature;
+                current_point->nvy = curv_y / curvature;
+				current_point->nvz = curv_z / curvature;
+			}
+
+			pscheme_data[i].v = (point_of_interest.x - current_point->x) * current_point->nvx
+                + (point_of_interest.y - current_point->y) * current_point->nvy
+                + (point_of_interest.z - current_point->z) * current_point->nvz;
+
+			pscheme_data[i].u = -eps * curvature + mu * pscheme_data[i].v;
+        }
+        else
+        {
+			//when this happens, we are at the end points of an open curve
+            pscheme_data[i].k1 = 0.0;
+            current_point->nvx = 0.0;
+			current_point->nvy = 0.0;
+			current_point->nvz = 0.0;
+            pscheme_data[i].u = 0.0;
+            pscheme_data[i].v = 0.0;
+        }
+        current_point = current_point->next;
+    }
+}
+
+void tangentialVelocitySmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega)
+{
+
+    double mean = 0.0;
+    const size_t number_of_points = plinked_curve->number_of_points;
+    const double curve_length = plinked_curve->length;
+    double h_i = -1;
+	double avg_length = curve_length / (double)(number_of_points - 1);//The curve is open
+
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= number_of_points; i++)
+    {
+        if (i > 1)
+        {
+			//if it is not the first point
+            h_i = current_point->previous->distance_to_next;
+        }
+        else
+        {
+			//first point
+            h_i = current_point->distance_to_next;
+        }
+
+        mean += h_i * pscheme_data[i].u * pscheme_data[i].k1;
+
+        current_point = current_point->next;
+    }
+
+    mean /= curve_length;
+
+    //it will therefore not move in the tangential direction
+    pscheme_data[0].alfa = 0.0;
+    pscheme_data[1].alfa = 0.0;
+
+    current_point = plinked_curve->first_point;
+    for (size_t i = 1; i <= number_of_points; i++)
+    {
+        if (i == 1) 
+        {
+            h_i = current_point->distance_to_next;
+        }
+        else
+        {
+            h_i = current_point->previous->distance_to_next;
+        }
+
+        pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * mean - h_i * pscheme_data[i].u * pscheme_data[i].k1  + omega * (avg_length - h_i);
+        current_point = current_point->next;
+    }
+
+    pscheme_data[number_of_points].alfa = 0.0;
+    pscheme_data[number_of_points + 1].alfa = 0.0;
+
+}
+
+bool coefficientsSmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double eps, const double dt)
+{
+    if (plinked_curve == NULL || pscheme_data == NULL)
+    {
+        return false;
+    }
+
+    double h_i = -1;
+    double h_i_plus = -1;
+    LinkedPoint3D* current_point = plinked_curve->first_point;
+    LinkedPoint3D* previous_point;
+
+    bool is_curve_closed = plinked_curve->first_point->previous != NULL;
+
+    for (size_t iter = 1; iter <= plinked_curve->number_of_points; iter++)
+    {
+
+        if (is_curve_closed || (iter > 1 && iter < plinked_curve->number_of_points))
+        {
+            previous_point = current_point->previous;
+            h_i = previous_point->distance_to_next;
+
+            if (is_curve_closed || iter < plinked_curve->number_of_points)
+            {
+                h_i_plus = current_point->distance_to_next;
+            }
+            else
+            {
+                h_i_plus = h_i;
+            }
+
+            pscheme_data[iter].a = -eps / h_i - 0.5 * fmax(-pscheme_data[iter].alfa, 0);      //lower diagonal
+            pscheme_data[iter].c = -eps / h_i_plus - 0.5 * fmax(pscheme_data[iter].alfa, 0); //upper diagonal
+            pscheme_data[iter].m = (h_i_plus + h_i) / (2.0 * dt);
+            pscheme_data[iter].b = pscheme_data[iter].m - (pscheme_data[iter].a + pscheme_data[iter].c);//diagonal
+        }
+        else
+        {
+            if (iter == 1)
+            {
+                h_i = current_point->distance_to_next;
+                h_i_plus = h_i;
+            }
+            else
+            {
+                h_i = current_point->previous->distance_to_next;
+                h_i_plus = h_i;
+            }
+
+            pscheme_data[iter].a = 0.0;
+            pscheme_data[iter].c = 0.0;
+            pscheme_data[iter].m = (h_i_plus + h_i) / (2.0 * dt);
+            pscheme_data[iter].b = 1.0;
+        }
+
         current_point = current_point->next;
     }
 
