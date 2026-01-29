@@ -71,6 +71,7 @@
     <ClCompile Include="src\setting_boundary_values.c" />
     <ClCompile Include="src\shapeGeneration.c" />
     <ClCompile Include="src\shape_registration.c" />
+    <ClCompile Include="src\smoothing_lagrangean.c" />
     <ClCompile Include="src\solvers.c" />
     <ClCompile Include="src\statistics.c" />
     <ClCompile Include="src\thresholding_function.c" />
@@ -102,6 +103,7 @@
     <ClInclude Include="include\segmentation.h" />
     <ClInclude Include="include\segmentation2d.h" />
     <ClInclude Include="include\shapeGeneration.h" />
+    <ClInclude Include="include\smoothing_lagrangean.h" />
     <ClInclude Include="include\statistics.h" />
     <ClInclude Include="include\template_functions.h" />
     <ClInclude Include="include\transformation.h" />

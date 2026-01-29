@@ -165,6 +165,12 @@
     <Filter Include="Header Files\Interfaces\Front propagation">
       <UniqueIdentifier>{2e9c3afb-187d-4f5b-96ff-c2396c3fd5d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Smoothing">
+      <UniqueIdentifier>{8bc2e535-48f7-4891-85a3-35cc5b8b9537}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Smoothing">
+      <UniqueIdentifier>{f0ba8592-e663-4de9-9f24-b97243d62f92}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\transformations.c">
@@ -371,6 +377,9 @@
     <ClCompile Include="src\key_points_detection.cpp">
       <Filter>Source Files\Front Popagation</Filter>
     </ClCompile>
+    <ClCompile Include="src\smoothing_lagrangean.c">
+      <Filter>Source Files\Smoothing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -567,6 +576,9 @@
     </ClInclude>
     <ClInclude Include="include\key_points_detection.h">
       <Filter>Header Files\Front propagation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\smoothing_lagrangean.h">
+      <Filter>Header Files\Smoothing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
