@@ -65,8 +65,8 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
 
 //=============================================================
 
-bool smoothingByLagrangeanCurveEvolution(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
-    unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
+//bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameters* pSegmentationParams,
+//    unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
 
 bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
 
@@ -601,7 +601,10 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             som_dist = h_i_plus + h_i;
 
             ////get the external velocity field
-            getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            vx = 0;
+			vy = 0;
+			vz = 0;
 
 			//Compute the tangent vector components
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
@@ -1020,7 +1023,7 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
 
 //=========================================================
 
-bool smoothingByLagrangeanCurveEvolution(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams,
+bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameters* pSegmentationParams,
     unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation)
 {
     //check if the pointers a well allocated
@@ -1093,6 +1096,7 @@ bool smoothingByLagrangeanCurveEvolution(Image_Data inputImage3D, const Lagrange
 
     free(pscheme_data);
     release3dLinkedCurve(&linked_curve);
+    release3dLinkedCurve(&initial_curve);
 
     return true;
 }
@@ -1264,15 +1268,17 @@ void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plink
     double dist_min, dist, dist_new, t, t_cl, numerator, denominator, curvature, omega;
 
     LinkedPoint3D* current_point = plinked_curve->first_point;
+    LinkedPoint3D* current_point_initial = NULL;
+    LinkedPoint3D* previous_point_initial = NULL;
     for (size_t i = 1; i <= number_of_points; i++)
     { 
         dist_min = 1e6;
-        if (i > 1 && i < plinked_curve->number_of_points)
+        if (i > 1 && i < number_of_points)
         {
 			//Find the closest point on the initial curve
-            LinkedPoint3D* current_point_initial = pinitial_curve->first_point->next;//r_{j}
-			LinkedPoint3D* previous_point_initial = current_point_initial->previous;//r_{j-1}
-            for (size_t j = 1; j <= pinitial_curve->number_of_points; j++) 
+            current_point_initial = pinitial_curve->first_point->next;//r_{j}
+			previous_point_initial = current_point_initial->previous;//r_{j-1}
+            for (size_t j = 2; j <= pinitial_curve->number_of_points; j++) 
             {
                 //Step 1 : compute t
 
