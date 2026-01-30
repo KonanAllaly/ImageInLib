@@ -68,10 +68,11 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
 //bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameters* pSegmentationParams,
 //    unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
 
-bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams);
+bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, 
+    const Lagrangean3DSegmentationParameters* pparams, bool isFirstTimeStep);
 
 void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
-    const double eps, const double mu);
+    const double eps, const double mu, bool isFirstTimeStep);
 
 void tangentialVelocitySmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double omega);
 
@@ -1066,20 +1067,25 @@ bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameter
     size_t it = 1;
     double motion = 0.0;
     double distance_to_next = 0.0;
+    bool isFirstTimeStep;
     do 
     {
-
+        if(it == 1)
+        {
+            isFirstTimeStep = true;
+        }else
+        {
+			isFirstTimeStep = false;
+        }
+        
         if (length_of_data < linked_curve.number_of_points + 2)
         {
             free(pscheme_data);
             length_of_data = linked_curve.number_of_points + 2;
             pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
         }
-
-        ////evolve curve
-        //evolveBySingleStepIIOE(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
-        evolveForSmoothingBySingleStep(&initial_curve, &linked_curve, pscheme_data, pSegmentationParams);
-
+        //evolve curve
+        evolveForSmoothingBySingleStep(&initial_curve, &linked_curve, pscheme_data, pSegmentationParams, isFirstTimeStep);
         it++;
 
     } while (it < pSegmentationParams->num_time_steps);
@@ -1101,7 +1107,8 @@ bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameter
     return true;
 }
 
-bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const Lagrangean3DSegmentationParameters* pparams)
+bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, 
+    const Lagrangean3DSegmentationParameters* pparams, bool isFirstTimeStep)
 {
     //check if the pointers a well allocated
     if (pinitial_curve == NULL || plinked_curve == NULL || pscheme_data == NULL || pparams == NULL)
@@ -1114,12 +1121,10 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D
     const double dt = pparams->time_step_size;
     const double mu = pparams->mu;
 
-    ////function to compute the normal velocity
-    //normal_velocity3D(pDistanceMap, plinked_curve, pscheme_data, eps, mu);
-    normalVelocitySmoothing(pinitial_curve, plinked_curve, pscheme_data, eps, mu);
+    //function to compute the normal velocity
+    normalVelocitySmoothing(pinitial_curve, plinked_curve, pscheme_data, eps, mu, isFirstTimeStep);
 
-    ////function to compute the tangential velocity
-    //tang_velocity3D(plinked_curve, pscheme_data, omega);
+    //function to compute the tangential velocity
     tangentialVelocitySmoothing(plinked_curve, pscheme_data, omega);
 
     if (!coefficientsSmoothing(plinked_curve, pscheme_data, eps, dt))
@@ -1243,7 +1248,7 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D
 }
 
 void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
-    const double eps, const double mu)
+    const double eps, const double mu, bool isFirstTimeStep)
 {
 
     //check if the pointers a well allocated
@@ -1276,57 +1281,66 @@ void normalVelocitySmoothing(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plink
         if (i > 1 && i < number_of_points)
         {
 			//Find the closest point on the initial curve
-            current_point_initial = pinitial_curve->first_point->next;//r_{j}
-			previous_point_initial = current_point_initial->previous;//r_{j-1}
-            for (size_t j = 2; j <= pinitial_curve->number_of_points; j++) 
+            if(isFirstTimeStep == true)
             {
-                //Step 1 : compute t
-
-				//p1 = r^{0}_{j} - r^{0}_{j-1}
-                p1.x = current_point_initial->x - previous_point_initial->x;
-                p1.y = current_point_initial->y - previous_point_initial->y;
-                p1.z = current_point_initial->z - previous_point_initial->z;
-
-				//p2 = r^{n}_i - r^{0}_{j-1}
-                p2.x = current_point->x - previous_point_initial->x;
-                p2.y = current_point->y - previous_point_initial->y;
-                p2.z = current_point->z - previous_point_initial->z;
-
-				numerator = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;//dot product : p1.p2
-				denominator = p1.x * p1.x + p1.y * p1.y + p1.z * p1.z;//dot product : p1.p1
-                if (denominator != 0.0)
-                {
-                    t = numerator / denominator;
-                }
-                else
-                {
-                    printf("Warning: zero denominator\n");
-                    t = 0.0;
-                }
-
-                //Step 2 : compute the closest point q
-                t_cl = fmax(0.0, fmin(1.0, t));
-                q.x = previous_point_initial->x + t_cl * p1.x;
-                q.y = previous_point_initial->y + t_cl * p1.y;
-                q.z = previous_point_initial->z + t_cl * p1.z;
-
-                //Step 3 : compute the distance
-                dist = sqrt((current_point->x - q.x) * (current_point->x - q.x) +
-                    (current_point->y - q.y) * (current_point->y - q.y) +
-                    (current_point->z - q.z) * (current_point->z - q.z));
-
-				if (dist < dist_min)
-                {
-					dist_min = dist;
-					point_of_interest = q;
-                }
-
-				current_point_initial = current_point_initial->next;
-				previous_point_initial = previous_point_initial->next;
+				point_of_interest.x = current_point->x;
+                point_of_interest.y = current_point->y;
+				point_of_interest.z = current_point->z;
             }
+            else
+            {
+                current_point_initial = pinitial_curve->first_point->next;//r_{j}
+                previous_point_initial = current_point_initial->previous;//r_{j-1}
+                for (size_t j = 2; j <= pinitial_curve->number_of_points; j++)
+                {
+                    //Step 1 : compute t
 
-            //Set the point of interest
-            point_of_interest = q;
+                    //p1 = r^{0}_{j} - r^{0}_{j-1}
+                    p1.x = current_point_initial->x - previous_point_initial->x;
+                    p1.y = current_point_initial->y - previous_point_initial->y;
+                    p1.z = current_point_initial->z - previous_point_initial->z;
+
+                    //p2 = r^{n}_i - r^{0}_{j-1}
+                    p2.x = current_point->x - previous_point_initial->x;
+                    p2.y = current_point->y - previous_point_initial->y;
+                    p2.z = current_point->z - previous_point_initial->z;
+
+                    numerator = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;//dot product : p1.p2
+                    denominator = p1.x * p1.x + p1.y * p1.y + p1.z * p1.z;//dot product : p1.p1
+                    if (denominator != 0.0)
+                    {
+                        t = numerator / denominator;
+                    }
+                    else
+                    {
+                        printf("Warning: zero denominator\n");
+                        t = 0.0;
+                    }
+
+                    //Step 2 : compute the closest point q
+                    t_cl = fmax(0.0, fmin(1.0, t));
+                    q.x = previous_point_initial->x + t_cl * p1.x;
+                    q.y = previous_point_initial->y + t_cl * p1.y;
+                    q.z = previous_point_initial->z + t_cl * p1.z;
+
+                    //Step 3 : compute the distance
+                    dist = sqrt((current_point->x - q.x) * (current_point->x - q.x) +
+                        (current_point->y - q.y) * (current_point->y - q.y) +
+                        (current_point->z - q.z) * (current_point->z - q.z));
+
+                    if (dist < dist_min)
+                    {
+                        dist_min = dist;
+                        point_of_interest = q;
+                    }
+
+                    current_point_initial = current_point_initial->next;
+                    previous_point_initial = previous_point_initial->next;
+                }
+
+                //Set the point of interest
+                point_of_interest = q;
+            }
 
 			//Set the normal velocity towards the initial curve
             h_i = current_point->previous->distance_to_next;
