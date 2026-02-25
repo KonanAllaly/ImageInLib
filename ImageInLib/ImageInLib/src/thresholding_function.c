@@ -1,6 +1,6 @@
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "thresholding.h"
 #include "common_functions.h"
 
@@ -124,13 +124,17 @@ bool computeHistogram(dataType** image3DPtr, size_t* histoPtr, const size_t xDim
 	dataType minClass = 0, maxClass = 0;
 
 	size_t nb_element;
-	for (n = 0; n < binCount; n++) {
+	for (n = 0; n < binCount; n++) 
+	{
 		minClass = n * sizeClass;
 		maxClass = (n + 1) * sizeClass;
 		nb_element = 0;
-		for (k = 0; k < zDim; k++) {
-			for (i = 0; i < dim2D; i++) {
-				if (image3DPtr[k][i] >= minClass && image3DPtr[k][i] < maxClass) {
+		for (k = 0; k < zDim; k++) 
+		{
+			for (i = 0; i < dim2D; i++) 
+			{
+				if (image3DPtr[k][i] >= minClass && image3DPtr[k][i] < maxClass) 
+				{
 					nb_element++;
 				}
 			}
@@ -162,7 +166,7 @@ bool thresholding3dFunctionN(dataType** image3DPtr, const size_t xDim, const siz
 	else {
 		for (k = 0; k < zDim; k++) {
 			for (i = 0; i < xDim * yDim; i++) {
-				if (image3DPtr[k][i] <= thres_min) {
+				if (image3DPtr[k][i] >= thres_min) {
 					image3DPtr[k][i] = foreGround;
 				}
 				else {
@@ -440,64 +444,56 @@ bool thresholdingOTSU(dataType** image3DPtr, const size_t length, const size_t w
 //	return true;
 //}
 
-bool iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType initial_threshold, dataType background, dataType foreground) {
+dataType iterativeThreshold(dataType** image3DPtr, const size_t length, const size_t width, const size_t height, dataType initial_threshold, dataType background, dataType foreground) {
 
 	size_t i, k, dim2D = length * width;
 
-	////Find min and max data
-	//dataType min_data = 1000000, max_data = -10000000;
-	//for (k = 0; k < height; k++) {
-	//	for (i = 0; i < dim2D; i++) {
-	//		if (image3DPtr[k][i] < min_data) {
-	//			min_data = image3DPtr[k][i];
-	//		}
-	//		if (image3DPtr[k][i] > max_data) {
-	//			max_data = image3DPtr[k][i];
-	//		}
-	//	}
-	//}
+	dataType threshold = 0.0, tol = 0.01;
+	dataType threshold_new = initial_threshold;
 
-	dataType optimalThresholdValue = initial_threshold;
-
-	size_t cpt1 = 0, cpt2 = 0;
-	dataType s1 = 0.0, s2 = 0.0, mean1 = 0.0, mean2 = 0.0;
+	size_t cpt1, cpt2;
+	dataType s1, s2, mean1, mean2;
 	do {
 		s1 = 0.0; 
-		s1 = 0.0;
+		s2 = 0.0;
 		cpt2 = 0; 
 		cpt1 = 0;
-		for (k = 0; k < height; k++) {
-			for (i = 0; i < dim2D; i++) {
-				if (image3DPtr[k][i] < optimalThresholdValue) {
+		mean1 = 0.0;
+		mean2 = 0.0;
+		threshold = threshold_new;
+		for (k = 0; k < height; k++) 
+		{
+			for (i = 0; i < dim2D; i++) 
+			{
+				if (image3DPtr[k][i] <= threshold)
+				{
 					cpt1++;
-					s1 = s1 + image3DPtr[k][i];
+					s1 += image3DPtr[k][i];
 				}
-				else {
+				else 
+				{
 					cpt2++;
-					s2 = s2 + image3DPtr[k][i];
+					s2 += image3DPtr[k][i];
 				}
 			}
 		}
-		mean1 = s1 / (dataType)cpt1;
-		mean2 = s2 / (dataType)cpt2;
-		optimalThresholdValue = (mean1 + mean2) / 2;
-	} while (mean1 == mean2);
 
-	printf("optimal threshold value = %f \n", optimalThresholdValue);
-
-	//Threshold
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (image3DPtr[k][i] < optimalThresholdValue) {
-				image3DPtr[k][i] = foreground;
-			}
-			else {
-				image3DPtr[k][i] = background;
-			}
+		if(cpt1 == 0 || cpt2 == 0)
+		{
+			printf("Optimal threshold value = %f \n", threshold_new);
+			return threshold_new;
 		}
-	}
+		else
+		{
+			mean1 = s1 / (dataType)cpt1;
+			mean2 = s2 / (dataType)cpt2;
+			threshold_new = (mean1 + mean2) / 2.0;
+		}
+	} while (fabs(threshold - threshold_new) > tol);
 
-	return true;
+	printf("Optimal threshold value = %f \n", threshold_new);
+
+	return threshold_new;
 }
 
 //2D function

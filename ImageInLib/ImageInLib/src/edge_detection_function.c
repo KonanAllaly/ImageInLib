@@ -708,9 +708,11 @@ void computeAngleFromGradient(dataType* anglePtr, dataType* gradientX, dataType*
 		anglePtr[i] = atan(gradientY[i] / gradientX[i]);
 	}
 
-	for (i = 0; i < dim2D; i++) {
+	for (i = 0; i < dim2D; i++) 
+	{
 		anglePtr[i] = anglePtr[i] * 180 / M_PI;
-		if (anglePtr[i] < 0) {
+		if (anglePtr[i] < 0) 
+		{
 			anglePtr[i] += 180;
 		}
 	}
@@ -728,21 +730,27 @@ void nonMaximumSuppression(dataType* resultPtr, dataType* normOfGradient, dataTy
 			r = 1.0;
 			xd = x_new(i, j, length);
 
-			if ((anglePtr[xd] >= 0 && anglePtr[xd] < 22.5) || (anglePtr[xd] >= 157.5 && anglePtr[xd] <= 180)) {
+			if ((anglePtr[xd] >= 0 && anglePtr[xd] < 22.5) || (anglePtr[xd] >= 157.5 && anglePtr[xd] <= 180)) 
+			{
 				r = normOfGradient[x_new(i, j - 1, length)];
 				q = normOfGradient[x_new(i, j + 1, length)];
 			}
-			else {
-				if (anglePtr[xd] >= 22.5 && anglePtr[xd] < 67.5) {
+			else 
+			{
+				if (anglePtr[xd] >= 22.5 && anglePtr[xd] < 67.5) 
+				{
 					r = normOfGradient[x_new(i - 1, j + 1, length)];
 					q = normOfGradient[x_new(i + 1, j - 1, length)];
 				}
-				else {
-					if (anglePtr[xd] >= 67.5 && anglePtr[xd] < 112.5) {
+				else 
+				{
+					if (anglePtr[xd] >= 67.5 && anglePtr[xd] < 112.5) 
+					{
 						r = normOfGradient[x_new(i - 1, j, length)];
 						q = normOfGradient[x_new(i + 1, j - 1, length)];
 					}
-					else {
+					else 
+					{
 						if (anglePtr[xd] >= 112.5 && anglePtr[xd] < 157.5) {
 							r = normOfGradient[x_new(i + 1, j + 1, length)];
 							q = normOfGradient[x_new(i - 1, j - 1, length)];
@@ -751,7 +759,8 @@ void nonMaximumSuppression(dataType* resultPtr, dataType* normOfGradient, dataTy
 				}
 			}
 
-			if (normOfGradient[xd] >= q && normOfGradient[xd] >= r) {
+			if (normOfGradient[xd] >= q && normOfGradient[xd] >= r) 
+			{
 				resultPtr[xd] = normOfGradient[xd];
 			}
 			else {
