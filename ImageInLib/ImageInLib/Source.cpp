@@ -16,6 +16,7 @@
 #include "enhancement.h"
 #include "eigen_systems.h"
 #include "percentile.h"
+#include "../src/thresholding.h"
 
 #include "../src/heat_equation.h"
 #include "segmentation2d.h"
@@ -23,6 +24,9 @@
 #include "../src/non_linear_heat_equation.h"
 
 #include "gaussian_distribution.h"
+
+#define MAX_LINE_LENGTH 1024
+#define epsilon 1e-6 
 
 int main() {
 
@@ -33,7 +37,7 @@ int main() {
 
 	size_t i = 0, j = 0, k = 0, xd = 0;
 
-	//===================== Load 3D patient data (.vtk) ================================
+	//===================== Load 3D patient data (.vtk) ==============================================
 	
 	/*
 	We load the .vtk files containing the original pixels value
@@ -47,7 +51,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient6_ct.vtk";
+	loading_path = inputPath + "vtk/petct/ct/Patient5_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input CT ================ " << std::endl;
@@ -64,6 +68,7 @@ int main() {
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
 	
+
 	//==================== Translate for registration ================================================
 
 	/*
@@ -116,17 +121,17 @@ int main() {
 	char header[MAX_LINE_LENGTH];
 	string inputPointCloud = inputPath + "vtk/petct/aorta/Hausdoff 31-03/Isolines/";
 
-	FILE* file_hausdoff;
-	storing_path = inputPointCloud + "h distance/hausdoff_distance_patient2.csv";
-	if (fopen_s(&file_hausdoff, storing_path.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(file_hausdoff, "manual,gsubsurf,HD,ratio,mean_manual,mean_gsubsurf,MHD,ratio_mean\n");
+	//FILE* file_hausdoff;
+	//storing_path = inputPointCloud + "h distance/hausdoff_distance_patient2.csv";
+	//if (fopen_s(&file_hausdoff, storing_path.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(file_hausdoff, "manual,gsubsurf,HD,ratio,mean_manual,mean_gsubsurf,MHD,ratio_mean\n");
 
 	
 	FILE* file_manual;
-	loading_path = inputPointCloud + "manual/_patient_2.csv";
+	loading_path = inputPointCloud + "manual/_patient_6.csv";
 	if (fopen_s(&file_manual, loading_path.c_str(), "r") != 0) {
 		printf("Enable to open");
 		return false;
@@ -167,13 +172,11 @@ int main() {
 	}
 	fclose(file_manual);
 
-
-
 	vector<Point3D>points_gsubsurf;
 
 	FILE* file_gsubsurf;
 	//std::string path_root = inputPointCloud + "gsubsurf/_02_patient_1.csv";
-	std::string path_root = inputPointCloud + "gsubsurf/_02_patient_2.csv";
+	std::string path_root = inputPointCloud + "gsubsurf/_03_patient_6.csv";
 	//std::string path_root = inputPointCloud + "gsubsurf/_03_patient_3.csv";
 	//std::string path_root = inputPointCloud + "gsubsurf/_03_patient_4.csv";
 	//std::string path_root = inputPointCloud + "gsubsurf/_017_patient_5.csv";
@@ -280,8 +283,8 @@ int main() {
 	std::cout << "We have : " << count_gsubsurf << " point in the segmentation" << std::endl;
 	std::cout << "We have : " << count_similar << " similar_points" << std::endl;
 
-	fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
-	fclose(file_hausdoff);
+	//fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
+	//fclose(file_hausdoff);
 
 	for (size_t n = 1; n <= 40; n++) {
 
@@ -385,7 +388,7 @@ int main() {
 		else {
 			MHD = mean_gsubsurf;
 		}
-		fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
+		//fprintf(file_hausdoff, "%f,%f,%f,%f,%f,%f,%f,%f\n", max_manual, max_gsubsurf, HD, ratio, mean_manual, mean_gsubsurf, MHD, ratio_mean);
 
 		while (points_gsubsurf.size() > 0)
 		{
@@ -393,7 +396,166 @@ int main() {
 		}
 
 	}
-	fclose(file_hausdoff);
+	//fclose(file_hausdoff);
+	*/
+
+	//==================== Iterative threhold on Edge image ==========================================
+
+	/*
+	dataType** imageData = new dataType * [Height];
+	dataType** edgeImageData = new dataType * [Height];
+	for(k = 0; k < Height; k++) 
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+		edgeImageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	loading_path = inputPath + "raw/filtered/filtered_p5.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	bool isGradientComputed = false;
+	Image_Data ctImageData = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
+	Point3D grad_vector;
+	dataType norm_of_gradient = 0.0, K = 100000;
+	for (k = 0; k < Height; k++)
+	{
+		for (i = 0; i < Length; i++)
+		{
+			for (j = 0; j < Width; j++)
+			{
+				xd = x_new(i, j, Length);
+				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
+				if (isGradientComputed == true) 
+				{
+					norm_of_gradient = grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z;
+					edgeImageData[k][xd] = gradientFunction(norm_of_gradient, K);
+					//edgeImageData[k][xd] = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+				}
+				else 
+				{
+					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
+					edgeImageData[k][xd] = 0;
+				}
+			}
+		}
+	}
+
+	//dataType optimal_threshold = 0.1;
+	//dataType thresh = iterativeThreshold(edgeImageData, Length, Width, Height, optimal_threshold, 0.0, 1.0);
+
+	dataType thresh = 0.3;
+	thresholding3dFunctionN(edgeImageData, Length, Width, Height, thresh, thresh, 0.0, 1.0);
+
+	storing_path = outputPath + "thresholded_edge_image_patient.raw";
+	manageRAWFile3D<dataType>(edgeImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for(k = 0; k < Height; k++)
+	{
+		delete[] imageData[k];
+		delete[] edgeImageData[k];
+	}
+	delete[] imageData;
+	delete[] edgeImageData;
+
+	free(ctContainer);
+	*/
+
+	//==================== Histogram on Segmentation Mask ============================================
+
+	/*
+	//const size_t length = 150, width = 150, height = 350;//p1,p2
+	//const size_t length = 150, width = 150, height = 380;//p3
+	//const size_t length = 150, width = 150, height = 350;//p4
+	const size_t length = 160, width = 160, height = 360;//p5
+	//const size_t length = 150, width = 150, height = 400;//p6
+	loading_path = outputPath + "Segmentation/Aorta/p5/_seg_func_05000.raw";
+
+	//Point3D segmentOrigin = { -63.9648, -236.996, 1354.21 };
+
+	dataType** segFunc = new dataType * [height];
+	for (k = 0; k < height; k++) 
+	{
+		segFunc[k] = new dataType[width * length]{ 0 };
+	}
+	manageRAWFile3D<dataType>(segFunc, length, width, height, loading_path.c_str(), LOAD_DATA, false);
+
+	
+	//find max and min value
+	dataType maxValue = segFunc[0][0];
+	dataType minValue = segFunc[0][0];
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < length; i++)
+		{
+			for (j = 0; j < width; j++)
+			{
+				xd = x_new(i, j, length);
+				if (segFunc[k][xd] > maxValue) {
+					maxValue = segFunc[k][xd];
+				}
+				if (segFunc[k][xd] < minValue) {
+					minValue = segFunc[k][xd];
+				}
+			}
+		}
+	}
+	std::cout << "Max value = " << maxValue << std::endl;
+	std::cout << "Min value = " << minValue << std::endl;
+	//rescaleNewRange(segFunc, length, width, height, 0.0, 256.0, maxValue, minValue);
+
+	const size_t binCount = 100;
+	size_t* histogram = new size_t[binCount]{ 0 };
+
+	dataType sizeClass = (maxValue - minValue) / (dataType)binCount;
+
+	computeHistogram(segFunc, histogram, length, width, height, binCount);
+
+	dataType peak1 = 0, peak2 = 0;
+	size_t index_peak1 = 0, index_peak2 = 0;
+	for(i = 0; i < binCount; i++)
+	{
+		if(histogram[i] > peak1)
+		{
+			peak1 = histogram[i];
+			index_peak1 = i;
+		}
+		else if(histogram[i] > peak2 && histogram[i] != histogram[index_peak1])
+		{
+			peak2 = histogram[i];
+			index_peak2 = i;
+		}
+	}
+	std::cout << "Peak 1 = " << peak1 << ", index = " << index_peak1 << std::endl;
+	std::cout << "Peak 2 = " << peak2 << ", index = " << index_peak2 << std::endl;
+
+	FILE* file_histogram;
+	storing_path = outputPath + "histogram_seg_patient5.csv";
+	if (fopen_s(&file_histogram, storing_path.c_str(), "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	dataType isovalue = 0.0;
+	//fprintf(file_histogram, "%f,%d\n", isovalue, 0);
+
+	fprintf(file_histogram, "isosurface,count_voxels\n");
+	for(i = 0; i < binCount; i++)
+	{
+		isovalue = (i + 1) * sizeClass;
+		//fprintf(file_histogram, "%f,%d\n", isovalue, histogram[i]);
+		if(isovalue > 0.09)
+		{
+			fprintf(file_histogram, "%f,%d\n", isovalue, histogram[i]);
+		}
+	}
+	fclose(file_histogram);
+
+	delete[] histogram;
+	for(k = 0; k < height; k++)
+	{
+		delete[] segFunc[k];
+	}
+	delete[] segFunc;
 	*/
 
 	//==================== Test Potential function ====================================================
@@ -1212,7 +1374,7 @@ int main() {
 	//free(ctContainer);
 	*/
 
-	//==================== Test segmentation 3D ==================================
+	//==================== Test segmentation 3D =======================================================
 
 	/*
 	dataType** inputImageData = new dataType * [Height];
@@ -1406,7 +1568,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Path Extraction 3D image ==================================
+	//==================== Path Extraction 3D image ===================================================
 
 	
 	//3D real image
@@ -1436,13 +1598,13 @@ int main() {
 	//endPoints[0] = { 279.0, 229.0, 134.0 };
 	//endPoints[1] = { 280.0, 235.0, 223.0 };
 
-	//Point3D* endPoints = new Point3D[2];//p5
-	//endPoints[0] = { 265.0, 244.0, 470.0 };
-	//endPoints[1] = { 235.0, 219.0, 626.0 };
+	Point3D* endPoints = new Point3D[2];//p5
+	endPoints[0] = { 265.0, 244.0, 470.0 };
+	endPoints[1] = { 235.0, 219.0, 626.0 };
 
-	Point3D* endPoints = new Point3D[2];//p6
-	endPoints[0] = { 249.0, 299.0, 256.0 };
-	endPoints[1] = { 258.0, 286.0, 443.0 };
+	//Point3D* endPoints = new Point3D[2];//p6
+	//endPoints[0] = { 249.0, 299.0, 256.0 };
+	//endPoints[1] = { 258.0, 286.0, 443.0 };
 
 	//dataType minValue = 1000000.0, maxValue = -1000000.0;
 	//for (k = 0; k < Height; k++) 
@@ -1473,44 +1635,45 @@ int main() {
 	};
 	Image_Data inputImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
 	//geodesicMeanCurvature(inputImage, smoothParameters);
-	storing_path = outputPath + "Data journal paper submission/filtered_p6.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	storing_path = outputPath + "Data journal paper submission/P5/filtered_p5.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	double radius = 3.0;
 	Potential_Parameters parameters{
 		1000, //edge detector coefficient
-		0.2,  //threshold, (0.15 --> p1, p2), threshold (0.2 --> p3, p4, p5, p6)
+		0.3,  //threshold, (0.15 --> p1, p2), threshold (0.2 --> p3, p4, p5, p6)
 		0.001,//epsilon
 		radius
 	};
 	//compute3DPotential(inputImage, potential, endPoints, parameters);
 
-	storing_path = outputPath + "Data journal paper submission/potential_p6.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "Data journal paper submission/potential_p6.raw";
+	storing_path = outputPath + "potential_p5.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	Image_Data toAction = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
-	//partialFrontPropagation(toAction, potential, endPoints);
-	storing_path = outputPath + "Data journal paper submission/action_map_partial_p6.raw";
+	partialFrontPropagation(toAction, potential, endPoints);
+	//storing_path = outputPath + "Data journal paper submission/action_map_partial_p6.raw";
 	//manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	//vector<Point3D> key_points;
-	//const double LengthKeyPoints = 50.0;
-	//frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
-	//FILE* key_points_file;
-	//string save_key_file = outputPath + "Data journal paper submission/key_points_p6.csv";
-	//if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) 
-	//{
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(key_points_file, "x,y,z\n");
-	//for (size_t it = 0; it < key_points.size(); it++)
-	//{
-	//	//convert to real world coordinates
-	//	Point3D kp = getRealCoordFromImageCoord3D(key_points[it], imageOrigin, imageSpacing, orientation);
-	//	fprintf(key_points_file, "%f,%f,%f\n", kp.x, kp.y, kp.z);
-	//}
-	//fclose(key_points_file);
+	vector<Point3D> key_points;
+	const double LengthKeyPoints = 50.0;
+	frontPropagationWithKeyPointDetection(toAction, potential, endPoints, LengthKeyPoints, key_points);
+	FILE* key_points_file;
+	string save_key_file = outputPath + "Data journal paper submission/key_points_p5.csv";
+	if (fopen_s(&key_points_file, save_key_file.c_str(), "w") != 0) 
+	{
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(key_points_file, "x,y,z\n");
+	for (size_t it = 0; it < key_points.size(); it++)
+	{
+		//convert to real world coordinates
+		Point3D kp = getRealCoordFromImageCoord3D(key_points[it], imageOrigin, imageSpacing, orientation);
+		fprintf(key_points_file, "%f,%f,%f\n", kp.x, kp.y, kp.z);
+	}
+	fclose(key_points_file);
 	
 	Path_Parameters parameters_path
 	{
@@ -1520,27 +1683,27 @@ int main() {
 	};
 
 	vector<Point3D> path_points;
-	path_points.push_back(endPoints[1]);
-	path_points.push_back(endPoints[0]);
+	//path_points.push_back(endPoints[1]);
+	//path_points.push_back(endPoints[0]);
 	Image_Data toPathExtraction = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
 	//shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
 
-	FILE* path_points_file;
-	string save_path_file = outputPath + "Data journal paper submission/end_points_p6.csv";
-	//string save_path_file = outputPath + "Data journal paper submission/path_points_p6.csv";
-	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
-		printf("Enable to open");
-		return false;
-	}
-	fprintf(path_points_file, "x,y,z\n");
+	//FILE* path_points_file;
+	////string save_path_file = outputPath + "Data journal paper submission/end_points_p6.csv";
+	//string save_path_file = outputPath + "path_points_p6.csv";
+	//if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+	//fprintf(path_points_file, "x,y,z\n");
 
-	for(size_t it = 0; it < path_points.size(); it++) 
-	{
-		//convert to real world coordinates
-		path_points[it] = getRealCoordFromImageCoord3D(path_points[it], imageOrigin, imageSpacing, orientation);
-		fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
-	}
-	fclose(path_points_file);
+	//for(size_t it = 0; it < path_points.size(); it++) 
+	//{
+	//	//convert to real world coordinates
+	//	path_points[it] = getRealCoordFromImageCoord3D(path_points[it], imageOrigin, imageSpacing, orientation);
+	//	fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
+	//}
+	//fclose(path_points_file);
 	
 	//string new_storing_path;
 	//vector<Point3D> path_points;
@@ -1586,7 +1749,6 @@ int main() {
 
 	free(ctContainer);
 	
-
 	/*
 	//3D artificial image
 	
@@ -1922,7 +2084,7 @@ int main() {
 	delete[] newImageData;
 	*/
 
-	//==================== Quantitative analysis study 3D ==================================
+	//==================== Quantitative analysis study 3D =============================================
 
 	/*
     //Translated origin
@@ -2518,7 +2680,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Adjust segment for quantitative analysis ==============
+	//==================== Adjust segment for quantitative analysis ===================================
 	
 	/*
 	const size_t length = 150, width = 150, height = 350;
@@ -2590,7 +2752,7 @@ int main() {
 	free(ctContainer);
 	*/
 
-	//==================== Analyse extracted path curvature ======================
+	//==================== Analyse extracted path curvature ===========================================
 	
 	/*
 	FILE* path_file;
@@ -2754,7 +2916,7 @@ int main() {
 	fclose(f_curv_max);
 	*/
 
-	//==================== Liver Cropping Test ======================
+	//==================== Liver Cropping Test ========================================================
 
 	/*
 	dataType** imageData = new dataType * [Height];

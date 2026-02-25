@@ -2042,7 +2042,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 				xd = x_new(i, j, length);
 				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
 				if (isGradientComputed == true) {
-					norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+					//norm_of_gradient = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
+					norm_of_gradient = grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z;
 				}
 				else {
 					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
@@ -2065,11 +2066,11 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	
 	////Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/edge_image_p4.raw";
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p5.raw";
 	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	
 	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/distance_map_p4.raw";
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p5.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
