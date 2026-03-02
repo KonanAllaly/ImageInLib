@@ -479,7 +479,6 @@ int main() {
 	}
 	manageRAWFile3D<dataType>(segFunc, length, width, height, loading_path.c_str(), LOAD_DATA, false);
 
-	
 	//find max and min value
 	dataType maxValue = segFunc[0][0];
 	dataType minValue = segFunc[0][0];
@@ -1376,7 +1375,7 @@ int main() {
 
 	//==================== Test segmentation 3D =======================================================
 
-	/*
+	
 	dataType** inputImageData = new dataType * [Height];
 	for (k = 0; k < Height; k++) {
 		inputImageData[k] = new dataType[dim2D]{ 0 };
@@ -1392,13 +1391,21 @@ int main() {
 	//size_t width = 150;
 	//size_t height = 180;
 
-	//Croping : p3
-	size_t i_min = 200;
-	size_t j_min = 185;
-	size_t k_min = 90;
-	size_t length = 150;
-	size_t width = 150;
-	size_t height = 170;
+	////Croping : p3
+	//size_t i_min = 200;
+	//size_t j_min = 185;
+	//size_t k_min = 90;
+	//size_t length = 150;
+	//size_t width = 150;
+	//size_t height = 170;
+
+	//Croping : p5
+	size_t i_min = 170;
+	size_t j_min = 170;
+	size_t k_min = 435;
+	size_t length = 170;
+	size_t width = 170;
+	size_t height = 260;
 
 	dataType** imageData = new dataType * [height];
 	dataType** initialSegment = new dataType * [height]{ 0 };
@@ -1432,8 +1439,8 @@ int main() {
 	//std::cout << "Min new : " << minValue << ", Max new: " << maxValue << std::endl;
 	//rescaleNewRange(imageData, length, width, height, 0.0, 1.0, maxValue, minValue);
 	
-	storing_path = outputPath + "segmentation/cropped_p3.raw";
-	//manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), LOAD_DATA, false);
+	//storing_path = outputPath + "Segmentation/cropped_p5.raw";
+	//manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	Point3D newOrigin = {i_min, j_min, k_min};
 	newOrigin = getRealCoordFromImageCoord3D(newOrigin, imageOrigin, imageSpacing, orientation);
@@ -1456,12 +1463,13 @@ int main() {
 	};
 	//geodesicMeanCurvature(inputImage, smoothParameters);
 
-	storing_path = outputPath + "segmentation/filtered_GMCF_p3.raw";
-	//manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = outputPath + "Segmentation/filtered_GMCF_p5.raw";
+	manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	////Generate the initial segmentation
 	//FILE* path_file;
-	//loading_path = inputPath + "paths/path segmentation/centered_path_p3.csv";
+	////loading_path = inputPath + "paths/path segmentation/centered_path_p3.csv";
+	//loading_path = outputPath + "Segmentation/Aorta/centered paths/finalCurve_p5.csv";
 	//if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) 
 	//{
 	//	printf("Enable to open");
@@ -1506,9 +1514,9 @@ int main() {
 	//		}
 	//	}
 	//}
-	
-	storing_path = outputPath + "segmentation/initial_segment_p3.raw";
-	//manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	storing_path = outputPath + "Segmentation/initial_segment_p5.raw";
+	manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	Segmentation_Parameters segParameters = 
 	{
@@ -1524,33 +1532,15 @@ int main() {
 		1.4,//omega_c
 		0.001,//tolerance
 		1.0,//convection coef
-		0.5,//diffusion coef
+		0.001,//diffusion coef
 	};
 
-	storing_path = outputPath + "segmentation/P3/";
+	storing_path = outputPath + "Segmentation/P5/";
+	Image_Data imageToSegment = { height, length, width, imageData, newOrigin, imageSpacing, orientation };
+	//generalizedSubsurfSegmentation(imageToSegment, initialSegment, segParameters, smoothParameters, (unsigned char*)storing_path.c_str());
+	GSUBSURF(imageToSegment, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
 	//GSUBSURF_S_ONE_IIOE(inputImage, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
 	////GSUBSURF(inputImage, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
-	
-	//storing_path = outputPath + "segmentation rectangular/gsubsurf_s_one_iioe/";
-	//GSUBSURF_S_ONE_IIOE(inputImage, initialSegment, storing_path.c_str(), smoothParameters, segParameters);
-
-	//storing_path = outputPath + "segmentation/3D 17-10-2025/_seg_func_2000.raw";
-	//manageRAWFile3D<dataType>(initialSegment, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	//for (k = 0; k < height; k++) 
-	//{
-	//	for(i = 0; i < length * width; i++)
-	//	{
-	//		if (initialSegment[k][i] > 0.25) 
-	//		{
-	//			imageData[k][i] = 1.0;
-	//		}
-	//		else {
-	//			imageData[k][i] = 0.0;
-	//		}
-	//	}
-	//}
-	//storing_path = outputPath + "segmentation/seg_result.raw";
-	//manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), STORE_DATA, false);
 
 	for(k = 0; k < Height; k++)
 	{
@@ -1566,11 +1556,11 @@ int main() {
 	delete[] inputImageData;
 
 	free(ctContainer);
-	*/
+	
 
 	//==================== Path Extraction 3D image ===================================================
 
-	
+	/*
 	//3D real image
 	dataType** imageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
@@ -1748,6 +1738,7 @@ int main() {
 	delete[] action;
 
 	free(ctContainer);
+	*/
 	
 	/*
 	//3D artificial image

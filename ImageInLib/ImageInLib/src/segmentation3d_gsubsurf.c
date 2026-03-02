@@ -201,7 +201,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	setBoundaryToZeroDirichletBC(prevSol_extPtr, length_ext, width_ext, height_ext);
 
 	////smoothing
-	heatImplicitScheme(inputImageData, explicit_lhe_Parameters);
+	//heatImplicitScheme(inputImageData, explicit_lhe_Parameters); --> skip because already smoothed
 
 	//compute the morm of gradient for the edge detector
 	computeNormOfGradientDiamondCell3D(inputImageData.imageDataPtr, length, width, height, h, gPtrs);
@@ -302,6 +302,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 	segmentationFunction.width = width;
 	segmentationFunction.imageDataPtr = segmFuntionPtr;
 	
+	
 	//loop for segmentation time steps	
 	size_t number_time_step = 0;
 	do
@@ -339,6 +340,7 @@ bool generalizedSubsurfSegmentation(Image_Data inputImageData, dataType** initia
 
 	} while ((number_time_step <= segParameters.maxNoOfTimeSteps) && (difference_btw_current_and_previous_sol > segParameters.segTolerance));
 	
+
 	for (i = 0; i < height; i++)
 	{
 		free(segmFuntionPtr[i]);
@@ -1741,7 +1743,6 @@ bool generalizedSubsurf_iioe(Image_Data imageData, dataType** initialSegment, co
 }
 */
 
-/*
 bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -1910,7 +1911,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 	}
 
 	////smoothing
-	//heatImplicitRectangularScheme(imageData, smooth_parms);
+	heatImplicitRectangularScheme(imageData, smooth_parms);
 
 	//compute the morm of gradient for the edge detector
 	normOfGradientReducedDiamondCells(imageData, gPtrs);
@@ -1926,6 +1927,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 				dataType avg_value = (sqrt(gPtrs.east[k][x]) + sqrt(gPtrs.west[k][x]) + sqrt(gPtrs.north[k][x]) +
 					sqrt(gPtrs.south[k][x]) + sqrt(gPtrs.top[k][x]) + sqrt(gPtrs.bottom[k][x])) / 6.0;
 				edgeDetectorPtr[k][x] = gradientFunction(avg_value * avg_value, coef_edge_detector);
+				//edgeDetectorPtr[k][x] = gradientFunction(avg_value, coef_edge_detector);
 				extendedEdge[k_ext][x_ext] = edgeDetectorPtr[k][x];
 			}
 		}
@@ -1969,10 +1971,10 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 	char name_ending[100];
 	Storage_Flags flags = { false,false };
 
-	//strcpy_s(name, sizeof name, segmentPath);
-	//sprintf_s(name_ending, sizeof(name_ending), "_edge_detector_iioe.raw");
-	//strcat_s(name, sizeof(name), name_ending);
-	//store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
+	strcpy_s(name, sizeof name, segmentPath);
+	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
+	strcat_s(name, sizeof(name), name_ending);
+	store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
 
 	copyDataToAnotherArray(initialSegment, segmentationPtr, height, length, width);
 
@@ -2181,7 +2183,6 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 
 	return true;
 }
-*/
 
 /*
 bool GSUBSURF_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
@@ -2718,6 +2719,7 @@ bool GSUBSURF_IIOE(Image_Data imageData, dataType** initialSegment, const char* 
 }
 */
 
+/*
 bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
 	size_t i, j, k, x;
@@ -3686,7 +3688,7 @@ bool GSUBSURF_S_ONE_IIOE(Image_Data imageData, dataType** initialSegment, const 
 
 	return true;
 }
-
+*/
 /*
 bool GSUBSURF_S_TWO_IIOE(Image_Data imageData, dataType** initialSegment, const char* segmentPath, const Filter_Parameters smooth_parms, Segmentation_Parameters seg_parms)
 {
