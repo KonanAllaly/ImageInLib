@@ -324,14 +324,16 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 
 		Point3D current_point = { x , y , z };
 
-		if (cSystem == REAL) {
+		if (cSystem == REAL) 
+		{
 			//Get image coordinate
 			Point3D store_point = getImageCoordFromRealCoord3D(current_point, image.origin, image.spacing, image.orientation);
 			pCurve->pPoints[i].x = store_point.x;
 			pCurve->pPoints[i].y = store_point.y;
 			pCurve->pPoints[i].z = store_point.z;
 		}
-		else {
+		else 
+		{
 			pCurve->pPoints[i].x = x;
 			pCurve->pPoints[i].y = y;
 			pCurve->pPoints[i].z = z;

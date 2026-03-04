@@ -32,8 +32,8 @@ extern "C" {
 	/// <returns>Returns true in case of sucessfully finished evolution process. Otherwise returns false</returns>
 	bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const Lagrangean3DSegmentationParameters* pSegmentationParams, unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
 
-	bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameters* pSegmentationParams,
-		unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
+	//bool smoothingByLagrangeanCurveEvolution(const Lagrangean3DSegmentationParameters* pSegmentationParams,
+	//	unsigned char* pOutputPathPtr, Curve3D* pResultSegmentation);
 
 #ifdef __cplusplus
 }
