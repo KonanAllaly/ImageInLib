@@ -63,6 +63,7 @@ extern "C" {
         double k2;
         double u;
         double v;
+		double beta, w; //normal velocity component, in smoothing
 
         double alfa;
         double ps;

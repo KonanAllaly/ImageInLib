@@ -4,8 +4,7 @@ extern "C" {
 
 #pragma once
 #include "common_functions.h"
-//#include "../src/segmentation3D_subsurf.h"
-//#include "segmentation2d.h"
+#include "../src/solvers.h"
 
 	// Structure that holds the parameters used during 3D Lagrangean smoothing process.
 	typedef struct
@@ -20,7 +19,18 @@ extern "C" {
 		bool open_curve;
 	} LagrangeanSmoothingParameters;
 
-	//bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pSmoothingParams, Curve3D* pResultSegmentation, unsigned char* pOutputPathPtr);
+	bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pSmoothingParameters,
+		unsigned char* pOutputPathPtr, Curve3D* pResultCurve);
+
+	void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
+		const double delta, const double lambda, bool isFirstTimeStep);
+
+	void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double omega, bool isCurveOpen);
+
+	bool coefficientsSmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double delta, const double tau);
+
+	bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
+		const LagrangeanSmoothingParameters* pparams, bool isFirstTimeStep);
 
 #ifdef __cplusplus
 }
