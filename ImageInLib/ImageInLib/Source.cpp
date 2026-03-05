@@ -2748,7 +2748,8 @@ int main() {
 	
 	FILE* path_file;
 	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Input/centered_p1.csv";
-	loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_v2.csv";
+	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_v2.csv";
+	loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_art.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2861,7 +2862,7 @@ int main() {
 	//delete[] tangent;
 	//delete[] norm_save;
 	
-	string saving_csv = outputPath + "curvature_smoothed_v2.csv";
+	string saving_csv = outputPath + "curvature.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
 	{
