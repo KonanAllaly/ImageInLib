@@ -127,32 +127,12 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
 	Point3D previous_q = { 0.0, 0.0, 0.0 };
 	Point3D current_q = { 0.0, 0.0, 0.0 };
 
-    //save set of points of interest for debugging
-    const char* path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/points_of_interest.csv";
-    FILE* file;
-    if (fopen_s(&file, path_to_file, "w") != 0)
-    {
-        printf("Enable to open");
-        return false;
-    }
-	VoxelSpacing imageSpacing = { 1.171875, 1.171875, 2.5 };//P1
-	Point3D imageOrigin = { -300, -230, -1022.5 };//P1
-	OrientationMatrix orientation = { {1.0,0.0,0.0},{0.0,1.0,0.0},{0.0,0.0,1.0} };//P1
-
     //Loop for the curve evolution
     for (size_t i = 1; i <= number_of_points; i++)
     { 
         if (i > 1 && i < number_of_points)
         {
-            //Find the closest point on the initial curve
-            
-            //LinkedPoint3D* ref_point = initial_curve->first_point;
-            //for(size_t n = 1; n <= number_of_points; n++)
-            //{
-            //
-			//	//ref_point = ref_point->next;
-            //}
-            
+            //Find the closest point on the initial curve  
             dist_min = 1e6;
             if (isFirstTimeStep == true)//This test should be moved up
             {
@@ -188,7 +168,9 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
                     }
                     else
                     {
-						//For debugging, this should not happen since we should not have two coincident points in the initial curve
+						//For debugging, this should not happen 
+                        // since we should not have two coincident 
+                        // points in the initial curve
                         printf("Warning: zero denominator\n");
                         t = 0.0;
                     }
@@ -216,15 +198,7 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
 
                     p_ref_initial = p_ref_initial->next;
                 }
-
-                //Set the point of interest
-                point_of_interest = q;
-
-                q = getRealCoordFromImageCoord3D(q, imageOrigin, imageSpacing, orientation);
-                fprintf(file, "%f,%f,%f\n", q.x, q.y, q.z);
                 
-				//current_q = q;
-				q.x = 0.0; q.y = 0.0; q.z = 0.0;
 				p_ref_initial = NULL;
             }
 
@@ -271,10 +245,8 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             pscheme_data[i].beta = 0.0; 
         }
         evolving_point = evolving_point->next;
-
-		//previous_q = current_q;
     }
-    fclose(file);
+    //fclose(file);
 }
 
 void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double omega, bool isCurveOpen)
