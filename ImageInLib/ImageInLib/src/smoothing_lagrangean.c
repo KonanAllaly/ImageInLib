@@ -171,7 +171,7 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
 						//For debugging, this should not happen 
                         // since we should not have two coincident 
                         // points in the initial curve
-                        printf("Warning: zero denominator\n");
+                        //printf("Warning: zero denominator\n");
                         t = 0.0;
                     }
 
