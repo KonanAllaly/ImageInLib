@@ -234,6 +234,8 @@ extern "C" {
 
 	Statistics getStatisticsInNeighborhood3D(dataType** imageDataPtr, const size_t length, const size_t width, const size_t height, const size_t x, const size_t y, const size_t z, const size_t sizeNeigh);
 
+	dataType computeCurvatureThreePoints(Point3D p1, Point3D p2, Point3D p3);
+
 #endif // !COMMON_FUNCTIONS
 
 #ifdef __cplusplus

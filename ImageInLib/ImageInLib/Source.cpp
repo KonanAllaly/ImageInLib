@@ -2745,11 +2745,13 @@ int main() {
 
 	//==================== Analyse extracted path curvature ===========================================
 	
-	
+	/*
 	FILE* path_file;
 	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Input/centered_p1.csv";
 	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_v2.csv";
-	loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_art.csv";
+	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/half_sphere_reference.csv";
+	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/half_sphere.csv";
+	loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_curv.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2862,7 +2864,7 @@ int main() {
 	//delete[] tangent;
 	//delete[] norm_save;
 	
-	string saving_csv = outputPath + "curvature.csv";
+	string saving_csv = outputPath + "curvature_curv.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
 	{
@@ -2906,6 +2908,91 @@ int main() {
 	//fprintf(f_curv_max, "x,y,z\n");
 	//fprintf(f_curv_max, "%lf,%lf,%lf\n", pointMax.x, pointMax.y, pointMax.z);
 	//fclose(f_curv_max);
+	*/
+	
+	srand(time(NULL));
+	//const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/half_sphere.csv";
+	//FILE* file_test;
+	//if (fopen_s(&file_test, test_circle, "w") != 0) {
+	//	printf("Enable to open");
+	//	return false;
+	//}
+
+	vector<Point3D> circlePoints;
+
+	double radius = 1.0;
+	size_t N = 100;
+	double angle_step = M_PI / (double)N;
+	double angle_rad = 0.0;
+	//half cricle in the xy plane
+	for (i = 0; i <= N; i++) {
+		angle_rad = i * angle_step;
+		double x = 50.0 + radius * cos(angle_rad);
+		double y = 50.0 + radius * sin(angle_rad);
+		double z = 50.0;
+		Point3D point = { x, y, z };
+		//if (i > 0 && i < N)
+		//{
+		//	double r_x = (double)rand() / RAND_MAX;
+		//	x += 0.4 * r_x;
+		//	double r_y = (double)rand() / RAND_MAX;
+		//	y += 0.4 * r_y;
+		//}
+		
+		//fprintf(file_test, "%f,%f,%f\n", x, y, z);
+		circlePoints.push_back(point);
+	}
+	////straight line
+	//for(i = 1; i <= N; i++)
+	//{
+	//	double x = 50.0 + radius * cos(angle_rad);
+	//	double y = 50.0 + radius * sin(angle_rad) - i * angle_step;
+	//	double z = 50.0;
+	//	Point3D point = { x, y, z };
+	//	fprintf(file_test, "%f,%f,%f\n", x, y, z);
+	//	circlePoints.push_back(point);
+	//}
+	
+	//fclose(file_test);
+
+	//Compute and save curvature
+	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature_float.csv";
+	FILE* file_curvature;
+	if (fopen_s(&file_curvature, test_curvature, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
+
+	dataType ref_curv = 1.0 / radius;
+	dataType max_error = 0.0, min_error = 1.0;
+	dataType mean_error = 0.0;
+	size_t size_pts = circlePoints.size();
+	dataType* curvature = new dataType[size_pts]{ 0 };
+	size_t counter = 0;
+	for(i = 1; i < size_pts - 1; i++)
+	{
+	//	dataType h_i = getPoint3DDistance(circlePoints[i - 1], circlePoints[i]);
+	//	dataType h_i_plus = getPoint3DDistance(circlePoints[i + 1], circlePoints[i]);
+		curvature[i] = computeCurvatureThreePoints(circlePoints[i - 1], circlePoints[i], circlePoints[i + 1]);
+		dataType error = fabs(curvature[i] - ref_curv);
+		if(error > max_error)
+		{
+			max_error = error;
+		}
+		if(error < min_error)
+		{
+			min_error = error;
+		}
+		mean_error += error;
+		fprintf(file_curvature, "%d,%f\n", i, curvature[i]);
+		counter++;
+	}
+	mean_error /= (dataType)counter;
+	std::cout << "Curvature error: mean = " << mean_error << std::endl;
+	std::cout << "Curvature error: min = " << min_error << ", max = " << max_error << std::endl;
+	fclose(file_curvature);
+	
+	delete[] curvature;
 	
 	//==================== Liver Cropping Test ========================================================
 

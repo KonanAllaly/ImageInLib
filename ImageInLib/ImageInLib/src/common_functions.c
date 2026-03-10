@@ -803,3 +803,15 @@ Statistics getStatisticsInNeighborhood3D(dataType** imageDataPtr, const size_t l
 	return stats;
 }
 
+dataType computeCurvatureThreePoints(Point3D p1, Point3D p2, Point3D p3) 
+{
+	dataType h1 = getPoint3DDistance(p1, p2);
+	dataType h2 = getPoint3DDistance(p2, p3);
+
+	dataType coef = 2.0 / (h1 + h2);
+	dataType x = (p3.x - p2.x) / h2 - (p2.x - p1.x) / h1;
+	dataType y = (p3.y - p2.y) / h2 - (p2.y - p1.y) / h1;
+	dataType z = (p3.z - p2.z) / h2 - (p2.z - p1.z) / h1;
+	return coef * sqrt(x * x + y * y + z * z);
+}
+
