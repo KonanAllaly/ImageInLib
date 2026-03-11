@@ -30,8 +30,7 @@
 
 int main() {
 
-	string inputPath = "C:/Users/Konan Allaly/Documents/Tests/input/";
-	string outputPath = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	string root = "C:/Users/Konan Allaly/Documents/Tests/";
 	
 	string loading_path, storing_path, extension;
 
@@ -46,12 +45,11 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	/*
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/ct/Patient5_ct.vtk";
+	loading_path = root + "input/vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input CT ================ " << std::endl;
@@ -67,7 +65,6 @@ int main() {
 	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
-	*/
 
 	//==================== Translate for registration ================================================
 
@@ -397,67 +394,6 @@ int main() {
 
 	}
 	//fclose(file_hausdoff);
-	*/
-
-	//==================== Iterative threhold on Edge image ==========================================
-
-	/*
-	dataType** imageData = new dataType * [Height];
-	dataType** edgeImageData = new dataType * [Height];
-	for(k = 0; k < Height; k++) 
-	{
-		imageData[k] = new dataType[dim2D]{ 0 };
-		edgeImageData[k] = new dataType[dim2D]{ 0 };
-	}
-
-	loading_path = inputPath + "raw/filtered/filtered_p5.raw";
-	manageRAWFile3D<dataType>(imageData, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
-
-	bool isGradientComputed = false;
-	Image_Data ctImageData = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
-	Point3D grad_vector;
-	dataType norm_of_gradient = 0.0, K = 100000;
-	for (k = 0; k < Height; k++)
-	{
-		for (i = 0; i < Length; i++)
-		{
-			for (j = 0; j < Width; j++)
-			{
-				xd = x_new(i, j, Length);
-				isGradientComputed = getGradient3D(ctImageData, i, j, k, &grad_vector);
-				if (isGradientComputed == true) 
-				{
-					norm_of_gradient = grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z;
-					edgeImageData[k][xd] = gradientFunction(norm_of_gradient, K);
-					//edgeImageData[k][xd] = sqrt(grad_vector.x * grad_vector.x + grad_vector.y * grad_vector.y + grad_vector.z * grad_vector.z);
-				}
-				else 
-				{
-					std::cout << "Error in computing gradient at point (" << i << ", " << j << ", " << k << ")" << std::endl;
-					edgeImageData[k][xd] = 0;
-				}
-			}
-		}
-	}
-
-	//dataType optimal_threshold = 0.1;
-	//dataType thresh = iterativeThreshold(edgeImageData, Length, Width, Height, optimal_threshold, 0.0, 1.0);
-
-	dataType thresh = 0.3;
-	thresholding3dFunctionN(edgeImageData, Length, Width, Height, thresh, thresh, 0.0, 1.0);
-
-	storing_path = outputPath + "thresholded_edge_image_patient.raw";
-	manageRAWFile3D<dataType>(edgeImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	for(k = 0; k < Height; k++)
-	{
-		delete[] imageData[k];
-		delete[] edgeImageData[k];
-	}
-	delete[] imageData;
-	delete[] edgeImageData;
-
-	free(ctContainer);
 	*/
 
 	//==================== Histogram on Segmentation Mask ============================================
@@ -2747,11 +2683,8 @@ int main() {
 	
 	/*
 	FILE* path_file;
-	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Input/centered_p1.csv";
-	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_v2.csv";
-	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/half_sphere_reference.csv";
-	//loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/half_sphere.csv";
-	loading_path = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/smooth_curv.csv";
+	//loading_path = outputPath + "Segmentation/Aorta/centered paths/finalCurve_p1.csv";
+	loading_path = root + "Curves/Output/smooth_v2.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -2864,7 +2797,8 @@ int main() {
 	//delete[] tangent;
 	//delete[] norm_save;
 	
-	string saving_csv = outputPath + "curvature_curv.csv";
+	string saving_csv = root + "curvature_smooth.csv";
+	//string saving_csv = root + "output/curvature_float.csv";
 	FILE* f_curvature;
 	if (fopen_s(&f_curvature, saving_csv.c_str(), "w") != 0)
 	{
@@ -2890,11 +2824,11 @@ int main() {
 		r_z = coef * (((pPoints[iplus].z - pPoints[icurrent].z) / h_i_plus) - ((pPoints[icurrent].z - pPoints[iminus].z) / h_i));
 		norm_r = sqrt(r_x * r_x + r_y * r_y + r_z * r_z);
 		fprintf(f_curvature, "%d,%lf\n", index, norm_r);
-		if(norm_r > max_curv)
-		{
-			max_curv = norm_r;
-			pointMax = pPoints[icurrent];
-		}
+		//if(norm_r > max_curv)
+		//{
+		//	max_curv = norm_r;
+		//	pointMax = pPoints[icurrent];
+		//}
 	}
 	fclose(f_curvature);
 
@@ -2910,6 +2844,7 @@ int main() {
 	//fclose(f_curv_max);
 	*/
 	
+	/*
 	srand(time(NULL));
 	//const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/half_sphere.csv";
 	//FILE* file_test;
@@ -2958,7 +2893,8 @@ int main() {
 	//Compute and save curvature
 	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature_float.csv";
 	FILE* file_curvature;
-	if (fopen_s(&file_curvature, test_curvature, "w") != 0) {
+	if (fopen_s(&file_curvature, test_curvature, "w") != 0) 
+	{
 		printf("Enable to open");
 		return false;
 	}
@@ -2993,7 +2929,8 @@ int main() {
 	fclose(file_curvature);
 	
 	delete[] curvature;
-	
+	*/
+
 	//==================== Liver Cropping Test ========================================================
 
 	/*
@@ -3057,6 +2994,157 @@ int main() {
 	}
 	delete[] imageData;
 	delete[] croppedImageData;
+	*/
+
+	//==================== Test Filtering ============================================================
+
+	
+	dataType** imageData = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	dataType** action = new dataType * [Height];
+	for (k = 0; k < Height; k++) 
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+	}
+	Image_Data inputImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
+
+	////Rescaling the image to the range [0, 1] for filtering
+	//for (k = 0; k < Height; k++) 
+	//{
+	//	for (i = 0; i < dim2D; i++) 
+	//	{
+	//		imageData[k][i] = ctContainer->dataPointer[k][i];
+	//	}
+	//}
+	//rescaleNewRange(imageData, Length, Width, Height, 0, 1, 2076, -1024);
+
+	////Filtering
+	//Filter_Parameters smoothParameters =
+	//{
+	//	1.0,// tau;
+	//	1.0,// h not used here
+	//	1.0,// sigma
+	//	1000,// edge_detector_coefficient
+	//	1.4,// omega_c;
+	//	1e-3,// tolerance;
+	//	1e-6,// eps2
+	//	1,// coef
+	//	1,// linked to sigma
+	//	1,//number of time step;
+	//	100// max number of iteration;
+	//};
+	////heatImplicitRectangularScheme(inputImage, smoothParameters);
+	//geodesicMeanCurvature(inputImage, smoothParameters);
+
+	//storing_path = root + "output/gmcf_float.raw";
+	storing_path = root + "/output/gmcf_double.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	Point3D* endPoints = new Point3D[2];//p1
+	endPoints[0] = { 261.0, 257.0, 145.0 };
+	endPoints[1] = { 259.0, 250.0, 246.0 };
+
+	double radius = 3.0;
+	Potential_Parameters parameters{
+		1000, //edge detector coefficient
+		0.15,  //threshold, (0.15 --> p1, p2), threshold (0.2 --> p3, p4, p5, p6)
+		0.001,//epsilon
+		radius
+	};
+	compute3DPotential(inputImage, potential, endPoints, parameters);
+
+	//storing_path = root + "output/potential_float.raw";
+	storing_path = root + "/output/potential_double.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Image_Data toAction = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
+	partialFrontPropagation(toAction, potential, endPoints);
+	//storing_path = root + "output/action_map_float.raw";
+	storing_path = root + "output/action_map_double.raw";
+	manageRAWFile3D<dataType>(action, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Path_Parameters parameters_path
+	{
+		0.8, // tau
+		1000,// max number of iterations
+		0.8 // tolerance
+	};
+	Image_Data toPathExtraction = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
+	vector<Point3D> path_points;
+	shortestPath3D(toPathExtraction, endPoints, path_points, parameters_path);
+	FILE* path_points_file;
+	string save_path_file = root + "output/path_points_double.csv";
+	if (fopen_s(&path_points_file, save_path_file.c_str(), "w") != 0) 
+	{
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(path_points_file, "x,y,z\n");
+
+	for(size_t it = 0; it < path_points.size(); it++) 
+	{
+		//convert to real world coordinates
+		path_points[it] = getRealCoordFromImageCoord3D(path_points[it], imageOrigin, imageSpacing, orientation);
+		fprintf(path_points_file, "%f,%f,%f\n", path_points[it].x, path_points[it].y, path_points[it].z);
+	}
+	fclose(path_points_file);
+
+	delete[] endPoints;
+	for (k = 0; k < Height; k++)
+	{
+		delete[] imageData[k];
+		delete[] potential[k];
+	}
+	delete[] imageData;
+	delete[] potential;
+	
+
+	
+	/*
+	float** imageDataF = new float * [Height];
+	double** imageDataD = new double* [Height];
+	for (k = 0; k < Height; k++) 
+	{
+		imageDataF[k] = new float[dim2D]{ 0 };
+		imageDataD[k] = new double[dim2D] { 0 };
+	}
+	
+	storing_path = root + "/output/distance_float.raw";
+	manageRAWFile3D<float>(imageDataF, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	storing_path = root + "/output/distance_double.raw";
+	manageRAWFile3D<double>(imageDataD, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	double min_diff = 0.0, max_diff = 0.0, mean_diff = 0.0;
+	size_t count = 0;
+	for(k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			double diff = fabs(imageDataF[k][i] - imageDataD[k][i]);
+			if (diff > max_diff)
+			{
+				max_diff = diff;
+			}
+			if (diff < min_diff)
+			{
+				min_diff = diff;
+			}
+			mean_diff += diff;
+			count++;
+		}
+	}
+	mean_diff /= (double)count;
+	std::cout << "Difference between float and double images: mean = " << mean_diff << ", min = " << min_diff << ", max = " << max_diff << std::endl;
+		for(k = 0; k < Height; k++)
+	{
+		delete[] imageDataF[k];
+		delete[] imageDataD[k];
+	}
+	delete[] imageDataF;
+	delete[] imageDataD;
 	*/
 
 	return EXIT_SUCCESS;

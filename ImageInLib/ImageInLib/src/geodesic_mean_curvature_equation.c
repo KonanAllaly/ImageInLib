@@ -740,10 +740,10 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 
 	heatImplicitRectangularScheme(presmoothingData, filterParameters);
 
-	//save smoothed image
-	char path_saving [] = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/smoothed_p4.raw";
-	Storage_Flags flags = { false,false };
-	store3dDataArrayD(presmoothedImage, length, width, height, path_saving, flags);
+	////save smoothed image
+	//char path_saving [] = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/smoothed_p4.raw";
+	//Storage_Flags flags = { false,false };
+	//store3dDataArrayD(presmoothedImage, length, width, height, path_saving, flags);
 
 	// Compute edge detector coefficients on presmoothed image
 	Pointers_Neighbours norm_of_gradient;
