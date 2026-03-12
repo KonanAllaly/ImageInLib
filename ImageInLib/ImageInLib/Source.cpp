@@ -66,6 +66,37 @@ int main() {
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
 
+	/*
+	float** imageDataF = new float* [Height];
+	double** imageDataD = new double* [Height];
+	for (k = 0; k < Height; k++) {
+		imageDataF[k] = new float[dim2D] {0};
+		imageDataD[k] = new double[dim2D] {0};
+	}
+
+	const char * load_ptr = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/filtered_p1.raw";
+	manageRAWFile3D<float>(imageDataF, Length, Width, Height, load_ptr, LOAD_DATA, false);
+
+	for (k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			imageDataD[k][i] = (double)imageDataF[k][i];
+		}
+	}
+	const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/filtered_p1_double.raw";
+	manageRAWFile3D<double>(imageDataD, Length, Width, Height, store_ptr, STORE_DATA, false);
+
+	for(k = 0; k < Height; k++)
+	{
+		delete[] imageDataF[k];
+		delete[] imageDataD[k];
+	}
+	delete[] imageDataF;
+	delete[] imageDataD;
+	free(ctContainer);
+	*/
+	
 	//==================== Translate for registration ================================================
 
 	/*
@@ -2998,7 +3029,7 @@ int main() {
 
 	//==================== Test Filtering ============================================================
 
-	
+	/*
 	dataType** imageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	dataType** action = new dataType * [Height];
@@ -3099,8 +3130,7 @@ int main() {
 	}
 	delete[] imageData;
 	delete[] potential;
-	
-
+	*/
 	
 	/*
 	float** imageDataF = new float * [Height];
