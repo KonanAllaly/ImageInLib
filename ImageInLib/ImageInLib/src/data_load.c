@@ -303,7 +303,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 	Point3D previous_point;
 	double dist = 0;
 	
-	dataType x = 0, y = 0, z = 0;
+	float x = 0, y = 0, z = 0;
 
 	//FILE* temp_file;
 	//const char *path_to_file = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/dist_btwn_points_p6.csv";
@@ -313,7 +313,8 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 	//	return false;
 	//}
 
-	for (size_t i = 0; i < pCurve->numPoints; i++) {
+	for (size_t i = 0; i < pCurve->numPoints; i++) 
+	{
 		
 		fscanf_s(file, "%f", &x);
 		fscanf_s(file, ",");
@@ -322,7 +323,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 		fscanf_s(file, "%f", &z);
 		fscanf_s(file, "\n");
 
-		Point3D current_point = { x , y , z };
+		Point3D current_point = { (dataType)x , (dataType)y , (dataType)z };
 
 		if (cSystem == REAL) 
 		{
