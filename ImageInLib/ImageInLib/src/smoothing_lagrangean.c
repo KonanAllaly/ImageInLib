@@ -114,7 +114,7 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
     double som_dist = 0;
     double curv_x = 0, curv_y = 0, curv_z = 0; //discrete curvature vector components
 
-    double min_dist = evolving_curve->length;
+    double min_dist = 1e6;//evolving_curve->length;
     Point3D point_of_interest = { 0.0, 0.0, 0.0 };
     Point3D p1 = { 0.0, 0.0, 0.0 };
     Point3D p2 = { 0.0, 0.0, 0.0 };
@@ -123,9 +123,6 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
 
     LinkedPoint3D* evolving_point = evolving_curve->first_point;
     LinkedPoint3D* p_ref_initial = NULL;
-
-	Point3D previous_q = { 0.0, 0.0, 0.0 };
-	Point3D current_q = { 0.0, 0.0, 0.0 };
 
     //Loop for the curve evolution
     for (size_t i = 1; i <= number_of_points; i++)
@@ -201,8 +198,6 @@ void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
                 
 				p_ref_initial = NULL;
             }
-
-            //double verif = getPoint3DDistance(current_q, previous_q);
             
             //Set the normal velocity towards the initial curve
             h_i = evolving_point->previous->distance_to_next;
