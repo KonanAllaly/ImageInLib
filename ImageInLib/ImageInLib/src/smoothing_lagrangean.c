@@ -295,7 +295,7 @@ void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
     pscheme_data[1].alfa = 0.0;
 
     current_point = evolving_curve->first_point;
-    for (size_t i = 2; i <= number_of_points; i++)
+    for (size_t i = 1; i <= number_of_points; i++)
     {
         if (i == 1)
         {
