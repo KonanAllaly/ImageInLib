@@ -2969,6 +2969,7 @@ int main() {
 		circlePoints.push_back(point);
 	}
 
+	/*
 	for (i = 1; i <= 50; i++) 
 	{
 		double x = p1.x;
@@ -2986,7 +2987,7 @@ int main() {
 		circlePoints.push_back(point);
 	}
 
-	/*
+	
 	Point3D p4 = { 2.0, -0.5 * M_PI * radius, 0.0 };
 	Point3D p3 = { 0.0, -0.5 * M_PI * radius, 0.0 };
 
