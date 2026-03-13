@@ -24,7 +24,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     //let us consider single curve without topological changes
     resetIDGenerator();
 
-    bool isOrientedPositively = true; //does not matter for open curves
+    bool isOrientedPositively = true;
 	bool isCurveClosed = !pSmoothingParameters->open_curve;
 
     if (isCurveClosed)
@@ -44,7 +44,10 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     //Initialize the evolving linked curve
     initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &evolving_curve, !isOrientedPositively, isCurveClosed);
 
-    size_t length_of_data = evolving_curve.number_of_points + 2;
+    //Data size for the scheme, 
+    // we add 2 to be sure that we have enough memory
+    // in case of topological changes (even if we do not expect any)
+	size_t length_of_data = pSmoothingParameters->num_points + 2; 
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
 
 	size_t it = 1; //count of time steps
@@ -88,6 +91,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
         final_curve = final_curve->next;
     }
 
+	final_curve = NULL;
     free(pscheme_data);
     release3dLinkedCurve(&evolving_curve);
     release3dLinkedCurve(&initial_curve);
