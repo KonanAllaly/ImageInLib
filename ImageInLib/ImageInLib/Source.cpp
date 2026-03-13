@@ -2875,18 +2875,18 @@ int main() {
 	//fclose(f_curv_max);
 	*/
 	
-	/*
+	
 	srand(time(NULL));
-	//const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/half_sphere.csv";
-	//FILE* file_test;
-	//if (fopen_s(&file_test, test_circle, "w") != 0) {
-	//	printf("Enable to open");
-	//	return false;
-	//}
+	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve.csv";
+	FILE* file_test;
+	if (fopen_s(&file_test, test_circle, "w") != 0) {
+		printf("Enable to open");
+		return false;
+	}
 
 	vector<Point3D> circlePoints;
 
-	double radius = 1.0;
+	/*
 	size_t N = 100;
 	double angle_step = M_PI / (double)N;
 	double angle_rad = 0.0;
@@ -2897,6 +2897,7 @@ int main() {
 		double y = 50.0 + radius * sin(angle_rad);
 		double z = 50.0;
 		Point3D point = { x, y, z };
+		
 		//if (i > 0 && i < N)
 		//{
 		//	double r_x = (double)rand() / RAND_MAX;
@@ -2905,24 +2906,138 @@ int main() {
 		//	y += 0.4 * r_y;
 		//}
 		
-		//fprintf(file_test, "%f,%f,%f\n", x, y, z);
+		fprintf(file_test, "%lf,%lf,%lf\n", x, y, z);
 		circlePoints.push_back(point);
 	}
-	////straight line
-	//for(i = 1; i <= N; i++)
-	//{
-	//	double x = 50.0 + radius * cos(angle_rad);
-	//	double y = 50.0 + radius * sin(angle_rad) - i * angle_step;
-	//	double z = 50.0;
-	//	Point3D point = { x, y, z };
-	//	fprintf(file_test, "%f,%f,%f\n", x, y, z);
-	//	circlePoints.push_back(point);
-	//}
 	
-	//fclose(file_test);
+	//straight line
+	size_t N2 = 50;
+	for(i = 1; i < N2 - 2; i++)
+	{
+		double x = 50.0 + radius * cos(angle_rad);
+		double y = 50.0 + radius * sin(angle_rad) - i * angle_step;
+		double z = 50.0;
+		Point3D point = { x, y, z };
+		fprintf(file_test, "%f,%f,%f\n", x, y, z);
+		circlePoints.push_back(point);
+	}
+
+	//straight line
+	for (i = 1; i < (N2 - 2); i++)
+	{
+		double x = 50.0 + radius * cos(angle_rad) - i * angle_step;
+		double y = 50.0 + radius * sin(angle_rad) - (N2 - 3) * angle_step;
+		double z = 50.0;
+		Point3D point = { x, y, z };
+		fprintf(file_test, "%f,%f,%f\n", x, y, z);
+		circlePoints.push_back(point);
+	}
+
+	for (i = 1; i < N; i++) {
+		angle_rad = i * angle_step;
+		double x = 50.0 - 2.5 * radius;
+		double y = 50.0 - radius * (1.5 - sin(angle_rad));
+		double z = 50.0 + radius * (-1.0 + cos(angle_rad));
+		Point3D point = { x, y, z };
+
+		fprintf(file_test, "%lf,%lf,%lf\n", x, y, z);
+		circlePoints.push_back(point);
+	}
+	*/
+
+	Point3D p1 = { 0.0, 0.0, 0.0 };
+	Point3D p2 = { 2.0, 0.0, 0.0 };
+	double radius = 0.5 * getPoint3DDistance(p1, p2);
+
+	Point3D center = { 0.5 * (p1.x + p2.x), 0.5 * (p1.y + p2.y), 0.5 * (p1.z + p2.z) };
+	double angle_step = M_PI / 100.0;
+	for (i = 0; i <= 100; i++) 
+	{
+		double angle_rad = (double)i * angle_step;
+		double x = center.x + radius * cos(angle_rad);
+		double y = center.y + radius * sin(angle_rad);
+		double z = center.z;
+		//add noise
+		if (i > 0 && i < 100 && (i % 5 == 0))
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.02 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y += 0.02 * r_y;
+		}
+		Point3D point = { x, y, z };
+		circlePoints.push_back(point);
+	}
+
+	for (i = 1; i <= 50; i++) 
+	{
+		double x = p1.x;
+		double y = p1.y - (double)i * angle_step;
+		double z = p1.z;
+		//add noise
+		if (i > 0 && i < 50 && (i % 5 == 0))
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.02 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y += 0.02 * r_y;
+		}
+		Point3D point = { x, y, z };
+		circlePoints.push_back(point);
+	}
+
+	Point3D p4 = { 2.0, -0.5 * M_PI * radius, 0.0 };
+	Point3D p3 = { 0.0, -0.5 * M_PI * radius, 0.0 };
+
+	size_t N2 = (size_t)(getPoint3DDistance(p3, p4) / angle_step);
+
+	for (i = 1; i <= N2; i++)
+	{
+		double x = p4.x - (double)i * angle_step;
+		double y = p4.y;
+		double z = p4.z;
+		//add noise
+		if (i > 0 && i < N2 && (i % 5 == 0))
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.02 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y += 0.02 * r_y;
+		}
+		Point3D point = { x, y, z };
+		circlePoints.push_back(point);
+	}
+
+	Point3D p5 = { 2.0, -0.5 * M_PI * radius, -2.0 };
+	Point3D center2 = { 0.5 * (p4.x + p5.x), 0.5 * (p4.y + p5.y), 0.5 * (p4.z + p5.z) };
+	
+	for (i = 0; i < 100; i++)
+	{
+		double angle_rad = i * angle_step;
+		double x = center2.x;
+		double y = center2.y - radius * sin(angle_rad);
+		double z = center2.z + radius * cos(angle_rad);
+		//add noise
+		if (i > 0 && i < 100 && (i % 5 == 0))
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.02 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y += 0.02 * r_y;
+		}
+		Point3D point = { x, y, z };
+		circlePoints.push_back(point);
+	}
+	
+	for(i = 0; i < circlePoints.size(); i++)
+	{
+		fprintf(file_test, "%lf,%lf,%lf\n", circlePoints[i].x, circlePoints[i].y, circlePoints[i].z);
+	}
+	
+	fclose(file_test);
 
 	//Compute and save curvature
-	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature_float.csv";
+	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature_double.csv";
 	FILE* file_curvature;
 	if (fopen_s(&file_curvature, test_curvature, "w") != 0) 
 	{
@@ -2938,8 +3053,6 @@ int main() {
 	size_t counter = 0;
 	for(i = 1; i < size_pts - 1; i++)
 	{
-	//	dataType h_i = getPoint3DDistance(circlePoints[i - 1], circlePoints[i]);
-	//	dataType h_i_plus = getPoint3DDistance(circlePoints[i + 1], circlePoints[i]);
 		curvature[i] = computeCurvatureThreePoints(circlePoints[i - 1], circlePoints[i], circlePoints[i + 1]);
 		dataType error = fabs(curvature[i] - ref_curv);
 		if(error > max_error)
@@ -2960,7 +3073,23 @@ int main() {
 	fclose(file_curvature);
 	
 	delete[] curvature;
-	*/
+
+	//Compute and save curvature
+	const char* test_spacing = "C:/Users/Konan Allaly/Documents/Tests/output/sapcing_double.csv";
+	FILE* file_spacing;
+	if (fopen_s(&file_spacing, test_spacing, "w") != 0)
+	{
+		printf("Enable to open");
+		return false;
+	}
+	for(i = 0; i < circlePoints.size() - 1; i++)
+	{
+		dataType spacing = getPoint3DDistance(circlePoints[i], circlePoints[i + 1]);
+		fprintf(file_spacing, "%d,%lf\n", i, spacing);
+	}
+	fclose(file_spacing);
+
+	circlePoints.clear();
 
 	//==================== Liver Cropping Test ========================================================
 
