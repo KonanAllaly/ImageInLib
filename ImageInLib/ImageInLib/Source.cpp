@@ -2877,7 +2877,7 @@ int main() {
 	
 	
 	srand(time(NULL));
-	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve.csv";
+	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve_evolve.csv";
 	FILE* file_test;
 	if (fopen_s(&file_test, test_circle, "w") != 0) {
 		printf("Enable to open");
@@ -2986,6 +2986,7 @@ int main() {
 		circlePoints.push_back(point);
 	}
 
+	/*
 	Point3D p4 = { 2.0, -0.5 * M_PI * radius, 0.0 };
 	Point3D p3 = { 0.0, -0.5 * M_PI * radius, 0.0 };
 
@@ -3028,6 +3029,7 @@ int main() {
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
+	*/
 	
 	for(i = 0; i < circlePoints.size(); i++)
 	{
@@ -3036,6 +3038,7 @@ int main() {
 	
 	fclose(file_test);
 
+	/*
 	//Compute and save curvature
 	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature_double.csv";
 	FILE* file_curvature;
@@ -3088,6 +3091,7 @@ int main() {
 		fprintf(file_spacing, "%d,%lf\n", i, spacing);
 	}
 	fclose(file_spacing);
+	*/
 
 	circlePoints.clear();
 
