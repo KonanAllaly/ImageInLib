@@ -324,7 +324,7 @@ bool loadListof3dPoints(Image_Data image, Curve3D* pCurve, const char* filePath,
 		fscanf_s(file, "%f", &z);
 		fscanf_s(file, "\n");
 
-		Point3D current_point = { (dataType)x , (dataType)y , (dataType)z };
+		Point3D current_point = { (dataType)x, (dataType)y, (dataType)z};
 
 		if (cSystem == REAL) 
 		{
