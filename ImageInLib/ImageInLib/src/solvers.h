@@ -64,6 +64,8 @@ extern "C" {
         double u;
         double v;
 		double beta, w; //normal velocity component, in smoothing
+		double normal_x, normal_y, normal_z; //normal vector components, in smoothing
+		double curvature;
 
         double alfa;
         double ps;
