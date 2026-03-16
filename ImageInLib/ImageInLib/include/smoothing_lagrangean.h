@@ -22,6 +22,8 @@ extern "C" {
 	bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pSmoothingParameters,
 		unsigned char* pOutputPathPtr, Curve3D* pResultCurve);
 
+	bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data);
+
 	void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
 		const double delta, const double lambda, bool isFirstTimeStep);
 
