@@ -119,10 +119,10 @@ bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme
             h_i = evolving_point->previous->distance_to_next;// |r_{i} - r_{i - 1}|
             h_i_plus = evolving_point->distance_to_next;// |r_{i + 1} - r_{i}|
             //Compute the discrete curvature vector components
-            double coef = 2.0 / (h_i + h_i_plus);
-            double curv_x = coef * (((evolving_point->next->x - evolving_point->x) / h_i_plus) - ((evolving_point->x - evolving_point->previous->x) / h_i));
-            double curv_y = coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
-            double curv_z = coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
+            double coef = 1.0 / (h_i + h_i_plus);
+            double curv_x = 2.0 * coef * (((evolving_point->next->x - evolving_point->x) / h_i_plus) - ((evolving_point->x - evolving_point->previous->x) / h_i));
+            double curv_y = 2.0 * coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
+            double curv_z = 2.0 * coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
             pscheme_data[i].curvature = sqrt(curv_x * curv_x + curv_y * curv_y + curv_z * curv_z);
             if (h_i == 0.0 || h_i_plus == 0.0 || pscheme_data[i].curvature == 0.0)
             {
@@ -136,9 +136,13 @@ bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme
             }
             else
             {
-				pscheme_data[i].normal_x = curv_x / pscheme_data[i].curvature;
-                pscheme_data[i].normal_y = curv_y / pscheme_data[i].curvature;
-				pscheme_data[i].normal_z = curv_z / pscheme_data[i].curvature;
+				//pscheme_data[i].normal_x = curv_x / pscheme_data[i].curvature;
+                //pscheme_data[i].normal_y = curv_y / pscheme_data[i].curvature;
+				//pscheme_data[i].normal_z = curv_z / pscheme_data[i].curvature;
+
+                pscheme_data[i].normal_x = -coef * (evolving_point->next->y - evolving_point->previous->y);
+                pscheme_data[i].normal_y = coef * (evolving_point->next->x - evolving_point->previous->x);
+                pscheme_data[i].normal_z = 0.0;
             }
 		}
         else
@@ -294,28 +298,28 @@ void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
         }
     }
 
-    LinkedPoint3D* current_point = evolving_curve->first_point;
-    for (size_t i = 1; i <= number_of_points; i++)
+    //LinkedPoint3D* current_point = evolving_curve->first_point;
+    LinkedPoint3D* current_point = evolving_curve->first_point->next;
+    for (size_t i = 2; i <= number_of_points; i++)
     {
-        if (i > 1)
-        {
-            //if it is not the first point
-            h_i = current_point->previous->distance_to_next;
-        }
-        else
-        {
-            //first point
-            h_i = current_point->distance_to_next;
-        }
+        //if (i > 1)
+        //{
+        //    //if it is not the first point
+        //    h_i = current_point->previous->distance_to_next;
+        //}
+        //else
+        //{
+        //    //first point
+        //    h_i = current_point->distance_to_next;
+        //}
 
+        h_i = current_point->previous->distance_to_next;
         mean += h_i * pscheme_data[i].curvature * pscheme_data[i].beta;
 
         current_point = current_point->next;
     }
 
     mean /= curve_length;
-
-    //it will therefore not move in the tangential direction
     
     //pscheme_data[0].alfa = 0.0;
     pscheme_data[1].alfa = 0.0;
@@ -451,9 +455,14 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-			pscheme_data[i].ps = pscheme_data[i].m * current_point->x + lambda * pscheme_data[i].w * pscheme_data[i].normal_x
+			//pscheme_data[i].ps = pscheme_data[i].m * current_point->x + lambda * pscheme_data[i].w * pscheme_data[i].normal_x
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x);
+            
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x 
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x);
+                + lambda * pscheme_data[i].w * 0.5 * (current_point->previous->y - current_point->next->y);
         }
         current_point = current_point->next;
     }
@@ -482,9 +491,14 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + lambda * pscheme_data[i].w * pscheme_data[i].normal_y
+            //pscheme_data[i].ps = pscheme_data[i].m * current_point->y + lambda * pscheme_data[i].w * pscheme_data[i].normal_y
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
+
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
+                + lambda * pscheme_data[i].w * 0.5 * (current_point->next->x - current_point->previous->x);
         }
         current_point = current_point->next;
     }
@@ -522,7 +536,11 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + lambda * pscheme_data[i].w * pscheme_data[i].normal_z
+            //pscheme_data[i].ps = pscheme_data[i].m * current_point->z + lambda * pscheme_data[i].w * pscheme_data[i].normal_z
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
+
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
         }
