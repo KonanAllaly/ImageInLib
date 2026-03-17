@@ -2877,7 +2877,7 @@ int main() {
 	
 	
 	srand(time(NULL));
-	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve_evolve.csv";
+	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/curve_test3.csv";
 	FILE* file_test;
 	if (fopen_s(&file_test, test_circle, "w") != 0) {
 		printf("Enable to open");
@@ -2957,37 +2957,39 @@ int main() {
 		double x = center.x + radius * cos(angle_rad);
 		double y = center.y + radius * sin(angle_rad);
 		double z = center.z;
+		
 		//add noise
 		if (i > 0 && i < 100 && (i % 5 == 0))
 		{
 			double r_x = (double)rand() / RAND_MAX;
-			x += 0.02 * r_x;
+			x += 0.05 * r_x;
 			double r_y = (double)rand() / RAND_MAX;
-			y += 0.02 * r_y;
+			y += 0.05 * r_y;
 		}
+
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
 
-	/*
 	for (i = 1; i <= 50; i++) 
 	{
 		double x = p1.x;
 		double y = p1.y - (double)i * angle_step;
 		double z = p1.z;
+		
 		//add noise
 		if (i > 0 && i < 50 && (i % 5 == 0))
 		{
 			double r_x = (double)rand() / RAND_MAX;
-			x += 0.02 * r_x;
+			x += 0.05 * r_x;
 			double r_y = (double)rand() / RAND_MAX;
-			y += 0.02 * r_y;
+			y += 0.05 * r_y;
 		}
+
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
 
-	
 	Point3D p4 = { 2.0, -0.5 * M_PI * radius, 0.0 };
 	Point3D p3 = { 0.0, -0.5 * M_PI * radius, 0.0 };
 
@@ -2998,20 +3000,24 @@ int main() {
 		double x = p4.x - (double)i * angle_step;
 		double y = p4.y;
 		double z = p4.z;
+		
 		//add noise
 		if (i > 0 && i < N2 && (i % 5 == 0))
 		{
 			double r_x = (double)rand() / RAND_MAX;
-			x += 0.02 * r_x;
+			x += 0.05 * r_x;
 			double r_y = (double)rand() / RAND_MAX;
-			y += 0.02 * r_y;
+			y += 0.05 * r_y;
 		}
+
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
 
+	/*
 	Point3D p5 = { 2.0, -0.5 * M_PI * radius, -2.0 };
 	Point3D center2 = { 0.5 * (p4.x + p5.x), 0.5 * (p4.y + p5.y), 0.5 * (p4.z + p5.z) };
+	
 	
 	for (i = 0; i < 100; i++)
 	{
@@ -3019,14 +3025,16 @@ int main() {
 		double x = center2.x;
 		double y = center2.y - radius * sin(angle_rad);
 		double z = center2.z + radius * cos(angle_rad);
-		//add noise
-		if (i > 0 && i < 100 && (i % 5 == 0))
-		{
-			double r_x = (double)rand() / RAND_MAX;
-			x += 0.02 * r_x;
-			double r_y = (double)rand() / RAND_MAX;
-			y += 0.02 * r_y;
-		}
+
+		////add noise
+		//if (i > 0 && i < 100 && (i % 5 == 0))
+		//{
+		//	double r_x = (double)rand() / RAND_MAX;
+		//	x += 0.02 * r_x;
+		//	double r_y = (double)rand() / RAND_MAX;
+		//	y += 0.02 * r_y;
+		//}
+
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
