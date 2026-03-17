@@ -439,11 +439,6 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
     //function to compute the tangential velocity
     tang_velocity3D(plinked_curve, pscheme_data, omega);
 
-    //if (!semiCoefficients3D(plinked_curve, pscheme_data, eps, dt))
-    //{
-    //    return false;
-    //}
-
     if(!semiCoefficientsIIOE(plinked_curve, pscheme_data, eps, dt))
     {
         return false;
@@ -605,7 +600,10 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             som_dist = h_i_plus + h_i;
 
             ////get the external velocity field
-            getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            vx = 0.0;
+            vy = 0.0;
+			vz = 0.0;
 
 			//Compute the tangent vector components
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
