@@ -342,7 +342,7 @@ void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
         }
         else
         {
-            pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * mean - h_i * pscheme_data[i].curvature * pscheme_data[i].beta + omega * (avg_length - h_i);
+            pscheme_data[i].alfa = pscheme_data[i - 1].alfa - h_i * mean + h_i * pscheme_data[i].curvature * pscheme_data[i].beta + omega * (avg_length - h_i);
         }
         current_point = current_point->next;
     }
