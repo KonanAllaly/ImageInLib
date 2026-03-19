@@ -343,15 +343,14 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         return false;
     }
 
-    //pOutputPathPtr : can be used to save the path during the motion
-
     //let us consider single curve without topological changes
     resetIDGenerator();
 
-    bool isOrientedPositively = true; //does not matter for open curves
+    bool isOrientedPositively = true;
 
     if (!pSegmentationParams->open_curve)
     {
+		//the curve is closed
         isOrientedPositively = is3dCurveOrientedPositively(pSegmentationParams->pinitial_condition);
     }
 
@@ -702,7 +701,8 @@ void tang_velocity3D(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, c
     current_point = plinked_curve->first_point;
     for (size_t i = 1; i <= number_of_points; i++)
     {
-        if (i == 1) {
+        if (i == 1) 
+        {
             h_i = current_point->distance_to_next;
         }
         else
