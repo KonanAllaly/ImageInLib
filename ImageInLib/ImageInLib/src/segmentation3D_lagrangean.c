@@ -437,7 +437,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nvx * dt * pscheme_data[i].m;
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * pscheme_data[i].normal_x * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
     }
@@ -463,7 +463,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->nvy * dt * pscheme_data[i].m;
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * pscheme_data[i].normal_y * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
     }
@@ -496,7 +496,7 @@ bool evolveBySingleStep3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nvz * dt * pscheme_data[i].m;
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * pscheme_data[i].normal_z * dt * pscheme_data[i].m;
         }
         current_point = current_point->next;
     }
@@ -594,12 +594,13 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             dot = tx * vx + ty * vy + tz * vz;
 
 			//Compute the normal velocity vector components
-            current_point->nvx = vx - dot * tx;
-            current_point->nvy = vy - dot * ty;
-            current_point->nvz = vz - dot * tz;
+            pscheme_data[i].normal_x = vx - dot * tx;
+            pscheme_data[i].normal_y = vy - dot * ty;
+            pscheme_data[i].normal_z = vz - dot * tz;
 
-            Point3D pnorm = { current_point->nvx, current_point->nvy, current_point->nvz };
-            norm_nv = norm3D(pnorm);
+            norm_nv = sqrt(pscheme_data[i].normal_x * pscheme_data[i].normal_x
+            + pscheme_data[i].normal_y * pscheme_data[i].normal_y
+            + pscheme_data[i].normal_z * pscheme_data[i].normal_z);
             
             //Compute the vector N1 components
             if (norm_nv != 0) 
@@ -638,9 +639,9 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             pscheme_data[i].k2 = 0.0;
             pscheme_data[i].u = 0.0;
             pscheme_data[i].v = 0.0;
-            current_point->nvx = 0.0;
-            current_point->nvy = 0.0;
-            current_point->nvz = 0.0;
+            pscheme_data[i].normal_x = 0.0;
+            pscheme_data[i].normal_y = 0.0;
+            pscheme_data[i].normal_z = 0.0;
         }
 
         current_point = current_point->next;
@@ -901,7 +902,7 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * current_point->nvx * dt * pscheme_data[i].m
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->x + mu * pscheme_data[i].normal_x * dt * pscheme_data[i].m
                                  - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
                                  - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x);
         }
@@ -929,7 +930,7 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * current_point->nvy * dt * pscheme_data[i].m
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y + mu * pscheme_data[i].normal_y * dt * pscheme_data[i].m
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
         }
@@ -966,7 +967,7 @@ bool evolveBySingleStepIIOE(Image_Data* pDistanceMap, LinkedCurve3D* plinked_cur
         }
         else
         {
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * current_point->nvz * dt * pscheme_data[i].m
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z + mu * pscheme_data[i].normal_z * dt * pscheme_data[i].m
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
         }
