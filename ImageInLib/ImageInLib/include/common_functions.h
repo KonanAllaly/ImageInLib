@@ -493,10 +493,6 @@ extern "C" {
 		double distance_to_next_y;
 		double distance_to_next_z;
 		unsigned long long id;
-		//extend the 3D points structure with the normal velocity vector
-		double nvx;
-		double nvy;
-		double nvz;
 		double average_distance_to_next; //use to observe the average distance after evolution
 	} LinkedPoint3D;
 
