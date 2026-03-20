@@ -19,15 +19,19 @@ extern "C" {
 		bool open_curve;
 	} LagrangeanSmoothingParameters;
 
+	bool getClosestPointToCurve(LinkedCurve3D* initial_curve, LinkedPoint3D* evolving_curve, double* px, double* py, double* pz);
+
 	bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pSmoothingParameters,
 		unsigned char* pOutputPathPtr, Curve3D* pResultCurve);
 
 	bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data);
 
-	void normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
-		const double delta, const double lambda, bool isFirstTimeStep);
+	bool normalVelocityFirstTimeStepSmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double delta);
 
-	void tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double omega, bool isCurveOpen);
+	bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
+		const double delta, const double lambda);
+
+	bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double omega, bool isCurveOpen);
 
 	bool coefficientsSmoothing(LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data, const double delta, const double tau);
 
