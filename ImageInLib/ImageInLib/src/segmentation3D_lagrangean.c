@@ -580,10 +580,10 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             som_dist = h_i_plus + h_i;
 
             ////get the external velocity field
-            //getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
-            vx = 0.0;
-            vy = 0.0;
-			vz = 0.0;
+            getVelocity3D(pDistanceMap, current_point->x, current_point->y, current_point->z, &vx, &vy, &vz);
+            //vx = 0.0;
+            //vy = 0.0;
+			//vz = 0.0;
 
 			//Compute the tangent vector components
             tx = (current_point->next->x - current_point->previous->x) / som_dist;
@@ -600,16 +600,20 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
 
             Point3D pnorm = { current_point->nvx, current_point->nvy, current_point->nvz };
             norm_nv = norm3D(pnorm);
-            //This should be corrected
-            if (norm_nv == 0) 
+            
+            //Compute the vector N1 components
+            if (norm_nv != 0) 
             {
-                norm_nv = 1.0;
+                n1_x = nvx / norm_nv;
+                n1_y = nvy / norm_nv;
+                n1_z = nvz / norm_nv;
             }
-
-			//Compute the vector N1 components
-            n1_x = nvx / norm_nv;
-            n1_y = nvy / norm_nv;
-            n1_z = nvz / norm_nv;
+            else
+            {
+                n1_x = 0.0;
+                n1_y = 0.0;
+				n1_z = 0.0;
+            }
 
 			//Compute the vector N2 components
             n2_x = n1_y * tz - n1_z * ty;
