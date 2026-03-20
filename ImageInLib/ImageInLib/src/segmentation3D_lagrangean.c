@@ -562,7 +562,6 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
     double vx = 0, vy = 0, vz = 0;             // external velocity field components 
     double tx = 0, ty = 0, tz = 0;             //tangential vector components
     double som_dist = 0, dot = 0, norm_nv = 1.0; 
-    double nvx = 0, nvy = 0, nvz = 0;          //normal velocity vector components
     double n1_x = 0, n1_y = 0, n1_z = 0;       //normal plan vector components
     double n2_x = 0, n2_y = 0, n2_z = 0;       //normal plan vector components
     double curv_x = 0, curv_y = 0, curv_z = 0; //discrete curvature vector components
@@ -605,9 +604,9 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
             //Compute the vector N1 components
             if (norm_nv != 0) 
             {
-                n1_x = nvx / norm_nv;
-                n1_y = nvy / norm_nv;
-                n1_z = nvz / norm_nv;
+                n1_x = pscheme_data[i].normal_x / norm_nv;
+                n1_y = pscheme_data[i].normal_y / norm_nv;
+                n1_z = pscheme_data[i].normal_z / norm_nv;
             }
             else
             {
@@ -615,6 +614,14 @@ void normal_velocity3D(Image_Data* pDistanceMap, LinkedCurve3D* plinked_curve, S
                 n1_y = 0.0;
 				n1_z = 0.0;
             }
+
+            //if (norm_nv == 0) 
+            //{
+			//	norm_nv = 1.0;
+            //}
+            //n1_x = pscheme_data[i].normal_x / norm_nv;
+            //n1_y = pscheme_data[i].normal_y / norm_nv;
+            //n1_z = pscheme_data[i].normal_z / norm_nv;
 
 			//Compute the vector N2 components
             n2_x = n1_y * tz - n1_z * ty;
