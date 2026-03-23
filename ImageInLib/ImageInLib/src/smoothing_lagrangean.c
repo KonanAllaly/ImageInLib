@@ -694,11 +694,11 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
 
 	bool is_curve_open = pSmoothingParameters->open_curve;
 
-	////Compute the curvature vector
- //   if(!computeCurvatureVector(evolving_curve, pscheme_data))
- //   {
- //       return false;
-	//}
+	//Compute the curvature vector
+    if(!computeCurvatureVector(evolving_curve, pscheme_data))
+    {
+        return false;
+	}
 
     //function to compute the normal velocity
     if(isFirstTimeStep)
