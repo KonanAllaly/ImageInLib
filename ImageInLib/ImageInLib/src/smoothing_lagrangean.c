@@ -474,16 +474,15 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             double h_i_plus = evolving_point->distance_to_next;
             double som_dist = h_i_plus + h_i;
 
+            /*
             //Compute the tangent vector components
             double tx = (evolving_point->next->x - evolving_point->previous->x) / som_dist;
             double ty = (evolving_point->next->y - evolving_point->previous->y) / som_dist;
             double tz = (evolving_point->next->z - evolving_point->previous->z) / som_dist;
-
             //Component the scalar product between the velocity vector and the tangent vector
             double dot = tx * (x - evolving_point->x) 
                 + ty * (y - evolving_point->y) 
                 + tz * (z - evolving_point->z);
-
             //Compute the vector N2 components
 			pscheme_data[i].normal_x = (x - evolving_point->x) - tx * dot;
 			pscheme_data[i].normal_y = (y - evolving_point->y) - ty * dot;
@@ -491,11 +490,9 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             double norm_pj = sqrt(pscheme_data[i].normal_x * pscheme_data[i].normal_x 
                 + pscheme_data[i].normal_y * pscheme_data[i].normal_y 
 				+ pscheme_data[i].normal_z * pscheme_data[i].normal_z);
-
             double n1_x = pscheme_data[i].normal_x;
             double n1_y = pscheme_data[i].normal_y;
             double n1_z = pscheme_data[i].normal_z;
-
             if (n1_x != 0.0 || n1_y != 0.0 || n1_z != 0.0) 
             {
                 n1_x /= norm_pj;
@@ -503,43 +500,42 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
                 n1_z /= norm_pj;
             }
             //(else{...}) TODO: suggest what to do
-
             //Compute the vector N2 components
             double n2_x = n1_y * tz - n1_z * ty;
             double n2_y = n1_z * tx - n1_x * tz;
             double n2_z = n1_x * ty - n1_y * tx;
-
 			//Compute curvature vector components
             double coef = 2.0 / som_dist;
             double curv_x = coef * (((evolving_point->next->x - evolving_point->x) / h_i_plus) - ((evolving_point->x - evolving_point->previous->x) / h_i));
             double curv_y = coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
             double curv_z = coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
-
 			pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
 			pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
-
 			//Compute the normal velocity component
 			pscheme_data[i].u = -delta * pscheme_data[i].k1 + lambda * norm_pj;
 			pscheme_data[i].v = -delta * pscheme_data[i].k2;
-            
-            //pscheme_data[i].w = (x - evolving_point->x) * pscheme_data[i].normal_x
-            //    + (y - evolving_point->y) * pscheme_data[i].normal_y
-            //    + (z - evolving_point->z) * pscheme_data[i].normal_z;
-            //pscheme_data[i].beta = -delta * pscheme_data[i].curvature + lambda * pscheme_data[i].w;
+            */
+
+            pscheme_data[i].w = (x - evolving_point->x) * pscheme_data[i].normal_x
+                + (y - evolving_point->y) * pscheme_data[i].normal_y
+                + (z - evolving_point->z) * pscheme_data[i].normal_z;
+            pscheme_data[i].beta = -delta * pscheme_data[i].curvature + lambda * pscheme_data[i].w;
 
         }
         else
         {
             //when this happens, we are at the end points of an open curve
-            pscheme_data[i].normal_x = 0.0;
-			pscheme_data[i].normal_y = 0.0;
-			pscheme_data[i].normal_z = 0.0;
-            pscheme_data[i].k1 = 0.0;
-            pscheme_data[i].k2 = 0.0;
-			pscheme_data[i].u = 0.0;
-			pscheme_data[i].v = 0.0;
-            //pscheme_data[i].w = 0.0;
-            //pscheme_data[i].beta = 0.0;
+            
+            //pscheme_data[i].normal_x = 0.0;
+			//pscheme_data[i].normal_y = 0.0;
+			//pscheme_data[i].normal_z = 0.0;
+            //pscheme_data[i].k1 = 0.0;
+            //pscheme_data[i].k2 = 0.0;
+			//pscheme_data[i].u = 0.0;
+			//pscheme_data[i].v = 0.0;
+            
+            pscheme_data[i].w = 0.0;
+            pscheme_data[i].beta = 0.0;
         }
         evolving_point = evolving_point->next;
     }
