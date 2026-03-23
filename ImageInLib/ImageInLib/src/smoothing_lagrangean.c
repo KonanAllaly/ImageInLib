@@ -737,14 +737,15 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-			//pscheme_data[i].ps = pscheme_data[i].m * current_point->x + lambda * pscheme_data[i].w * pscheme_data[i].normal_x
-            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
-            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x);
+			pscheme_data[i].ps = pscheme_data[i].m * current_point->x 
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x)
+                + lambda * tau * pscheme_data[i].m * pscheme_data[i].w * pscheme_data[i].normal_x;
             
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->x 
-                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x) 
-                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_x;
+            //pscheme_data[i].ps = pscheme_data[i].m * current_point->x 
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x) 
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x) 
+            //    + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_x;
         }
         current_point = current_point->next;
     }
@@ -773,19 +774,20 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-            //pscheme_data[i].ps = pscheme_data[i].m * current_point->y + lambda * pscheme_data[i].w * pscheme_data[i].normal_y
-            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
-            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->y
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y)
+                + lambda * tau * pscheme_data[i].m * pscheme_data[i].w * pscheme_data[i].normal_y;
 
             //pscheme_data[i].ps = pscheme_data[i].m * current_point->y
             //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y)
             //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y);
             //    + lambda * pscheme_data[i].w * 0.5 * (current_point->next->x - current_point->previous->x);
 
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->y 
-                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y) 
-                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_y;
+            //pscheme_data[i].ps = pscheme_data[i].m * current_point->y 
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y) 
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y) 
+            //    + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_y;
         }
         current_point = current_point->next;
     }
@@ -823,18 +825,19 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         }
         else
         {
-            //pscheme_data[i].ps = pscheme_data[i].m * current_point->z + lambda * pscheme_data[i].w * pscheme_data[i].normal_z
-            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
-            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
+            pscheme_data[i].ps = pscheme_data[i].m * current_point->z
+                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
+                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z)
+                + lambda * tau * pscheme_data[i].m * pscheme_data[i].w * pscheme_data[i].normal_z;
 
             //pscheme_data[i].ps = pscheme_data[i].m * current_point->z
             //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z)
             //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z);
 
-            pscheme_data[i].ps = pscheme_data[i].m * current_point->z 
-                - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z) 
-                - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_z;
+            //pscheme_data[i].ps = pscheme_data[i].m * current_point->z 
+            //    - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z) 
+            //    - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z) 
+            //    + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_z;
         }
         current_point = current_point->next;
     }
