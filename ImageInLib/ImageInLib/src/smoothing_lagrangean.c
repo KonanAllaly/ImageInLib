@@ -38,6 +38,8 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     //Initialize the evolving linked curve
     initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &initial_curve, !isOrientedPositively, isCurveClosed);
 
+    resetIDGenerator();
+
     //create evolving linked curve
     LinkedCurve3D evolving_curve = create3dLinkedCurve();
 
@@ -108,6 +110,8 @@ bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme
 
 	double h_i = INFINITY, h_i_plus = INFINITY;
 	size_t number_of_points = evolving_curve->number_of_points;
+
+    double var_epsilon = 1e-6;
     
     LinkedPoint3D* evolving_point = evolving_curve->first_point;
     for(size_t i = 1; i <= number_of_points; i++)
@@ -122,6 +126,7 @@ bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme
             double curv_y = 2.0 * coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
             double curv_z = 2.0 * coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
             pscheme_data[i].curvature = sqrt(curv_x * curv_x + curv_y * curv_y + curv_z * curv_z);
+            
             if (h_i == 0.0 || h_i_plus == 0.0 || pscheme_data[i].curvature == 0.0)
             {
 				//For debugging, this should not happen since we should not have two coincident points in the evolving curve
@@ -134,13 +139,13 @@ bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme
             }
             else
             {
-				//pscheme_data[i].normal_x = curv_x / pscheme_data[i].curvature;
-                //pscheme_data[i].normal_y = curv_y / pscheme_data[i].curvature;
-				//pscheme_data[i].normal_z = curv_z / pscheme_data[i].curvature;
+				pscheme_data[i].normal_x = curv_x / (var_epsilon + pscheme_data[i].curvature);
+                pscheme_data[i].normal_y = curv_y / (var_epsilon + pscheme_data[i].curvature);
+				pscheme_data[i].normal_z = curv_z / (var_epsilon + pscheme_data[i].curvature);
 
-                pscheme_data[i].normal_x = -coef * (evolving_point->next->y - evolving_point->previous->y);
-                pscheme_data[i].normal_y = coef * (evolving_point->next->x - evolving_point->previous->x);
-                pscheme_data[i].normal_z = 0.0;
+                //pscheme_data[i].normal_x = -coef * (evolving_point->next->y - evolving_point->previous->y);
+                //pscheme_data[i].normal_y = coef * (evolving_point->next->x - evolving_point->previous->x);
+                //pscheme_data[i].normal_z = 0.0;
             }
 		}
         else
@@ -555,13 +560,13 @@ bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
     dataType h_i = INFINITY;
 
     dataType avg_length = INFINITY;
-    if (isCurveOpen)
+    if (!isCurveOpen)
     {
-        avg_length = curve_length / (dataType)(number_of_points - 1);//The curve is open
+        avg_length = curve_length / (dataType)(number_of_points - 1);//The curve is closed
     }
     else
     {
-        avg_length = curve_length / (dataType)(number_of_points);//The curve is closed
+        avg_length = curve_length / (dataType)(number_of_points);//The curve is open
     }
 
     LinkedPoint3D* current_point = evolving_curve->first_point;
