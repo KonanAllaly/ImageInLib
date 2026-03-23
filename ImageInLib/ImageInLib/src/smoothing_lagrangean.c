@@ -579,8 +579,8 @@ bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
             h_i = current_point->distance_to_next;
         }
 
-        //mean += h_i * pscheme_data[i].curvature * pscheme_data[i].beta;
-        mean += h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2);
+        mean += h_i * pscheme_data[i].curvature * pscheme_data[i].beta;
+        //mean += h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2);
 
         current_point = current_point->next;
     }
@@ -602,8 +602,8 @@ bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
             h_i = current_point->previous->distance_to_next;
         }
 
-        //pscheme_data[i].alfa = pscheme_data[i - 1].alfa - h_i * mean + h_i * pscheme_data[i].curvature * pscheme_data[i].beta + omega * (avg_length - h_i);
-        pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
+        pscheme_data[i].alfa = pscheme_data[i - 1].alfa - h_i * mean + h_i * pscheme_data[i].curvature * pscheme_data[i].beta + omega * (avg_length - h_i);
+        //pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
         current_point = current_point->next;
     }
 
