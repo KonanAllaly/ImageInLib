@@ -2877,7 +2877,7 @@ int main() {
 	
 	
 	srand(time(NULL));
-	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/curve_test.csv";
+	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve_noise.csv";
 	FILE* file_test;
 	if (fopen_s(&file_test, test_circle, "w") != 0) {
 		printf("Enable to open");
@@ -2958,33 +2958,34 @@ int main() {
 		double y = center.y + radius * sin(angle_rad);
 		double z = center.z;
 		
-		////add noise
-		//if (i > 0 && i < 100 && (i % 5 == 0))
-		//{
-		//	double r_x = (double)rand() / RAND_MAX;
-		//	x += 0.05 * r_x;
-		//	double r_y = (double)rand() / RAND_MAX;
-		//	y += 0.05 * r_y;
-		//}
+		//add noise
+		if (i > 0 && i < 100)
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.03 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y -= 0.03 * r_y;
+		}
 
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
 
+	
 	for (i = 1; i <= 50; i++) 
 	{
 		double x = p1.x;
 		double y = p1.y - (double)i * angle_step;
 		double z = p1.z;
 		
-		////add noise
-		//if (i > 0 && i < 50 && (i % 5 == 0))
-		//{
-		//	double r_x = (double)rand() / RAND_MAX;
-		//	x += 0.05 * r_x;
-		//	double r_y = (double)rand() / RAND_MAX;
-		//	y += 0.05 * r_y;
-		//}
+		//add noise
+		if (i > 0 && i < 50)
+		{
+			//double r_x = (double)rand() / RAND_MAX;
+			//x += 0.03 * r_x;
+			double r_y = (double)rand() / RAND_MAX;
+			y -= 0.03 * r_y;
+		}
 
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
@@ -3001,20 +3002,20 @@ int main() {
 		double y = p3.y;
 		double z = p3.z;
 		
-		////add noise
-		//if (i > 0 && i < N2 && (i % 5 == 0))
-		//{
-		//	double r_x = (double)rand() / RAND_MAX;
-		//	x += 0.05 * r_x;
-		//	double r_y = (double)rand() / RAND_MAX;
-		//	y += 0.05 * r_y;
-		//}
+		//add noise
+		if (i > 0 && i < N2)
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.03 * r_x;
+			//double r_y = (double)rand() / RAND_MAX;
+			//y -= 0.03 * r_y;
+		}
 
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
+	
 
-	/*
 	Point3D p5 = { 2.0, -0.5 * M_PI * radius, -2.0 };
 	Point3D center2 = { 0.5 * (p4.x + p5.x), 0.5 * (p4.y + p5.y), 0.5 * (p4.z + p5.z) };
 	
@@ -3026,19 +3027,19 @@ int main() {
 		double y = center2.y - radius * sin(angle_rad);
 		double z = center2.z + radius * cos(angle_rad);
 
-		////add noise
-		//if (i > 0 && i < 100 && (i % 5 == 0))
-		//{
-		//	double r_x = (double)rand() / RAND_MAX;
-		//	x += 0.02 * r_x;
-		//	double r_y = (double)rand() / RAND_MAX;
-		//	y += 0.02 * r_y;
-		//}
+		//add noise
+		if (i > 0 && i < 100)
+		{
+			double r_x = (double)rand() / RAND_MAX;
+			x += 0.03 * r_x;
+			double r_z = (double)rand() / RAND_MAX;
+			z -= 0.03 * r_z;
+		}
 
 		Point3D point = { x, y, z };
 		circlePoints.push_back(point);
 	}
-	*/
+	
 	
 	for(i = 0; i < circlePoints.size(); i++)
 	{
@@ -3047,7 +3048,7 @@ int main() {
 	
 	fclose(file_test);
 
-	
+	/*
 	//Compute and save curvature
 	const char* test_curvature = "C:/Users/Konan Allaly/Documents/Tests/output/curvature.csv";
 	FILE* file_curvature;
@@ -3085,6 +3086,7 @@ int main() {
 	fclose(file_curvature);
 	
 	delete[] curvature;
+	*/
 	
 	//Compute and save spacing
 	const char* test_spacing = "C:/Users/Konan Allaly/Documents/Tests/output/sapcing.csv";
