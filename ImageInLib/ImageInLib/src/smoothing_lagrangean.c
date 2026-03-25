@@ -99,229 +99,75 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     return true;
 }
 
-bool computeCurvatureVector(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data)
-{
-    if(evolving_curve == NULL || pscheme_data == NULL)
-    {
-        return false;
-	}
-
-    //This implementation dont take into account open curves 
-
-	double h_i = INFINITY, h_i_plus = INFINITY;
-	size_t number_of_points = evolving_curve->number_of_points;
-
-    double var_epsilon = 1e-6;
-    
-    LinkedPoint3D* evolving_point = evolving_curve->first_point;
-    for(size_t i = 1; i <= number_of_points; i++)
-    {
-        if(i > 1 && i < number_of_points)
-        {
-            h_i = evolving_point->previous->distance_to_next;// |r_{i} - r_{i - 1}|
-            h_i_plus = evolving_point->distance_to_next;// |r_{i + 1} - r_{i}|
-            
-            //Compute the discrete curvature vector components
-            double coef = 1.0 / (h_i + h_i_plus);
-            double curv_x = 2.0 * coef * (((evolving_point->next->x - evolving_point->x) / h_i_plus) - ((evolving_point->x - evolving_point->previous->x) / h_i));
-            double curv_y = 2.0 * coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
-            double curv_z = 2.0 * coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
-            pscheme_data[i].curvature = sqrt(curv_x * curv_x + curv_y * curv_y + curv_z * curv_z);
-            
-            if (h_i == 0.0 || h_i_plus == 0.0 || pscheme_data[i].curvature == 0.0)
-            {
-				//For debugging, this should not happen since we should not have two coincident points in the evolving curve
-				//we can set the curvature to zero in this case
-                // TODO: We will investigate why we have this situation
-                
-                pscheme_data[i].normal_x = 0.0;
-                pscheme_data[i].normal_y = 0.0;
-                pscheme_data[i].normal_z = 0.0; 
-            }
-            else
-            {
-				pscheme_data[i].normal_x = curv_x / (var_epsilon + pscheme_data[i].curvature);
-                pscheme_data[i].normal_y = curv_y / (var_epsilon + pscheme_data[i].curvature);
-				pscheme_data[i].normal_z = curv_z / (var_epsilon + pscheme_data[i].curvature);
-
-                //pscheme_data[i].normal_x = -coef * (evolving_point->next->y - evolving_point->previous->y);
-                //pscheme_data[i].normal_y = coef * (evolving_point->next->x - evolving_point->previous->x);
-                //pscheme_data[i].normal_z = 0.0;
-            }
-
-		}
-        else
-        {
-			//we are at the end points of an open curve
-            pscheme_data[i].curvature = 0.0;
-            pscheme_data[i].normal_x = 0.0;
-            pscheme_data[i].normal_y = 0.0;
-            pscheme_data[i].normal_z = 0.0;
-        }
-        evolving_point = evolving_point->next;
-	}
-
-	return true;
-}
-
-bool getClosestPointToCurve(LinkedCurve3D* initial_curve, LinkedPoint3D* evolving_point, double* px, double* py, double* pz)
+bool getClosestPointToCurve(LinkedCurve3D* initial_curve, LinkedPoint3D* evolving_point, bool isTheFirstTimeStep, double* px, double* py, double* pz)
 {
     if(initial_curve == NULL || evolving_point == NULL || px == NULL || py == NULL || pz == NULL)
     {
         return false;
 	}
 
-	double dist_min = INFINITY, x, y, z;
-	LinkedPoint3D* reference_point = initial_curve->first_point;
-    for(size_t i = 1; i < initial_curve->number_of_points; i++)
+    if(isTheFirstTimeStep)
     {
-        //Step 1 : compute t
-
-		//pt1 = r^{0}_{j} - r^{0}_{j+1}
-		double x_pt1 = reference_point->next->x - reference_point->x;
-		double y_pt1 = reference_point->next->y - reference_point->y;
-		double z_pt1 = reference_point->next->z - reference_point->z;
-
-		//pt2 = r^{n}_i - r^{0}_{j}
-		double x_pt2 = evolving_point->x - reference_point->x;
-		double y_pt2 = evolving_point->y - reference_point->y;
-		double z_pt2 = evolving_point->z - reference_point->z;
-
-        double numerator = x_pt1 * x_pt2 + y_pt1 * y_pt2 + z_pt1 * z_pt2;//scalar product : p1.p2
-        double denominator = x_pt1 * x_pt1 + y_pt1 * y_pt1 + z_pt1 * z_pt1;//scalar product : p1.p1
-        double t = numerator / denominator;
-
-        if(denominator != 0.0)
-        {
-            double t_cl = fmax(0.0, fmin(1.0, t));
-            x = reference_point->x + t_cl * x_pt1;
-			y = reference_point->y + t_cl * y_pt1;
-			z = reference_point->z + t_cl * z_pt1;
-        }
-        else
-        {
-            //For debugging, this should not happen since we should not have two coincident points in the initial curve
-            printf("! Points merging !");
-			return false;
-        }
-
-		double dist = sqrt((evolving_point->x - x) * (evolving_point->x - x) 
-            + (evolving_point->y - y) * (evolving_point->y - y) 
-            + (evolving_point->z - z) * (evolving_point->z - z));
-
-        if(t > 0.0 && t < 1.0 && dist < dist_min)
-        {
-            dist_min = dist;
-            *px = x;
-            *py = y;
-            *pz = z;
-		}
-		reference_point = reference_point->next;
+        *px = evolving_point->x;
+        *py = evolving_point->y;
+        *pz = evolving_point->z;
     }
-
-    return true;
-}
-
-bool normalVelocityFirstTimeStepSmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data, const double delta)
-{
-
-    //check if the pointers a well allocated
-    if (evolving_curve == NULL || pscheme_data == NULL || evolving_curve->number_of_points < 2)
+    else
     {
-        return false;
-    }
-
-    //No topological change, therefore the number of points is the same during the evolution
-    const size_t number_of_points = evolving_curve->number_of_points;
-
-    LinkedPoint3D* evolving_point = evolving_curve->first_point;
-    LinkedPoint3D* p_ref_initial = NULL;
-
-    double tx, ty, tz;
-    double n1_x, n1_y, n1_z;
-    double n2_x, n2_y, n2_z;
-    double denominator;
-
-    //Initial implementation
-    //Loop for the curve evolution
-    for (size_t i = 1; i <= number_of_points; i++)
-    {
-        pscheme_data[i].normal_x = 0.0;
-        pscheme_data[i].normal_y = 0.0;
-        pscheme_data[i].normal_z = 0.0;
-
-        if (i > 1 && i < number_of_points)
+        double dist_min = INFINITY, x, y, z;
+        LinkedPoint3D* reference_point = initial_curve->first_point;
+        for (size_t i = 1; i < initial_curve->number_of_points; i++)
         {
+            //Step 1 : compute t
 
-            double h_i = evolving_point->previous->distance_to_next;
-            double h_i_plus = evolving_point->distance_to_next;
+            //pt1 = r^{0}_{j} - r^{0}_{j+1}
+            double x_pt1 = reference_point->next->x - reference_point->x;
+            double y_pt1 = reference_point->next->y - reference_point->y;
+            double z_pt1 = reference_point->next->z - reference_point->z;
 
-            if (h_i == 0.0 || h_i_plus == 0.0)
+            //pt2 = r^{n}_i - r^{0}_{j}
+            double x_pt2 = evolving_point->x - reference_point->x;
+            double y_pt2 = evolving_point->y - reference_point->y;
+            double z_pt2 = evolving_point->z - reference_point->z;
+
+            double numerator = x_pt1 * x_pt2 + y_pt1 * y_pt2 + z_pt1 * z_pt2;//scalar product : p1.p2
+            double denominator = x_pt1 * x_pt1 + y_pt1 * y_pt1 + z_pt1 * z_pt1;//scalar product : p1.p1
+            double t = numerator / denominator;
+
+            if (denominator != 0.0)
             {
-                //TODO: think about why this happens and what to do
-                return false;
-            }
-            double som_dist = h_i_plus + h_i;
-
-            //Compute the tangent vector components
-            tx = (evolving_point->next->x - evolving_point->previous->x) / som_dist;
-            ty = (evolving_point->next->y - evolving_point->previous->y) / som_dist;
-            tz = (evolving_point->next->z - evolving_point->previous->z) / som_dist;
-            denominator = 1 + tz;
-
-            //Compute the normal plane vectors
-            if (denominator == 0.0)
-            {
-                n1_x = 0.0;
-                n1_y = -1.0;
-                n1_z = 0.0;
-
-                n2_x = -1.0;
-                n2_y = 0.0;
-                n2_z = 0.0;
-
+                double t_cl = fmax(0.0, fmin(1.0, t));
+                x = reference_point->x + t_cl * x_pt1;
+                y = reference_point->y + t_cl * y_pt1;
+                z = reference_point->z + t_cl * z_pt1;
             }
             else
             {
-                //Compute N1 components
-                n1_x = (1.0 - tx * tx) / denominator;
-                n1_y = -tx * ty / denominator;
-                n1_z = -tx;
-
-                //Compute N2 components
-                n2_x = -tx * ty / denominator;
-                n2_y = (1.0 - ty * ty) / denominator;
-                n2_z = -ty;
+                //For debugging, this should not happen since we should not have two coincident points in the initial curve
+                printf("! Points merging !");
+                return false;
             }
 
-            //Compute the curvature vector
-            double coef = 2.0 / som_dist;
-            double curv_x = coef * (((evolving_point->next->x - evolving_point->x) / h_i_plus) - ((evolving_point->x - evolving_point->previous->x) / h_i));
-            double curv_y = coef * (((evolving_point->next->y - evolving_point->y) / h_i_plus) - ((evolving_point->y - evolving_point->previous->y) / h_i));
-            double curv_z = coef * (((evolving_point->next->z - evolving_point->z) / h_i_plus) - ((evolving_point->z - evolving_point->previous->z) / h_i));
+            double dist = sqrt((evolving_point->x - x) * (evolving_point->x - x)
+                + (evolving_point->y - y) * (evolving_point->y - y)
+                + (evolving_point->z - z) * (evolving_point->z - z));
 
-            //Compute the curvature component in the new normal basis
-            pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
-            pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
-
-            //Compute the normal velocity component
-            pscheme_data[i].u = delta * pscheme_data[i].k1;//The attraction vector == 0.0
-            pscheme_data[i].v = delta * pscheme_data[i].k2;//The attraction vector == 0.0
+            if (dist < dist_min)
+            {
+                dist_min = dist;
+                *px = x;
+                *py = y;
+                *pz = z;
+            }
+            reference_point = reference_point->next;
         }
-        else
-        {
-            //we are at the end points of an open curve
-            pscheme_data[i].u = 0.0;
-            pscheme_data[i].v = 0.0;
-        }
-        evolving_point = evolving_point->next;
     }
 
     return true;
 }
 
 bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
-    const double delta, const double lambda)
+    bool isTheFirstTimeStep, const double delta, const double lambda)
 {
 
     //check if the pointers a well allocated
@@ -342,15 +188,24 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
     double n1_x, n1_y, n1_z;
     double n2_x, n2_y, n2_z;
     double denominator;
+    double r0_minus_r_x, r0_minus_r_y, r0_minus_r_z;
+    double attract1, attract2;
     for (size_t i = 1; i <= number_of_points; i++)
     {
         if (i > 1 && i < number_of_points)
         {
             
-            if(!getClosestPointToCurve(initial_curve, evolving_point, &x, &y, &z))
+            //Get the attraction vector
+            x = evolving_point->x;
+            y = evolving_point->y;
+            z = evolving_point->z;
+            if(!getClosestPointToCurve(initial_curve, evolving_point, isTheFirstTimeStep, &x, &y, &z))
             {
                 return false;
             }
+            r0_minus_r_x = x - evolving_point->x;
+            r0_minus_r_y = y - evolving_point->y;
+            r0_minus_r_z = z - evolving_point->z;
 
             double h_i = evolving_point->previous->distance_to_next;
             double h_i_plus = evolving_point->distance_to_next;
@@ -403,16 +258,16 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             pscheme_data[i].k1 = curv_x * n1_x + curv_y * n1_y + curv_z * n1_z;
             pscheme_data[i].k2 = curv_x * n2_x + curv_y * n2_y + curv_z * n2_z;
 
-            pscheme_data[i].normal_x = (x - evolving_point->x) * n1_x + (x - evolving_point->x) * n2_x;
-            pscheme_data[i].normal_y = (y - evolving_point->y) * n1_y + (y - evolving_point->y) * n2_y;
-            pscheme_data[i].normal_z = (z - evolving_point->z) * n1_z + (z - evolving_point->z) * n2_z;
+            attract1 = lambda * (r0_minus_r_x * n1_x + r0_minus_r_y * n1_y + r0_minus_r_z * n1_z);
+            attract2 = lambda * (r0_minus_r_x * n2_x + r0_minus_r_y * n2_y + r0_minus_r_z * n2_z);
+
+            pscheme_data[i].normal_x = attract1 * n1_x + attract2 * n2_x;
+            pscheme_data[i].normal_y = attract1 * n1_y + attract2 * n2_y;
+            pscheme_data[i].normal_z = attract1 * n1_z + attract2 * n2_z;
 
             //Compute the normal velocity component
-            pscheme_data[i].u = delta * pscheme_data[i].k1 + (x - evolving_point->x) * n1_x
-                + (y - evolving_point->y) * n1_y + (z - evolving_point->z) * n1_z;
-
-            pscheme_data[i].v = delta * pscheme_data[i].k2 + (x - evolving_point->x) * n2_x
-                + (y - evolving_point->y) * n2_y + (z - evolving_point->z) * n2_z;
+            pscheme_data[i].u = delta * pscheme_data[i].k1 + r0_minus_r_x * n1_x + r0_minus_r_y * n1_y + r0_minus_r_z * n1_z;
+            pscheme_data[i].v = delta * pscheme_data[i].k2 + r0_minus_r_x * n2_x + r0_minus_r_y * n2_y + r0_minus_r_z * n2_z;
 
         }
         else
@@ -425,9 +280,6 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             pscheme_data[i].normal_x = 0.0;
             pscheme_data[i].normal_y = 0.0;
             pscheme_data[i].normal_z = 0.0;
-            
-            //pscheme_data[i].w = 0.0;
-            //pscheme_data[i].beta = 0.0;
         }
         evolving_point = evolving_point->next;
     }
@@ -457,27 +309,23 @@ bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
         avg_length = curve_length / (dataType)(number_of_points);//The curve is closed
     }
 
-    LinkedPoint3D* current_point = evolving_curve->first_point->next;
-    size_t nb_elts = 0;
-    for (size_t i = 2; i <= number_of_points; i++)
+    LinkedPoint3D* current_point = evolving_curve->first_point;
+    for (size_t i = 1; i <= number_of_points; i++)
     {
-        //if (!isCurveOpen || i > 1)
-        //{
-        //    //if it is not the first point
-        //    h_i = current_point->previous->distance_to_next;
-        //}
-        //else
-        //{
-        //    //first point
-        //    h_i = current_point->distance_to_next;
-        //}
-
-        h_i = current_point->previous->distance_to_next;
+        if (i == 1)
+        {
+            //if it is not the first point
+            h_i = current_point->distance_to_next;
+        }
+        else
+        {
+            //first point
+            h_i = current_point->previous->distance_to_next;;
+        }
 
         mean += h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2);
 
         current_point = current_point->next;
-        nb_elts++;
     }
 
     mean /= curve_length;
@@ -485,19 +333,18 @@ bool tangentialVelocitySmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* ps
     pscheme_data[0].alfa = 0.0;
     pscheme_data[1].alfa = 0.0;
 
-    current_point = evolving_curve->first_point->next;
-    for (size_t i = 2; i <= number_of_points; i++)
+    current_point = evolving_curve->first_point;
+    for (size_t i = 1; i <= number_of_points; i++)
     {
-        //if (i == 1)
-        //{
-        //    h_i = current_point->distance_to_next;
-        //}
-        //else
-        //{
-        //    h_i = current_point->previous->distance_to_next;
-        //}
+        if (i == 1)
+        {
+            h_i = current_point->distance_to_next;
+        }
+        else
+        {
+            h_i = current_point->previous->distance_to_next;
+        }
 
-        h_i = current_point->previous->distance_to_next;
         pscheme_data[i].alfa = pscheme_data[i - 1].alfa + h_i * (pscheme_data[i].u * pscheme_data[i].k1 + pscheme_data[i].v * pscheme_data[i].k2) - h_i * mean + omega * (avg_length - h_i);
         current_point = current_point->next;
     }
@@ -570,7 +417,7 @@ bool coefficientsSmoothing(LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_
 }
 
 bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D* evolving_curve, SchemeData3D* pscheme_data,
-    const LagrangeanSmoothingParameters* pSmoothingParameters, bool isFirstTimeStep)
+    const LagrangeanSmoothingParameters* pSmoothingParameters, bool isTheFirstTimeStep)
 {
     //check if the pointers a well allocated
     if (initial_curve == NULL || evolving_curve == NULL || pscheme_data == NULL || pSmoothingParameters == NULL)
@@ -585,26 +432,9 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
 
 	bool is_curve_open = pSmoothingParameters->open_curve;
 
-	//Compute the curvature vector
-    if(!computeCurvatureVector(evolving_curve, pscheme_data))
+    if (!normalVelocitySmoothing(initial_curve, evolving_curve, pscheme_data, isTheFirstTimeStep, delta, lambda))
     {
         return false;
-	}
-
-    //function to compute the normal velocity
-    if(isFirstTimeStep)
-    {
-        if (!normalVelocityFirstTimeStepSmoothing(evolving_curve, pscheme_data, delta))
-        {
-            return false;
-		}
-    }
-    else
-    {
-        if (!normalVelocitySmoothing(initial_curve, evolving_curve, pscheme_data, delta, lambda))
-        {
-            return false;
-        }
     }
 
     //function to compute the tangential velocity
@@ -640,7 +470,7 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
             pscheme_data[i].ps = pscheme_data[i].m * current_point->x 
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->x - current_point->next->x) 
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->x - current_point->previous->x) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_x;
+                + pscheme_data[i].m * tau * pscheme_data[i].normal_x;
 
         }
         current_point = current_point->next;
@@ -683,7 +513,7 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
             pscheme_data[i].ps = pscheme_data[i].m * current_point->y 
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->y - current_point->next->y) 
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->y - current_point->previous->y) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_y;
+                + pscheme_data[i].m * tau * pscheme_data[i].normal_y;
 
         }
         current_point = current_point->next;
@@ -734,7 +564,7 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
             pscheme_data[i].ps = pscheme_data[i].m * current_point->z 
                 - 0.5 * fmin(pscheme_data[i].alfa, 0) * (current_point->z - current_point->next->z) 
                 - 0.5 * fmin(-pscheme_data[i].alfa, 0) * (current_point->z - current_point->previous->z) 
-                + lambda * pscheme_data[i].m * tau * pscheme_data[i].normal_z;
+                + pscheme_data[i].m * tau * pscheme_data[i].normal_z;
 
         }
         current_point = current_point->next;
