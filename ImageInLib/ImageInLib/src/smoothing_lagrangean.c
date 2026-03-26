@@ -36,7 +36,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     LinkedCurve3D initial_curve = create3dLinkedCurve();
 
     //Initialize the evolving linked curve
-    initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &initial_curve, !isOrientedPositively, isCurveClosed);
+    initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &initial_curve, false, isCurveClosed);
 
     resetIDGenerator();
 
@@ -44,7 +44,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     LinkedCurve3D evolving_curve = create3dLinkedCurve();
 
     //Initialize the evolving linked curve
-    initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &evolving_curve, !isOrientedPositively, isCurveClosed);
+    initialize3dLinkedCurve(pSmoothingParameters->pinitial_condition, &evolving_curve, false, isCurveClosed);
 
     //Data size for the scheme, 
     // we add 2 to be sure that we have enough memory

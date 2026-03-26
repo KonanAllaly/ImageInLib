@@ -562,6 +562,33 @@ extern "C" {
 	LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z);
 
 	/// <summary>
+	/// Insert a new point in the curve, can be usefull when the spacing is too large
+	/// </summary>
+	/// <param name="linked_curve">the curve</param>
+	/// <param name="linked_point">the points of interest</param>
+	/// <param name="point_x">coord x</param>
+	/// <param name="point_y">coord y</param>
+	/// <param name="point_z">coord z</param>
+	/// <returns></returns>
+	LinkedPoint3D* insertAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z);
+
+	/// <summary>
+	/// Remove a given point from the curve, can be usefull when points are merging
+	/// </summary>
+	/// <param name="linked_curve">the curve</param>
+	/// <param name="linked_point">the point of interest</param>
+	/// <returns></returns>
+	bool remove3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point);
+
+	/// <summary>
+	/// Resample a curve to have uniform spacing between points
+	/// </summary>
+	/// <param name="linked_curve">the curve of interest</param>
+	/// <param name="target_spacing">the new spacing</param>
+	/// <returns>return the number of inserted points, -1 if the function failed</returns>
+	int resample3dCurve(LinkedCurve3D* linked_curve, const double target_spacing);
+
+	/// <summary>
 	/// Initialize given 3d linked curve (opened or closed)
 	/// </summary>
 	/// <param name="pcurve">the input curve, contains all initial curve points</param>

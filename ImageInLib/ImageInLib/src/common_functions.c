@@ -2,6 +2,8 @@
 #include "common_functions.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <inttypes.h>
 
 
 //==============================================================================
@@ -481,7 +483,6 @@ bool getGradient2D(dataType* pbase_data, const size_t width, const size_t height
 	{
 		dy = (pbase_data[x_new(x, y + 1, width)] - pbase_data[x_new(x, y - 1, width)]) / hy_c;
 	}
-
 
 	grad->x = dx;
 	grad->y = dy;
@@ -1087,9 +1088,12 @@ LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* link
 
 	if (linked_point->next != NULL)
 	{
+		//For open curve, this never happens
+		//because linked_point is the last point in the curve
 		new_linked_point->next = linked_point->next;
 	}
 
+	//the newly created point is set as the next neighbour of the last point, i.e: linked_point
 	linked_point->next = new_linked_point;
 	(linked_point->next)->previous = linked_point;
 
@@ -1099,6 +1103,97 @@ LinkedPoint3D* pushAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* link
 	updateDistance3dToNext(linked_curve, new_linked_point);
 
 	return new_linked_point;
+}
+
+LinkedPoint3D* insertAfter3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point, const double point_x, const double point_y, const double point_z)
+{
+	if (linked_curve == NULL || linked_point == NULL)
+		return NULL;
+
+	if (linked_point->next == NULL)
+	{
+		fprintf(stderr, "insertAfter3dPoint: linked_point has no next, "
+			"cannot insert between.\n");
+		return NULL;
+	}
+
+	// --- Insert the new point between linked_point and linked_point->next ---
+	LinkedPoint3D* point_after = linked_point->next;
+
+	LinkedPoint3D* new_point = create3dLinkedPoint(point_x, point_y, point_z);
+	if (new_point == NULL)
+		return NULL;
+
+	// Assign the new point the ID of point_after (it takes its place in the chain)
+	new_point->id = point_after->id;
+
+	// Re-link
+	new_point->previous = linked_point;
+	new_point->next = point_after;
+	linked_point->next = new_point;
+	point_after->previous = new_point;
+
+	linked_curve->number_of_points++;
+
+	// --- Shift IDs of all points from point_after onwards ---
+	LinkedPoint3D* current = point_after;
+	while (current != NULL)
+	{
+		current->id++;
+		current = current->next;
+	}
+
+	// --- Update distances ---
+	updateDistance3dToNext(linked_curve, linked_point);
+	updateDistance3dToNext(linked_curve, new_point);
+
+	return new_point;
+}
+
+bool remove3dPoint(LinkedCurve3D* linked_curve, LinkedPoint3D* linked_point)
+{
+	if (linked_curve == NULL || linked_point == NULL)
+		return false;
+
+	// do not remove the first point
+	if (linked_point->previous == NULL)
+	{
+		fprintf(stderr, "cannot remove the first point.\n");
+		return false;
+	}
+
+	// do not remove the last point
+	if (linked_point->next == NULL)
+	{
+		fprintf(stderr, "cannot remove the last point.\n");
+		return false;
+	}
+
+	LinkedPoint3D* point_before = linked_point->previous;
+	LinkedPoint3D* point_after = linked_point->next;
+
+	//Re-link neighbours, bypassing linked_point
+	point_before->next = point_after;
+	point_after->previous = point_before;
+
+	//Update distance from point_before to point_after
+	updateDistance3dToNext(linked_curve, point_before);
+
+	//Shift IDs of all points from point_after onwards
+	LinkedPoint3D* current = point_after;
+	while (current != NULL)
+	{
+		current->id--;
+		current = current->next;
+	}
+
+	linked_curve->number_of_points--;
+
+	//Free the removed point
+	free(linked_point);
+	linked_point = NULL;
+
+	return true;
 }
 
 bool initialize3dLinkedCurve(Curve3D* pcurve, LinkedCurve3D* plinked_curve, const bool reverse, const bool close_curve)
@@ -1165,6 +1260,73 @@ void release3dLinkedCurve(LinkedCurve3D* linked_curve)
 
 		current_point = next_point;
 	}
+}
+
+int resample3dCurve(LinkedCurve3D* linked_curve, const double target_spacing)
+{
+	if (linked_curve == NULL || linked_curve->first_point == NULL)
+		return -1;
+
+	if (target_spacing <= 0.0)
+	{
+		fprintf(stderr, "resample3dCurve: target_spacing must be strictly positive.\n");
+		return -1;
+	}
+
+	int total_inserted = 0;
+	LinkedPoint3D* current = linked_curve->first_point;
+
+	while (current != NULL && current->next != NULL)
+	{
+		double dist = current->distance_to_next;
+
+		//If actual spacing is already <= target, leave this segment alone
+		if (dist <= target_spacing)
+		{
+			current = current->next;
+			continue;
+		}
+
+		//Compute how many new points to insert in this segment
+		// e.g. dist=1.0, target=0.25 -> num_intervals=4, insert 3 new points
+		int num_intervals = (int)ceil(dist / target_spacing);
+		int num_to_insert = num_intervals - 1;
+
+		double x0 = current->x;
+		double y0 = current->y;
+		double z0 = current->z;
+
+		double x1 = current->next->x;
+		double y1 = current->next->y;
+		double z1 = current->next->z;
+
+		LinkedPoint3D* insert_after = current;
+
+		for (int i = 1; i <= num_to_insert; i++)
+		{
+			// Linear interpolation parameter t in (0, 1)
+			double t = (double)i / (double)num_intervals;
+
+			double new_x = x0 + t * (x1 - x0);
+			double new_y = y0 + t * (y1 - y0);
+			double new_z = z0 + t * (z1 - z0);
+
+			LinkedPoint3D* inserted = insertAfter3dPoint(linked_curve, insert_after, new_x, new_y, new_z);
+			if (inserted == NULL)
+			{
+				fprintf(stderr, "resample3dCurve: insertion failed at segment " "(%llu -> %llu).\n", insert_after->id, insert_after->next->id);
+				return -1;
+			}
+
+			total_inserted++;
+			insert_after = inserted;  // next point inserts after the one we just added
+		}
+
+		//Move to the original next point (now further ahead in the chain) ---
+		current = insert_after->next;
+	}
+
+	return total_inserted;
 }
 
 BoundingBox findPointBoundingBox(Image_Data imageDataPtr, Point3D point, double radius) {
