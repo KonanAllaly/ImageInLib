@@ -16,6 +16,7 @@ extern "C" {
 		dataType delta;                 // curvature weight
 		dataType lambda;                // attraction weight
 		dataType omega;                 // redistribution speed
+		double tolerance;              // tolerance for convergence
 		bool open_curve;
 	} LagrangeanSmoothingParameters;
 

@@ -59,6 +59,20 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     // on the initial curve since it is the same as the evolving curve
     bool isFirstTimeStep = true; 
 
+	double initilal_length = evolving_curve.length;
+    double current_length = initilal_length, previous_length = initilal_length;
+    double length_diff = 0.0;
+
+    //Save the total lenght
+    const char * savingPath = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/Torsion/curve_length_p3.csv";
+    //savingPath = outputPath + "centered_smoothed_p1_without_attr.csv";
+    FILE* file_save;
+    if (fopen_s(&file_save, savingPath, "w") != 0) {
+        printf("Enable to open");
+        return false;
+    }
+    fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
+
     do
     {
         if (it == 1)
@@ -79,7 +93,16 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
 
         isFirstTimeStep = false;
 
+		current_length = evolving_curve.length;
+		length_diff = fabs(current_length - previous_length);
+
+        fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
+
+		previous_length = current_length;
+
     } while (it <= pSmoothingParameters->num_time_steps);
+    //it <= pSmoothingParameters->num_time_steps ||
+    //length_diff > pSmoothingParameters->tolerance
 
     LinkedPoint3D* final_curve = evolving_curve.first_point;
 
@@ -90,6 +113,8 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
         pResultCurve->pPoints[i].z = (dataType)final_curve->z;
         final_curve = final_curve->next;
     }
+
+    fclose(file_save);
 
 	final_curve = NULL;
     free(pscheme_data);
