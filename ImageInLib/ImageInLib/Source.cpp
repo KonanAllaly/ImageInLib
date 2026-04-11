@@ -45,6 +45,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
+	
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -65,6 +66,7 @@ int main() {
 	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
+	
 
 	/*
 	float** imageDataF = new float* [Height];
@@ -2875,7 +2877,7 @@ int main() {
 	//fclose(f_curv_max);
 	*/
 	
-	
+	/*
 	srand(time(NULL));
 	const char* test_circle = "C:/Users/Konan Allaly/Documents/Tests/output/test_curve_noise.csv";
 	FILE* file_test;
@@ -2885,6 +2887,7 @@ int main() {
 	}
 
 	vector<Point3D> circlePoints;
+	*/
 
 	/*
 	size_t N = 100;
@@ -2945,6 +2948,7 @@ int main() {
 	}
 	*/
 
+    /*
 	Point3D p1 = { 0.0, 0.0, 0.0 };
 	Point3D p2 = { 2.0, 0.0, 0.0 };
 	double radius = 0.5 * getPoint3DDistance(p1, p2);
@@ -3047,6 +3051,7 @@ int main() {
 	}
 	
 	fclose(file_test);
+	*/
 
 	/*
 	//Compute and save curvature
@@ -3088,6 +3093,7 @@ int main() {
 	delete[] curvature;
 	*/
 	
+    /*
 	//Compute and save spacing
 	const char* test_spacing = "C:/Users/Konan Allaly/Documents/Tests/output/sapcing.csv";
 	FILE* file_spacing;
@@ -3105,6 +3111,7 @@ int main() {
 	
 
 	circlePoints.clear();
+	*/
 
 	//==================== Liver Cropping Test ========================================================
 
@@ -3318,6 +3325,67 @@ int main() {
 		delete[] imageDataD[k];
 	}
 	delete[] imageDataF;
+	delete[] imageDataD;
+	*/
+
+	//==================== Tests for New data ==========================
+
+	/*
+	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
+
+	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
+	ctContainer->operation = copyFrom;
+	loading_path = root + "input/vtk/petct/AortaSeg24/subject001_CTA.vtk";
+	readVtkFile(loading_path.c_str(), ctContainer);
+
+	//std::cout << "============ Input CT ================ " << std::endl;
+
+	int Height = ctContainer->dimensions[2];
+	int Length = ctContainer->dimensions[0];
+	int Width = ctContainer->dimensions[1];
+	int dim2D = Length * Width;
+	std::cout << "CT image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << ctContainer->dimensions[2] << "" << std::endl;
+
+	std::cout << "CT origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << std::endl;
+	Point3D imageOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
+	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
+	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	std::cout << "=========================================" << std::endl;
+
+	free(ctContainer);
+	*/
+
+	/*
+	const size_t length = 435, width = 435, height = 724;
+	short** imageDataS = new short* [height];
+	dataType** imageDataD = new dataType * [height];
+	for (k = 0; k < height; k++)
+	{
+		imageDataS[k] = new short[length * width]{ 0 };
+		imageDataD[k] = new dataType[length * width]{ 0 };
+	}
+
+	loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/seg24_patient1.raw";
+	manageRAWFile3D<short>(imageDataS, length, width, height, loading_path.c_str(), LOAD_DATA, false);
+
+	//Convert to double
+	for (k = 0; k < height; k++)
+	{
+		for (i = 0; i < length * width; i++)
+		{
+			imageDataD[k][i] = (dataType)imageDataS[k][i];
+		}
+	}
+
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/seg24_patient1.raw";
+	manageRAWFile3D<dataType>(imageDataD, length, width, height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < height; k++)
+	{
+		delete[] imageDataS[k];
+		delete[] imageDataD[k];
+	}
+	delete[] imageDataS;
 	delete[] imageDataD;
 	*/
 
