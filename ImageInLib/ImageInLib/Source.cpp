@@ -24,6 +24,7 @@
 #include "../src/non_linear_heat_equation.h"
 
 #include "gaussian_distribution.h"
+#include "load_nifti.h"
 
 #define MAX_LINE_LENGTH 1024
 #define epsilon 1e-6 
@@ -45,7 +46,7 @@ int main() {
 	needed when we need to perform interpolation.
 	*/
 	
-	
+	/*
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
@@ -66,7 +67,7 @@ int main() {
 	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
-	
+	*/
 
 	/*
 	float** imageDataF = new float* [Height];
@@ -3330,64 +3331,63 @@ int main() {
 
 	//==================== Tests for New data ==========================
 
-	/*
 	OrientationMatrix orientation = { { 1.0, 0.0, 0.0 } , { 0.0, 1.0, 0.0 } , { 0.0, 0.0, 1.0 } };
 
-	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
-	ctContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/AortaSeg24/subject001_CTA.vtk";
-	readVtkFile(loading_path.c_str(), ctContainer);
+	const char* filepath = "C:/Users/Konan Allaly/Documents/Tests/AortaSeg24/images/images/subject005_CTA.nii.gz";
+	NiiContainer imageDataStr = { 0 };
 
+	if (load_nii(filepath, &imageDataStr) != true)
+	{
+		fprintf(stderr, "Failed to load '%s'\n", filepath);
+		return false;
+	}
 	//std::cout << "============ Input CT ================ " << std::endl;
 
-	int Height = ctContainer->dimensions[2];
-	int Length = ctContainer->dimensions[0];
-	int Width = ctContainer->dimensions[1];
-	int dim2D = Length * Width;
-	std::cout << "CT image dim : " << ctContainer->dimensions[0] << " x " << ctContainer->dimensions[1] << " x " << ctContainer->dimensions[2] << "" << std::endl;
+	size_t Height = imageDataStr.heigth;
+	size_t Length = imageDataStr.length;
+	size_t Width = imageDataStr.width;
+	size_t dim2D = Length * Width;
+	std::cout << "CT image dim : " << Length << " x " << Width << " x " << Height << "" << std::endl;
 
-	std::cout << "CT origin : (" << ctContainer->origin[0] << ", " << ctContainer->origin[1] << ", " << ctContainer->origin[2] << ")" << std::endl;
-	Point3D imageOrigin = { ctContainer->origin[0], ctContainer->origin[1], ctContainer->origin[2] };
-	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
-	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl;
+	std::cout << "CT origin : (" << imageDataStr.ox << ", " << imageDataStr.oy << ", " << imageDataStr.oz << ")" << std::endl;
+	Point3D imageOrigin = { imageDataStr.ox, imageDataStr.oy, imageDataStr.oz };
+	VoxelSpacing imageSpacing = { imageDataStr.sx, imageDataStr.sy, imageDataStr.sz };
+	std::cout << "CT spacing : (" << imageDataStr.sx << ", " << imageDataStr.sy << ", " << imageDataStr.sz << ")" << std::endl;
 	std::cout << "=========================================" << std::endl;
 
-	free(ctContainer);
-	*/
-
-	/*
-	const size_t length = 435, width = 435, height = 724;
-	short** imageDataS = new short* [height];
-	dataType** imageDataD = new dataType * [height];
-	for (k = 0; k < height; k++)
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++)
 	{
-		imageDataS[k] = new short[length * width]{ 0 };
-		imageDataD[k] = new dataType[length * width]{ 0 };
+		imageData[k] = new dataType[Length * Width]{ 0 };
 	}
 
-	loading_path = "C:/Users/Konan Allaly/Documents/Tests/input/seg24_patient1.raw";
-	manageRAWFile3D<short>(imageDataS, length, width, height, loading_path.c_str(), LOAD_DATA, false);
-
-	//Convert to double
-	for (k = 0; k < height; k++)
+	//Copy data from the loaded NiiContainer to the new imageData array
+	for (k = 0; k < Height; k++)
 	{
-		for (i = 0; i < length * width; i++)
+		for (i = 0; i < Length; i++) 
 		{
-			imageDataD[k][i] = (dataType)imageDataS[k][i];
+			for (j = 0; j < Width; j++) 
+			{
+				imageData[k][x_new(i, j, Length)] = get_voxel(&imageDataStr, i, j, k);
+			}
 		}
 	}
 
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/seg24_patient1.raw";
-	manageRAWFile3D<dataType>(imageDataD, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/seg24_patient5.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	for (k = 0; k < height; k++)
+	for (k = 0; k < Height; k++)
 	{
-		delete[] imageDataS[k];
-		delete[] imageDataD[k];
+		delete[] imageData[k];
 	}
-	delete[] imageDataS;
-	delete[] imageDataD;
-	*/
+	delete[] imageData;
+
+	//const char saveVtkPath[] = "C:/Users/Konan Allaly/Documents/Tests/output/subject001_CTA.vtk";
+	//if(saveNiiVolumeAsVtk(&imageDataStr, saveVtkPath, dta_binary) != true)
+	//{
+	//	fprintf(stderr, "Failed to save '%s'\n", saveVtkPath);
+	//	return false;
+	//}
 
 	return EXIT_SUCCESS;
 }

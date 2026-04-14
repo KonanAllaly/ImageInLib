@@ -359,6 +359,9 @@
     <ClCompile Include="src\gaussian_distribution.c">
       <Filter>Source Files\Statistics</Filter>
     </ClCompile>
+    <ClCompile Include="src\load_nifti.c">
+      <Filter>Source Files\File Management</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\transformations.h">
@@ -540,6 +543,9 @@
     </ClInclude>
     <ClInclude Include="include\gaussian_distribution.h">
       <Filter>Header Files\Statistics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\load_nifti.h">
+      <Filter>Header Files\File Management</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
