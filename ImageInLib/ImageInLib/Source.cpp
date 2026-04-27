@@ -2051,15 +2051,17 @@ int main() {
 	//CT = {-300, -226.484, -1275}
 	Point3D imageOrigin = { -300, -226.484, -1275 }; //for analysis after treatment
 	//PET = {-286.586, -213.07, -1274}
-	
+	*/
     
+	
 	//==================== PET ================
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
-	loading_path = inputPath + "vtk/petct/pet/Patient2_pet.vtk";
+	loading_path = root + "input/vtk/petct/pet/Patient1_pet.vtk";
 	readVtkFile(loading_path.c_str(), petContainer);
-	//Point3D PETimageOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
-	Point3D PETimageOrigin = { -286.586, -213.07, -1274 };// for analysis after treatment
+	
+	Point3D PETimageOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
+	//Point3D PETimageOrigin = { -286.586, -213.07, -1274 };// for analysis after treatment
 	std::cout << "PET origin : (" << petContainer->origin[0] << ", " << petContainer->origin[1] << ", " << petContainer->origin[2] << ")" << std::endl;
 	VoxelSpacing PETimageSpacing = { petContainer->spacing[0], petContainer->spacing[1], petContainer->spacing[2] };
 	std::cout << "PET spacing : (" << petContainer->spacing[0] << ", " << petContainer->spacing[1] << ", " << petContainer->spacing[2] << ")" << std::endl;
@@ -2069,6 +2071,7 @@ int main() {
 	std::cout << "PET image dim : " << petContainer->dimensions[0] << " x " << petContainer->dimensions[1] << " x " << petContainer->dimensions[2] << "" << std::endl;
 	std::cout << "=========================================" << std::endl;
 	//==========================================
+	
 	
 	// Load liver CT
 	dataType** maskLiver = new dataType * [Height];
@@ -2082,8 +2085,10 @@ int main() {
 		maskAorta[k] = new dataType[dim2D] { 0 };
 		distanceMap[k] = new dataType[dim2D]{ 0 };
 	}
+	
+	
 	Image_Data inputImageStr = { Height, Length, Width, imageDataFull, imageOrigin, imageSpacing, orientation };
-	loading_path = inputPath + "raw/liver/liver_p2.raw";
+	loading_path = root + "input/raw/liver/liver_p1.raw";
 	manageRAWFile3D<dataType>(maskLiver, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//Ball Liver PET
@@ -2106,9 +2111,8 @@ int main() {
 	double radius_liver_roi = 20 + 1.5 * fmax(PETimageSpacing.sx, fmax(PETimageSpacing.sy, PETimageSpacing.sz));// approx 15mm
 
 	////get mean SUV liver
-	//dataType mean_SUV_Liver = 2.39835;//p1
-	//dataType mean_SUV_Liver = 2.37516;
-	//dataType mean_SUV_Liver = 2.57092;//p2
+	//dataType mean_SUV_Liver = 2.37516, ratio = 2.14847;
+	//dataType mean_SUV_Liver = 2.56972, ratio = 1.24//p2
 
 	dataType mean_SUV_Liver = 0.0;
 	
@@ -2134,7 +2138,7 @@ int main() {
 						ballLiverPet[kk_pet][x_new(ii_pet, jj_pet, length_pet)] = 1.0;
 						mean_SUV_Liver += petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
 						count_voxels++;
-						statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] == true;
+						statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] = true;
 					}
 				}
 			}
@@ -2143,8 +2147,8 @@ int main() {
 	
 	mean_SUV_Liver /= (dataType)count_voxels;
 	std::cout << "Liver mean SUV : " << mean_SUV_Liver << std::endl;
-	//storing_path = outputPath + "P2 translated/ball_liver_p1.raw";
-	//manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
+	storing_path = root + "output/ball_liver_p1.raw";
+	manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
 
 	for(k = 0; k < height_pet; k++)
 	{
@@ -2153,13 +2157,13 @@ int main() {
 	}
 	delete[] ballLiverPet;
 	delete[] statusPetBall;
-
+	
 	////==================== Segmented aorta distance map ==================================
-	//const size_t length = 150, width = 150, height = 350;//p1,p2
+	////const size_t length = 150, width = 150, height = 350;//p1,p2
 	////const size_t length = 150, width = 150, height = 380;//p3
 	////const size_t length = 150, width = 150, height = 350;//p4
 	////const size_t length = 160, width = 160, height = 360;//p5
-	////const size_t length = 150, width = 150, height = 400;//p6
+	//const size_t length = 150, width = 150, height = 400;//p6
 	//dataType** imageData = new dataType * [height];
 	//dataType** maskData = new dataType * [height];
 	//bool** statusPoints = new bool * [height];
@@ -2173,176 +2177,107 @@ int main() {
 	//////Patient 1
 	//Point3D segmentOrigin = { -65.625, 4.375, -700.234 };
 	//VoxelSpacing segmentSpacing = { 1.171875, 1.171875, 1.171875 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
 	////Patient 2
 	//Point3D segmentOrigin = { -77.3438, 16.0938, -780.316 };
 	//VoxelSpacing segmentSpacing = { 1.171875, 1.171875, 1.171875 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
 	////Patient 3
 	//Point3D segmentOrigin = { -64.4532, -74.2188, -622.594 };
 	//VoxelSpacing segmentSpacing = { 0.976562, 0.976562, 0.976562 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
 	////Patient 4
 	//Point3D segmentOrigin = { -64.4532, -64.4532, -537.266 };
 	//VoxelSpacing segmentSpacing = { 0.976562, 0.976562, 0.976562 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
 	////Patient 5
 	//Point3D segmentOrigin = { -63.9648, -236.996, 1354.21 };
 	//VoxelSpacing segmentSpacing = { 0.976562, 0.976562, 0.976562 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
 	////Patient 6
 	//Point3D segmentOrigin = { -73.7305, -206.754, -767.055 };
 	//VoxelSpacing segmentSpacing = { 0.976562, 0.976562, 0.976562 };
-	//Image_Data inputImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
+	//Image_Data segmentImageStr = { height, length, width, imageData, segmentOrigin, segmentSpacing, orientation };
 
-	//loading_path = outputPath + "Segmentation/3D image/p1/_seg_func_05000.raw";
+	//loading_path = root + "output/Segmentation/Aorta/p6/_seg_func_05000.raw";
 	//manageRAWFile3D<dataType>(imageData, length, width, height, loading_path.c_str(), LOAD_DATA, false);
-	//for (k = 0; k < height; k++) 
+	//for (k = 0; k < height; k++)
 	//{
-	//	for(i = 0; i < length * width; i++) 
+	//	for (i = 0; i < length; i++)
 	//	{
-	//		if(imageData[k][i] >= 0.2) 
+	//		for (j = 0; j < width; j++)
 	//		{
-	//			imageData[k][i] = 1.0;
-	//		}
-	//		else 
-	//		{
-	//			imageData[k][i] = 0.0;
-	//		}
-	//	}
-	//}
-
-	//storing_path = outputPath + "P1/seg_aorta_isoline_02.raw";
-	//manageRAWFile3D<dataType>(imageData, length, width, height, storing_path.c_str(), LOAD_DATA, false);
-	////Observe mask at aorta edge in PET
-	//size_t min_i, max_i, min_j, max_j, min_k, max_k;
-	//size_t l_mask = 0;
-	//for(k = 0; k < height; k++)
-	//{
-	//	for(i = 0; i < length; i++)
-	//	{
-	//		for(j = 0; j < width; j++)
-	//		{
-	//			if(imageData[k][x_new(i, j, length)] == 1.0)
+	//			if (imageData[k][x_new(i, j, length)] >= 0.3)
 	//			{
-	//				if (isEdgeVoxel(imageData, length, width, height, i, j, k, 0.0) == true) 
-	//				{
-	//					Point3D p = { (dataType)i, (dataType)j, (dataType)k };
-	//					Point3D p_real = getRealCoordFromImageCoord3D(p, segmentOrigin, segmentSpacing, orientation);
-	//					Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-	//					size_t i_pet = (size_t)p_pet.x;
-	//					size_t j_pet = (size_t)p_pet.y;
-	//					size_t k_pet = (size_t)p_pet.z;
-	//					min_i = (i_pet - l_mask > 0) ? i_pet - l_mask : 0;
-	//					max_i = (i_pet + l_mask < length_pet - 1) ? i_pet + l_mask : length_pet - 1;
-	//					min_j = (j_pet - l_mask > 0) ? j_pet - l_mask : 0;
-	//					max_j = (j_pet + l_mask < width_pet - 1) ? j_pet + l_mask : width_pet - 1;
-	//					min_k = (k_pet - l_mask > 0) ? k_pet - l_mask : 0;
-	//					max_k = (k_pet + l_mask < height_pet - 1) ? k_pet + l_mask : height_pet - 1;
-	//					for (size_t kk = min_k; kk <= max_k; kk++) 
-	//					{
-	//						for (size_t ii = min_i; ii <= max_i; ii++)
-	//						{
-	//							for (size_t jj = min_j; jj <= max_j; jj++)
-	//							{
-	//								ballLiverPet[kk][x_new(ii, jj, length_pet)] = 1.0;
-	//							}
-	//						}
-	//					}
-	//				}
+	//				Point3D p = { (dataType)i, (dataType)j, (dataType)k };
+	//				Point3D p_real = getRealCoordFromImageCoord3D(p, segmentOrigin, segmentSpacing, orientation);
+	//				p = getImageCoordFromRealCoord3D(p_real, imageOrigin, imageSpacing, orientation);
+	//				imageDataFull[(size_t)p.z][x_new((size_t)p.x, (size_t)p.y, Length)] = 1.0;
 	//			}
 	//		}
 	//	}
 	//}
-	//storing_path = outputPath + "P1/mask_edgeOnevoxel.raw";
-	//manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
+
+	loading_path = root + "output/Segmentation/Aorta/p1/segment_aorta_full_dim_p1.raw";
+	manageRAWFile3D<dataType>(imageDataFull, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	//loading_path = root + "output/Segmentation/Aorta/p3/seg_aorta_isoline_03.raw";
+	//manageRAWFile3D<dataType>(imageData, length, width, height, loading_path.c_str(), LOAD_DATA, false);
+
 	
-	////Get statistiques at aorta edge
-	//size_t count_voxels = 0;
-	//dataType min_value = 1e6, max_value = -1e6, mean_value = 0.0;
-	//for(k = 0; k < height; k++)
+	////Compute the maximum SUV in the whole aorta
+	//dataType maxSUV_aorta = 0.0;
+	//for(k = 0; k < Height; k++)
 	//{
-	//	for(i = 0; i < length; i++)
+	//	for(i = 0; i < Length; i++)
 	//	{
-	//		for(j = 0; j < width; j++)
+	//		for(j = 0; j < Width; j++)
 	//		{
-	//			if(imageData[k][x_new(i, j, length)] == 1.0 && isEdgeVoxel(imageData, length, width, height, i, j, k, 0.0) == true)
+	//			xd = x_new(i, j, Length);
+	//			if (imageDataFull[k][xd] == 1.0) 
 	//			{
-	//				//maskData[k][x_new(i, j, length)] = 1.0;
 	//				Point3D p = { (dataType)i, (dataType)j, (dataType)k };
-	//				Point3D p_real = getRealCoordFromImageCoord3D(p, segmentOrigin, segmentSpacing, orientation);
+	//				Point3D p_real = getRealCoordFromImageCoord3D(p, imageOrigin, imageSpacing, orientation);
 	//				Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
 	//				size_t i_pet = (size_t)p_pet.x;
 	//				size_t j_pet = (size_t)p_pet.y;
 	//				size_t k_pet = (size_t)p_pet.z;
-	//				
-	//				//dataType pet_value = petContainer->dataPointer[k_pet][x_new(i_pet, j_pet, length_pet)];
-	//				//if (pet_value < min_value)
-	//				//{
-	//				//	min_value = pet_value;
-	//				//}
-	//				//if (pet_value > max_value)
-	//				//{
-	//				//	max_value = pet_value;
-	//				//}
-	//				//if (statusPetBall[k_pet][x_new(i_pet, j_pet, length_pet)] == false)
-	//				//{
-	//				//	mean_value += pet_value;
-	//				//	count_voxels++;
-	//				//	statusPetBall[k_pet][x_new(i_pet, j_pet, length_pet)] == true;
-	//				//}
-	//				Statistics statistics = getStatisticsInNeighborhood3D(petContainer->dataPointer, length_pet, width_pet, height_pet, i_pet, j_pet, k_pet, 4);
-	//				dataType pet_value_min = statistics.min_data;
-	//				dataType pet_value_max = statistics.max_data;
-	//				dataType pet_value_mean = statistics.mean_data;
-	//				
-	//				if(pet_value_min < min_value)
+	//				dataType pet_value = petContainer->dataPointer[k_pet][x_new(i_pet, j_pet, length_pet)];
+	//				if (pet_value > maxSUV_aorta)
 	//				{
-	//					min_value = pet_value_min;
-	//				}
-	//				if (pet_value_max > max_value)
-	//				{
-	//					max_value = pet_value_max;
-	//				}
-	//				if (statusPetBall[k_pet][x_new(i_pet, j_pet, length_pet)] == false) 
-	//				{
-	//					mean_value += pet_value_mean;
-	//					count_voxels++;
-	//					statusPetBall[k_pet][x_new(i_pet, j_pet, length_pet)] == true;
+	//					maxSUV_aorta = pet_value;
 	//				}
 	//			}
 	//		}
 	//	}
 	//}
-	//std::cout << "Nb aorta edge voxels: " << count_voxels << std::endl;
-	//mean_value /= (dataType)count_voxels;
-	//std::cout << "Aorta edge PET values: min = " << min_value << ", max = " << max_value << ", mean = " << mean_value << std::endl;
 
-	loading_path = outputPath + "Segmentation/Aorta/p2/segment_aorta_full_dim_p2.raw";
-	manageRAWFile3D<dataType>(imageDataFull, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	//std::cout << "Max SUV in aorta: " << maxSUV_aorta << std::endl;
+	//std::cout << "Ratio max SUV aorta / mean SUV liver: " << maxSUV_aorta / mean_SUV_Liver << std::endl;
+	
 
-	//fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
-	storing_path = outputPath + "distance_map_aorta_p2.raw";
-	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+	fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
+	storing_path = root + "output/distance_map_aorta_p1.raw";
+	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	////File to save ratios
-	//string saving_ratios_csv = outputPath + "ratios_after.csv";
-	//FILE* f_ratios;
-	//if (fopen_s(&f_ratios, saving_ratios_csv.c_str(), "w") != 0)
-	//{
-	//	printf("Enable to open");
-	//	return false;
-	//}
-	//fprintf(f_ratios, "index,radius,ratio_max\n");
+	//File to save ratios
+	string saving_ratios_csv = root + "output/ratios_p1.csv";
+	FILE* f_ratios;
+	if (fopen_s(&f_ratios, saving_ratios_csv.c_str(), "w") != 0)
+	{
+		printf("Enable to open");
+		return false;
+	}
+	fprintf(f_ratios, "index,radius,ratio_max\n");
 
 	// Input centered path
 	FILE* path_file;
-	loading_path = outputPath + "Segmentation/Aorta/centered paths/finalCurve_p1.csv";
+	loading_path = root + "output/Segmentation/Aorta/centered paths/finalCurve_p1.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) 
 	{
 		printf("Enable to open");
@@ -2352,6 +2287,8 @@ int main() {
 	size_t index = 0;
 	dataType x = 0.0, y = 0.0, z = 0.0;
 	dataType aorta_max_SUV = 0, aorta_pet_value = 0.0;
+	Point3D cent_pt_max = { 0, 0, 0 }, pt_max = {0, 0, 0};
+	dataType max_radius = 0.0;
 	
 	while (feof(path_file) == 0)
 	{
@@ -2370,259 +2307,195 @@ int main() {
 		size_t j_seg = (size_t)(current_point_ct.y);
 		size_t k_seg = (size_t)(current_point_ct.z);
 		double dist_seg = distanceMap[k_seg][x_new(i_seg, j_seg, Length)];
-		dataType offset_distance = 2.0 * fmax(PETimageSpacing.sx, fmax(PETimageSpacing.sy, PETimageSpacing.sz));
+		dataType offset_distance = fmax(PETimageSpacing.sx, fmax(PETimageSpacing.sy, PETimageSpacing.sz));
 		double radius_aorta_roi = dist_seg + offset_distance;
 
 		//index <= 25 ----> ascending aorta
 		//index > 35 && index <= 150 ----> aortic arch
 		//index > 175 && index <= 275 ----> descending aorta
 		//index > 290 ----> abdominal aorta
-		if(index <= 25)
-		{
-			//aorta_max_SUV = 0.0;
-			//count_voxels = 0;
-			BoundingBox3D box = findBoundingBox3D(current_point_ct, Length, Width, Height, radius_aorta_roi, offset_distance);
-			for (size_t kk = box.k_min; kk <= box.k_max; kk++)
-			{
-				for (size_t ii = box.i_min; ii <= box.i_max; ii++)
-				{
-					for (size_t jj = box.j_min; jj <= box.j_max; jj++)
-					{
-						Point3D p_ct = { (dataType)ii, (dataType)jj, (dataType)kk };
-						Point3D p_real = getRealCoordFromImageCoord3D(p_ct, imageOrigin, imageSpacing, orientation);
-						double dist = getPoint3DDistance(p_real, current_point);
-
-						if (dist <= radius_aorta_roi)
-						{
-							if (imageDataFull[kk][x_new(ii, jj, Length)] == 1.0)
-							{
-								maskAorta[kk][x_new(ii, jj, Length)] = 1.0;
-								Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-								size_t ii_pet = (size_t)p_pet.x;
-								size_t jj_pet = (size_t)p_pet.y;
-								size_t kk_pet = (size_t)p_pet.z;
-								aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-								count_voxels++;
-								if (aorta_pet_value > aorta_max_SUV)
-								{
-									aorta_max_SUV = aorta_pet_value;
-								}
-							}
-						}
-					}
-				}
-			}
-			//dataType ratio_max_aorta_mean_liver = aorta_max_SUV / mean_SUV_Liver;
-			//fprintf(f_ratios, "%d,%lf,%lf,%lf\n", index, radius_aorta_roi, ratio_max_aorta_mean_liver);
-		}
-		
-		////aorta_max_SUV = 0.0;
-		////mean_SUV_aorta = 0.0;
-		////count_voxels = 0;
-		//BoundingBox3D box = findBoundingBox3D(current_point_ct, length, width, height, radius_aorta_roi, offset_distance);
-		//for (size_t kk = box.k_min; kk <= box.k_max; kk++)
+		//if(index <= 25)
 		//{
-		//	for (size_t ii = box.i_min; ii <= box.i_max; ii++)
+		//	//aorta_max_SUV = 0.0;
+		//	//count_voxels = 0;
+		//	BoundingBox3D box = findBoundingBox3D(current_point_ct, Length, Width, Height, radius_aorta_roi, offset_distance);
+		//	for (size_t kk = box.k_min; kk <= box.k_max; kk++)
 		//	{
-		//		for (size_t jj = box.j_min; jj <= box.j_max; jj++)
+		//		for (size_t ii = box.i_min; ii <= box.i_max; ii++)
 		//		{
-		//			Point3D p_ct = { (dataType)ii, (dataType)jj, (dataType)kk };
-		//			Point3D p_real = getRealCoordFromImageCoord3D(p_ct, segmentOrigin, segmentSpacing, orientation);
-		//			double dist = getPoint3DDistance(p_real, current_point);
-		//			
-		//			if (dist <= radius_aorta_roi)
+		//			for (size_t jj = box.j_min; jj <= box.j_max; jj++)
 		//			{
-		//				//maskData[kk][x_new(ii, jj, length)] = 1.0;
-		//				if(imageData[kk][x_new(ii, jj, length)] == 1.0)
+		//				Point3D p_ct = { (dataType)ii, (dataType)jj, (dataType)kk };
+		//				Point3D p_real = getRealCoordFromImageCoord3D(p_ct, imageOrigin, imageSpacing, orientation);
+		//				double dist = getPoint3DDistance(p_real, current_point);
+		//				if (dist <= radius_aorta_roi)
 		//				{
-		//					//maskAorta[kk][x_new(ii, jj, length)] = 1.0;
-		//					Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//					size_t ii_pet = (size_t)p_pet.x;
-		//					size_t jj_pet = (size_t)p_pet.y;
-		//					size_t kk_pet = (size_t)p_pet.z;
-		//					aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//					if (aorta_pet_value > aorta_max_SUV)
+		//					if (imageDataFull[kk][x_new(ii, jj, Length)] == 1.0)
 		//					{
-		//						aorta_max_SUV = aorta_pet_value;
+		//						maskAorta[kk][x_new(ii, jj, Length)] = 1.0;
+		//						Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+		//						size_t ii_pet = (size_t)p_pet.x;
+		//						size_t jj_pet = (size_t)p_pet.y;
+		//						size_t kk_pet = (size_t)p_pet.z;
+		//						aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+		//						count_voxels++;
+		//						if (aorta_pet_value > aorta_max_SUV)
+		//						{
+		//							aorta_max_SUV = aorta_pet_value;
+		//						}
 		//					}
 		//				}
 		//			}
-		//			
-		//			////First test: full sphere
-		//			//if (dist <= radius_aorta_roi)
-		//			//{
-		//			//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//			//	size_t ii_pet = (size_t)p_pet.x;
-		//			//	size_t jj_pet = (size_t)p_pet.y;
-		//			//	size_t kk_pet = (size_t)p_pet.z;
-		//			//	maskData[kk][x_new(ii, jj, length)] = 1.0;
-		//			//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//			//	count_voxels++;
-		//			//	mean_SUV_aorta += aorta_pet_value;
-		//			//	if (aorta_pet_value > aorta_max_SUV)
-		//			//	{
-		//			//		aorta_max_SUV = aorta_pet_value;
-		//			//	}
-		//			//}
-		//			////Second test: intersection sphere-segmented aorta
-		//			//if (dist <= radius_aorta_roi)
-		//			//{
-		//			//	if (imageData[kk][x_new(ii, jj, length)] == 1.0)
-		//			//	{
-		//			//		Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//			//		size_t ii_pet = (size_t)p_pet.x;
-		//			//		size_t jj_pet = (size_t)p_pet.y;
-		//			//		size_t kk_pet = (size_t)p_pet.z;
-		//			//		maskData[kk][x_new(ii, jj, length)] = 1.0;
-		//			//		aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//			//		count_voxels++;
-		//			//		mean_SUV_aorta += aorta_pet_value;
-		//			//		if (aorta_pet_value > aorta_max_SUV)
-		//			//		{
-		//			//			aorta_max_SUV = aorta_pet_value;
-		//			//		}
-		//			//	}
-		//			//}
-		//			////Third test: shell
-		//			//if (dist >= half_radius && dist <= radius_aorta_roi)
-		//			//{
-		//			//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//			//	size_t ii_pet = (size_t)p_pet.x;
-		//			//	size_t jj_pet = (size_t)p_pet.y;
-		//			//	size_t kk_pet = (size_t)p_pet.z;
-		//			//	maskData[kk][x_new(ii, jj, length)] = 1.0;
-		//			//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//			//	count_voxels++;
-		//			//	mean_SUV_aorta += aorta_pet_value;
-		//			//	if (aorta_pet_value > aorta_max_SUV)
-		//			//	{
-		//			//		aorta_max_SUV = aorta_pet_value;
-		//			//	}
-		//			//}
-		//			////Fouth test: shell min max aorta radiuses
-		//			//size_t xdp = x_new(ii, jj, length);
-		//			////dist >= min_dist_aorta &&
-		//			//if (dist >= half_radius && dist <= radius_aorta_roi)
-		//			//{
-		//			//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//			//	size_t ii_pet = (size_t)p_pet.x;
-		//			//	size_t jj_pet = (size_t)p_pet.y;
-		//			//	size_t kk_pet = (size_t)p_pet.z;
-		//			//	maskData[kk][xdp] = 1.0;
-		//			//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//			//	count_voxels++;
-		//			//	mean_SUV_aorta += aorta_pet_value;
-		//			//	if (aorta_pet_value > aorta_max_SUV)
-		//			//	{
-		//			//		aorta_max_SUV = aorta_pet_value;
-		//			//	}
-		//			//	//statusPoints[kk][xdp] = true;
-		//			//}
-		//			////Get Statistics along the aorta
-		//			//if(dist <= radius_aorta_roi && imageData[kk][x_new(ii, jj, length)] == 1.0)
-		//			//{
-		//			//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
-		//			//	size_t ii_pet = (size_t)p_pet.x;
-		//			//	size_t jj_pet = (size_t)p_pet.y;
-		//			//	size_t kk_pet = (size_t)p_pet.z;
-		//			//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
-		//			//	if(aorta_pet_value > aorta_max_SUV)
-		//			//	{
-		//			//		aorta_max_SUV = aorta_pet_value;
-		//			//	}
-		//			//	if (aorta_pet_value < aorta_min_SUV)
-		//			//	{
-		//			//		aorta_min_SUV = aorta_pet_value;
-		//			//	}
-		//			//	//if(statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] == false)
-		//			//	//{
-		//			//	//	mean_SUV_aorta += aorta_pet_value;
-		//			//	//	count_voxels++;
-		//			//	//	statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] = true;
-		//			//	//}
-		//			//	mean_SUV_aorta += aorta_pet_value;
-		//			//	count_voxels++;
-		//			//}
 		//		}
 		//	}
+		//	//dataType ratio_max_aorta_mean_liver = aorta_max_SUV / mean_SUV_Liver;
+		//	//fprintf(f_ratios, "%d,%lf,%lf,%lf\n", index, radius_aorta_roi, ratio_max_aorta_mean_liver);
 		//}
+		
+		aorta_max_SUV = 0.0;
+		count_voxels = 0;
+		BoundingBox3D box = findBoundingBox3D(current_point_ct, Length, Width, Height, radius_aorta_roi, offset_distance);
+		for (size_t kk = box.k_min; kk <= box.k_max; kk++)
+		{
+			for (size_t ii = box.i_min; ii <= box.i_max; ii++)
+			{
+				for (size_t jj = box.j_min; jj <= box.j_max; jj++)
+				{
+					Point3D p_ct = { (dataType)ii, (dataType)jj, (dataType)kk };
+					Point3D p_real = getRealCoordFromImageCoord3D(p_ct, imageOrigin, imageSpacing, orientation);
+					double dist = getPoint3DDistance(p_real, current_point);
+					
+					if (dist <= radius_aorta_roi)
+					{
+						//maskData[kk][x_new(ii, jj, length)] = 1.0;
+						if(imageDataFull[kk][x_new(ii, jj, Length)] == 1.0)
+						{
+							//maskAorta[kk][x_new(ii, jj, Length)] = 1.0;
+							Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+							size_t ii_pet = (size_t)p_pet.x;
+							size_t jj_pet = (size_t)p_pet.y;
+							size_t kk_pet = (size_t)p_pet.z;
+							aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+							if (aorta_pet_value > aorta_max_SUV)
+							{
+								aorta_max_SUV = aorta_pet_value;
 
-		//mean_SUV_aorta /= (dataType)count_voxels;
-		//std::cout << "Statistics along the aorta: min = " << aorta_min_SUV << ", max = " << aorta_max_SUV << ", mean = " << mean_SUV_aorta << std::endl;
-		//dataType ratio_mean_aorta_mean_liver = mean_SUV_aorta / mean_SUV_Liver;
-		//dataType ratio_max_aorta_mean_liver = aorta_max_SUV / mean_SUV_Liver;
-		//fprintf(f_ratios, "%d,%lf,%lf,%lf\n", index, radius_aorta_roi, ratio_max_aorta_mean_liver, ratio_mean_aorta_mean_liver);	
+								cent_pt_max = current_point;
+								max_radius = radius_aorta_roi;
+							}
+						}
+					}
+					
+					////First test: full sphere
+					//if (dist <= radius_aorta_roi)
+					//{
+					//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+					//	size_t ii_pet = (size_t)p_pet.x;
+					//	size_t jj_pet = (size_t)p_pet.y;
+					//	size_t kk_pet = (size_t)p_pet.z;
+					//	maskData[kk][x_new(ii, jj, length)] = 1.0;
+					//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+					//	count_voxels++;
+					//	mean_SUV_aorta += aorta_pet_value;
+					//	if (aorta_pet_value > aorta_max_SUV)
+					//	{
+					//		aorta_max_SUV = aorta_pet_value;
+					//	}
+					//}
+					////Second test: intersection sphere-segmented aorta
+					//if (dist <= radius_aorta_roi)
+					//{
+					//	if (imageData[kk][x_new(ii, jj, length)] == 1.0)
+					//	{
+					//		Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+					//		size_t ii_pet = (size_t)p_pet.x;
+					//		size_t jj_pet = (size_t)p_pet.y;
+					//		size_t kk_pet = (size_t)p_pet.z;
+					//		maskData[kk][x_new(ii, jj, length)] = 1.0;
+					//		aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+					//		count_voxels++;
+					//		mean_SUV_aorta += aorta_pet_value;
+					//		if (aorta_pet_value > aorta_max_SUV)
+					//		{
+					//			aorta_max_SUV = aorta_pet_value;
+					//		}
+					//	}
+					//}
+					////Third test: shell
+					//if (dist >= half_radius && dist <= radius_aorta_roi)
+					//{
+					//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+					//	size_t ii_pet = (size_t)p_pet.x;
+					//	size_t jj_pet = (size_t)p_pet.y;
+					//	size_t kk_pet = (size_t)p_pet.z;
+					//	maskData[kk][x_new(ii, jj, length)] = 1.0;
+					//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+					//	count_voxels++;
+					//	mean_SUV_aorta += aorta_pet_value;
+					//	if (aorta_pet_value > aorta_max_SUV)
+					//	{
+					//		aorta_max_SUV = aorta_pet_value;
+					//	}
+					//}
+					////Fouth test: shell min max aorta radiuses
+					//size_t xdp = x_new(ii, jj, length);
+					////dist >= min_dist_aorta &&
+					//if (dist >= half_radius && dist <= radius_aorta_roi)
+					//{
+					//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+					//	size_t ii_pet = (size_t)p_pet.x;
+					//	size_t jj_pet = (size_t)p_pet.y;
+					//	size_t kk_pet = (size_t)p_pet.z;
+					//	maskData[kk][xdp] = 1.0;
+					//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+					//	count_voxels++;
+					//	mean_SUV_aorta += aorta_pet_value;
+					//	if (aorta_pet_value > aorta_max_SUV)
+					//	{
+					//		aorta_max_SUV = aorta_pet_value;
+					//	}
+					//	//statusPoints[kk][xdp] = true;
+					//}
+					////Get Statistics along the aorta
+					//if(dist <= radius_aorta_roi && imageData[kk][x_new(ii, jj, length)] == 1.0)
+					//{
+					//	Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
+					//	size_t ii_pet = (size_t)p_pet.x;
+					//	size_t jj_pet = (size_t)p_pet.y;
+					//	size_t kk_pet = (size_t)p_pet.z;
+					//	aorta_pet_value = petContainer->dataPointer[kk_pet][x_new(ii_pet, jj_pet, length_pet)];
+					//	if(aorta_pet_value > aorta_max_SUV)
+					//	{
+					//		aorta_max_SUV = aorta_pet_value;
+					//	}
+					//	if (aorta_pet_value < aorta_min_SUV)
+					//	{
+					//		aorta_min_SUV = aorta_pet_value;
+					//	}
+					//	//if(statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] == false)
+					//	//{
+					//	//	mean_SUV_aorta += aorta_pet_value;
+					//	//	count_voxels++;
+					//	//	statusPetBall[kk_pet][x_new(ii_pet, jj_pet, length_pet)] = true;
+					//	//}
+					//	mean_SUV_aorta += aorta_pet_value;
+					//	count_voxels++;
+					//}
+				}
+			}
+		}
+
+		dataType ratio_max_aorta_mean_liver = aorta_max_SUV / mean_SUV_Liver;
+		fprintf(f_ratios, "%d,%lf,%lf,%lf\n", index, radius_aorta_roi, ratio_max_aorta_mean_liver);	
 		
 	}
-	//fclose(f_ratios);
+	fclose(f_ratios);
 	fclose(path_file);
 
 	std::cout << "Max aorta ratio : " << aorta_max_SUV / mean_SUV_Liver << std::endl;
 
-	//std::cout << "Abdominal max ratio : " << aorta_max_SUV / mean_SUV_Liver << std::endl;
-	//std::cout << "Descending max ratio : " << aorta_max_SUV / mean_SUV_Liver << std::endl;
-	//std::cout << "Aortic arch max ratio : " << aorta_max_SUV / mean_SUV_Liver << std::endl;
-	
-	//storing_path = outputPath + "P1/ascending_aorta.raw";
-	//storing_path = outputPath + "P1/aortic_arch.raw";
-	//storing_path = outputPath + "P2 translated/abdominal_aorta.raw";
-	//manageRAWFile3D<dataType>(maskAorta, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	////std::cout << "Aorta min distance to centerline: " << min_dist_aorta << " mm" << std::endl;
-	////std::cout << "Aorta max distance to centerline: " << max_dist_aorta << " mm" << std::endl;
-	////storing_path = outputPath + "P1/mask_aorta_fourth.raw";
-	////manageRAWFile3D<dataType>(maskData, length, width, height, storing_path.c_str(), STORE_DATA, false);
-	//////Analysis at the point of interest
-	////std::cout << "Point of interest at index 265: (" << point_of_interest.x << ", " << point_of_interest.y << ", " << point_of_interest.z << ")" << std::endl;
-	////Point3D point_ct = getImageCoordFromRealCoord3D(point_of_interest, segmentOrigin, segmentSpacing, orientation);
-	////size_t i_poi = (size_t)(point_ct.x);
-	////size_t j_poi = (size_t)(point_ct.y);
-	////size_t k_poi = (size_t)(point_ct.z);
-	////double dist_poi = distanceMap[k_poi][x_new(i_poi, j_poi, length)] + offset_distance;
-	////std::cout << "Distance to aorta at point of interest: " << dist_poi << " mm" << std::endl;
-	//////Draw spheres at point of interest
-	////string saving_sphere_csv = outputPath + "P1/spheres_tests.csv";
-	////FILE* f_sphere;
-	////if (fopen_s(&f_sphere, saving_sphere_csv.c_str(), "w") != 0)
-	////{
-	////	printf("Enable to open");
-	////	return false;
-	////}
-	////fprintf(f_ratios, "x,y,z\n");
-	////fprintf(f_sphere, "%f,%f,%f\n", point_of_interest.x, point_of_interest.y, point_of_interest.z);
-	////box = findBoundingBox3D(point_ct, length, width, height, max_dist_aorta, 2.0);
-	//
-	////for(size_t kk = box.k_min; kk <= box.k_max; kk++)
-	////{
-	////	for (size_t ii = box.i_min; ii <= box.i_max; ii++)
-	////	{
-	////		for (size_t jj = box.j_min; jj <= box.j_max; jj++)
-	////		{
-	////			Point3D p_ct = { (dataType)ii, (dataType)jj, (dataType)kk };
-	////			Point3D p_real = getRealCoordFromImageCoord3D(p_ct, segmentOrigin, segmentSpacing, orientation);
-	////			double dist = getPoint3DDistance(p_real, point_of_interest);
-	////
-	////			if (dist >= min_dist_aorta && dist <= max_dist_aorta)
-	////			{
-	////				fprintf(f_sphere, "%f,%f,%f\n", p_real.x, p_real.y, p_real.z);
-	////			}
-	////		}
-	////	}
-	////}
-	////fclose(f_sphere);
-
-	//for (k = 0; k < Height; k++)
-	//{
-	//	if (k < height_pet)
-	//	{
-	//		delete[] ballLiverPet[k];
-	//		delete[] statusPetBall[k];
-	//	}
-	//	delete[] maskLiver[k];
-	//}
-	//delete[] ballLiverPet;
-	//delete[] statusPetBall;
-	//delete[] maskLiver;
+	std::cout << "Centroid max SUV in aorta (real coord) : (" << cent_pt_max.x << ", " << cent_pt_max.y << ", " << cent_pt_max.z << ")" << std::endl;
+	std::cout << "Radius max SUV " << max_radius << std::endl;
 
 	for (k = 0; k < Height; k++)
 	{
@@ -2638,7 +2511,6 @@ int main() {
 
 	free(petContainer);
 	free(ctContainer);
-	*/
 
 	//==================== Adjust segment for quantitative analysis ===================================
 	
