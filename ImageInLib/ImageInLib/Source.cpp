@@ -50,7 +50,7 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = root + "input/vtk/petct/ct/Patient5_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input CT ================ " << std::endl;
@@ -2057,7 +2057,7 @@ int main() {
 	//==================== PET ================
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/pet/Patient1_pet.vtk";
+	loading_path = root + "input/vtk/petct/pet/Patient5_pet.vtk";
 	readVtkFile(loading_path.c_str(), petContainer);
 	
 	Point3D PETimageOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
@@ -2088,7 +2088,7 @@ int main() {
 	
 	
 	Image_Data inputImageStr = { Height, Length, Width, imageDataFull, imageOrigin, imageSpacing, orientation };
-	loading_path = root + "input/raw/liver/liver_p1.raw";
+	loading_path = root + "input/raw/liver/liver_p5.raw";
 	manageRAWFile3D<dataType>(maskLiver, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//Ball Liver PET
@@ -2147,7 +2147,7 @@ int main() {
 	
 	mean_SUV_Liver /= (dataType)count_voxels;
 	std::cout << "Liver mean SUV : " << mean_SUV_Liver << std::endl;
-	storing_path = root + "output/ball_liver_p1.raw";
+	storing_path = root + "output/ball_liver_p5.raw";
 	manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
 
 	for(k = 0; k < height_pet; k++)
@@ -2223,7 +2223,7 @@ int main() {
 	//	}
 	//}
 
-	loading_path = root + "output/Segmentation/Aorta/p1/segment_aorta_full_dim_p1.raw";
+	loading_path = root + "output/Segmentation/Aorta/p5/segment_aorta_full_dim_p5.raw";
 	manageRAWFile3D<dataType>(imageDataFull, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//loading_path = root + "output/Segmentation/Aorta/p3/seg_aorta_isoline_03.raw";
@@ -2262,11 +2262,11 @@ int main() {
 	
 
 	fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
-	storing_path = root + "output/distance_map_aorta_p1.raw";
+	storing_path = root + "output/distance_map_aorta_p5.raw";
 	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//File to save ratios
-	string saving_ratios_csv = root + "output/ratios_p1.csv";
+	string saving_ratios_csv = root + "output/ratios_p5.csv";
 	FILE* f_ratios;
 	if (fopen_s(&f_ratios, saving_ratios_csv.c_str(), "w") != 0)
 	{
@@ -2277,7 +2277,7 @@ int main() {
 
 	// Input centered path
 	FILE* path_file;
-	loading_path = root + "output/Segmentation/Aorta/centered paths/finalCurve_p1.csv";
+	loading_path = root + "output/Segmentation/Aorta/centered paths/finalCurve_p5.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) 
 	{
 		printf("Enable to open");
