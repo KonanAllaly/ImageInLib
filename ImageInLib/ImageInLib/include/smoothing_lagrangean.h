@@ -35,6 +35,10 @@ extern "C" {
 	bool evolveForSmoothingBySingleStep(LinkedCurve3D* pinitial_curve, LinkedCurve3D* plinked_curve, SchemeData3D* pscheme_data,
 		const LagrangeanSmoothingParameters* pparams, bool isFirstTimeStep);
 
+	//Function to investiage curvature, torsion and tangent vector
+
+	bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char* save_path);
+
 #ifdef __cplusplus
 }
 #endif

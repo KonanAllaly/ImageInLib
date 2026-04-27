@@ -63,15 +63,15 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
     double current_length = initilal_length, previous_length = initilal_length;
     double length_diff = 0.0;
 
-    //Save the total lenght
-    const char * savingPath = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/Torsion/curve_length_p3.csv";
-    //savingPath = outputPath + "centered_smoothed_p1_without_attr.csv";
-    FILE* file_save;
-    if (fopen_s(&file_save, savingPath, "w") != 0) {
-        printf("Enable to open");
-        return false;
-    }
-    fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
+    ////Save the total lenght
+    //const char * savingPath = "C:/Users/Konan Allaly/Documents/Tests/Curves/Output/Torsion/curve_length_p3.csv";
+    ////savingPath = outputPath + "centered_smoothed_p1_without_attr.csv";
+    //FILE* file_save;
+    //if (fopen_s(&file_save, savingPath, "w") != 0) {
+    //    printf("Enable to open");
+    //    return false;
+    //}
+    //fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
 
     do
     {
@@ -96,7 +96,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
 		current_length = evolving_curve.length;
 		length_diff = fabs(current_length - previous_length);
 
-        fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
+        //fprintf(file_save, "%d,%lf\n", it, evolving_curve.length);
 
 		previous_length = current_length;
 
@@ -114,7 +114,7 @@ bool smoothingByLagrangeanCurveEvolution(const LagrangeanSmoothingParameters* pS
         final_curve = final_curve->next;
     }
 
-    fclose(file_save);
+    //fclose(file_save);
 
 	final_curve = NULL;
     free(pscheme_data);
@@ -624,6 +624,132 @@ bool evolveForSmoothingBySingleStep(LinkedCurve3D* initial_curve, LinkedCurve3D*
         update3dPoint(evolving_curve, current_point, current_point->x, current_point->y, pscheme_data[i].sol);
         current_point = current_point->next;
     }
+
+    return true;
+}
+
+//Function to investiage curvature, torsion and tangent vector
+
+bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char * save_path)
+{
+    if (curve == NULL || curve->numPoints < 2 || save_path == NULL)
+    {
+        return false;
+    }
+
+    size_t new_path_length;
+
+    //Save curvature
+	const char* extension_curvature = "_curvature.csv";
+    new_path_length = strlen(save_path) + strlen(extension_curvature) + 1;
+    char* save_curvature = malloc(new_path_length);
+    strcpy_s(save_curvature, new_path_length, save_path);
+    strcat_s(save_curvature, new_path_length, extension_curvature);
+    
+    FILE* file_save_curvature;
+    if (fopen_s(&file_save_curvature, save_curvature, "w") != 0) {
+        printf("Enable to open");
+        free(save_curvature);
+        return false;
+    }
+
+    //Save tangent
+    const char* extension_tangent = "_tangent.csv";
+    new_path_length = strlen(save_path) + strlen(extension_tangent) + 1;
+    char* save_tangent = malloc(new_path_length);
+    strcpy_s(save_tangent, new_path_length, save_path);
+    strcat_s(save_tangent, new_path_length, extension_tangent);
+
+    FILE* file_save_tangent;
+    if (fopen_s(&file_save_tangent, save_tangent, "w") != 0) {
+        printf("Enable to open");
+        free(save_curvature);
+        free(save_tangent);
+        return false;
+    }
+
+    //Save torsion
+    const char* extension_torsion = "_torsion.csv";
+    new_path_length = strlen(save_path) + strlen(extension_torsion) + 1;
+    char* save_torsion = malloc(new_path_length);
+    strcpy_s(save_torsion, new_path_length, save_path);
+    strcat_s(save_torsion, new_path_length, extension_torsion);
+
+    FILE* file_save_torsion;
+    if (fopen_s(&file_save_torsion, save_torsion, "w") != 0) {
+        printf("Enable to open");
+        free(save_curvature);
+        free(save_tangent);
+        free(save_torsion);
+        return false;
+    }
+
+    for (size_t i = 1; i < curve->numPoints - 1; i++)
+    {
+        Point3D currentPt = curve->pPoints[i].pt;
+        Point3D prevPt = curve->pPoints[i - 1].pt;
+        Point3D nextPt = curve->pPoints[i + 1].pt;
+        double h1 = getPoint3DDistance(currentPt, prevPt);
+        double h2 = getPoint3DDistance(currentPt, nextPt);
+        double coef = 1.0 / (h1 + h2);
+
+		//curvature vector
+        double curv_x = 2.0 * coef * ((nextPt.x - currentPt.x) / h2 - (currentPt.x - prevPt.x) / h1);
+        double curv_y = 2.0 * coef * ((nextPt.y - currentPt.y) / h2 - (currentPt.y - prevPt.y) / h1);
+        double curv_z = 2.0 * coef * ((nextPt.z - currentPt.z) / h2 - (currentPt.z - prevPt.z) / h1);
+        double curvature = sqrt(curv_x * curv_x + curv_y * curv_y + curv_z * curv_z);
+        fprintf(file_save_curvature, "%d, %lf\n", i, curvature);
+
+		//tangent vector
+        double tan_x = coef * (nextPt.x - prevPt.x);
+        double tan_y = coef * (nextPt.y - prevPt.y);
+        double tan_z = coef * (nextPt.z - prevPt.z);
+        double tan = sqrt(tan_x * tan_x + tan_y * tan_y + tan_z * tan_z);
+        fprintf(file_save_tangent, "%d, %lf, %lf\n", i, tan_z, tan);
+        
+		//torsion vector
+        if (i >= 2 && i < curve->numPoints - 2) 
+        {
+            Point3D i_c_minus_two = curve->pPoints[i - 2].pt;
+            Point3D i_c_minus_one = curve->pPoints[i - 1].pt;
+            Point3D i_c = curve->pPoints[i].pt;
+            Point3D i_c_plus_one = curve->pPoints[i + 1].pt;
+            Point3D i_c_plus_two = curve->pPoints[i + 2].pt;
+
+            double e_i_x = (i_c_plus_one.x - i_c.x);
+            double e_i_y = (i_c_plus_one.y - i_c.y);
+            double e_i_z = (i_c_plus_one.z - i_c.z);
+
+            double e_i_minus_1_x = (i_c.x - i_c_minus_one.x);
+            double e_i_minus_1_y = (i_c.y - i_c_minus_one.y);
+            double e_i_minus_1_z = (i_c.z - i_c_minus_one.z);
+
+            double e_i_plus_x = (i_c_plus_two.x - i_c_plus_one.x);
+            double e_i_plus_y = (i_c_plus_two.y - i_c_plus_one.y);
+            double e_i_plus_z = (i_c_plus_two.z - i_c_plus_one.z);
+
+            double torsion_numerator =
+                e_i_minus_1_x * (e_i_y * e_i_plus_z - e_i_z * e_i_plus_y)
+                + e_i_minus_1_y * (e_i_z * e_i_plus_x - e_i_x * e_i_plus_z)
+                + e_i_minus_1_z * (e_i_x * e_i_plus_y - e_i_y * e_i_plus_x);
+
+            double cros_x = e_i_minus_1_y * e_i_z - e_i_minus_1_z * e_i_y;
+            double cros_y = e_i_minus_1_z * e_i_x - e_i_minus_1_x * e_i_z;
+            double cros_z = e_i_minus_1_x * e_i_y - e_i_minus_1_y * e_i_x;
+
+            double torsion_denominator = cros_x * cros_x + cros_y * cros_y + cros_z * cros_z;
+            double torsion = torsion_numerator / torsion_denominator;
+
+            fprintf(file_save_torsion, "%d, %lf\n", i, torsion);
+        }
+    }
+    fclose(file_save_curvature);
+    fclose(file_save_tangent);
+    fclose(file_save_torsion);
+
+	free(save_curvature);
+	free(save_tangent);
+	free(save_torsion);
 
     return true;
 }
