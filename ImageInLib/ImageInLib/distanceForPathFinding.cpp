@@ -2065,11 +2065,12 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 		}
 	}
 	
-	////Real image
+	//Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path;// = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p5.raw";
-	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p7.raw";
+	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	
+	/*
 	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
 	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_double.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
@@ -2125,6 +2126,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 			potential[k][i] = (dataType)(var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i]));
 		}
 	}
+	*/
 
 	for (k = 0; k < height; k++) {
 		delete[] maskThreshold[k];

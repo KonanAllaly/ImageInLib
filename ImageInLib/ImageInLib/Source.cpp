@@ -25,6 +25,8 @@
 
 #include "gaussian_distribution.h"
 
+#include "labelling.h"
+
 #define MAX_LINE_LENGTH 1024
 #define epsilon 1e-6 
 
@@ -50,7 +52,9 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/ct/Patient5_ct.vtk";
+	loading_path = root + "input/vtk/petct/ct/Patient2_ct.vtk";
+
+	//loading_path = root + "input/Patient8_ct.vtk";//new data
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	std::cout << "============ Input CT ================ " << std::endl;
@@ -66,39 +70,98 @@ int main() {
 	VoxelSpacing imageSpacing = { ctContainer->spacing[0], ctContainer->spacing[1], ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
+
 	
+	//const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/output/patient8_ct.raw";
+	//manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, store_ptr, STORE_DATA, false);
+	//free(ctContainer);
+
+	//==================== Segmentation of the Liver =======================================
 
 	/*
-	float** imageDataF = new float* [Height];
-	double** imageDataD = new double* [Height];
-	for (k = 0; k < Height; k++) {
-		imageDataF[k] = new float[dim2D] {0};
-		imageDataD[k] = new double[dim2D] {0};
+	dataType** imageData = (dataType**)malloc(Height * sizeof(dataType*));
+	for(k = 0; k < Height; k++)
+	{
+		imageData[k] = (dataType*)malloc(dim2D * sizeof(dataType));
 	}
 
-	const char * load_ptr = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/filtered_p1.raw";
-	manageRAWFile3D<float>(imageDataF, Length, Width, Height, load_ptr, LOAD_DATA, false);
-
-	for (k = 0; k < Height; k++) 
+	//copy the data
+	for(k = 0; k < Height; k++)
 	{
 		for (i = 0; i < dim2D; i++) 
 		{
-			imageDataD[k][i] = (double)imageDataF[k][i];
+			imageData[k][i] = (dataType)ctContainer->dataPointer[k][i];
 		}
 	}
-	const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/input/raw/filtered/filtered_p1_double.raw";
-	manageRAWFile3D<double>(imageDataD, Length, Width, Height, store_ptr, STORE_DATA, false);
+
+	thresholding3dFunctionN(imageData, Length, Width, Height, 0.0, 200.0, 0.0, 1.0);
+
+	const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/output/thes_liver.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, store_ptr, STORE_DATA, false);
 
 	for(k = 0; k < Height; k++)
 	{
-		delete[] imageDataF[k];
-		delete[] imageDataD[k];
+		free(imageData[k]);
 	}
-	delete[] imageDataF;
-	delete[] imageDataD;
+	free(imageData);
 	free(ctContainer);
 	*/
+
+	//==================== Region growing to segment the aorta =======================================
 	
+	/*
+	dataType** imageData = (dataType**)malloc(Height * sizeof(dataType*));
+	dataType** maskThreshold = (dataType**)malloc(Height * sizeof(dataType*));
+	dataType** potential = (dataType**)malloc(Height * sizeof(dataType*));
+	for (k = 0; k < Height; k++) 
+	{
+		imageData[k] = (dataType*)malloc(dim2D * sizeof(dataType));
+		maskThreshold[k] = (dataType*)malloc(dim2D * sizeof(dataType));
+		potential[k] = (dataType*)malloc(dim2D * sizeof(dataType));
+	}
+
+	Point3D seed1 = { 290, 206, 203 };
+	Point3D seed2 = { 250, 193, 435 };
+	Point3D* seeds = (Point3D*)malloc(2 * sizeof(Point3D));
+	seeds[0] = seed1;
+	seeds[1] = seed2;
+
+	Image_Data ctImageData = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
+
+	//copy the data
+	for(k = 0; k < Height; k++)
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			imageData[k][i] = (dataType)ctContainer->dataPointer[k][i];
+		}
+	}
+
+	////Region growing
+	//const size_t sizeNeigh = 4;
+	//Statistics stats_point = getStatisticsInNeighborhood3D(imageData, Length, Width, Height, (size_t)seed1.x, (size_t)seed1.y, (size_t)seed1.z, sizeNeigh);
+	////Statistics stats_point = getPointNeighborhoodStats(ctImageData, seed2, 5.0);
+	//thresholding3dFunctionN(imageData, Length, Width, Height, stats_point.mean_data - stats_point.sd_data, stats_point.mean_data + stats_point.sd_data, 0.0, 1.0);
+	//storing_path = root + "output/threshold_p7.raw";
+	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	//regionGrowing(imageData, maskThreshold, Length, Width, Height, seed1);
+
+	Potential_Parameters parameters = { 1000.0, 0.2, 0.001, 3.0 };
+	compute3DPotential(ctImageData, potential, seeds, parameters);
+
+	storing_path = root + "output/potential_p7.raw";
+	manageRAWFile3D<dataType>(maskThreshold, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	
+	for(k = 0; k < Height; k++)
+	{
+		free(imageData[k]);
+		free(maskThreshold[k]);
+	}
+	free(imageData);
+	free(maskThreshold);
+	free(ctContainer);
+	*/
+
 	//==================== Translate for registration ================================================
 
 	/*
@@ -2057,7 +2120,7 @@ int main() {
 	//==================== PET ================
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/pet/Patient5_pet.vtk";
+	loading_path = root + "input/vtk/petct/pet/Patient2_pet.vtk";
 	readVtkFile(loading_path.c_str(), petContainer);
 	
 	Point3D PETimageOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
@@ -2088,7 +2151,7 @@ int main() {
 	
 	
 	Image_Data inputImageStr = { Height, Length, Width, imageDataFull, imageOrigin, imageSpacing, orientation };
-	loading_path = root + "input/raw/liver/liver_p5.raw";
+	loading_path = root + "input/raw/liver/liver_p2.raw";
 	manageRAWFile3D<dataType>(maskLiver, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//Ball Liver PET
@@ -2147,8 +2210,8 @@ int main() {
 	
 	mean_SUV_Liver /= (dataType)count_voxels;
 	std::cout << "Liver mean SUV : " << mean_SUV_Liver << std::endl;
-	storing_path = root + "output/ball_liver_p5.raw";
-	manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = root + "output/ball_liver_p5.raw";
+	//manageRAWFile3D<dataType>(ballLiverPet, length_pet, width_pet, height_pet, storing_path.c_str(), STORE_DATA, false);
 
 	for(k = 0; k < height_pet; k++)
 	{
@@ -2223,7 +2286,8 @@ int main() {
 	//	}
 	//}
 
-	loading_path = root + "output/Segmentation/Aorta/p5/segment_aorta_full_dim_p5.raw";
+	/*
+	loading_path = root + "output/Segmentation/Aorta/p1/segment_aorta_full_dim_p1.raw";
 	manageRAWFile3D<dataType>(imageDataFull, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//loading_path = root + "output/Segmentation/Aorta/p3/seg_aorta_isoline_03.raw";
@@ -2262,11 +2326,11 @@ int main() {
 	
 
 	fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
-	storing_path = root + "output/distance_map_aorta_p5.raw";
+	storing_path = root + "output/distance_map_aorta_p1.raw";
 	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//File to save ratios
-	string saving_ratios_csv = root + "output/ratios_p5.csv";
+	string saving_ratios_csv = root + "output/ratios_p1.csv";
 	FILE* f_ratios;
 	if (fopen_s(&f_ratios, saving_ratios_csv.c_str(), "w") != 0)
 	{
@@ -2277,7 +2341,7 @@ int main() {
 
 	// Input centered path
 	FILE* path_file;
-	loading_path = root + "output/Segmentation/Aorta/centered paths/finalCurve_p5.csv";
+	loading_path = root + "output/Segmentation/Aorta/centered paths/finalCurve_p1.csv";
 	if (fopen_s(&path_file, loading_path.c_str(), "r") != 0) 
 	{
 		printf("Enable to open");
@@ -2496,6 +2560,7 @@ int main() {
 
 	std::cout << "Centroid max SUV in aorta (real coord) : (" << cent_pt_max.x << ", " << cent_pt_max.y << ", " << cent_pt_max.z << ")" << std::endl;
 	std::cout << "Radius max SUV " << max_radius << std::endl;
+	*/
 
 	for (k = 0; k < Height; k++)
 	{
@@ -2511,6 +2576,7 @@ int main() {
 
 	free(petContainer);
 	free(ctContainer);
+	
 
 	//==================== Adjust segment for quantitative analysis ===================================
 	
