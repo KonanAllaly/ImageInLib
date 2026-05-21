@@ -20,12 +20,13 @@
 
 #include "../src/heat_equation.h"
 #include "segmentation2d.h"
-#include "../src/segmentation3d_gsubsurf.h"
+#include "../src/segmentation3d_gsubsurf.h" 
 #include "../src/non_linear_heat_equation.h"
 
 #include "gaussian_distribution.h"
 
 #include "labelling.h"
+#include "morphological_change.h"
 
 #define MAX_LINE_LENGTH 1024
 #define epsilon 1e-6 
@@ -52,8 +53,9 @@ int main() {
 	
 	Vtk_File_Info* ctContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	ctContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/ct/Patient2_ct.vtk";
+	loading_path = root + "input/vtk/petct/ct/Patient1_ct.vtk";
 
+	//loading_path = root + "input/vtk/petct/pet/Patient6_pet.vtk";
 	//loading_path = root + "input/Patient8_ct.vtk";//new data
 	readVtkFile(loading_path.c_str(), ctContainer);
 
@@ -71,7 +73,76 @@ int main() {
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "=========================================" << std::endl;
 
+	/*
+	//==================================
+	dataType thres_min = -30, thres_max = 200;
+
+	dataType** imageData = new dataType * [Height];
+	for(k = 0; k < Height; k++)
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//copy the data
+	for(k = 0; k < Height; k++)
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			imageData[k][i] = (dataType)ctContainer->dataPointer[k][i];
+		}
+	}
+	thresholding3dFunctionN(imageData, Length, Width, Height, thres_min, thres_max, 0.0, 1.0);
+
+	size_t num_iterations = 10;
+	for(i = 0; i < num_iterations; i++)
+	{
+		erosion3dHeighteenNeigbours(imageData, Length, Width, Height, 1.0, 0.0);
+		//dilatation3dHeighteenNeigbours(imageData, Length, Width, Height, 1, 0);
+	}
+
+	const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/output/patient4_threshold.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, store_ptr, STORE_DATA, false);
 	
+	for(k = 0; k < Height; k++)
+	{
+		delete[] imageData[k];
+	}
+	delete[] imageData;
+
+	free(ctContainer);
+	*/
+
+	//==================================
+
+	/*
+	//Find the minimum and maximum pixel value in the CT image
+	dataType minPixelValue = ctContainer->dataPointer[0][0];
+	dataType maxPixelValue = ctContainer->dataPointer[0][0];
+	for(k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			if (ctContainer->dataPointer[k][i] < minPixelValue) {
+				minPixelValue = ctContainer->dataPointer[k][i];
+			}
+			if (ctContainer->dataPointer[k][i] > maxPixelValue) {
+				maxPixelValue = ctContainer->dataPointer[k][i];
+			}
+		}
+	}
+
+	std::cout << "Minimum pixel value in CT image: " << minPixelValue << std::endl;
+	std::cout << "Maximum pixel value in CT image: " << maxPixelValue << std::endl;
+
+	rescaleNewRange(ctContainer->dataPointer, Length, Width, Height, minPixelValue, maxPixelValue, 0.0, 255.0);
+
+	storing_path = root + "output/rescaled_ct_p6.vtk";
+	ctContainer->operation = copyTo;
+	storeVtkFile(storing_path.c_str(), ctContainer, dta_binary);
+
+	free(ctContainer);
+	*/
+
 	//const char* store_ptr = "C:/Users/Konan Allaly/Documents/Tests/output/patient8_ct.raw";
 	//manageRAWFile3D<dataType>(ctContainer->dataPointer, Length, Width, Height, store_ptr, STORE_DATA, false);
 	//free(ctContainer);
@@ -2120,7 +2191,7 @@ int main() {
 	//==================== PET ================
 	Vtk_File_Info* petContainer = (Vtk_File_Info*)malloc(sizeof(Vtk_File_Info));
 	petContainer->operation = copyFrom;
-	loading_path = root + "input/vtk/petct/pet/Patient2_pet.vtk";
+	loading_path = root + "input/vtk/petct/pet/Patient1_pet.vtk";
 	readVtkFile(loading_path.c_str(), petContainer);
 	
 	Point3D PETimageOrigin = { petContainer->origin[0], petContainer->origin[1], petContainer->origin[2] };
@@ -2149,9 +2220,8 @@ int main() {
 		distanceMap[k] = new dataType[dim2D]{ 0 };
 	}
 	
-	
 	Image_Data inputImageStr = { Height, Length, Width, imageDataFull, imageOrigin, imageSpacing, orientation };
-	loading_path = root + "input/raw/liver/liver_p2.raw";
+	loading_path = root + "input/raw/liver/liver_p1.raw";
 	manageRAWFile3D<dataType>(maskLiver, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//Ball Liver PET
@@ -2286,14 +2356,13 @@ int main() {
 	//	}
 	//}
 
-	/*
+	
 	loading_path = root + "output/Segmentation/Aorta/p1/segment_aorta_full_dim_p1.raw";
 	manageRAWFile3D<dataType>(imageDataFull, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//loading_path = root + "output/Segmentation/Aorta/p3/seg_aorta_isoline_03.raw";
 	//manageRAWFile3D<dataType>(imageData, length, width, height, loading_path.c_str(), LOAD_DATA, false);
 
-	
 	////Compute the maximum SUV in the whole aorta
 	//dataType maxSUV_aorta = 0.0;
 	//for(k = 0; k < Height; k++)
@@ -2325,9 +2394,9 @@ int main() {
 	//std::cout << "Ratio max SUV aorta / mean SUV liver: " << maxSUV_aorta / mean_SUV_Liver << std::endl;
 	
 
-	fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
+	//fastMarchingDistanceMap(inputImageStr, distanceMap, 0.0);
 	storing_path = root + "output/distance_map_aorta_p1.raw";
-	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
 	//File to save ratios
 	string saving_ratios_csv = root + "output/ratios_p1.csv";
@@ -2371,7 +2440,7 @@ int main() {
 		size_t j_seg = (size_t)(current_point_ct.y);
 		size_t k_seg = (size_t)(current_point_ct.z);
 		double dist_seg = distanceMap[k_seg][x_new(i_seg, j_seg, Length)];
-		dataType offset_distance = fmax(PETimageSpacing.sx, fmax(PETimageSpacing.sy, PETimageSpacing.sz));
+		dataType offset_distance = 2.0 * fmax(PETimageSpacing.sx, fmax(PETimageSpacing.sy, PETimageSpacing.sz));
 		double radius_aorta_roi = dist_seg + offset_distance;
 
 		//index <= 25 ----> ascending aorta
@@ -2431,10 +2500,8 @@ int main() {
 					
 					if (dist <= radius_aorta_roi)
 					{
-						//maskData[kk][x_new(ii, jj, length)] = 1.0;
 						if(imageDataFull[kk][x_new(ii, jj, Length)] == 1.0)
 						{
-							//maskAorta[kk][x_new(ii, jj, Length)] = 1.0;
 							Point3D p_pet = getImageCoordFromRealCoord3D(p_real, PETimageOrigin, PETimageSpacing, orientation);
 							size_t ii_pet = (size_t)p_pet.x;
 							size_t jj_pet = (size_t)p_pet.y;
@@ -2560,8 +2627,7 @@ int main() {
 
 	std::cout << "Centroid max SUV in aorta (real coord) : (" << cent_pt_max.x << ", " << cent_pt_max.y << ", " << cent_pt_max.z << ")" << std::endl;
 	std::cout << "Radius max SUV " << max_radius << std::endl;
-	*/
-
+	
 	for (k = 0; k < Height; k++)
 	{
 		delete[] distanceMap[k];
@@ -2576,6 +2642,7 @@ int main() {
 
 	free(petContainer);
 	free(ctContainer);
+	
 	
 
 	//==================== Adjust segment for quantitative analysis ===================================
