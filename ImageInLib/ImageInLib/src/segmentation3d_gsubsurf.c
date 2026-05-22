@@ -1910,7 +1910,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 		}
 	}
 
-	////smoothing
+	//smoothing
 	heatImplicitRectangularScheme(imageData, smooth_parms);
 
 	//compute the morm of gradient for the edge detector
@@ -1996,6 +1996,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 
 	Image_Data segmentationData = { height, length, width, segmentationPtr, imageData.origin, imageData.spacing, imageData.orientation };
 
+	
 	do {
 		number_time_step++;
 
@@ -2036,6 +2037,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 		count_gauss_seidel_iteration = 0;
 
 		do {
+
 			count_gauss_seidel_iteration++;
 			for (k = 0, k_ext = 1; k < height; k++, k_ext++)
 			{
@@ -2062,8 +2064,14 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 								+ uCoef.n_Ptr[k][x] + uCoef.s_Ptr[k][x] 
 								+ uCoef.t_Ptr[k][x] + uCoef.b_Ptr[k][x]));
 
-						gaussSeidelPtr[k_ext][x_ext] = gaussSeidelPtr[k_ext][x_ext] 
+						gaussSeidelPtr[k_ext][x_ext] = gaussSeidelPtr[k_ext][x_ext]
 							+ omega * (gauss_seidel_coef - gaussSeidelPtr[k_ext][x_ext]);
+
+						//if(gauss_seidel_coef > gaussSeidelPtr[k_ext][x_ext])
+						//{
+						//	gaussSeidelPtr[k_ext][x_ext] = gaussSeidelPtr[k_ext][x_ext]
+						//		+ omega * (gauss_seidel_coef - gaussSeidelPtr[k_ext][x_ext]);
+						//}
 					}
 				}
 			}
@@ -2091,6 +2099,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 					}
 				}
 			}
+
 		} while (count_gauss_seidel_iteration < seg_parms.maxNoGSIteration && error_gauss_seidel > seg_parms.gauss_seidelTolerance);
 
 		//rescall to data range 0-1
@@ -2115,6 +2124,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 		}
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
+	
 
 	for (k = 0; k < height_ext; k++)
 	{
