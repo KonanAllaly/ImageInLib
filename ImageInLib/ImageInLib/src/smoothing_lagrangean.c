@@ -668,6 +668,7 @@ bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char * save_path)
         return false;
     }
 
+    /*
     //Save torsion
     const char* extension_torsion = "_torsion.csv";
     new_path_length = strlen(save_path) + strlen(extension_torsion) + 1;
@@ -683,6 +684,7 @@ bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char * save_path)
         free(save_torsion);
         return false;
     }
+    */
 
     for (size_t i = 1; i < curve->numPoints - 1; i++)
     {
@@ -707,6 +709,7 @@ bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char * save_path)
         double tan = sqrt(tan_x * tan_x + tan_y * tan_y + tan_z * tan_z);
         fprintf(file_save_tangent, "%d, %lf, %lf\n", i, tan_z, tan);
         
+        /*
 		//torsion vector
         if (i >= 2 && i < curve->numPoints - 2) 
         {
@@ -741,15 +744,18 @@ bool computeCurvatureTorsionAndTangent(Curve3D* curve, const char * save_path)
             double torsion = torsion_numerator / torsion_denominator;
 
             fprintf(file_save_torsion, "%d, %lf\n", i, torsion);
+            
         }
+        */
+
     }
     fclose(file_save_curvature);
     fclose(file_save_tangent);
-    fclose(file_save_torsion);
+    //fclose(file_save_torsion);
 
 	free(save_curvature);
 	free(save_tangent);
-	free(save_torsion);
+	//free(save_torsion);
 
     return true;
 }
