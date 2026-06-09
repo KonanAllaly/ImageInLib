@@ -54,7 +54,7 @@ int main() {
 	ctContainer->operation = copyFrom;
 	
 	std::cout<<"Original data"<<std::endl;
-	loading_path = root + "input/vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = root + "input/vtk/petct/ct/Patient6_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	size_t Height = (size_t)ctContainer->dimensions[2];
@@ -68,6 +68,211 @@ int main() {
 	VoxelSpacing imageSpacing = { (dataType)ctContainer->spacing[0], (dataType)ctContainer->spacing[1], (dataType)ctContainer->spacing[2] };
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "================================" << std::endl;
+
+	//===================== Segmentation liver ==============================================
+
+	dataType** imageData = new dataType * [Height];
+	for(k = 0; k < Height; k++)
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//copying data from vtk container to 3D array
+	for (k = 0; k < Height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			imageData[k][i] = ctContainer->dataPointer[k][i];
+		}
+	}
+
+	Image_Data originalImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
+
+	//===================== Interpolation to isotropic spacing ==============================================
+
+	size_t newHeight = (size_t)round(Height * (imageSpacing.sz / imageSpacing.sx));
+	std::cout << "New height after interpolation = " << newHeight << std::endl;
+	VoxelSpacing newSpacing = { imageSpacing.sx, imageSpacing.sy, imageSpacing.sx };
+
+	dataType** segmentedLiver = new dataType * [newHeight];
+	dataType** distanceMap = new dataType * [newHeight];
+	int** labelArray = new int* [newHeight];
+	bool** status = new bool* [newHeight];
+	for (k = 0; k < newHeight; k++)
+	{
+		segmentedLiver[k] = new dataType[dim2D]{ 0 };
+		distanceMap[k] = new dataType[dim2D]{ 0 };
+		labelArray[k] = new int[dim2D] { 0 };
+		status[k] = new bool[dim2D] { false };
+	}
+
+	Image_Data interpolatedImage = { newHeight, Length, Width, segmentedLiver, imageOrigin, newSpacing, orientation };
+
+	imageInterpolation3D(originalImage, interpolatedImage, TRILINEAR);
+
+	Image_Data toDistanceMap = { newHeight, Length, Width, segmentedLiver, imageOrigin, newSpacing, orientation };
+	dataType min_distance = fmax(imageSpacing.sx, fmax(imageSpacing.sy, imageSpacing.sx));
+
+	dataType thres_min = -30, thres_max = 200, background = 0, foreground = 1;
+	thresholding3dFunctionN(segmentedLiver, Length, Width, newHeight, thres_min, thres_max, background, foreground);
+
+	//storing_path = root + "output/threshold_p1.raw";
+	//manageRAWFile3D<dataType>(segmentedLiver, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	/*
+	size_t num_iterations = 14;
+	for (i = 0; i < num_iterations; i++)
+	{
+		erosion3dHeighteenNeigbours(segmentedLiver, Length, Width, newHeight, foreground, background);
+	}
+	*/
+	
+	size_t num_iterations = 21;
+	dataType max_distance = 0.0;
+	dataType stop_condition = 0.0, prev = 0.0;
+	size_t iteration = 0;
+	while(stop_condition <= min_distance && iteration < num_iterations)
+	{
+		iteration++;
+		fastMarchingDistanceMap(toDistanceMap, distanceMap, background);
+		max_distance = 0.0;
+		for (k = 0; k < newHeight; k++)
+		{
+			for (i = 0; i < dim2D; i++)
+			{
+				if (distanceMap[k][i] <= min_distance)
+				{
+					segmentedLiver[k][i] = background;
+				}
+				if (distanceMap[k][i] > max_distance)
+				{
+					max_distance = distanceMap[k][i];
+				}
+				distanceMap[k][i] = 0.0;
+			}
+		}
+		if (iteration == 1) 
+		{
+			stop_condition = min_distance;
+		}
+		else
+		{
+			stop_condition = max_distance - prev;
+		}
+		prev = max_distance;
+		std::cout << "Maximum distance = " << max_distance << " at step " << iteration << std::endl;
+	}
+	
+	
+	/*
+	for (size_t n = 0; n < num_iterations; n++)
+	{
+		fastMarchingDistanceMap(toDistanceMap, distanceMap, background);
+		//storing_path = root + "output/d_map_p2.raw";
+		//manageRAWFile3D<dataType>(distanceMap, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+		max_distance = 0.0;
+		for (k = 0; k < Height; k++) 
+		{
+			for (i = 0; i < dim2D; i++) 
+			{
+				if (distanceMap[k][i] <= min_distance) 
+				{
+					segmentedLiver[k][i] = background;
+				}
+				if(distanceMap[k][i] > max_distance)
+				{
+					max_distance = distanceMap[k][i];
+				}
+				distanceMap[k][i] = 0.0;
+			}
+		}
+		std::cout << "Maximum distance = " << max_distance << " at step " << n + 1 << std::endl;
+	}
+	*/
+	
+	
+	int numberOfRegionCells = countNumberOfRegionsCells(segmentedLiver, Length, Width, newHeight, foreground);
+
+	labelling3D(segmentedLiver, labelArray, status, Length, Width, newHeight, foreground);
+
+	//Counting
+	int* countingArray = new int[numberOfRegionCells] {0};
+	if (countingArray == NULL)
+		return false;
+
+	//Get regions sizes
+	for (k = 0; k < newHeight; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			if (labelArray[k][i] > 0) 
+			{
+				countingArray[labelArray[k][i]]++;
+			}
+		}
+	}
+
+	//Number of regions
+	int numberOfRegions = 0;
+	for (i = 0; i < numberOfRegionCells; i++) 
+	{
+		if (countingArray[i] > 0) 
+		{
+			numberOfRegions++;
+		}
+	}
+
+	//Find the largest region
+	size_t regionSize = 0;
+	for (k = 0; k < newHeight; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			if (countingArray[labelArray[k][i]] > regionSize) 
+			{
+				regionSize = countingArray[labelArray[k][i]];
+			}
+		}
+	}
+
+	//Keep and save the largest region
+	for (k = 0; k < newHeight; k++) {
+		for (i = 0; i < dim2D; i++) 
+		{
+			if (countingArray[labelArray[k][i]] == regionSize) 
+			{
+				segmentedLiver[k][i] = 1.0;
+			}
+			else {
+				segmentedLiver[k][i] = 0.0;
+			}
+		}
+	}
+
+	//storing_path = root + "output/threshold_p1.raw";
+	//storing_path = root + "output/segment_d_map_p6.raw";
+	storing_path = root + "output/segment_dmap_interpol_p6.raw";
+	manageRAWFile3D<dataType>(segmentedLiver, Length, Width, newHeight, storing_path.c_str(), STORE_DATA, false);
+	
+	for(k = 0; k < Height; k++)
+	{
+		delete[] imageData[k];
+	}
+	delete[] imageData;
+
+	for(k = 0; k < newHeight; k++)
+	{
+		delete[] segmentedLiver[k];
+		delete[] distanceMap[k];
+		delete[] labelArray[k];
+		delete[] status[k];
+	}
+	delete[] segmentedLiver;
+	delete[] distanceMap;
+	delete[] labelArray;
+	delete[] status;
+
+	//====================================================================================
 
 	/*
 	//================== Liver  ============================================
@@ -671,10 +876,13 @@ int main() {
 	}
 	delete[] liver;
 	delete[] status_liver;
+	*/
 
+	/*
 	//================== Load aorta segment and compute distance map =
 
 	dataType** aorta = new dataType * [Height];
+	dataType** maskAorta = new dataType * [Height];
 	dataType** ascending = new dataType * [Height];
 	dataType** arch = new dataType * [Height];
 	dataType** descending = new dataType * [Height];
@@ -683,18 +891,19 @@ int main() {
 	for (k = 0; k < Height; k++)
 	{
 		aorta[k] = new dataType[dim2D]{ 0 };
+		maskAorta[k] = new dataType[dim2D]{ 0 };
 		ascending[k] = new dataType[dim2D]{ 0 };
 		arch[k] = new dataType[dim2D]{ 0 };
 		descending[k] = new dataType[dim2D]{ 0 };
 		abdominal[k] = new dataType[dim2D]{ 0 };
 		distanceMapAorta[k] = new dataType[dim2D]{ 0 };
 	}
-	loading_path = root + "output/Segmentation/Aorta/p6/segment_aorta_full_dim_p6.raw";
+	loading_path = root + "output/Segmentation/Aorta/p1/segment_aorta_full_dim_p1.raw";
 	manageRAWFile3D<dataType>(aorta, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	Image_Data aortaSegment = { Height, Length, Width, aorta, imageOrigin, imageSpacing, orientation };
 	fastMarchingDistanceMap(aortaSegment, distanceMapAorta, 0.0);
-	storing_path = root + "output/distance_map_p6.raw";
+	storing_path = root + "output/distance_map_p1.raw";
 	manageRAWFile3D<dataType>(distanceMapAorta, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//=================== SUV in segments ============================
@@ -704,7 +913,7 @@ int main() {
 	dataType pet_suv = 0.0, max_suv_roi = 0.0;
 
 	FILE* ratio_file;
-	storing_path = root + "output/ratio_p6.csv";
+	storing_path = root + "output/ratio_p1.csv";
 	if (fopen_s(&ratio_file, storing_path.c_str(), "w") != 0)
 	{
 		printf("Unable to open");
@@ -716,7 +925,7 @@ int main() {
 	
 	//Treat ascending aorta
 	FILE* path_ascending;
-	loading_path = root_path + "ascending/ascending_p6.csv";
+	loading_path = root_path + "ascending/ascending_p1.csv";
 	if (fopen_s(&path_ascending, loading_path.c_str(), "r") != 0)
 	{
 		printf("Unable to open");
@@ -781,16 +990,16 @@ int main() {
 		
 		dataType reference_suv = 1.0;
 		max_suv_roi /= mean_suv_liver;
-		fprintf(ratio_file, "%d,%f,%f\n", index, reference_suv, max_suv_roi);
+		//fprintf(ratio_file, "%d,%f,%f\n", index, reference_suv, max_suv_roi);
 	}
 	std::cout << "Max SUV in ascending aorta : " << max_suv_ascending / mean_suv_liver << std::endl;
 
-	storing_path = root + "output/ascending_p6.raw";
+	storing_path = root + "output/ascending_p1.raw";
 	manageRAWFile3D<dataType>(ascending, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//Treat aortic arch
 	FILE* path_arch;
-	loading_path = root_path + "arch/arch_p6.csv";
+	loading_path = root_path + "arch/arch_p1.csv";
 	if (fopen_s(&path_arch, loading_path.c_str(), "r") != 0)
 	{
 		printf("Unable to open");
@@ -853,12 +1062,12 @@ int main() {
 	}
 	std::cout << "Max SUV in aortic arch : " << max_suv_arch / mean_suv_liver << std::endl;
 
-	storing_path = root + "output/arch_p6.raw";
+	storing_path = root + "output/arch_p1.raw";
 	manageRAWFile3D<dataType>(arch, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//Treat descending aorta
 	FILE* path_descending;
-	loading_path = root_path + "descending/descending_p6.csv";
+	loading_path = root_path + "descending/descending_p1.csv";
 	if (fopen_s(&path_descending, loading_path.c_str(), "r") != 0)
 	{
 		printf("Enable to open");
@@ -928,12 +1137,12 @@ int main() {
 	}
 	std::cout << "Max SUV in descending aorta : " << max_suv_descending / mean_suv_liver << std::endl;
 
-	storing_path = root + "output/descending_p6.raw";
+	storing_path = root + "output/descending_p1.raw";
 	manageRAWFile3D<dataType>(descending, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	//Treat abdominal aorta
 	FILE* path_abdominal;
-	loading_path = root_path + "abdominal/abdomen_p6.csv";
+	loading_path = root_path + "abdominal/abdomen_p1.csv";
 	if (fopen_s(&path_abdominal, loading_path.c_str(), "r") != 0)
 	{
 		printf("Unable to open");
@@ -1003,10 +1212,11 @@ int main() {
 	}
 	std::cout << "Max SUV in abdominal aorta : " << max_suv_abdominal / mean_suv_liver << std::endl;
 
-	storing_path = root + "output/abdominal_p6.raw";
+	storing_path = root + "output/abdominal_p1.raw";
 	manageRAWFile3D<dataType>(abdominal, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	
 	fclose(ratio_file);
+
 	//============================
 
 	path_points_ascending.clear();
@@ -1029,6 +1239,133 @@ int main() {
 	delete[] arch;
 	delete[] descending;
 	delete[] abdominal;
+	*/
+
+	/*
+	//============================ SUV along smoothed centerline ============================
+
+	dataType** aorta = new dataType * [Height];
+	dataType** maskAorta = new dataType * [Height];
+	dataType** distanceMapAorta = new dataType * [Height];
+	for(k = 0; k < Height; k++)
+	{
+		aorta[k] = new dataType[dim2D]{ 0 };
+		maskAorta[k] = new dataType[dim2D]{ 0 };
+		distanceMapAorta[k] = new dataType[dim2D]{ 0 };
+	}
+	loading_path = root + "output/Segmentation/Aorta/p6/segment_aorta_full_dim_p6.raw";
+	manageRAWFile3D<dataType>(aorta, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
+	Image_Data aortaSegment = { Height, Length, Width, aorta, imageOrigin, imageSpacing, orientation };
+	fastMarchingDistanceMap(aortaSegment, distanceMapAorta, 0.0);
+	storing_path = root + "output/distance_map_p6.raw";
+	manageRAWFile3D<dataType>(distanceMapAorta, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	dataType x, y, z, index = 0;
+	std::vector<Point3D> path_points;
+	dataType pet_suv = 0.0, max_suv_roi = 0.0;
+
+	FILE* ratio_file;
+	storing_path = root + "output/ratio_p6.csv";
+	if (fopen_s(&ratio_file, storing_path.c_str(), "w") != 0)
+	{
+		printf("Unable to open");
+		return false;
+	}
+	fprintf(ratio_file, "index,reference,ratio\n");
+	
+	//Treat smoothed centerline
+	string root_path = root + "output/Segmentation/Aorta/centered paths/";
+	FILE* path_smoothed;
+	loading_path = root_path + "smoothed/smoothed_p6.csv";
+	if (fopen_s(&path_smoothed, loading_path.c_str(), "r") != 0)
+	{
+		printf("Unable to open");
+		return false;
+	}
+	size_t k_max_ascending = 0;
+	while (fscanf_s(path_smoothed, "%f,%f,%f", &x, &y, &z) == 3)
+	{
+		Point3D current_point = { x, y, z };
+		path_points.push_back(current_point);
+		current_point = getImageCoordFromRealCoord3D(current_point, imageOrigin, imageSpacing, orientation);
+	}
+	fclose(path_smoothed);
+
+	dataType global_max_suv = 0.0;
+	dataType z_global_max_suv = 0.0;
+	for (size_t n = 0; n < path_points.size(); n++)
+	{
+		index++;
+		Point3D current_point = path_points[n];
+		Point3D petCoord = getImageCoordFromRealCoord3D(current_point, petOrigin, petSpacing, orientation);
+		Point3D ctCoord = getImageCoordFromRealCoord3D(current_point, imageOrigin, imageSpacing, orientation);
+
+		double radius = (double)distanceMapAorta[(size_t)ctCoord.z][x_new((size_t)ctCoord.x, (size_t)ctCoord.y, Length)];
+		double radius_path_roi = radius + 2.0 * fmax(petSpacing.sx, fmax(petSpacing.sy, petSpacing.sz));
+
+		BoundingBox3D box_roi = findBoundingBox3D(ctCoord, Length, Width, Height, radius_path_roi, 2.0);
+		max_suv_roi = 0.0;
+		for (k = box_roi.k_min; k < box_roi.k_max; k++)
+		{
+			for (i = box_roi.i_min; i < box_roi.i_max; i++)
+			{
+				for (j = box_roi.j_min; j < box_roi.j_max; j++)
+				{
+					xd = x_new(i, j, Length);
+					Point3D currentPoint = { (dataType)i, (dataType)j, (dataType)k };
+					currentPoint = getRealCoordFromImageCoord3D(currentPoint, imageOrigin, imageSpacing, orientation);
+					Point3D currentPointpet = getImageCoordFromRealCoord3D(currentPoint, petOrigin, petSpacing, orientation);
+					size_t k_pet = (size_t)currentPointpet.z;
+					size_t i_pet = (size_t)currentPointpet.x;
+					size_t j_pet = (size_t)currentPointpet.y;
+					double d_current_path_point = getPoint3DDistance(currentPoint, current_point);
+					if (d_current_path_point <= radius_path_roi)
+					{
+						maskAorta[k][xd] = 1.0;
+						if(aorta[k][x_new(i, j, Length)] > 0.0)
+						{
+							pet_suv = petContainer->dataPointer[k_pet][x_new(i_pet, j_pet, petLength)];
+							if (max_suv_roi < pet_suv)
+							{
+								max_suv_roi = pet_suv;
+							}
+							if(global_max_suv < pet_suv)
+							{
+								global_max_suv = pet_suv;
+								z_global_max_suv = currentPoint.z;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		dataType reference_suv = 1.0;
+		max_suv_roi /= mean_suv_liver;
+		fprintf(ratio_file, "%d,%f,%f\n", index, reference_suv, max_suv_roi);
+	}
+	std::cout << "Max SUV along smoothed centerline : " << global_max_suv << std::endl;
+	std::cout << "Z of max SUV along smoothed centerline : " << z_global_max_suv << std::endl;
+
+	//storing_path = root + "output/maskAorta_p3.raw";
+	//manageRAWFile3D<dataType>(maskAorta, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	path_points.clear();
+	fclose(ratio_file);
+	free(petContainer);
+
+	for(k = 0; k < Height; k++)
+	{
+		delete[] aorta[k];
+		delete[] maskAorta[k];
+		delete[] distanceMapAorta[k];
+	}
+	delete[] aorta;
+	delete[] distanceMapAorta;
+	delete[] maskAorta;
+
+	//=======================================================================================
 	*/
 
 	/*
@@ -1117,8 +1454,6 @@ int main() {
 	fclose(path_abdominal);
 	*/
 
-	//free(petContainer);
-
 	//for(k = 0; k < height; k++)
 	//{
 	//	delete[] imageData[k];
@@ -1135,6 +1470,7 @@ int main() {
 	//delete[] imageDataFull;
 	//delete[] initialsegmentFull;
 
+	/*
 	//=========== Potential function for path extraction =============
 
 	dataType** potential = new dataType * [Height];
@@ -1146,24 +1482,29 @@ int main() {
 	}
 	string root_potential = root + "output/Data journal paper submission/";
 	//loading_path = root_potential + "P1/potential_p1.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	loading_path = root_potential + "P1/edge_image_p1.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
 	//storing_path = root + "output/slice_thorax_edge_image.raw";
 	//storing_path = root + "output/slice_abdomen_edge_image.raw";
-	//storing_path = root + "output/slice_heart_edge_image.raw";
+	storing_path = root + "output/slice_heart_edge_image.raw";
 	//storing_path = root + "output/slice_thorax_potential.raw";
 	//storing_path = root + "output/slice_abdomen_potential.raw";
 	//storing_path = root + "output/slice_heart_potential.raw";
-	//manageRAWFile2D<dataType>(potential[229], Length, Width, storing_path.c_str(), STORE_DATA, false);
+	manageRAWFile2D<dataType>(potential[229], Length, Width, storing_path.c_str(), STORE_DATA, false);
+	
 
-	string root_aorta = root + "output/Segmentation/Aorta/";
+	//string root_aorta = root + "output/Segmentation/Aorta/";
 	//loading_path = root_aorta + "p1/segment_aorta_full_dim_p1.raw";
 	//manageRAWFile3D<dataType>(aorta, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
 
-	//storing_path = root + "output/slice_thorax_aorta_segment.raw";
-	//storing_path = root + "output/slice_abdomen_aorta_segment.raw";
-	//storing_path = root + "output/slice_heart_aorta_segment.raw";
-	//manageRAWFile2D<dataType>(aorta[255], Length, Width, storing_path.c_str(), STORE_DATA, false);
+	//storing_path = root_potential + "P1/level_sets_full_dim_p1.raw";
+	//manageRAWFile3D<dataType>(aorta, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
+
+	//storing_path = root + "output/slice_thorax_aorta_levelset.raw";
+	//storing_path = root + "output/slice_abdomen_aorta_levelset.raw";
+	//storing_path = root + "output/slice_heart_aorta_levelset.raw";
+	//manageRAWFile2D<dataType>(aorta[229], Length, Width, storing_path.c_str(), STORE_DATA, false);
 
 	//storing_path = root + "output/slice_thorax_ct_image.raw";
 	//storing_path = root + "output/slice_abdomen_ct_image.raw";
@@ -1183,7 +1524,7 @@ int main() {
 	//	}
 	//}
 
-	/*
+	
 	//restore original image dimension for segment image
 	size_t length = 150, width = 150, height = 350;
 	dataType** imageData = new dataType * [height];
@@ -1212,24 +1553,21 @@ int main() {
 			}
 		}
 	}
-
-	storing_path = root_potential + "P1/level_sets_full_dim_p1.raw";
-	manageRAWFile3D<dataType>(aorta, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-
-	for(k = 0; k < height; k++)
+	for (k = 0; k < height; k++)
 	{
 		delete[] imageData[k];
 	}
 	delete[] imageData;
+		//for (k = 0; k < Height; k++)
+	//{
+	//	delete[] potential[k];
+	//	delete[] aorta[k];
+	//}
+	//delete[] potential;
+	//delete[] aorta;
 	*/
-	
-	for (k = 0; k < Height; k++)
-	{
-		delete[] potential[k];
-		delete[] aorta[k];
-	}
-	delete[] potential;
-	delete[] aorta;
+
+	//======================================================================================
 
 	free(ctContainer);
 	return EXIT_SUCCESS;
