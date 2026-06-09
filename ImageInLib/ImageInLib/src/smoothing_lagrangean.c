@@ -290,9 +290,13 @@ bool normalVelocitySmoothing(LinkedCurve3D* initial_curve, LinkedCurve3D* evolvi
             pscheme_data[i].normal_y = attract1 * n1_y + attract2 * n2_y;
             pscheme_data[i].normal_z = attract1 * n1_z + attract2 * n2_z;
 
+            ////Compute the normal velocity component
+            //pscheme_data[i].u = delta * pscheme_data[i].k1 + r0_minus_r_x * n1_x + r0_minus_r_y * n1_y + r0_minus_r_z * n1_z;
+            //pscheme_data[i].v = delta * pscheme_data[i].k2 + r0_minus_r_x * n2_x + r0_minus_r_y * n2_y + r0_minus_r_z * n2_z;
+
             //Compute the normal velocity component
-            pscheme_data[i].u = delta * pscheme_data[i].k1 + r0_minus_r_x * n1_x + r0_minus_r_y * n1_y + r0_minus_r_z * n1_z;
-            pscheme_data[i].v = delta * pscheme_data[i].k2 + r0_minus_r_x * n2_x + r0_minus_r_y * n2_y + r0_minus_r_z * n2_z;
+            pscheme_data[i].u = delta * pscheme_data[i].k1 + lambda * (r0_minus_r_x * n1_x + r0_minus_r_y * n1_y + r0_minus_r_z * n1_z);
+            pscheme_data[i].v = delta * pscheme_data[i].k2 + lambda * (r0_minus_r_x * n2_x + r0_minus_r_y * n2_y + r0_minus_r_z * n2_z);
 
         }
         else
