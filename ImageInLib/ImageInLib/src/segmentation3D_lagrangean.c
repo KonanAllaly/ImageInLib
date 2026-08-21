@@ -363,10 +363,22 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
     size_t length_of_data = linked_curve.number_of_points + 2;
     SchemeData3D* pscheme_data = (SchemeData3D*)calloc(length_of_data, sizeof(SchemeData3D));
 
-    size_t it = 1;
+    Point3D imageOrigin = { -249.512, -403.012, 675.5 };
+    VoxelSpacing imageSpacing = { 0.976562, 0.976562, 1.5 };
+    OrientationMatrix orientation = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
+
+    //Array for name construction
+    unsigned char  name[500];
+    unsigned char  name_ending[200];
+    Storage_Flags flags = { false,false };
+
+    
+
+    size_t it = 1, ind_save = 0;
     double motion = 0.0;
     double distance_to_next = 0.0;
-    do {
+    do 
+    {
 
         if (length_of_data < linked_curve.number_of_points + 2)
         {
@@ -380,6 +392,72 @@ bool lagrangeanSemiImplicit3DCurveSegmentation(Image_Data inputImage3D, const La
         evolveBySingleStepIIOE(&inputImage3D, &linked_curve, pscheme_data, pSegmentationParams);
 
         it++;
+
+		//save the evolving curve every 20 time steps
+        /*
+        if(it % 2 == 0)
+        {
+			ind_save++;
+            LinkedPoint3D* pPoint = linked_curve.first_point;
+            strcpy_s(name, sizeof name, pOutputPathPtr);
+            sprintf_s(name_ending, sizeof(name_ending), "_path_%03zd.csv", ind_save);
+            strcat_s(name, sizeof(name), name_ending);
+
+            FILE* file_save;
+            if (fopen_s(&file_save, name, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            for (size_t i = 0; i < linked_curve.number_of_points; i++) {
+                Point3D fPoint = { pPoint->x, pPoint->y, pPoint->z };
+                fPoint = getRealCoordFromImageCoord3D(fPoint, imageOrigin, imageSpacing, orientation);
+                fprintf(file_save, "%f,%f,%f\n", fPoint.x, fPoint.y, fPoint.z);
+                pPoint = pPoint->next;
+            }
+            fclose(file_save);
+			pPoint = NULL; 
+
+            ind_save++;
+            LinkedPoint3D* pPoint = linked_curve.first_point;
+            strcpy_s(name, sizeof name, pOutputPathPtr);
+            sprintf_s(name_ending, sizeof(name_ending), "_path_%03zd.csv", ind_save);
+            strcat_s(name, sizeof(name), name_ending);
+
+            FILE* file_save;
+            if (fopen_s(&file_save, name, "w") != 0) {
+                printf("Enable to open");
+                return false;
+            }
+            for (size_t i = 0; i < linked_curve.number_of_points; i++) {
+                Point3D fPoint = { pPoint->x, pPoint->y, pPoint->z };
+                fPoint = getRealCoordFromImageCoord3D(fPoint, imageOrigin, imageSpacing, orientation);
+                fprintf(file_save, "%f,%f,%f\n", fPoint.x, fPoint.y, fPoint.z);
+                pPoint = pPoint->next;
+            }
+            fclose(file_save);
+            pPoint = NULL;
+		}
+        */
+        ind_save++;
+        LinkedPoint3D* pPoint = linked_curve.first_point;
+        strcpy_s(name, sizeof name, pOutputPathPtr);
+        sprintf_s(name_ending, sizeof(name_ending), "_path_%03zd.csv", ind_save);
+        strcat_s(name, sizeof(name), name_ending);
+
+        FILE* file_save;
+        if (fopen_s(&file_save, name, "w") != 0) {
+            printf("Enable to open");
+            return false;
+        }
+        for (size_t i = 0; i < linked_curve.number_of_points; i++) {
+            Point3D fPoint = { pPoint->x, pPoint->y, pPoint->z };
+            fPoint = getRealCoordFromImageCoord3D(fPoint, imageOrigin, imageSpacing, orientation);
+            fprintf(file_save, "%f,%f,%f\n", fPoint.x, fPoint.y, fPoint.z);
+            pPoint = pPoint->next;
+        }
+        fclose(file_save);
+        pPoint = NULL;
+		
 
     } while (it < pSegmentationParams->num_time_steps);
 
