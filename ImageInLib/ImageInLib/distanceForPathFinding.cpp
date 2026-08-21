@@ -2067,50 +2067,58 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	
 	//Real image
 	Image_Data toDistanceMap = { height, length, width, maskThreshold, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p7.raw";
-	manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	////std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/P1/edge_image_p1.raw";
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image_p3.raw";
+	//manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	
-	/*
-	fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_double.raw";
-	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	//fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
+	
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/P3/distance_map_p3.raw";
+	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p3.raw";
+	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
 	//Image_Data toDistanceMap = { height, length, width, ctImageData.imageDataPtr, ctImageData.origin, ctImageData.spacing, ctImageData.orientation };
 	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/edge_image.raw";
 	////manageRAWFile3D<dataType>(maskThreshold, length, width, height, storing_path.c_str(), STORE_DATA, false);
 	//fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fm.raw";
-	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), STORE_DATA, false);
+	
+	//std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_fm.raw";
+	//manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	Statistics seedStats = { 0.0, 0.0, 0.0, 0.0 };
 	seedStats = getPointNeighborhoodStats(ctImageData, seedPoint[0], parameters.radius);
 	dataType value_first_pt = seedStats.mean_data;
-	std::cout << "Seed 1 value : " << value_first_pt << std::endl;
+	//std::cout << "Seed 1 value : " << value_first_pt << std::endl;
 	dataType seedValCT = value_first_pt;
 	
-	dataType var_epsilon = 0;//0.01;
+	dataType var_epsilon = 0.0;//0.01;
 	if (seedStats.sd_data != 0) 
 	{
 		var_epsilon = seedStats.sd_data;
 	}
-	else {
+	else 
+	{
 		var_epsilon = parameters.eps;
 	}
 	
 	std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
 
 	//Computation of potential function
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
 			potential[k][i] = fabs(seedValCT - ctImageData.imageDataPtr[k][i]);
 		}
 	}
 
 	//Find the max of the difference
 	dataType maxImage = 0.0;
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
 			if (potential[k][i] > maxImage) 
 			{
 				maxImage = potential[k][i];
@@ -2123,10 +2131,9 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	{
 		for (i = 0; i < dim2D; i++) 
 		{
-			potential[k][i] = (dataType)(var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i]));
+			potential[k][i] = (dataType)((var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i])));
 		}
 	}
-	*/
 
 	for (k = 0; k < height; k++) {
 		delete[] maskThreshold[k];
@@ -2160,10 +2167,13 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 	dataType y = seedPoints[1].y;
 	dataType z = seedPoints[1].z;
 	double dist_to_end = 0.0;
+	
+	//string root = "C:/Users/Konan Allaly/Documents/Tests/output/P5/paths/";
 
 	size_t count_iter = 1;
 	Point3D final_point = getRealCoordFromImageCoord3D(seedPoints[0], actionMapStr.origin, spacing, actionMapStr.orientation);
 
+	size_t id_path = 0;//, current_size = 0;
 	bool isGradientComputed = false;
 	Point3D grad_vector;
 	dataType norm_of_gradient = 0.0;
@@ -2202,6 +2212,29 @@ bool shortestPath3D(Image_Data actionMapStr, Point3D* seedPoints, vector<Point3D
 		path_points.push_back(point_current);
 		
 		count_iter++;
+
+		/*
+		if(count_iter % 10 == 0) 
+		{
+			id_path++;
+			string save_points = root + "path_points_" + std::to_string(id_path) + ".csv";
+			FILE* path_points_save;
+			if (fopen_s(&path_points_save, save_points.c_str(), "w") != 0) 
+			{
+				printf("Enable to open");
+				return false;
+			}
+			fprintf(path_points_save, "x,y,z\n");
+			for(size_t p = 0; p < path_points.size(); p++) 
+			{
+				Point3D processed = getRealCoordFromImageCoord3D(path_points[p], actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
+				fprintf(path_points_save, "%f,%f,%f\n", processed.x, processed.y, processed.z);
+			}
+			fclose(path_points_save);
+			//current_size = path_points.size();
+		}
+		*/
+		
 
 	} while (dist_to_end > parameters.tolerance && count_iter < parameters.max_iteration);
 
@@ -2324,12 +2357,14 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 	//Point3D processed = getRealCoordFromImageCoord3D(endPoints[0], actionPtr.origin, actionPtr.spacing, actionPtr.orientation);
 	//fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
 	
-	//string save_front = "C:/Users/Konan Allaly/Documents/Tests/output/";
+	//string save_front = "C:/Users/Konan Allaly/Documents/Tests/output/P5/action/";
 	//dataType** saveAction = new dataType * [height];
-	//for (k = 0; k < height; k++) {
+	//for (k = 0; k < height; k++) 
+	//{
 	//	saveAction[k] = new dataType[dim2D]{ 0 };
 	//}
 
+	size_t id_save = 0;
 	while (narrowBand.size() > 0) {
 
 		//processed the point with minimum distance
@@ -2352,7 +2387,8 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 		}
 		
 		//Exit the while loop when the final point is reached/computed
-		if (labelArray[seedK][seedIndex] == 1) {
+		if (labelArray[seedK][seedIndex] == 1) 
+		{
 			break;
 		}
 
@@ -2401,42 +2437,49 @@ bool partialFrontPropagation(Image_Data actionPtr, dataType** potentialFuncPtr, 
 			}
 		}
 
-		//if(num_proceed == 30000)
-		//{
-		//	string save_first = save_front + "front1.raw";
-		//	for(int ik = 0; ik < height; ik++)
-		//	{
-		//		for(int ij = 0; ij < dim2D; ij++)
-		//		{
-		//			if(labelArray[ik][ij] == 1)
-		//			{
-		//				saveAction[ik][ij] = actionPtr.imageDataPtr[ik][ij];
-		//			}
-		//			else {
-		//				saveAction[ik][ij] = max_action + 1;
-		//			}
-		//		}
-		//	}
-		//	manageRAWFile3D<dataType>(saveAction, length, width, height, save_first.c_str(), STORE_DATA, false);
-		//}
-		//else if (num_proceed == 300000)
-		//{
-		//	string save_second = save_front + "front2.raw";
-		//	for (int ik = 0; ik < height; ik++)
-		//	{
-		//		for (int ij = 0; ij < dim2D; ij++)
-		//		{
-		//			if (labelArray[ik][ij] == 1)
-		//			{
-		//				saveAction[ik][ij] = actionPtr.imageDataPtr[ik][ij];
-		//			}
-		//			else {
-		//				saveAction[ik][ij] = max_action + 1;
-		//			}
-		//		}
-		//	}
-		//	manageRAWFile3D<dataType>(saveAction, length, width, height, save_second.c_str(), STORE_DATA, false);
-		//}
+		/*
+		if(num_proceed % 20000 == 0)
+		{
+			id_save++;
+			string save_action = save_front + "front_" + std::to_string(id_save) + ".raw";
+			for(int ik = 0; ik < height; ik++)
+			{
+				for(int ij = 0; ij < dim2D; ij++)
+				{
+					if(labelArray[ik][ij] == 1)
+					{
+						saveAction[ik][ij] = actionPtr.imageDataPtr[ik][ij];
+					}
+					else 
+					{
+						saveAction[ik][ij] = max_action + 1;
+					}
+				}
+			}
+			manageRAWFile3D<dataType>(saveAction, length, width, height, save_action.c_str(), STORE_DATA, false);
+		}
+		*/
+
+		/*
+		else if (num_proceed == 300000)
+		{
+			string save_second = save_front + "front2.raw";
+			for (int ik = 0; ik < height; ik++)
+			{
+				for (int ij = 0; ij < dim2D; ij++)
+				{
+					if (labelArray[ik][ij] == 1)
+					{
+						saveAction[ik][ij] = actionPtr.imageDataPtr[ik][ij];
+					}
+					else {
+						saveAction[ik][ij] = max_action + 1;
+					}
+				}
+			}
+			manageRAWFile3D<dataType>(saveAction, length, width, height, save_second.c_str(), STORE_DATA, false);
+		}
+		*/
 
 	}
 
@@ -2674,7 +2717,8 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	size_t dim3D = length * width * height;
 	vector<int> heapIndex(dim3D);
-	for (size_t n = 0; n < dim3D; n++) {
+	for (size_t n = 0; n < dim3D; n++) 
+	{
 		heapIndex[n] = -1;
 	}
 
@@ -2738,6 +2782,15 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 	//for (k = 0; k < height; k++) {
 	//	saveAction[k] = new dataType[dim2D]{ 0 };
 	//}
+
+	//string save_front = "C:/Users/Konan Allaly/Documents/Tests/output/P5/partial/";
+	//dataType** saveAction = new dataType * [height];
+	//for (k = 0; k < height; k++)
+	//{
+	//	saveAction[k] = new dataType[dim2D]{ 0 };
+	//}
+
+	//size_t id_save = 0;
 	
 	while (narrowBand.size() > 0) {
 
@@ -2753,12 +2806,14 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 		//processed = getRealCoordFromImageCoord3D(processed, actionMapStr.origin, actionMapStr.spacing, actionMapStr.orientation);
 		//fprintf(processed_points, "%f,%f,%f\n", processed.x, processed.y, processed.z);
 
-		if(max_action < actionMapStr.imageDataPtr[k][currentIndx]) {
+		if(max_action < actionMapStr.imageDataPtr[k][currentIndx]) 
+		{
 			max_action = actionMapStr.imageDataPtr[k][currentIndx];
 		}
 
 		//Exit of the while loop if the end point is reached
-		if (labelArray[kEnd][x_new(iEnd, jEnd, length)] == 1) {
+		if (labelArray[kEnd][x_new(iEnd, jEnd, length)] == 1) 
+		{
 			break;
 		}
 
@@ -2847,8 +2902,29 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 			//}
 			//manageRAWFile3D<dataType>(saveAction, length, width, height, save_front_key.c_str(), STORE_DATA, false);
 
+			/*
+			//id_save++;
+			string save_action = save_front + "front_" + std::to_string(id_key) + ".raw";
+			for (int ik = 0; ik < height; ik++)
+			{
+				for (int ij = 0; ij < dim2D; ij++)
+				{
+					if (labelArray[ik][ij] == 1)
+					{
+						saveAction[ik][ij] = actionMapStr.imageDataPtr[ik][ij];
+					}
+					else
+					{
+						saveAction[ik][ij] = max_action + 1;
+					}
+				}
+			}
+			manageRAWFile3D<dataType>(saveAction, length, width, height, save_action.c_str(), STORE_DATA, false);
+			*/
+
 		}
-		else {
+		else 
+		{
 			actionMapStr.imageDataPtr[k][currentIndx] = current.arrival;
 			deleteRootHeap3D(narrowBand, heapIndex);
 		}
@@ -2884,16 +2960,44 @@ bool frontPropagationWithKeyPointDetection(Image_Data actionMapStr, dataType** p
 
 	key_points.push_back(seedPoint[1]);
 
+	//id_key++;
+	//string save_action = save_front + "front_" + std::to_string(id_key) + ".raw";
+	//for (int ik = 0; ik < height; ik++)
+	//{
+	//	for (int ij = 0; ij < dim2D; ij++)
+	//	{
+	//		if (labelArray[ik][ij] == 1)
+	//		{
+	//			saveAction[ik][ij] = actionMapStr.imageDataPtr[ik][ij];
+	//		}
+	//		else
+	//		{
+	//			saveAction[ik][ij] = max_action + 1;
+	//		}
+	//	}
+	//}
+	//manageRAWFile3D<dataType>(saveAction, length, width, height, save_action.c_str(), STORE_DATA, false);
+
+	//for(k = 0; k < height; k++) 
+	//{
+	//	delete[] saveAction[k];
+	//}
+	//delete[] saveAction;
+
 	//set all the unvisited points to a maximum value
-	for (k = 0; k < height; k++) {
-		for (i = 0; i < dim2D; i++) {
-			if (actionMapStr.imageDataPtr[k][i] == INFINITY) {
+	for (k = 0; k < height; k++) 
+	{
+		for (i = 0; i < dim2D; i++) 
+		{
+			if (actionMapStr.imageDataPtr[k][i] == INFINITY) 
+			{
 				actionMapStr.imageDataPtr[k][i] = max_action + 1;
 			}
 		}
 	}
 
-	for (k = 0; k < height; k++) {
+	for (k = 0; k < height; k++) 
+	{
 		delete[] labelArray[k];
 	}
 	delete[] labelArray;

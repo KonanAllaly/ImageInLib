@@ -937,8 +937,8 @@ bool geodesicMeanCurvature(Image_Data inputImageData, const Filter_Parameters fi
 			}
 		}
 	} while (error > filterParameters.tolerance && count_iteration < filterParameters.maxNumberOfSolverIteration);
-	printf("The number of iterations is %zd\n", count_iteration);
-	printf("Error is %e\n", error);
+	//printf("The number of iterations is %zd\n", count_iteration);
+	//printf("Error is %e\n", error);
 
 	//Copy the current time step to original data holder after timeStepsNum
 	copyDataToReducedArea(inputImageData.imageDataPtr, gauss_seidelPtr, height, length, width);

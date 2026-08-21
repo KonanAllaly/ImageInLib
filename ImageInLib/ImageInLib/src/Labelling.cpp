@@ -580,6 +580,8 @@ bool labelling3D(dataType** imageDataPtr, int** segmentedImage, bool** statusArr
 		}
 	}
 
+	std::cout << "Number of regions: " << label - 1 << std::endl;
+
 	return true;
 }
 

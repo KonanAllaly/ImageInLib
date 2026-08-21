@@ -439,8 +439,8 @@ void heatImplicitRectangularScheme(Image_Data toImplicitImage, const Filter_Para
 		// Copy current to tempPtr before next time step
 		copyDataToAnotherArray(currentPtr, tempPtr, height_ext, length_ext, width_ext);
 	}
-	printf("The number of iterations is %zd\n", z);
-	printf("Error is %e\n", error);
+	//printf("The number of iterations is %zd\n", z);
+	//printf("Error is %e\n", error);
 
 	// Copy back to original after filtering
 	for (k = 0, k_ext = 1; k < height; k++, k_ext++) {
