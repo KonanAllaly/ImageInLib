@@ -2073,8 +2073,7 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	
 	//fastMarchingDistanceMap(toDistanceMap, distance, 1.0);
 	
-	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/Data journal paper submission/P3/distance_map_p3.raw";
-	//storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map_p3.raw";
+	std::string storing_path = "C:/Users/Konan Allaly/Documents/Tests/output/distance_map.raw";
 	manageRAWFile3D<dataType>(distance, length, width, height, storing_path.c_str(), LOAD_DATA, false);
 
 	////////Artificial image : no need to compute the edge image when empty inside
@@ -2092,15 +2091,15 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	//std::cout << "Seed 1 value : " << value_first_pt << std::endl;
 	dataType seedValCT = value_first_pt;
 	
-	dataType var_epsilon = 0.0;//0.01;
-	if (seedStats.sd_data != 0) 
-	{
-		var_epsilon = seedStats.sd_data;
-	}
-	else 
-	{
-		var_epsilon = parameters.eps;
-	}
+	dataType var_epsilon = 0.01;//0.01;
+	//if (seedStats.sd_data != 0) 
+	//{
+	//	var_epsilon = seedStats.sd_data;
+	//}
+	//else 
+	//{
+	//	var_epsilon = parameters.eps;
+	//}
 	
 	std::cout << "Epsilon to be used : " << var_epsilon << std::endl;
 
@@ -2131,7 +2130,8 @@ bool compute3DPotential(Image_Data ctImageData, dataType** potential, Point3D* s
 	{
 		for (i = 0; i < dim2D; i++) 
 		{
-			potential[k][i] = (dataType)((var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i])));
+			potential[k][i] = (dataType)(var_epsilon + (potential[k][i] / maxImage) * (1.0 / (1.0 + distance[k][i])));
+			//potential[k][i] = (dataType)((var_epsilon + (potential[k][i] / maxImage)) * (1.0 / (1.0 + distance[k][i])));
 		}
 	}
 

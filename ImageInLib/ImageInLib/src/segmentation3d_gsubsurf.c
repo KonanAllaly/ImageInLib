@@ -1966,15 +1966,15 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 		}
 	}
 
-	//Array for name construction
-	char name[350];
-	char name_ending[100];
-	Storage_Flags flags = { false,false };
+	////Array for name construction
+	//char name[350];
+	//char name_ending[100];
+	//Storage_Flags flags = { false,false };
 
-	strcpy_s(name, sizeof name, segmentPath);
-	sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
-	strcat_s(name, sizeof(name), name_ending);
-	store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
+	//strcpy_s(name, sizeof name, segmentPath);
+	//sprintf_s(name_ending, sizeof(name_ending), "_edge_detector.raw");
+	//strcat_s(name, sizeof(name), name_ending);
+	//store3dDataArrayD(edgeDetectorPtr, length, width, height, name, flags);
 
 	copyDataToAnotherArray(initialSegment, segmentationPtr, height, length, width);
 
@@ -2114,6 +2114,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 		//copy to reduce array
 		copyDataToReducedArea(segmentationPtr, gaussSeidelPtr, height, length, width);
 
+		/*
 		//save the solution
 		if (number_time_step % seg_parms.mod == 0) {
 			strcpy_s(name, sizeof name, segmentPath);
@@ -2122,6 +2123,7 @@ bool GSUBSURF(Image_Data imageData, dataType** initialSegment, const char* segme
 			store3dDataArrayD(segmentationPtr, length, width, height, name, flags);
 			printf("Step %zd , residual = %e \n", number_time_step, error_segmentation);
 		}
+		*/
 
 	} while (number_time_step <= seg_parms.maxNoOfTimeSteps && error_segmentation > seg_parms.segTolerance);
 	
