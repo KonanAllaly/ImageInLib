@@ -38,7 +38,7 @@ int main()
 
 	using Clock = std::chrono::steady_clock;
 
-	string root = "C:/Users/Konan Allaly/Documents/Tests/";
+	string root = "C:/Users/Konan Allaly/Documents/";
 	
 	string loading_path, storing_path, extension;
 
@@ -59,7 +59,7 @@ int main()
 	ctContainer->operation = copyFrom;
 	
 	std::cout<<"Original data"<<std::endl;
-	loading_path = root + "input/vtk/petct/ct/Patient1_ct.vtk";
+	loading_path = root + "Input tests/vtk/petct/ct/Patient1_ct.vtk";
 	readVtkFile(loading_path.c_str(), ctContainer);
 
 	size_t Height = (size_t)ctContainer->dimensions[2];
@@ -74,25 +74,19 @@ int main()
 	std::cout << "CT spacing : (" << ctContainer->spacing[0] << ", " << ctContainer->spacing[1] << ", " << ctContainer->spacing[2] << ")" << std::endl; 
 	std::cout << "================================" << std::endl;
 
-	//================= Estimate the filtering time for each patient ==========================================
+	//================= Old data ==========================================
 
+	/*
 	dataType** imageData = new dataType*[Height];
-	//dataType** testImageData = new dataType * [Height];
 	dataType** potential = new dataType * [Height];
 	dataType** action = new dataType * [Height];
 	for (k = 0; k < Height; k++) 
 	{
 		imageData[k] = new dataType[dim2D]{0};
-		//testImageData[k] = new dataType[dim2D]{0};
 		potential[k] = new dataType[dim2D]{0};
 		action[k] = new dataType[dim2D]{0};
 	}
-
-	//storing_path = root + "output/Data journal paper submission/P1/filtered_p1.raw";
-	////storing_path = root + "output/filtered_p5.raw";
-	//manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 	
-	/*
 	//copy
 	for(k = 0; k < Height; k++)
 	{
@@ -115,7 +109,7 @@ int main()
 
 	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
 
-	storing_path = root + "output/rescaled_p3.raw";
+	storing_path = root + "Tests/output/rescaled_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
 	Filter_Parameters smoothParameters =
@@ -134,63 +128,23 @@ int main()
 	};
 	Image_Data inputImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
 
-	//clock_t start_p = clock();
 	geodesicMeanCurvature(inputImage, smoothParameters);
-	//clock_t end_p = clock();
-	//std::cout << "Filtering time: " << double(end_p - start_p) / CLOCKS_PER_SEC << " seconds" << std::endl;
-
-	std::vector<double> ex_times;
-	for (size_t n = 0; n < 10; ++n)
-	{
-		manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
-		
-		auto start = std::chrono::steady_clock::now();
-		geodesicMeanCurvature(inputImage, smoothParameters);
-		auto end = std::chrono::steady_clock::now();
-
-		ex_times.push_back(std::chrono::duration<double>(end - start).count());
-	}
-
-	dataType mean_time = 0.0, max_time = 0.0, min_time = 10000.0;
-	for(size_t n = 0; n < ex_times.size(); n++)
-	{
-		mean_time += ex_times[n];
-		if(ex_times[n] > max_time) max_time = ex_times[n];
-		if(ex_times[n] < min_time) min_time = ex_times[n];
-	}
-	//std::cout << "Filtering time for 10 iterations : " << mean_time << " seconds" << std::endl;
-	mean_time /= (dataType)ex_times.size();
-	std::cout << "Mean filtering time: " << mean_time << " seconds" << std::endl;
-	std::cout << "Max filtering time: " << max_time << " seconds" << std::endl;
-	std::cout << "Min filtering time: " << min_time << " seconds" << std::endl;
 	
-	storing_path = root + "output/filtered_p3.raw";
+	storing_path = root + "Tests/output/filtered_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 	
-	storing_path = root + "output/Data journal paper submission/P3/filtered_p3.raw";
-	manageRAWFile3D<dataType>(testImageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
-
-	//Compute similarity between the two images
-	size_t nb_voxel_different = 0;
-	dataType eps = 1e-6, max_diff = 0;
-	for (k = 0; k < Height; k++) 
+	for(k = 0; k < Height; k++)
 	{
-		for(i = 0; i < dim2D; i++)
-		{
-			max_diff = fabs(imageData[k][i] - testImageData[k][i]);
-			if(max_diff > eps)
-			{
-				nb_voxel_different++;
-			}
-		}
+		delete[] imageData[k];
+		delete[] potential[k];
+		delete[] action[k];
 	}
-	std::cout << "Number of different voxels between the two images: " << nb_voxel_different << std::endl;
-	std::cout<< "Maximum difference between the two images: " << max_diff << std::endl;
-	*/
+	delete[] imageData;
+	delete[] potential;
+	delete[] action;
+	
 
-	//================= Estimate the potential computation duration for each patient ===============================
-
-	/*
+	
 	storing_path = root + "output/Data journal paper submission/P5/filtered_p5.raw";
 	////storing_path = root + "output/filtered_p5.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
@@ -304,15 +258,22 @@ int main()
 	//std::cout << "Number of different voxels between the two images: " << nb_voxel_different << std::endl;
 	//std::cout << "Maximum difference between the two images: " << max_diff << std::endl;
 	//
-	*/
 
 	//================= Estimate time for front propagation and path finding for each patient ========================
 
-	/*
-	//loading_path = root + "output/potential_p6.raw";
-	//manageRAWFile3D<dataType>(potential, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+	dataType** imageData = new dataType * [Height];
+	dataType** potential = new dataType * [Height];
+	dataType** action = new dataType * [Height];	
+	for (size_t k = 0; k < Height; k++) 
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+		potential[k] = new dataType[dim2D]{ 0 };
+		action[k] = new dataType[dim2D]{ 0 };
+	}
 
-	
+	loading_path = root + "output/potential_p6.raw";
+	manageRAWFile3D<dataType>(potential, Length, Width, Height, loading_path.c_str(), LOAD_DATA, false);
+
 	Image_Data actionPtr = { Height, Length, Width, action, imageOrigin, imageSpacing, orientation };
 	//partialFrontPropagation(actionPtr, potential, endPoints);
 
@@ -460,11 +421,10 @@ int main()
 	path_key_points.clear();
 	//path_ordered.clear();
 	key_points.clear();
-	*/
 
 	//================= Aorta Segmentation ========================================
 
-	/*
+	
 	////Croping : p1
 	size_t i_min = 200;
 	size_t j_min = 200;
@@ -595,11 +555,11 @@ int main()
 	}
 	delete[] segImageData;
 	delete[] initialSegment;
-	*/
+	
 	
 	//================== Old versus new potential ==================================
 	
-	/*
+	
 	//Patient 1
 	Point3D seed1 = { 261, 257, 145 };
 	Point3D seed2 = { 259, 250, 246 };
@@ -653,11 +613,11 @@ int main()
 	fclose(path_points_file);
 
 	path_points.clear();
-	*/
+	
 
 	//================== Quantitative analysis ====================================
 	
-	/*
+	
 	storing_path = root + "output/Data journal paper submission/P1/segment_aorta_full_dim_p1.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), LOAD_DATA, false);
 
@@ -698,9 +658,11 @@ int main()
 
 	storing_path = root + "output/piece_aorta.raw";
 	manageRAWFile3D<dataType>(testImageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	*/ 
+
+	
 	//================== Segment the liver ============================
 
+	
 	int** labelArray = new int* [Height];
 	bool** status = new bool* [Height];
 	for(k = 0; k < Height; k++)
@@ -913,7 +875,7 @@ int main()
 	storing_path = root + "output/liver_segmented.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
 
-	/*
+	
 	//invert
 	for(k = 0; k < Height; k++)
 	{
@@ -949,7 +911,7 @@ int main()
 
 	storing_path = root + "output/liver_segmented_refined.raw";
 	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
-	*/
+	
 
 	for(k = 0; k < Height; k++)
 	{
@@ -957,10 +919,12 @@ int main()
 		delete[] status[k];
 	}
 	delete[] labelArray;
-	delete[] status;	
+	delete[] status;
+	
 
 	//======================== Refinement ================================================
 
+	
 	//dataType** segmentedLiver = new dataType * [Height];
 	//for (k = 0; k < Height; k++)
 	//{
@@ -1120,22 +1084,81 @@ int main()
 	//}
 	//delete[] segmentedLiver;
 
-
-
 	//================== Clean up memory ==========================================
 
-	//delete[] endPoints;
-	for(k = 0; k < Height; k++)
+	////delete[] endPoints;
+	//for(k = 0; k < Height; k++)
+	//{
+	//	delete[] imageData[k];
+	//	//delete[] testImageData[k];
+	//	delete[] potential[k];
+	//	delete[] action[k];
+	//}
+	//delete[] imageData;
+	////delete[] testImageData;
+	//delete[] potential;
+	//delete[] action;
+	*/
+
+	//================ New data =============================================
+
+	dataType** imageData = new dataType * [Height];
+	for (k = 0; k < Height; k++)
+	{
+		imageData[k] = new dataType[dim2D]{ 0 };
+	}
+
+	//copy
+	for (k = 0; k < Height; k++)
+	{
+		memcpy(imageData[k], ctContainer->dataPointer[k], dim2D * sizeof(dataType));
+	}
+
+	//Find min and max values in the image
+	dataType minValue = imageData[0][0];
+	dataType maxValue = imageData[0][0];
+	for (k = 0; k < Height; k++)
+	{
+		for (i = 0; i < dim2D; i++)
+		{
+			if (imageData[k][i] < minValue) minValue = imageData[k][i];
+			if (imageData[k][i] > maxValue) maxValue = imageData[k][i];
+		}
+	}
+	std::cout << "Min value : " << minValue << std::endl;
+	std::cout << "Max value : " << maxValue << std::endl;
+
+	rescaleNewRange(imageData, Length, Width, Height, 0.0, 1.0, maxValue, minValue);
+
+	storing_path = root + "Tests/output/rescaled_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	Filter_Parameters smoothParameters =
+	{
+		1.0,// tau;
+		1.0,// h not used here
+		1.0,// sigma
+		1000,// edge_detector_coefficient
+		1.4,// omega_c;
+		1e-3,// tolerance;
+		1e-6,// eps2
+		1,// coef
+		1,// linked to sigma
+		1,//number of time step;
+		100// max number of iteration;
+	};
+	Image_Data inputImage = { Height, Length, Width, imageData, imageOrigin, imageSpacing, orientation };
+
+	geodesicMeanCurvature(inputImage, smoothParameters);
+
+	storing_path = root + "Tests/output/filtered_p1.raw";
+	manageRAWFile3D<dataType>(imageData, Length, Width, Height, storing_path.c_str(), STORE_DATA, false);
+
+	for (k = 0; k < Height; k++)
 	{
 		delete[] imageData[k];
-		//delete[] testImageData[k];
-		delete[] potential[k];
-		delete[] action[k];
 	}
 	delete[] imageData;
-	//delete[] testImageData;
-	delete[] potential;
-	delete[] action;
 
 	free(ctContainer);
 
